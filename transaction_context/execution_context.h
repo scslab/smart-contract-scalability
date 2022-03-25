@@ -21,7 +21,7 @@ class BuiltinFnWrappers
 
 class ExecutionContext {
 
-	WasmContext wasm_context;
+	std::unique_ptr<WasmContext> wasm_context;
 
 	std::map<Address, std::unique_ptr<WasmRuntime>> active_runtimes;
 
@@ -33,7 +33,7 @@ class ExecutionContext {
 
 	void link_builtin_fns(WasmRuntime& runtime);
 
-	ExecutionContext(WasmContext&& ctx)
+	ExecutionContext(std::unique_ptr<WasmContext> ctx)
 		: wasm_context(std::move(ctx))
 		, active_runtiems()
 		, tx_state_delta()
@@ -67,9 +67,9 @@ public:
 		return *ctx;
 	}
 
-	static void make_ctx()
+	static void make_ctx(std::unique_ptr<WasmContext>&& ctx)
 	{
-		ctx = std::make_unique<
+		ctx = std::make_unique<ExecutionContext>(std::move(ctx));
 	}
 };
 

@@ -352,6 +352,8 @@ namespace wasm3 {
          * Note that the type of the return value must be explicitly specified as a template argument.
          *
          * @return the return value of the function or void.
+         * 
+         * TODO this could be re-templated to support multi-value returns.
          */
         template<typename Ret = void, typename ... Args>
         Ret call(Args... args) {

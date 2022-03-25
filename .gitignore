@@ -17,7 +17,6 @@ doc/
 *.deps
 *.dirstamp
 depcomp
-test
 test_runner.cc
 README
 ylwrap
@@ -27,6 +26,13 @@ compile
 
 xdr/*.h
 
+#binaries
+simple
+test
+
 #mac
 .DS_STORE
 *~
+
+#test wasm
+*/tests/wat/*.wasm
