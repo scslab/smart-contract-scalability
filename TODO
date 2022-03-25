@@ -1,0 +1,43 @@
+Architecture:
+
+db
+	
+	data object: oneof (map, counter, list, raw bytes)
+
+	every account has list of data objects: map <uint64_t> <params of the object>
+
+	global map store: map <account id, obj index> <map>
+	global counter store: map <account id, obj index> <counter>
+	etc.
+
+	methods: 
+
+		alloc_counter(uint64 obj_index)
+	   	alloc_dsdlksd(uint64 obj_index)
+	   	free(obj_index)
+
+	   	require asset deposit for each obj allocated.
+
+	   	suggested pattern: hash(data) -> uint64 to compute an index
+
+	   	two allocs on same index conflict
+
+		rationale:
+			have to tell runtime what type of invariant/object is
+			runtime computing a "sequential" sequence of indices is noncommutative.
+
+			64 bits seems like enough, and fits easily within WASM semantics.  Could also do longer handles,
+			with more careful calling conventions (i.e. pass to runtime an offset into WASM memory, not a raw integer).
+
+	trie of contracts
+		contract id (hash) to contract data (wasm)
+
+
+TODO: 
+	cache contracts that are loaded into memory?  See if wasm3/fizzy/etc has a "reset" method.  Could likely
+	just reset stack pointer and memory buf.
+
+
+
+
+

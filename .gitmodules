@@ -1,0 +1,6 @@
+[submodule "wasm3"]
+	path = wasm3
+	url = git@github.com:wasm3/wasm3.git
+[submodule "xdrpp"]
+	path = xdrpp
+	url = git@github.com:gramseyer/xdrpp.git
