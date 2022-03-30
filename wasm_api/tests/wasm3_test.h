@@ -64,6 +64,16 @@ public:
 		auto load16 = r.find_function("load16");
 
 		TS_ASSERT_EQUALS(load16.template call<int32_t>(3), 0x9012);
+
+		auto [mem_ptr, mlen] = r.get_memory();
+
+		TS_ASSERT_EQUALS(mlen, 65536);
+
+		uint32_t buf[2];
+		buf[0] = 0x12345678;
+		buf[1] = 0xABCDEF90;
+
+		TS_ASSERT_EQUALS(0, memcmp(mem_ptr, (uint8_t*)buf, 8));
 	}
 
 };
