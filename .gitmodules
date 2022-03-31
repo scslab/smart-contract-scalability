@@ -4,3 +4,6 @@
 [submodule "xdrpp"]
 	path = xdrpp
 	url = git@github.com:gramseyer/xdrpp.git
+[submodule "merkle_trie_toolkit"]
+	path = merkle_trie_toolkit
+	url = git@github.com:gramseyer/merkle_trie_toolkit.git

@@ -18,7 +18,7 @@ Wasm3_WasmContext::new_runtime_instance(Address const& contract_address)
 }
 
 TransactionStatus 
-Wasm3_WasmRuntime::invoke(TransactionInvocation const& tx)
+Wasm3_WasmRuntime::invoke(MethodInvocation const& invocation)
 {
 	throw std::runtime_error("unimpl");
 }

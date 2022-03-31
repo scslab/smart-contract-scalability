@@ -49,6 +49,17 @@ fi
 AC_MSG_RESULT($XDRC)
 AC_SUBST(XDRC)
 
+ALREADY_HAVE_XDRC=../$XDRC
+
+mtt_disable_tests=yes
+export mtt_disable_tests
+
+export ALREADY_HAVE_XDRC
+export xdrpp_LIBS
+export xdrpp_CFLAGS
+
+AX_PKGCONFIG_SUBDIR(merkle_trie_toolkit)
+
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

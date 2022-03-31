@@ -20,15 +20,10 @@ public:
 	ContractDB() : contracts() {}
 
 	std::shared_ptr<const Contract>
-	get_contract(Address const& addr)
-	{
-		auto it = contracts.find(addr);
-		if (it == contracts.end())
-		{
-			return nullptr;
-		}
-		return it->second;
-	}
+	get_contract(Address const& addr) const;
+
+	bool
+	register_contract(Address const& addr, std::shared_ptr<const Contract> contract);
 };
 
 } /* scs */

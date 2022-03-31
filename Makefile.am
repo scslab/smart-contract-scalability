@@ -18,6 +18,9 @@ SUFFIXES = .x .h .wat .wasm
 .x.h:
 	$(XDRC)  -hh -o $@ $<
 
+CONTRACT_DB_SRCS = \
+	contract_db/contract_db.cc
+
 TRANSACTION_CONTEXT_SRCS = \
 	transaction_context/execution_context.cc
 
@@ -42,6 +45,8 @@ WASM3_SRCS = \
 	wasm3/source/m3_parse.c
 
 SRCS = \
+	$(CONTRACT_DB_SRCS) \
+	$(TRANSACTION_CONTEXT_SRCS) \
 	$(WASM_API_SRCS) \
 	$(WASM3_SRCS)
 

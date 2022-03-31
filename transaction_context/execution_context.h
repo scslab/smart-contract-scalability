@@ -1,22 +1,28 @@
 #pragma once
 
+#include <cstdint>
+#include <optional>
+#include <memory>
+
+#include "transaction_context/transaction_context.h"
+
 #include "wasm_api/wasm_api.h"
 
 namespace scs
 {
 
-class BuiltinFnWrappers
+struct BuiltinFnWrappers
 {
 	static void 
-	builtin_scs_return(uint32_t offset, uint32_t len);
+	builtin_scs_return(int32_t offset, int32_t len);
 
 	static void
 	builtin_scs_invoke(
-		uint32_t addr_offset, 
-		uint32_t methodname_offset, 
-		uint32_t methodname_len, 
-		uint32_t calldata_offset, 
-		uint32_t calldata_len);
+		int32_t addr_offset, 
+		int32_t methodname_offset, 
+		int32_t methodname_len, 
+		int32_t calldata_offset, 
+		int32_t calldata_len);
 };
 
 class ExecutionContext {
@@ -25,52 +31,50 @@ class ExecutionContext {
 
 	std::map<Address, std::unique_ptr<WasmRuntime>> active_runtimes;
 
-	TransactionStateDeltaBatch tx_state_delta;
+	//TransactionStateDeltaBatch tx_state_delta;
 
-	std::optional<TransactionContext> tx_context;
+	std::unique_ptr<TransactionContext> tx_context;
 
 	bool executed;
 
 	void link_builtin_fns(WasmRuntime& runtime);
 
+	friend class ThreadlocalExecutionContext;
+
 	ExecutionContext(std::unique_ptr<WasmContext> ctx)
 		: wasm_context(std::move(ctx))
-		, active_runtiems()
-		, tx_state_delta()
-		, tx_context(std::nullopt)
+		, active_runtimes()
+		//, tx_state_delta()
+		, tx_context(nullptr)
 		, executed(false)
 		{}
 
 	friend class BuiltinFnWrappers;
-	// should only be used by builtin fns
-	void invoke_subroutine(TransactionInvocation invocation);
 
-	TransactionContext& get_tx_context() 
+	// should only be used by builtin fns
+	void invoke_subroutine(MethodInvocation invocation);
+
+	TransactionContext& get_transaction_context()
 	{
-		return (*tx_context).runtime_stack.back();
+		return *tx_context;
 	}
 
 public:
 
 	TransactionStatus
-	execute(TransactionInvocation const& invocation_context, uint64_t gas_limit, Address src);
+	execute(MethodInvocation const& invocation, uint64_t gas_limit, Address const& src);
 
 	void reset();
 };
 
 class ThreadlocalExecutionContext {
-	static thread_local std::unique_ptr<ExecutionContext> ctx;
+	inline static thread_local std::unique_ptr<ExecutionContext> ctx;
+
+	ThreadlocalExecutionContext() = delete;
 
 public:
-	static ExecutionContext& get_ctx()
-	{
-		return *ctx;
-	}
-
-	static void make_ctx(std::unique_ptr<WasmContext>&& ctx)
-	{
-		ctx = std::make_unique<ExecutionContext>(std::move(ctx));
-	}
+	static ExecutionContext& get_ctx();
+	static void make_ctx(std::unique_ptr<WasmContext>&& c);
 };
 
 } /* scs */

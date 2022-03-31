@@ -2,6 +2,8 @@
 
 #include "contract_db/contract_db.h"
 
+#include "transaction_context/method_invocation.h"
+
 #include "wasm_api/wasm3.h"
 
 #include "xdr/transaction.h"
@@ -62,7 +64,7 @@ protected:
 
 public:
 
-	virtual TransactionStatus invoke(TransactionInvocation const& tx) = 0;
+	virtual TransactionStatus invoke(MethodInvocation const& invocation) = 0;
 
 	virtual void link_fn(
 		const char* module_name, const char* fn_name, 
@@ -73,7 +75,6 @@ public:
 	virtual void link_fn(
 		const char* module_name, const char* fn_name, 
 		void (*f) (int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t)) = 0;
-
 
 	template<typename ArrayLike>
 	ArrayLike load_from_memory(int32_t offset, int32_t len)
@@ -88,6 +89,24 @@ public:
 		}
 
 		return ArrayLike(mem + offset, mem + offset + len);
+	}
+
+	template <typename ArrayLike>
+	ArrayLike load_from_memory_to_const_size_buf(int32_t offset)
+	{
+		ArrayLike out;
+		const size_t len = out.size();
+
+		auto [mem, mlen] = get_memory();
+		if (mlen < offset + len) {
+			throw WasmError("OOB Mem Access");
+		}
+		if (offset < 0 || len < 0) {
+			throw WasmError("Invalid Mem Parameters");
+		}
+
+		memcpy(out.data(), mem, len);
+		return out;
 	}
 
 	template<typename ArrayLike>
@@ -151,7 +170,7 @@ public:
 	}
 
 	TransactionStatus 
-	invoke(TransactionInvocation const& calldata) override final;
+	invoke(MethodInvocation const& invocation) override final;
 };
 
 

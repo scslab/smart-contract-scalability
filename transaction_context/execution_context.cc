@@ -1,4 +1,4 @@
-#pragma once
+#include "transaction_context/execution_context.h"
 
 namespace scs
 {
@@ -23,15 +23,16 @@ BuiltinFnWrappers::builtin_scs_invoke(
 
 	auto& runtime = tx_ctx.runtime_stack.back();
 
-	TransactionInvocation invocation
+	MethodInvocation invocation
 	{
-		.invokedAddress = runtime.template load_from_memory<Address>(addr_offset, 32),
-		.methodName = runtime.template load_from_memory<std::string>(methodname_offset, methodname_len),
+
+		.addr = runtime.template load_from_memory_to_const_size_buf<Address>(addr_offset),
+		.method_name = runtime.template load_from_memory<std::vector<uint8_t>>(methodname_offset, methodname_len),
 		.calldata = runtime.template load_from_memory<std::vector<uint8_t>>(calldata_offset, calldata_len)
 	};
 
 	ThreadlocalExecutionContext::get_ctx().invoke_subroutine(invocation);
-	tx_context.return_buf.clear();
+	tx_ctx.return_buf.clear();
 }
 
 void 
@@ -77,23 +78,23 @@ ExecutionContext::link_builtin_fns(WasmRuntime& runtime)
 }
 
 void 
-ExecutionContext::invoke_subroutine(TransactionInvocation invocation)
+ExecutionContext::invoke_subroutine(MethodInvocation invocation)
 {
-	tx_context.invocation_stack.push_back(invocation);
+	tx_context->invocation_stack.push_back(invocation);
 
-	auto iter = active_runtimes.find(invocation.invokedAddress);
+	auto iter = active_runtimes.find(invocation.addr);
 	if (iter == active_runtimes.end())
 	{
-		active_runtimes.emplace(invocation.invokedAddress, wasm_context.new_runtime_instance(invocation.invokedAddress));
-		link_builtin_fns(active_runtimes.at(invocation.invokedAddress));
+		active_runtimes.emplace(invocation.addr, wasm_context->new_runtime_instance(invocation.addr));
+		link_builtin_fns(*active_runtimes.at(invocation.addr));
 	}
 
-	active_runtimes.at(invocation.invokedAddress).invoke(invocation);
-	tx_context.invocation_stack.pop_back();
+	active_runtimes.at(invocation.addr)->invoke(invocation);
+	tx_context->invocation_stack.pop_back();
 }
 
 TransactionStatus
-ExecutionContext::execute(TransactionInvocation const& invocation_context, uint64_t gas_limit, Address src);
+ExecutionContext::execute(MethodInvocation const& invocation, uint64_t gas_limit, Address const& src)
 {
 	if (executed)
 	{
@@ -101,17 +102,19 @@ ExecutionContext::execute(TransactionInvocation const& invocation_context, uint6
 	}
 	executed = true;
 
-	tx_context = std::make_optional<TransactionContext>(src, gas_limit);
+	tx_context = std::make_unique<TransactionContext>(gas_limit, src);
 
 	try
 	{
-		invoke_subroutine(tx_context);
+		invoke_subroutine(invocation);
 	} 
 	catch(const std::exception& e)
 	{
-		std::printf("Execution error: %s\n", e.what().c_str());
+		std::printf("Execution error: %s\n", e.what());
 		return TransactionStatus::FAILURE;
 	}
+
+	return TransactionStatus::SUCCESS;
 }
 
 void
@@ -119,11 +122,21 @@ ExecutionContext::reset()
 {
 	// nothing to do to clear wasm_context
 	active_runtimes.clear();
-	tx_state_delta.clear();
-	tx_context = std::nullopt;
+	//tx_state_delta.clear();
+	tx_context.reset();
 	executed = false;
 }
 
+ExecutionContext&  
+ThreadlocalExecutionContext::get_ctx()
+{
+	return *ctx;
+}
 
+void 
+ThreadlocalExecutionContext::make_ctx(std::unique_ptr<WasmContext>&& c)
+{
+	ctx = std::unique_ptr<ExecutionContext>(new ExecutionContext(std::move(c)));
+}
 
 } /* scs */
