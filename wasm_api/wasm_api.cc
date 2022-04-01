@@ -20,7 +20,7 @@ Wasm3_WasmContext::new_runtime_instance(Address const& contract_address)
 int32_t  
 Wasm3_WasmRuntime::invoke(MethodInvocation const& invocation)
 {
-	auto fn = runtime.find_function(invocation.method_name.c_str());
+	auto fn = runtime.find_function(invocation.get_invocable_methodname().c_str());
 
 	write_to_memory(invocation.calldata, 0, invocation.calldata.size());
 

@@ -19,16 +19,14 @@ struct BuiltinFnWrappers
 	static int32_t
 	builtin_scs_invoke(
 		int32_t addr_offset, 
-		int32_t methodname_offset, 
-		int32_t methodname_len, 
+		int32_t methodname, 
 		int32_t calldata_offset, 
 		int32_t calldata_len);
 
 	static int32_t
 	builtin_scs_invoke_with_return(
 		int32_t addr_offset, 
-		int32_t methodname_offset, 
-		int32_t methodname_len, 
+		int32_t methodname, 
 		int32_t calldata_offset, 
 		int32_t calldata_len,
 		int32_t return_offset,

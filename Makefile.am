@@ -22,7 +22,8 @@ CONTRACT_DB_SRCS = \
 	contract_db/contract_db.cc
 
 TRANSACTION_CONTEXT_SRCS = \
-	transaction_context/execution_context.cc
+	transaction_context/execution_context.cc \
+	transaction_context/method_invocation.cc
 
 WASM_API_SRCS = \
 	wasm_api/wasm_api.cc
@@ -50,6 +51,9 @@ SRCS = \
 	$(WASM_API_SRCS) \
 	$(WASM3_SRCS)
 
+MTT_TESTS = \
+	$(wildcard merkle_trie_toolkit/tests/*.h)
+
 TEST_SRCS = \
 	wasm_api/tests/wasm3_test.h \
 	wasm_api/tests/wasm_api_test.h
@@ -71,8 +75,11 @@ LDADD = $(xdrpp_LIBS) $(libsodium_LIBS) $(LIBFYAML_LIBS) $(tbb_LIBS) $(merkle_tr
 $(SRCS:.cc=.o) : $(XH_FILES)
 $(MAIN_CCS:.cc=.o) : $(XH_FILES)
 
-test_runner.cc : $(TEST_SRCS) $(XH_FILES) $(TEST_WASMS)
-	cxxtestgen --error-printer -o test_runner.cc $(TEST_SRCS)
+test_runner.cc : $(TEST_SRCS) $(MTT_TESTS) $(XH_FILES) $(TEST_WASMS)
+	cxxtestgen --error-printer -o test_runner.cc $(TEST_SRCS) $(MTT_TESTS)
+
+test_runner.o : CXXFLAGS += -I./merkle_trie_toolkit
+
 
 bin_PROGRAMS = \
 	simple \

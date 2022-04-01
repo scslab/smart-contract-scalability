@@ -4,6 +4,8 @@
 
 #include "transaction_context/method_invocation.h"
 
+#include "utils/serialize_endian.h"
+
 #include "wasm_api/wasm3.h"
 
 #include "xdr/transaction.h"
@@ -71,16 +73,21 @@ public:
 		void (*f) (int32_t, int32_t)) = 0;
 	virtual void link_fn(
 		const char* module_name, const char* fn_name, 
-		int32_t (*f) (int32_t, int32_t, int32_t, int32_t, int32_t)) = 0;
+		int32_t (*f) (int32_t, int32_t, int32_t, int32_t)) = 0;
 	virtual void link_fn(
 		const char* module_name, const char* fn_name, 
-		int32_t (*f) (int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t)) = 0;
+		int32_t (*f) (int32_t, int32_t, int32_t, int32_t, int32_t, int32_t)) = 0;
 
 	template<typename ArrayLike>
 	ArrayLike load_from_memory(int32_t offset, int32_t len)
 	{
 		auto [mem, mlen] = get_memory();
-		if (mlen < offset + len) {
+
+		if (offset < 0 || len < 0) {
+			throw WasmError("Invalid Mem Parameters");
+		}
+
+		if (mlen < static_cast<uint32_t>(offset) + static_cast<uint32_t>(len)) {
 			// did you forget (memory 1 1) in the .wat file
 			throw WasmError(
 				"OOB Mem Access: mlen = " 
@@ -89,10 +96,6 @@ public:
 				+ std::to_string(offset) 
 				+ " len = " 
 				+ std::to_string(len));
-		}
-
-		if (offset < 0 || len < 0) {
-			throw WasmError("Invalid Mem Parameters");
 		}
 
 		return ArrayLike(mem + offset, mem + offset + len);
@@ -105,11 +108,13 @@ public:
 		const size_t len = out.size();
 
 		auto [mem, mlen] = get_memory();
-		if (mlen < offset + len) {
-			throw WasmError("OOB Mem Access");
-		}
+		
 		if (offset < 0 || len < 0) {
 			throw WasmError("Invalid Mem Parameters");
+		}
+
+		if (mlen < static_cast<uint32_t>(offset) + static_cast<uint32_t>(len)) {
+			throw WasmError("OOB Mem Access");
 		}
 
 		memcpy(out.data(), mem, len);
@@ -122,7 +127,7 @@ public:
 
 		if (array.size() > max_len)
 		{
-			throw WasmError("array is too big to write");
+			throw WasmError("Array is too big to write");
 		}
 
 		if (offset < 0 || max_len < 0) {
@@ -167,17 +172,19 @@ public:
 	{
 		module.link_optional(module_name, fn_name, f);
 	}
+
 	void link_fn(
 		const char* module_name, 
 		const char* fn_name, 
-		int32_t (*f)(int32_t, int32_t, int32_t, int32_t, int32_t)) override final
+		int32_t (*f)(int32_t, int32_t, int32_t, int32_t)) override final
 	{
 		module.link_optional(module_name, fn_name, f);
 	}
+
 	void link_fn(
 		const char* module_name, 
 		const char* fn_name, 
-		int32_t (*f) (int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t)) override final
+		int32_t (*f) (int32_t, int32_t, int32_t, int32_t, int32_t, int32_t)) override final
 	{
 		module.link_optional(module_name, fn_name, f);
 	}

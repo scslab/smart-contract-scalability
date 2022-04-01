@@ -14,8 +14,7 @@ BuiltinFnWrappers::builtin_scs_return(int32_t offset, int32_t len)
 int32_t 
 BuiltinFnWrappers::builtin_scs_invoke(
 	int32_t addr_offset, 
-	int32_t methodname_offset, 
-	int32_t methodname_len, 
+	int32_t methodname, 
 	int32_t calldata_offset, 
 	int32_t calldata_len)
 {
@@ -26,7 +25,7 @@ BuiltinFnWrappers::builtin_scs_invoke(
 	MethodInvocation invocation
 	{
 		.addr = runtime.template load_from_memory_to_const_size_buf<Address>(addr_offset),
-		.method_name = runtime.template load_from_memory<std::string>(methodname_offset, methodname_len),
+		.method_name = static_cast<uint32_t>(methodname),
 		.calldata = runtime.template load_from_memory<std::vector<uint8_t>>(calldata_offset, calldata_len)
 	};
 
@@ -39,8 +38,7 @@ BuiltinFnWrappers::builtin_scs_invoke(
 int32_t 
 BuiltinFnWrappers::builtin_scs_invoke_with_return(
 	int32_t addr_offset, 
-	int32_t methodname_offset, 
-	int32_t methodname_len, 
+	int32_t methodname, 
 	int32_t calldata_offset, 
 	int32_t calldata_len,
 	int32_t return_offset,
@@ -53,7 +51,7 @@ BuiltinFnWrappers::builtin_scs_invoke_with_return(
 	MethodInvocation invocation
 	{
 		.addr = runtime.template load_from_memory_to_const_size_buf<Address>(addr_offset),
-		.method_name = runtime.template load_from_memory<std::string>(methodname_offset, methodname_len),
+		.method_name = static_cast<uint32_t>(methodname),
 		.calldata = runtime.template load_from_memory<std::vector<uint8_t>>(calldata_offset, calldata_len)
 	};
 
