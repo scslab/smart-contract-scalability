@@ -74,14 +74,21 @@ public:
 		int32_t (*f) (int32_t, int32_t, int32_t, int32_t, int32_t)) = 0;
 	virtual void link_fn(
 		const char* module_name, const char* fn_name, 
-		void (*f) (int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t)) = 0;
+		int32_t (*f) (int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t)) = 0;
 
 	template<typename ArrayLike>
 	ArrayLike load_from_memory(int32_t offset, int32_t len)
 	{
 		auto [mem, mlen] = get_memory();
 		if (mlen < offset + len) {
-			throw WasmError("OOB Mem Access");
+			// did you forget (memory 1 1) in the .wat file
+			throw WasmError(
+				"OOB Mem Access: mlen = " 
+				+ std::to_string(mlen) 
+				+ " offset = " 
+				+ std::to_string(offset) 
+				+ " len = " 
+				+ std::to_string(len));
 		}
 
 		if (offset < 0 || len < 0) {
@@ -124,8 +131,14 @@ public:
 
 		auto [mem, mlen] = get_memory();
 
-		if (mlen > offset + array.size()) {
-			throw WasmError("OOB Mem Write");
+		if (mlen < offset + array.size()) {
+			throw WasmError(
+				"OOB Mem Write: mlen = " 
+				+ std::to_string(mlen) 
+				+ " offset = " 
+				+ std::to_string(offset) 
+				+ " max_len = " 
+				+ std::to_string(max_len));
 		}
 
 		memcpy(mem + offset, array.data(), array.size());
@@ -164,7 +177,7 @@ public:
 	void link_fn(
 		const char* module_name, 
 		const char* fn_name, 
-		void (*f) (int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t)) override final
+		int32_t (*f) (int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t)) override final
 	{
 		module.link_optional(module_name, fn_name, f);
 	}

@@ -18,7 +18,9 @@ struct TransactionContext {
 
 	std::vector<MethodInvocation> invocation_stack;
 	std::vector<uint8_t> return_buf;
-	std::vector<WasmRuntime> runtime_stack;
+	std::vector<WasmRuntime*> runtime_stack;
+
+	std::vector<std::vector<uint8_t>> logs;
 
 	TransactionContext(uint64_t gas_limit, Address const& src)
 		: gas_limit(gas_limit)

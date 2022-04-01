@@ -23,6 +23,21 @@ struct BuiltinFnWrappers
 		int32_t methodname_len, 
 		int32_t calldata_offset, 
 		int32_t calldata_len);
+
+	static int32_t
+	builtin_scs_invoke_with_return(
+		int32_t addr_offset, 
+		int32_t methodname_offset, 
+		int32_t methodname_len, 
+		int32_t calldata_offset, 
+		int32_t calldata_len,
+		int32_t return_offset,
+		int32_t return_len);
+
+	static void
+	builtin_scs_log(
+		int32_t log_offset,
+		int32_t log_len);
 };
 
 class ExecutionContext {
@@ -54,10 +69,7 @@ class ExecutionContext {
 	// should only be used by builtin fns
 	int32_t invoke_subroutine(MethodInvocation invocation);
 
-	TransactionContext& get_transaction_context()
-	{
-		return *tx_context;
-	}
+	TransactionContext& get_transaction_context();
 
 public:
 
@@ -65,6 +77,9 @@ public:
 	execute(MethodInvocation const& invocation, uint64_t gas_limit);
 
 	void reset();
+
+	std::vector<std::vector<uint8_t>> const&
+	get_logs();
 };
 
 class ThreadlocalExecutionContext {

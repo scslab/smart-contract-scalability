@@ -8,7 +8,7 @@ BuiltinFnWrappers::builtin_scs_return(int32_t offset, int32_t len)
 {
 	auto& tx_ctx = ThreadlocalExecutionContext::get_ctx().get_transaction_context();
 
-	tx_ctx.return_buf = tx_ctx.runtime_stack.back().template load_from_memory<std::vector<uint8_t>>(offset, len);
+	tx_ctx.return_buf = tx_ctx.runtime_stack.back()->template load_from_memory<std::vector<uint8_t>>(offset, len);
 }
 
 int32_t 
@@ -21,7 +21,7 @@ BuiltinFnWrappers::builtin_scs_invoke(
 {
 	auto& tx_ctx = ThreadlocalExecutionContext::get_ctx().get_transaction_context();
 
-	auto& runtime = tx_ctx.runtime_stack.back();
+	auto& runtime = *tx_ctx.runtime_stack.back();
 
 	MethodInvocation invocation
 	{
@@ -34,6 +34,50 @@ BuiltinFnWrappers::builtin_scs_invoke(
 	tx_ctx.return_buf.clear();
 
 	return res;
+}
+
+int32_t 
+BuiltinFnWrappers::builtin_scs_invoke_with_return(
+	int32_t addr_offset, 
+	int32_t methodname_offset, 
+	int32_t methodname_len, 
+	int32_t calldata_offset, 
+	int32_t calldata_len,
+	int32_t return_offset,
+	int32_t return_len)
+{
+	auto& tx_ctx = ThreadlocalExecutionContext::get_ctx().get_transaction_context();
+
+	auto& runtime = *tx_ctx.runtime_stack.back();
+
+	MethodInvocation invocation
+	{
+		.addr = runtime.template load_from_memory_to_const_size_buf<Address>(addr_offset),
+		.method_name = runtime.template load_from_memory<std::string>(methodname_offset, methodname_len),
+		.calldata = runtime.template load_from_memory<std::vector<uint8_t>>(calldata_offset, calldata_len)
+	};
+
+	int32_t res = ThreadlocalExecutionContext::get_ctx().invoke_subroutine(invocation);
+
+	runtime.write_to_memory(tx_ctx.return_buf, return_offset, return_len);
+
+	tx_ctx.return_buf.clear();
+
+	return res;
+}
+
+void
+BuiltinFnWrappers::builtin_scs_log(
+	int32_t log_offset,
+	int32_t log_len)
+{
+	auto& tx_ctx = ThreadlocalExecutionContext::get_ctx().get_transaction_context();
+
+	auto& runtime = *tx_ctx.runtime_stack.back();
+
+	auto log = runtime.template load_from_memory<std::vector<uint8_t>>(log_offset, log_len);
+
+	tx_ctx.logs.push_back(log);
 }
 
 void 
@@ -51,31 +95,15 @@ ExecutionContext::link_builtin_fns(WasmRuntime& runtime)
 		"return",
 		&BuiltinFnWrappers::builtin_scs_return);
 
-	/*runtime.link_fn(
+	runtime.link_fn(
 		"scs", 
 		"invoke", 
-		[this, &runtime] (
-			uint32_t addr_offset, 
-			uint32_t methodname_offset, 
-			uint32_t methodname_len, 
-			uint32_t calldata_offset, 
-			uint32_t calldata_len,
-			uint32_t return_offset,
-			uint32_t return_len)
-		-> void
-	{
-		TransactionInvocation invocation
-		{
-			.invokedAddress = runtime.template load_from_memory<Address>(addr_offset, 32),
-			.methodName = runtime.template load_from_memory<std::string>(methodname_offset, methodname_len),
-			.calldata = runtime.template load_from_memory<uint8_t>(calldata_offset, calldata_len)
-		};
+		&BuiltinFnWrappers::builtin_scs_invoke_with_return);
 
-		invoke_subroutine(invocation);
-
-		runtime.write_to_memory(tx_context.return_buf, return_offset, return_len);
-		tx_context.return_buf.clear();
-	});*/
+	runtime.link_fn(
+		"scs",
+		"log",
+		&BuiltinFnWrappers::builtin_scs_log);
 }
 
 //returns status code/return value of invoked subroutine
@@ -91,7 +119,14 @@ ExecutionContext::invoke_subroutine(MethodInvocation invocation)
 		link_builtin_fns(*active_runtimes.at(invocation.addr));
 	}
 
-	int32_t res = active_runtimes.at(invocation.addr)->invoke(invocation);
+	auto* runtime = active_runtimes.at(invocation.addr).get();
+
+	tx_context -> runtime_stack.push_back(runtime);
+
+	int32_t res = runtime->invoke(invocation);
+
+	tx_context -> runtime_stack.pop_back();
+
 	tx_context->invocation_stack.pop_back();
 	return res;
 }
@@ -109,7 +144,10 @@ ExecutionContext::execute(MethodInvocation const& invocation, uint64_t gas_limit
 
 	try
 	{
-		invoke_subroutine(invocation);
+		int32_t res = invoke_subroutine(invocation);
+		if (res < 0) {
+			throw std::runtime_error("contract returned error");
+		}
 	} 
 	catch(const std::exception& e)
 	{
@@ -128,6 +166,27 @@ ExecutionContext::reset()
 	//tx_state_delta.clear();
 	tx_context.reset();
 	executed = false;
+}
+
+TransactionContext& 
+ExecutionContext::get_transaction_context()
+{
+
+	if (!executed)
+	{
+		throw std::runtime_error("can't get ctx before execution");
+	}
+	return *tx_context;
+}
+
+std::vector<std::vector<uint8_t>> const&
+ExecutionContext::get_logs()
+{
+	if (!executed) 
+	{
+		throw std::runtime_error("can't get logs before execution");
+	}
+	return tx_context -> logs;
 }
 
 ExecutionContext&  
