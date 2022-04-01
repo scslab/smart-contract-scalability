@@ -11,7 +11,7 @@ BuiltinFnWrappers::builtin_scs_return(int32_t offset, int32_t len)
 	tx_ctx.return_buf = tx_ctx.runtime_stack.back().template load_from_memory<std::vector<uint8_t>>(offset, len);
 }
 
-void 
+int32_t 
 BuiltinFnWrappers::builtin_scs_invoke(
 	int32_t addr_offset, 
 	int32_t methodname_offset, 
@@ -25,14 +25,15 @@ BuiltinFnWrappers::builtin_scs_invoke(
 
 	MethodInvocation invocation
 	{
-
 		.addr = runtime.template load_from_memory_to_const_size_buf<Address>(addr_offset),
-		.method_name = runtime.template load_from_memory<std::vector<uint8_t>>(methodname_offset, methodname_len),
+		.method_name = runtime.template load_from_memory<std::string>(methodname_offset, methodname_len),
 		.calldata = runtime.template load_from_memory<std::vector<uint8_t>>(calldata_offset, calldata_len)
 	};
 
-	ThreadlocalExecutionContext::get_ctx().invoke_subroutine(invocation);
+	int32_t res = ThreadlocalExecutionContext::get_ctx().invoke_subroutine(invocation);
 	tx_ctx.return_buf.clear();
+
+	return res;
 }
 
 void 
@@ -77,7 +78,8 @@ ExecutionContext::link_builtin_fns(WasmRuntime& runtime)
 	});*/
 }
 
-void 
+//returns status code/return value of invoked subroutine
+int32_t 
 ExecutionContext::invoke_subroutine(MethodInvocation invocation)
 {
 	tx_context->invocation_stack.push_back(invocation);
@@ -89,12 +91,13 @@ ExecutionContext::invoke_subroutine(MethodInvocation invocation)
 		link_builtin_fns(*active_runtimes.at(invocation.addr));
 	}
 
-	active_runtimes.at(invocation.addr)->invoke(invocation);
+	int32_t res = active_runtimes.at(invocation.addr)->invoke(invocation);
 	tx_context->invocation_stack.pop_back();
+	return res;
 }
 
 TransactionStatus
-ExecutionContext::execute(MethodInvocation const& invocation, uint64_t gas_limit, Address const& src)
+ExecutionContext::execute(MethodInvocation const& invocation, uint64_t gas_limit)
 {
 	if (executed)
 	{
@@ -102,7 +105,7 @@ ExecutionContext::execute(MethodInvocation const& invocation, uint64_t gas_limit
 	}
 	executed = true;
 
-	tx_context = std::make_unique<TransactionContext>(gas_limit, src);
+	tx_context = std::make_unique<TransactionContext>(gas_limit, invocation.addr);
 
 	try
 	{

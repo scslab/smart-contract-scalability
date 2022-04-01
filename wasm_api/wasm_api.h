@@ -64,14 +64,14 @@ protected:
 
 public:
 
-	virtual TransactionStatus invoke(MethodInvocation const& invocation) = 0;
+	virtual int32_t invoke(MethodInvocation const& invocation) = 0;
 
 	virtual void link_fn(
 		const char* module_name, const char* fn_name, 
 		void (*f) (int32_t, int32_t)) = 0;
 	virtual void link_fn(
 		const char* module_name, const char* fn_name, 
-		void (*f) (int32_t, int32_t, int32_t, int32_t, int32_t)) = 0;
+		int32_t (*f) (int32_t, int32_t, int32_t, int32_t, int32_t)) = 0;
 	virtual void link_fn(
 		const char* module_name, const char* fn_name, 
 		void (*f) (int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t)) = 0;
@@ -157,7 +157,7 @@ public:
 	void link_fn(
 		const char* module_name, 
 		const char* fn_name, 
-		void (*f)(int32_t, int32_t, int32_t, int32_t, int32_t)) override final
+		int32_t (*f)(int32_t, int32_t, int32_t, int32_t, int32_t)) override final
 	{
 		module.link_optional(module_name, fn_name, f);
 	}
@@ -169,7 +169,7 @@ public:
 		module.link_optional(module_name, fn_name, f);
 	}
 
-	TransactionStatus 
+	int32_t 
 	invoke(MethodInvocation const& invocation) override final;
 };
 

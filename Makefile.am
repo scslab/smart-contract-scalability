@@ -51,7 +51,8 @@ SRCS = \
 	$(WASM3_SRCS)
 
 TEST_SRCS = \
-	wasm_api/tests/wasm3_test.h
+	wasm_api/tests/wasm3_test.h \
+	wasm_api/tests/wasm_api_test.h
 
 MAIN_CCS = \
 	main/simple.cc
@@ -64,8 +65,8 @@ TEST_WASMS = ${TEST_WATS:.wat=.wasm}
 .wat.wasm:
 	wat2wasm -o $@ $<
 
-AM_CPPFLAGS = $(xdrpp_CFLAGS) $(libsodium_CFLAGS) $(LIBFYAML_CFLAGS) $(tbb_CFLAGS) 
-LDADD = $(xdrpp_LIBS) $(libsodium_LIBS) $(LIBFYAML_LIBS) $(tbb_LIBS)
+AM_CPPFLAGS = $(xdrpp_CFLAGS) $(libsodium_CFLAGS) $(LIBFYAML_CFLAGS) $(tbb_CFLAGS) $(merkle_trie_toolkit_CFLAGS)
+LDADD = $(xdrpp_LIBS) $(libsodium_LIBS) $(LIBFYAML_LIBS) $(tbb_LIBS) $(merkle_trie_toolkit_LIBS)
 
 $(SRCS:.cc=.o) : $(XH_FILES)
 $(MAIN_CCS:.cc=.o) : $(XH_FILES)

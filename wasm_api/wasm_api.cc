@@ -17,10 +17,14 @@ Wasm3_WasmContext::new_runtime_instance(Address const& contract_address)
 	return std::make_unique<Wasm3_WasmRuntime>(std::move(runtime), std::move(module), *this);
 }
 
-TransactionStatus 
+int32_t  
 Wasm3_WasmRuntime::invoke(MethodInvocation const& invocation)
 {
-	throw std::runtime_error("unimpl");
+	auto fn = runtime.find_function(invocation.method_name.c_str());
+
+	write_to_memory(invocation.calldata, 0, invocation.calldata.size());
+
+	return fn.template call<int32_t>(invocation.calldata.size());
 }
 
 

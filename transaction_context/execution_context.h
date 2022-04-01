@@ -16,7 +16,7 @@ struct BuiltinFnWrappers
 	static void 
 	builtin_scs_return(int32_t offset, int32_t len);
 
-	static void
+	static int32_t
 	builtin_scs_invoke(
 		int32_t addr_offset, 
 		int32_t methodname_offset, 
@@ -52,7 +52,7 @@ class ExecutionContext {
 	friend class BuiltinFnWrappers;
 
 	// should only be used by builtin fns
-	void invoke_subroutine(MethodInvocation invocation);
+	int32_t invoke_subroutine(MethodInvocation invocation);
 
 	TransactionContext& get_transaction_context()
 	{
@@ -62,7 +62,7 @@ class ExecutionContext {
 public:
 
 	TransactionStatus
-	execute(MethodInvocation const& invocation, uint64_t gas_limit, Address const& src);
+	execute(MethodInvocation const& invocation, uint64_t gas_limit);
 
 	void reset();
 };
