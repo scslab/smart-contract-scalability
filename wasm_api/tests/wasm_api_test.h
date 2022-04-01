@@ -25,7 +25,7 @@ public:
 			.calldata = {}
 		};
 
-		std::string expect = "pub01EFCDAB";
+		std::string expect = "01EFCDAB";
 
 		auto res = invocation.get_invocable_methodname();
 
@@ -41,7 +41,7 @@ public:
 			.calldata = {}
 		};
 
-		std::string expect = "pub00000000";
+		std::string expect = "00000000";
 
 		auto res = invocation.get_invocable_methodname();
 

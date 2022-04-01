@@ -3,7 +3,7 @@
   (memory 1 1)
 
   ;; call_log
-  (func (export "pub00000000") (param $calldata_len i32) (result i32)
+  (func (export "00000000") (param $calldata_len i32) (result i32)
 
     ;; log 8 bytes
     i32.const 0
