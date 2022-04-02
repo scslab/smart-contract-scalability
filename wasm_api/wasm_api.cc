@@ -26,9 +26,9 @@ Wasm3_WasmRuntime::invoke(MethodInvocation const& invocation)
 
 	auto fn = runtime.find_function(invocation.get_invocable_methodname().c_str());
 
-	write_to_memory(invocation.calldata, 0, invocation.calldata.size());
-
-	return fn.template call<int32_t>(invocation.calldata.size());
+	return fn.template call<int32_t>();
+	//write_to_memory(invocation.calldata, 0, invocation.calldata.size());
+	//return fn.template call<int32_t>(invocation.calldata.size());
 }
 
 

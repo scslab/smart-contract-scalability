@@ -1,5 +1,7 @@
 #include <cxxtest/TestSuite.h>
 
+#include "debug/debug_macros.h"
+
 #include "transaction_context/execution_context.h"
 
 #include "wasm_api/wasm_api.h"
@@ -18,6 +20,7 @@ public:
 
 	void test_methodname()
 	{
+		TEST_START();
 		MethodInvocation invocation
 		{
 			.addr = Address{},
@@ -34,6 +37,7 @@ public:
 
 	void test_methodname_zeroes()
 	{
+		TEST_START();
 		MethodInvocation invocation
 		{
 			.addr = Address{},
@@ -50,6 +54,7 @@ public:
 
 	void test_execute_simple()
 	{
+		TEST_START();
 		ContractDB db;
 
 		std::shared_ptr<Contract> c = std::make_shared<Contract>(load_wasm_from_file("wasm_api/tests/wat/test_call_simple.wasm"));
@@ -77,6 +82,7 @@ public:
 
 	void test_log_zeroed_array()
 	{
+		TEST_START();
 		ContractDB db;
 
 		std::shared_ptr<Contract> c = std::make_shared<Contract>(load_wasm_from_file("wasm_api/tests/wat/test_log.wasm"));

@@ -11,7 +11,7 @@
   (memory 1 1)
 
   ;; input is address of target to call
-  (func (export "FF000000") (param $calldata_len i32) (result i32)
+  (func (export "FF000000") (result i32)
 
     (i32.store (i32.const 255) (i32.const 0xFF))
 

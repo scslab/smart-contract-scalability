@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mtt/trie/debug_macros.h"
+#include "mtt/trie/debug_levels.h"
 
 #define CONTRACT_DEBUG DEBUG_LEVEL_INFO
 
@@ -19,3 +19,11 @@
 #define CONTRACT_INFO(s, ...) (void)0
 #define CONTRACT_INFO_F(s) (void)0
 #endif
+
+#ifndef TEST_START_ON
+	#if CONTRACT_DEBUG <= DEBUG_LEVEL_INFO
+		#define TEST_START_ON 1
+	#endif
+#endif
+
+#include "mtt/trie/debug_macros.h"

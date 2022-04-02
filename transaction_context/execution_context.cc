@@ -13,6 +13,17 @@ BuiltinFnWrappers::builtin_scs_return(int32_t offset, int32_t len)
 	tx_ctx.return_buf = tx_ctx.runtime_stack.back()->template load_from_memory<std::vector<uint8_t>>(offset, len);
 }
 
+void 
+BuiltinFnWrappers::builtin_scs_get_calldata(int32_t offset, int32_t len)
+{
+	auto& tx_ctx = ThreadlocalExecutionContext::get_ctx().get_transaction_context();
+
+	auto& calldata = tx_ctx.invocation_stack.back().calldata;
+
+	tx_ctx.runtime_stack.back() -> write_to_memory(calldata, offset, len);
+}
+
+
 int32_t 
 BuiltinFnWrappers::builtin_scs_invoke_no_return(
 	int32_t addr_offset, 
@@ -94,6 +105,11 @@ ExecutionContext::link_builtin_fns(WasmRuntime& runtime)
 		"scs",
 		"return",
 		&BuiltinFnWrappers::builtin_scs_return);
+
+	runtime.link_fn(
+		"scs",
+		"get_calldata",
+		&BuiltinFnWrappers::builtin_scs_get_calldata);
 
 	runtime.link_fn(
 		"scs", 
