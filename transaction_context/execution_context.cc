@@ -118,7 +118,7 @@ ExecutionContext::link_builtin_fns(WasmRuntime& runtime)
 
 	runtime.link_fn(
 		"scs",
-		"log",
+		"host_log",
 		&BuiltinFnWrappers::builtin_scs_log);
 }
 

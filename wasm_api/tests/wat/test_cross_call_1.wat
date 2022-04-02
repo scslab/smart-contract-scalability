@@ -11,7 +11,7 @@
 
   (import "scs" "get_calldata" (func $get_calldata (param i32 i32)))
 
-  (import "scs" "log" (func $log (param i32) (param i32)))
+  (import "scs" "host_log" (func $log (param i32) (param i32)))
 
   (memory 1 1)
 

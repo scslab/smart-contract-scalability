@@ -75,7 +75,7 @@ LDADD = $(xdrpp_LIBS) $(libsodium_LIBS) $(LIBFYAML_LIBS) $(tbb_LIBS) $(merkle_tr
 $(SRCS:.cc=.o) : $(XH_FILES)
 $(MAIN_CCS:.cc=.o) : $(XH_FILES)
 
-test_runner.cc : $(TEST_SRCS) $(MTT_TESTS) $(XH_FILES)
+test_runner.cc : $(TEST_SRCS) $(MTT_TESTS) $(XH_FILES) $(TEST_WASMS)
 	cxxtestgen --error-printer -o test_runner.cc $(TEST_SRCS) $(MTT_TESTS)
 
 test_runner.o : CXXFLAGS += -I./merkle_trie_toolkit
@@ -85,10 +85,11 @@ bin_PROGRAMS = \
 	simple \
 	test
 
+#test: $(TEST_WASMS) $(TEST_SRCS) $(SRCS) test_runner.cc
+
 simple_SOURCES = $(SRCS) main/simple.cc
 test_SOURCES = $(SRCS) test_runner.cc
 
-test: $(TEST_WASMS)
 
 
 
