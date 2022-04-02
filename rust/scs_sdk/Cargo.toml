@@ -1,0 +1,10 @@
+[package]
+name = "scs_sdk"
+version = "0.0.1"
+authors = ["Geoff Ramseyer"]
+license = "MIT OR Apache-2.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+

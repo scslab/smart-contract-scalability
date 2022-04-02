@@ -12,6 +12,7 @@ std::string
 MethodInvocation::get_invocable_methodname() const
 {
 	std::stringstream ss;
+	ss << "pub";
 	ss << std::hex << std::uppercase << std::setw(2) << std::setfill('0');
 	uint8_t buf[4];
 
