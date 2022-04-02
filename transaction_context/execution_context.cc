@@ -1,5 +1,7 @@
 #include "transaction_context/execution_context.h"
 
+#include "debug/debug_macros.h"
+
 namespace scs
 {
 
@@ -12,7 +14,7 @@ BuiltinFnWrappers::builtin_scs_return(int32_t offset, int32_t len)
 }
 
 int32_t 
-BuiltinFnWrappers::builtin_scs_invoke(
+BuiltinFnWrappers::builtin_scs_invoke_no_return(
 	int32_t addr_offset, 
 	int32_t methodname, 
 	int32_t calldata_offset, 
@@ -86,7 +88,7 @@ ExecutionContext::link_builtin_fns(WasmRuntime& runtime)
 	runtime.link_fn(
 		"scs", 
 		"invoke", 
-		&BuiltinFnWrappers::builtin_scs_invoke);
+		&BuiltinFnWrappers::builtin_scs_invoke_no_return);
 
 	runtime.link_fn(
 		"scs",
@@ -95,7 +97,7 @@ ExecutionContext::link_builtin_fns(WasmRuntime& runtime)
 
 	runtime.link_fn(
 		"scs", 
-		"invoke", 
+		"invoke_return", 
 		&BuiltinFnWrappers::builtin_scs_invoke_with_return);
 
 	runtime.link_fn(
@@ -113,6 +115,7 @@ ExecutionContext::invoke_subroutine(MethodInvocation invocation)
 	auto iter = active_runtimes.find(invocation.addr);
 	if (iter == active_runtimes.end())
 	{
+		CONTRACT_INFO("creating new runtime for contract at %s", debug::array_to_str(invocation.addr).c_str());
 		active_runtimes.emplace(invocation.addr, wasm_context->new_runtime_instance(invocation.addr));
 		link_builtin_fns(*active_runtimes.at(invocation.addr));
 	}

@@ -4,7 +4,7 @@
 
 #include "xdr/types.h"
 
-#include "utils/serialize_endian.h"
+#include "mtt/utils/serialize_endian.h"
 
 namespace scs
 {

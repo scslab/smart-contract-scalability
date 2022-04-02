@@ -152,4 +152,48 @@ public:
 			TS_ASSERT_EQUALS(logs[0], calldata);
 		}
 	}
+
+	void test_cross_call()
+	{
+		ContractDB db;
+
+		std::shared_ptr<Contract> c = std::make_shared<Contract>(load_wasm_from_file("wasm_api/tests/wat/test_cross_call_1.wasm"));
+		Address addr0 = address_from_uint64(0);
+
+		TS_ASSERT(db.register_contract(addr0, c));
+
+		c = std::make_shared<Contract>(load_wasm_from_file("wasm_api/tests/wat/test_cross_call_2.wasm"));
+		Address addr1 = address_from_uint64(1);
+
+		TS_ASSERT(db.register_contract(addr1, c));
+
+		std::unique_ptr<WasmContext> p = std::unique_ptr<WasmContext>(new Wasm3_WasmContext(db));
+		ThreadlocalExecutionContext::make_ctx(std::move(p));
+		auto& exec_ctx = ThreadlocalExecutionContext::get_ctx();
+
+		MethodInvocation invocation {
+			.addr = addr0,
+			.method_name = 0, // call_log
+			.calldata = {addr1.begin(), addr1.end()}
+		};
+
+		TS_ASSERT_EQUALS(
+			TransactionStatus::SUCCESS,
+			exec_ctx.execute(invocation, UINT64_MAX));
+		
+		auto const& logs = exec_ctx.get_logs();
+
+		TS_ASSERT_EQUALS(logs.size(), 2);
+		
+		//avoids a test segfault
+		if (logs.size() >= 2)
+		{
+			TS_ASSERT_EQUALS(logs[0].size(), 4);
+			TS_ASSERT_EQUALS(logs[0], std::vector<uint8_t>({255, 0, 0, 0}));
+
+			TS_ASSERT_EQUALS(logs[1].size(), 4);
+			TS_ASSERT_EQUALS(logs[1], std::vector<uint8_t>({55, 0, 0, 0}));
+		}
+
+	}
 };

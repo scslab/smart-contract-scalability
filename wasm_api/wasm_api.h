@@ -4,7 +4,7 @@
 
 #include "transaction_context/method_invocation.h"
 
-#include "utils/serialize_endian.h"
+#include "mtt/utils/serialize_endian.h"
 
 #include "wasm_api/wasm3.h"
 

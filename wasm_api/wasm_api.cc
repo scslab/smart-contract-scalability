@@ -1,5 +1,7 @@
 #include "wasm_api/wasm_api.h"
 
+#include "debug/debug_macros.h"
+
 namespace scs
 {
 
@@ -20,6 +22,8 @@ Wasm3_WasmContext::new_runtime_instance(Address const& contract_address)
 int32_t  
 Wasm3_WasmRuntime::invoke(MethodInvocation const& invocation)
 {
+	CONTRACT_INFO("Call: Address %s Method %s", debug::array_to_str(invocation.addr).c_str(), invocation.get_invocable_methodname().c_str());
+
 	auto fn = runtime.find_function(invocation.get_invocable_methodname().c_str());
 
 	write_to_memory(invocation.calldata, 0, invocation.calldata.size());
