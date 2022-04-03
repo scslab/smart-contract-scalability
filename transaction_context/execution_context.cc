@@ -24,32 +24,8 @@ BuiltinFnWrappers::builtin_scs_get_calldata(int32_t offset, int32_t len)
 }
 
 
-int32_t 
-BuiltinFnWrappers::builtin_scs_invoke_no_return(
-	int32_t addr_offset, 
-	int32_t methodname, 
-	int32_t calldata_offset, 
-	int32_t calldata_len)
-{
-	auto& tx_ctx = ThreadlocalExecutionContext::get_ctx().get_transaction_context();
-
-	auto& runtime = *tx_ctx.runtime_stack.back();
-
-	MethodInvocation invocation
-	{
-		.addr = runtime.template load_from_memory_to_const_size_buf<Address>(addr_offset),
-		.method_name = static_cast<uint32_t>(methodname),
-		.calldata = runtime.template load_from_memory<std::vector<uint8_t>>(calldata_offset, calldata_len)
-	};
-
-	int32_t res = ThreadlocalExecutionContext::get_ctx().invoke_subroutine(invocation);
-	tx_ctx.return_buf.clear();
-
-	return res;
-}
-
-int32_t 
-BuiltinFnWrappers::builtin_scs_invoke_with_return(
+void 
+BuiltinFnWrappers::builtin_scs_invoke(
 	int32_t addr_offset, 
 	int32_t methodname, 
 	int32_t calldata_offset, 
@@ -68,13 +44,13 @@ BuiltinFnWrappers::builtin_scs_invoke_with_return(
 		.calldata = runtime.template load_from_memory<std::vector<uint8_t>>(calldata_offset, calldata_len)
 	};
 
-	int32_t res = ThreadlocalExecutionContext::get_ctx().invoke_subroutine(invocation);
+	if (return_len > 0)
+	{
+		runtime.write_to_memory(tx_ctx.return_buf, return_offset, return_len);
+	}
 
-	runtime.write_to_memory(tx_ctx.return_buf, return_offset, return_len);
-
+	ThreadlocalExecutionContext::get_ctx().invoke_subroutine(invocation);
 	tx_ctx.return_buf.clear();
-
-	return res;
 }
 
 void
@@ -99,7 +75,7 @@ ExecutionContext::link_builtin_fns(WasmRuntime& runtime)
 	runtime.link_fn(
 		"scs", 
 		"invoke", 
-		&BuiltinFnWrappers::builtin_scs_invoke_no_return);
+		&BuiltinFnWrappers::builtin_scs_invoke);
 
 	runtime.link_fn(
 		"scs",
@@ -112,18 +88,12 @@ ExecutionContext::link_builtin_fns(WasmRuntime& runtime)
 		&BuiltinFnWrappers::builtin_scs_get_calldata);
 
 	runtime.link_fn(
-		"scs", 
-		"invoke_return", 
-		&BuiltinFnWrappers::builtin_scs_invoke_with_return);
-
-	runtime.link_fn(
 		"scs",
 		"host_log",
 		&BuiltinFnWrappers::builtin_scs_log);
 }
 
-//returns status code/return value of invoked subroutine
-int32_t 
+void 
 ExecutionContext::invoke_subroutine(MethodInvocation invocation)
 {
 	tx_context->invocation_stack.push_back(invocation);
@@ -140,7 +110,7 @@ ExecutionContext::invoke_subroutine(MethodInvocation invocation)
 
 	tx_context -> runtime_stack.push_back(runtime);
 
-	int32_t res = runtime->invoke(invocation);
+	runtime->invoke(invocation);
 
 	tx_context -> runtime_stack.pop_back();
 

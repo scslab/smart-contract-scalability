@@ -16,7 +16,7 @@
   (memory 1 1)
 
   ;; input is address of target to call
-  (func (export "00000000") (result i32)
+  (func (export "pub00000000") (result i32)
 
     (local $callres i32)
 

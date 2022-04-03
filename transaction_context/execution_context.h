@@ -19,15 +19,8 @@ struct BuiltinFnWrappers
 	static void
 	builtin_scs_get_calldata(int32_t offset, int32_t len);
 
-	static int32_t
-	builtin_scs_invoke_no_return(
-		int32_t addr_offset, 
-		int32_t methodname, 
-		int32_t calldata_offset, 
-		int32_t calldata_len);
-
-	static int32_t
-	builtin_scs_invoke_with_return(
+	static void
+	builtin_scs_invoke(
 		int32_t addr_offset, 
 		int32_t methodname, 
 		int32_t calldata_offset, 

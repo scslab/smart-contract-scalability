@@ -66,17 +66,17 @@ protected:
 
 public:
 
-	virtual int32_t invoke(MethodInvocation const& invocation) = 0;
+	virtual void invoke(MethodInvocation const& invocation) = 0;
 
 	virtual void link_fn(
 		const char* module_name, const char* fn_name, 
 		void (*f) (int32_t, int32_t)) = 0;
 	virtual void link_fn(
 		const char* module_name, const char* fn_name, 
-		int32_t (*f) (int32_t, int32_t, int32_t, int32_t)) = 0;
+		void (*f) (int32_t, int32_t, int32_t, int32_t)) = 0;
 	virtual void link_fn(
 		const char* module_name, const char* fn_name, 
-		int32_t (*f) (int32_t, int32_t, int32_t, int32_t, int32_t, int32_t)) = 0;
+		void (*f) (int32_t, int32_t, int32_t, int32_t, int32_t, int32_t)) = 0;
 
 	template<typename ArrayLike>
 	ArrayLike load_from_memory(int32_t offset, int32_t len)
@@ -189,7 +189,7 @@ public:
 		module.link_optional(module_name, fn_name, f);
 	}
 
-	int32_t 
+	void 
 	invoke(MethodInvocation const& invocation) override final;
 };
 

@@ -19,14 +19,14 @@ Wasm3_WasmContext::new_runtime_instance(Address const& contract_address)
 	return std::make_unique<Wasm3_WasmRuntime>(std::move(runtime), std::move(module), *this);
 }
 
-int32_t  
+void  
 Wasm3_WasmRuntime::invoke(MethodInvocation const& invocation)
 {
 	CONTRACT_INFO("Call: Address %s Method %s", debug::array_to_str(invocation.addr).c_str(), invocation.get_invocable_methodname().c_str());
 
 	auto fn = runtime.find_function(invocation.get_invocable_methodname().c_str());
 
-	return fn.template call<int32_t>();
+	fn.template call<void>(invocation.calldata.size());
 	//write_to_memory(invocation.calldata, 0, invocation.calldata.size());
 	//return fn.template call<int32_t>(invocation.calldata.size());
 }

@@ -5,6 +5,6 @@
     local.get $rhs
     i32.add)
 
-  (func (export "01000000") (result i32)
+  (func (export "pub01000000") (result i32)
     i32.const 0)
 )
