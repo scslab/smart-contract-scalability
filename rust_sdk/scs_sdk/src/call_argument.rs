@@ -97,6 +97,20 @@ impl <'a> ContractProxy<'a>
 		out
 	}
 
+	pub fn call_noret<T, const TSIZE : usize>(&self, methodname : i32, arg : &BackedType<T, TSIZE>)
+	{
+		unsafe
+		{
+			builtin_fns::invoke(
+				self.addr.get_ptr() as i32, 
+				methodname, 
+				arg.get_backing_ptr() as i32, 
+				arg.get_backing_len() as i32,
+				0,
+				0);
+		}
+	}
+
 	pub fn call_noargs<R, const RSIZE: usize>(&self, methodname : i32) -> BackedType<R, RSIZE>
 	{
 		let out = BackedType::<R, RSIZE>::new();
@@ -115,6 +129,20 @@ impl <'a> ContractProxy<'a>
 				out.get_backing_len() as i32);
 		}
 		out
+	}
+
+	pub fn call_noargs_noret(&self, methodname : i32)
+	{
+		unsafe
+		{
+			builtin_fns::invoke(
+				self.addr.get_ptr() as i32, 
+				methodname, 
+				0,
+				0,
+				0,
+				0);
+		}
 	}
 }
 

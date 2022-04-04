@@ -250,7 +250,7 @@ pub fn scs_interface_method(attr: TokenStream, item: TokenStream) -> TokenStream
             {
                 pub fn #original_fn_name (&self, arg : &#backed_type_in )
                 {
-                    let _out : #backed_type_ret = self.proxy.call(method_id!(#fn_name), &arg);
+                    self.proxy.call_noret(method_id!(#fn_name), &arg);
                 }
             }
 
@@ -280,7 +280,7 @@ pub fn scs_interface_method(attr: TokenStream, item: TokenStream) -> TokenStream
             {
                 pub fn #original_fn_name (&self)
                 {
-                    let _out : #backed_type_ret = self.proxy.call_noargs(method_id!(#fn_name));
+                    self.proxy.call_noargs_noret(method_id!(#fn_name));
                 }
             }
         }
