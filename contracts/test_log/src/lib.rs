@@ -1,7 +1,9 @@
 #![no_std]
 
 use scs_sdk as sdk;
-use scs_callable_attr::{scs_public_function, method_id};
+use scs_callable_attr::{scs_public_function, method_id, scs_interface_method};
+
+use erc20;
 
 #[scs_public_function]
 pub fn test_log(calldata_len : i32)
@@ -40,4 +42,18 @@ pub fn try_fancy_call(calldata_len : i32)
 	sdk::log_generic_reprc(&arg.get().val);
 	sdk::log_generic_reprc(&arg.get().long_val);
 }
+
+#[scs_public_function]
+pub fn try_call_erc20(calldata_len : i32)
+{
+	let arg = sdk::call_argument::BackedType::<FancyCall, {core::mem::size_of::<FancyCall>()}>::new_from_calldata(calldata_len);
+	let proxy = sdk::call_argument::ContractProxy::new(&arg.get().addr);
+
+	let erc20_proxy = erc20::InterfaceERC20::new(proxy);
+
+	let erc20_arg = sdk::call_argument::BackedType::<(), 0>::new();
+
+	erc20_proxy.name(&erc20_arg);
+}
+
 

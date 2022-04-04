@@ -96,6 +96,26 @@ impl <'a> ContractProxy<'a>
 		}
 		out
 	}
+
+	pub fn call_noargs<R, const RSIZE: usize>(&self, methodname : i32) -> BackedType<R, RSIZE>
+	{
+		let out = BackedType::<R, RSIZE>::new();
+		if RSIZE != core::mem::size_of::<R>()
+		{
+			panic!("sizeof mismatch");
+		}
+		unsafe
+		{
+			builtin_fns::invoke(
+				self.addr.get_ptr() as i32, 
+				methodname, 
+				0,
+				0,
+				out.get_backing_ptr() as i32,
+				out.get_backing_len() as i32);
+		}
+		out
+	}
 }
 
 

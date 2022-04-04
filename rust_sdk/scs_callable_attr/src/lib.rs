@@ -5,12 +5,18 @@ extern crate quote;
 
 use syn::ItemFn;
 use syn::LitStr;
+use syn::FnArg::Typed;
+use syn::Ident;
+
+use syn::ReturnType::{Default, Type};
 
 use proc_macro::TokenStream;
 
 use sha2::Sha256;
 
 use sha2::Digest;
+
+use quote::ToTokens;
 
 fn copy_slice (buf : &[u8]) -> [u8 ; 4]
 {
@@ -45,7 +51,7 @@ pub fn method_id(item : TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
-pub fn scs_public_function(_attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn scs_public_function(attr: TokenStream, item: TokenStream) -> TokenStream {
     let func : ItemFn = parse_macro_input!(item as ItemFn);
 
     let sig = &func.sig;
@@ -53,10 +59,10 @@ pub fn scs_public_function(_attr: TokenStream, item: TokenStream) -> TokenStream
     let name = sig.ident.to_string();
 
 
-    if sig.inputs.len() != 1
+    if sig.inputs.len() >= 2
     {
         let res = quote!{
-            compile_error!("haven't hooked up a backed data API yet, so just calldata should have size 1 (calldata_len : i32)");
+            compile_error!("currently only support at most one argument");
         };
         TokenStream::from(res)
     }
@@ -81,18 +87,209 @@ pub fn scs_public_function(_attr: TokenStream, item: TokenStream) -> TokenStream
         let no_mangle = quote!{#[no_mangle]};
         let always_inline = quote!{#[inline(always)]};
 
-        let res = quote!{
-            #always_inline
-            #func
+        if sig.inputs.len() == 0
+        {
 
-            #no_mangle
-            fn #m_write ( calldata_len : i32)
-            { 
-              #call_original (calldata_len);
-            }
-        };
+            let res = quote!{
+                #always_inline
+                #func
 
-        TokenStream::from(res)
+                #no_mangle
+                fn #m_write ( calldata_len : i32)
+                {
+                    #call_original ();
+                }
+            };
+
+            println!("output : {}", res);
+            TokenStream::from(res)
+        } else
+        {
+            let input = sig.inputs.first().expect("has input");
+            let t = match input
+            {
+                Typed(pat_type) => pat_type,
+                _ =>
+                {
+                    let res = quote!{
+                        compile_error!("no self on smart contract methods");
+                    };
+                    return TokenStream::from(res);
+                },
+            };
+
+            //let arg_type = format_type!("{}", (*t.ty).to_token_stream().to_string());
+            let arg_type = &*t.ty;
+
+            let backed_type_in = quote!(
+                ::scs_sdk::call_argument::BackedType::<#arg_type, {core::mem::size_of::<#arg_type>()}>
+            );
+
+            let res = quote!{
+                #always_inline
+                #func
+
+                #no_mangle
+                fn #m_write ( calldata_len : i32)
+                {
+                   let arg = #backed_type_in :: new_from_calldata(calldata_len);
+                    #call_original (&arg.get());
+                }
+            };
+            println!("output : {}", res);
+            TokenStream::from(res)
+        }
     }
 }
+
+#[proc_macro_attribute]
+pub fn scs_interface_method(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let func : ItemFn = parse_macro_input!(item as ItemFn);
+
+    let sig = &func.sig;
+
+    let fn_name = sig.ident.to_string();
+
+    if sig.inputs.len() >= 2
+    {
+        let res = quote!{
+            compile_error!("currently only support at most one argument");
+        };
+        return TokenStream::from(res);
+    }
+
+    let packagename : Ident = parse_macro_input!(attr as Ident);
+
+    let mut backed_type_in = quote!(
+        compile_error!("can't use this")
+    );
+
+    let args_flag = sig.inputs.len() != 0;
+
+    if args_flag
+    {
+        let input = sig.inputs.first().expect("has input");
+        let t = match input
+        {
+            Typed(pat_type) => pat_type,
+            _ =>
+            {
+                let res = quote!{
+                    compile_error!("no self on smart contract methods");
+                };
+                return TokenStream::from(res);
+            },
+        };
+
+        let arg_type = &*t.ty;//format_ident!("{}", (*t.ty).to_token_stream().to_string());
+        backed_type_in = quote!(
+            ::scs_sdk::call_argument::BackedType::<#arg_type, {core::mem::size_of::<#arg_type>()}>
+        );
+    }
+
+
+    let original_fn_name = format_ident!("{}", fn_name);
+
+    let has_ret = match sig.output {
+        Default => false,
+        _ => true,
+    };
+
+    //TODO
+    let mut backed_type_ret =         
+        quote!{
+            ::scs_sdk::call_argument::BackedType::<(), 0>
+        };
+    if has_ret
+    {
+        let ret_type = match &sig.output
+        {
+            Default =>
+            {
+                let res = quote!{
+                    compile_error!("impossible");
+                };
+                return TokenStream::from(res);
+            },
+            Type(_, t) =>
+            {
+                format_ident!("{}", (*t).to_token_stream().to_string())
+            },
+        };
+
+        backed_type_ret = quote!{
+             ::scs_sdk::call_argument::BackedType::<#ret_type, {core::mem::size_of::<#ret_type>()}>
+        };
+    }
+
+
+    let output = 
+
+    if args_flag && has_ret
+    {
+        quote!{
+
+            #func
+
+            impl <'a> #packagename <'a>
+            {
+                pub fn #original_fn_name (&self, arg : &#backed_type_in) -> #backed_type_ret
+                {
+                    let out : #backed_type_ret = self.proxy.call(method_id!(#fn_name), &arg);
+                    out
+                }
+            }
+        }
+    } else if args_flag && !has_ret
+    {
+        quote!{
+
+            #func
+
+            impl <'a> #packagename <'a>
+            {
+                pub fn #original_fn_name (&self, arg : &#backed_type_in )
+                {
+                    let _out : #backed_type_ret = self.proxy.call(method_id!(#fn_name), &arg);
+                }
+            }
+
+        }
+    } else if !args_flag && has_ret
+    {
+        quote!{
+
+            #func
+
+            impl <'a> #packagename <'a>
+            {
+                pub fn #original_fn_name (&self) -> #backed_type_ret
+                {
+                    let out : #backed_type_ret = self.proxy.call_noargs(method_id!(#fn_name));
+                    out
+                }
+            }
+        }
+    } else
+    {
+        quote!{
+
+            #func
+
+            impl <'a> #packagename <'a>
+            {
+                pub fn #original_fn_name (&self)
+                {
+                    let _out : #backed_type_ret = self.proxy.call_noargs(method_id!(#fn_name));
+                }
+            }
+        }
+    };
+
+    println!("output : {}", output);
+
+    TokenStream::from(output)
+}
+
+
 

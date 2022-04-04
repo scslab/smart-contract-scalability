@@ -3,6 +3,7 @@
 
 members = [
     "test_log",
+    "erc20",
 ]
 
 [profile.dev]
