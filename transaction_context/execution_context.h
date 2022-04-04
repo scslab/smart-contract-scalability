@@ -61,7 +61,7 @@ class ExecutionContext {
 	friend class BuiltinFnWrappers;
 
 	// should only be used by builtin fns
-	int32_t invoke_subroutine(MethodInvocation invocation);
+	void invoke_subroutine(MethodInvocation invocation);
 
 	TransactionContext& get_transaction_context();
 

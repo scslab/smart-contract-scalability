@@ -176,7 +176,7 @@ public:
 	void link_fn(
 		const char* module_name, 
 		const char* fn_name, 
-		int32_t (*f)(int32_t, int32_t, int32_t, int32_t)) override final
+		void (*f)(int32_t, int32_t, int32_t, int32_t)) override final
 	{
 		module.link_optional(module_name, fn_name, f);
 	}
@@ -184,7 +184,7 @@ public:
 	void link_fn(
 		const char* module_name, 
 		const char* fn_name, 
-		int32_t (*f) (int32_t, int32_t, int32_t, int32_t, int32_t, int32_t)) override final
+		void (*f) (int32_t, int32_t, int32_t, int32_t, int32_t, int32_t)) override final
 	{
 		module.link_optional(module_name, fn_name, f);
 	}

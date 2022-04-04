@@ -115,7 +115,6 @@ ExecutionContext::invoke_subroutine(MethodInvocation invocation)
 	tx_context -> runtime_stack.pop_back();
 
 	tx_context->invocation_stack.pop_back();
-	return res;
 }
 
 TransactionStatus
@@ -131,10 +130,7 @@ ExecutionContext::execute(MethodInvocation const& invocation, uint64_t gas_limit
 
 	try
 	{
-		int32_t res = invoke_subroutine(invocation);
-		if (res < 0) {
-			throw std::runtime_error("contract returned error");
-		}
+		invoke_subroutine(invocation);
 	} 
 	catch(const std::exception& e)
 	{

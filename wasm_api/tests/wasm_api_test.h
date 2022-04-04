@@ -200,6 +200,34 @@ public:
 			TS_ASSERT_EQUALS(logs[1].size(), 4);
 			TS_ASSERT_EQUALS(logs[1], std::vector<uint8_t>({55, 0, 0, 0}));
 		}
+	}
 
+	void test_rustsdk_log()
+	{
+		ContractDB db;
+
+		std::shared_ptr<Contract> c = std::make_shared<Contract>(load_wasm_from_file("contracts/built_wasms/test_log.wasm"));
+		Address addr0 = address_from_uint64(0);
+
+		TS_ASSERT(db.register_contract(addr0, c));
+
+		std::unique_ptr<WasmContext> p = std::unique_ptr<WasmContext>(new Wasm3_WasmContext(db));
+		ThreadlocalExecutionContext::make_ctx(std::move(p));
+		auto& exec_ctx = ThreadlocalExecutionContext::get_ctx();
+
+		MethodInvocation invocation
+		{
+			.addr = addr0,
+			.method_name = test::method_name_from_human_readable("test_log"),
+			.calldata = {}
+		};
+
+		TS_ASSERT_EQUALS(
+			TransactionStatus::SUCCESS,
+			exec_ctx.execute(invocation, UINT64_MAX));
+		
+		auto const& logs = exec_ctx.get_logs();
+
+		TS_ASSERT_EQUALS(logs.size(), 1);
 	}
 };
