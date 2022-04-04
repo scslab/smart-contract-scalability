@@ -69,7 +69,7 @@ TEST_WASMS = ${TEST_WATS:.wat=.wasm}
 TEST_RUST_WASMS = \
 	contracts/built_wasms/test_log.wasm
 
-contracts/built_wasms/%.wasm : $(wildcard contracts/$(basename $@)/src/*.rs) $(wildcard rust_sdk/*/src/*.rs) contracts/Makefile
+contracts/built_wasms/%.wasm : $(wildcard contracts/*/src/*.rs) $(wildcard rust_sdk/*/src/*.rs) contracts/Makefile
 	cd contracts/ && \
 	make $(notdir $@)
 
@@ -82,7 +82,7 @@ LDADD = $(xdrpp_LIBS) $(libsodium_LIBS) $(LIBFYAML_LIBS) $(tbb_LIBS) $(merkle_tr
 $(SRCS:.cc=.o) : $(XH_FILES)
 $(MAIN_CCS:.cc=.o) : $(XH_FILES)
 
-test_runner.cc : $(TEST_SRCS) $(MTT_TESTS) $(XH_FILES) $(TEST_WASMS)
+test_runner.cc : $(TEST_SRCS) $(MTT_TESTS) $(XH_FILES) $(TEST_WASMS) $(TEST_RUST_WASMS)
 	cxxtestgen --error-printer -o test_runner.cc $(TEST_SRCS) $(MTT_TESTS)
 
 test_runner.o : CXXFLAGS += -I./merkle_trie_toolkit

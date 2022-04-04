@@ -100,7 +100,7 @@ public:
 		MethodInvocation invocation {
 			.addr = addr,
 			.method_name = 0, //call_log
-			.calldata = {}
+			.calldata = {0, 1, 0, 2, 0, 3, 0, 4}
 		};
 
 		TS_ASSERT_EQUALS(
@@ -115,7 +115,7 @@ public:
 		if (logs.size() > 0)
 		{
 			TS_ASSERT_EQUALS(logs[0].size(), 8);
-			TS_ASSERT_EQUALS(logs[0], std::vector<uint8_t>({0, 0, 0, 0, 0, 0, 0, 0}));
+			TS_ASSERT_EQUALS(logs[0], std::vector<uint8_t>({0, 1, 0, 2, 0, 3, 0, 4}));
 		}
 	}
 
@@ -231,6 +231,65 @@ public:
 		{
 			TS_ASSERT_EQUALS(logs[0].size(), 4);
 			TS_ASSERT_EQUALS(logs[0], std::vector<uint8_t>({5, 0, 0, 0}));
+		}
+	}
+
+	void test_rustsdk_log_fancy()
+	{
+		ContractDB db;
+
+		std::shared_ptr<Contract> c = std::make_shared<Contract>(load_wasm_from_file("contracts/built_wasms/test_log.wasm"));
+		Address addr0 = address_from_uint64(0);
+
+		TS_ASSERT(db.register_contract(addr0, c));
+
+		std::unique_ptr<WasmContext> p = std::unique_ptr<WasmContext>(new Wasm3_WasmContext(db));
+		ThreadlocalExecutionContext::make_ctx(std::move(p));
+		auto& exec_ctx = ThreadlocalExecutionContext::get_ctx();
+
+		uint32_t val1 = 5;
+
+		uint64_t val2 = 0xAABBCCDDEEFF0011;
+
+		struct calldata_format{
+			Address addr;
+			uint32_t v1;
+			uint64_t v2;
+		} to_be_serialized;
+
+		to_be_serialized.addr = addr0;
+		to_be_serialized.v1 = val1;
+		to_be_serialized.v2 = val2;
+
+		uint8_t* ptr = reinterpret_cast<uint8_t*>(&to_be_serialized);
+
+		MethodInvocation invocation
+		{
+			.addr = addr0,
+			.method_name = test::method_name_from_human_readable("try_fancy_call"),
+			.calldata = {ptr, ptr + sizeof(to_be_serialized)}
+		};
+
+		TS_ASSERT_EQUALS(
+			TransactionStatus::SUCCESS,
+			exec_ctx.execute(invocation, UINT64_MAX));
+		
+		auto const& logs = exec_ctx.get_logs();
+
+		TS_ASSERT_EQUALS(logs.size(), 3);
+
+		if (logs.size() >= 3)
+		{
+			TS_ASSERT_EQUALS(logs[0].size(), 32);
+
+			TS_ASSERT_EQUALS(logs[1], std::vector<uint8_t>({5, 0, 0, 0}));
+
+			TS_ASSERT_EQUALS(logs[2].size(), 8);
+			if (logs[2].size() >= 8)
+			{
+				uint64_t val2_res = utils::read_unsigned_little_endian<uint64_t>(logs[2].data());
+				TS_ASSERT_EQUALS(val2_res, val2);
+			}
 		}
 	}
 };

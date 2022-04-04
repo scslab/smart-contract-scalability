@@ -6,7 +6,7 @@ license = "MIT OR Apache-2.0"
 edition = "2021"
 
 [lib]
-crate-type = ["rlib"]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 static_assertions = "0.1"

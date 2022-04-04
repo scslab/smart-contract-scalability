@@ -8,4 +8,4 @@ scs_sdk = {path = "../../rust_sdk/scs_sdk"}
 scs_callable_attr = {path = "../../rust_sdk/scs_callable_attr"}
 
 [lib]
-crate-type = ["rlib"]
+crate-type = ["cdylib"]

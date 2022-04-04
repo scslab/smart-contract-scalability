@@ -19,6 +19,10 @@ BuiltinFnWrappers::builtin_scs_get_calldata(int32_t offset, int32_t len)
 	auto& tx_ctx = ThreadlocalExecutionContext::get_ctx().get_transaction_context();
 
 	auto& calldata = tx_ctx.invocation_stack.back().calldata;
+	if (len > calldata.size())
+	{
+		throw std::runtime_error("insufficient calldata");
+	}
 
 	tx_ctx.runtime_stack.back() -> write_to_memory(calldata, offset, len);
 }
@@ -44,12 +48,15 @@ BuiltinFnWrappers::builtin_scs_invoke(
 		.calldata = runtime.template load_from_memory<std::vector<uint8_t>>(calldata_offset, calldata_len)
 	};
 
+
+
+	ThreadlocalExecutionContext::get_ctx().invoke_subroutine(invocation);
+
 	if (return_len > 0)
 	{
 		runtime.write_to_memory(tx_ctx.return_buf, return_offset, return_len);
 	}
 
-	ThreadlocalExecutionContext::get_ctx().invoke_subroutine(invocation);
 	tx_ctx.return_buf.clear();
 }
 
@@ -61,6 +68,8 @@ BuiltinFnWrappers::builtin_scs_log(
 	auto& tx_ctx = ThreadlocalExecutionContext::get_ctx().get_transaction_context();
 
 	auto& runtime = *tx_ctx.runtime_stack.back();
+
+	CONTRACT_INFO("Logging offset=%lu len=%lu", log_offset, log_len);
 
 	auto log = runtime.template load_from_memory<std::vector<uint8_t>>(log_offset, log_len);
 

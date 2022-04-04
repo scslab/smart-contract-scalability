@@ -21,6 +21,21 @@ impl <T, const SZ : usize> BackedType<T, SZ>
 		Self { backing : [0 ; SZ], x : PhantomData}
 	}
 
+	pub fn new_from_calldata(calldata_len : i32) -> Self
+	{
+		let out = Self::new();
+
+		if (calldata_len as usize) > out.get_backing_len()
+		{
+			panic!("too much calldata");
+		}
+
+		unsafe {
+			builtin_fns::get_calldata(out.get_backing_ptr() as i32, calldata_len);
+		}
+		out
+	}
+
 	pub fn get(&self) -> &T
 	{
 		let out : *const T = unsafe { core::mem::transmute(&self.backing) };

@@ -15,3 +15,12 @@ pub fn log_i32(val: &i32)
 		builtin_fns::host_log(addr as i32, 4);
 	}
 }
+
+pub fn log_generic_reprc<T>(val : *const T)
+{
+	let addr : *const u8 = unsafe { core::mem::transmute(val) };
+	unsafe
+	{
+		builtin_fns::host_log(addr as i32, core::mem::size_of::<T>() as i32);
+	}
+}

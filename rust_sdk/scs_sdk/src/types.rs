@@ -1,3 +1,5 @@
+
+#[repr(C)]
 pub struct Address
 {
 	data : [u8 ; 32]
