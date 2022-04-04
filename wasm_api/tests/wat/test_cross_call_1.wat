@@ -5,7 +5,8 @@
       (param $methodname i32) 
       (param $calldata_offset i32)
       (param $calldata_len i32)
-      (result i32)
+      (param $return_offset i32)
+      (param $return_len i32)
     )
   )
 
@@ -16,9 +17,7 @@
   (memory 1 1)
 
   ;; input is address of target to call
-  (func (export "pub00000000") (result i32)
-
-    (local $callres i32)
+  (func (export "pub00000000") (param $calldata_len i32)
 
     ;; get_calldata
     i32.const 0
@@ -36,19 +35,10 @@
     i32.const 0
     i32.const 0
 
+    ;; return
+    i32.const 0
+    i32.const 0
+
     call $invoke 
-
-    local.set $callres
-
-    (i32.store (i32.const 0) (local.get $callres))
-
-    ;; log 4 bytes
-    i32.const 0
-    i32.const 4
-
-    call $log
-
-    ;; return 0
-    i32.const 0
   )
 )

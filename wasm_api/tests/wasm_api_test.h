@@ -189,16 +189,13 @@ public:
 		
 		auto const& logs = exec_ctx.get_logs();
 
-		TS_ASSERT_EQUALS(logs.size(), 2);
+		TS_ASSERT_EQUALS(logs.size(), 1);
 		
 		//avoids a test segfault
-		if (logs.size() >= 2)
+		if (logs.size() >= 1)
 		{
 			TS_ASSERT_EQUALS(logs[0].size(), 4);
 			TS_ASSERT_EQUALS(logs[0], std::vector<uint8_t>({255, 0, 0, 0}));
-
-			TS_ASSERT_EQUALS(logs[1].size(), 4);
-			TS_ASSERT_EQUALS(logs[1], std::vector<uint8_t>({55, 0, 0, 0}));
 		}
 	}
 
