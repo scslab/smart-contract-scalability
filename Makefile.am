@@ -66,6 +66,13 @@ TEST_WATS = \
 
 TEST_WASMS = ${TEST_WATS:.wat=.wasm}
 
+TEST_RUST_WASMS = \
+	contracts/built_wasms/test_log.wasm
+
+contracts/built_wasms/%.wasm : $(wildcard contracts/$(basename $@)/src/*.rs) $(wildcard rust_sdk/*/src/*.rs) contracts/Makefile
+	cd contracts/ && \
+	make $(notdir $@)
+
 .wat.wasm:
 	wat2wasm -o $@ $<
 

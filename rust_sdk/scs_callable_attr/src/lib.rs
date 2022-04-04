@@ -2,12 +2,7 @@
 extern crate syn;
 #[macro_use]
 extern crate quote;
-#[macro_use]
-extern crate sha2;
-#[macro_use]
-extern crate hex;
 
-use syn::parse::{Parse, ParseStream};
 use syn::ItemFn;
 use syn::LitStr;
 
@@ -50,7 +45,7 @@ pub fn method_id(item : TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
-pub fn scs_public_function(attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn scs_public_function(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let func : ItemFn = parse_macro_input!(item as ItemFn);
 
     let sig = &func.sig;

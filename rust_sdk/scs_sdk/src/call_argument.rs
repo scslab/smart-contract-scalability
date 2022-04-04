@@ -3,13 +3,13 @@ use crate::builtin_fns;
 
 use core::marker::PhantomData;
 
-pub struct BackedType<T, const sz : usize>
+pub struct BackedType<T, const SZ : usize>
 {
-	backing : [u8; sz],
+	backing : [u8; SZ],
 	x : PhantomData<T>,
 }
 
-impl <T, const sz : usize> BackedType<T, sz>
+impl <T, const SZ : usize> BackedType<T, SZ>
 {
 	pub fn new() -> Self
 	{
@@ -18,7 +18,7 @@ impl <T, const sz : usize> BackedType<T, sz>
 		// the entire generics/templating system is useless if you
 		// can't do something this simple
 		// const_assert!(sz ==  {core::mem::size_of::<T>()});
-		Self { backing : [0 ; sz], x : PhantomData}
+		Self { backing : [0 ; SZ], x : PhantomData}
 	}
 
 	pub fn get(&self) -> &T
@@ -44,7 +44,7 @@ impl <T, const sz : usize> BackedType<T, sz>
 	}
 	pub fn get_backing_len(&self) -> usize
 	{
-		sz
+		SZ
 	}
 }
 
@@ -62,10 +62,10 @@ impl <'a> ContractProxy<'a>
 
 	// should be invoked using a macro to translate string to name
 	// e.g. call<T, R>(method_id!("methodname"))
-	pub fn call<T, const tsize : usize, R, const rsize : usize>(&self, methodname : i32, arg : &BackedType<T, tsize>) -> BackedType<R, rsize>
+	pub fn call<T, const TSIZE : usize, R, const RSIZE : usize>(&self, methodname : i32, arg : &BackedType<T, TSIZE>) -> BackedType<R, RSIZE>
 	{
-		let out = BackedType::<R, rsize>::new();
-		if rsize != core::mem::size_of::<R>() || tsize != core::mem::size_of::<T>()
+		let out = BackedType::<R, RSIZE>::new();
+		if RSIZE != core::mem::size_of::<R>() || TSIZE != core::mem::size_of::<T>()
 		{
 			panic!("sizeof mismatch");
 		}

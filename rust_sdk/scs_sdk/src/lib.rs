@@ -3,10 +3,6 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 
-#[macro_use]
-extern crate static_assertions;
-
-
 mod builtin_fns;
 mod rt;
 pub mod call_argument;
