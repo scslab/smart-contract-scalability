@@ -17,7 +17,7 @@ pub fn try_macros(calldata_len : i32)
 
 	let proxy = sdk::call_argument::ContractProxy::new(&addr);
 
-	let arg = sdk::call_argument::BackedType::<i32, 4>::new();
+	let arg = sdk::call_argument::BackedType::<i32, {core::mem::size_of::<i32>()}>::new();
 
 	let res : sdk::call_argument::BackedType::<(), 0> = proxy.call(method_id!("foo"), &arg);
 }

@@ -1,0 +1,11 @@
+[package]
+name = "test_log"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+scs_sdk = {path = "../../rust_sdk/scs_sdk"}
+scs_callable_attr = {path = "../../rust_sdk/scs_callable_attr"}
+
+[lib]
+crate-type = ["cdylib", "rlib"]

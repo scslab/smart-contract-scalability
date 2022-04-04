@@ -1,0 +1,23 @@
+[workspace]
+
+members = [
+    "scs_sdk",
+    "scs_callable_attr",
+]
+
+[profile.dev]
+opt-level = "z"
+overflow-checks = false
+debug = 0
+strip = "debuginfo"
+panic = "abort"
+
+[profile.release]
+opt-level = "z"
+overflow-checks = false
+debug = 0
+strip = "symbols"
+debug-assertions = false
+panic = "abort"
+
+

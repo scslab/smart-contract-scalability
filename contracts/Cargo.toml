@@ -1,8 +1,7 @@
+
 [workspace]
 
 members = [
-    "scs_sdk",
-    "scs_callable_attr",
     "test_log",
 ]
 
@@ -12,6 +11,7 @@ overflow-checks = false
 debug = 0
 strip = "debuginfo"
 panic = "abort"
+
 
 [profile.release]
 opt-level = "z"
