@@ -30,6 +30,30 @@ fn copy_slice (buf : &[u8]) -> [u8 ; 4]
     out
 }
 
+
+#[proc_macro]
+pub fn create_interface(item : TokenStream) -> TokenStream
+{
+    let string : Ident = parse_macro_input!(item as Ident);
+
+    let out = quote!{
+        pub struct #string<'a>
+        {
+            proxy : sdk::call_argument::ContractProxy<'a>,
+        }
+
+        impl<'a> #string<'a>
+        {
+            pub fn new(p : sdk::call_argument::ContractProxy<'a>) -> Self
+            {
+                Self{proxy : p}
+            }
+        } 
+    };
+
+    TokenStream::from(out)
+}
+
 #[proc_macro]
 pub fn method_id(item : TokenStream) -> TokenStream {
 
@@ -51,7 +75,7 @@ pub fn method_id(item : TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
-pub fn scs_public_function(attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn scs_public_function(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let func : ItemFn = parse_macro_input!(item as ItemFn);
 
     let sig = &func.sig;
