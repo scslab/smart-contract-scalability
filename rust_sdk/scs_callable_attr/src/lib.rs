@@ -259,7 +259,7 @@ pub fn scs_interface_method(attr: TokenStream, item: TokenStream) -> TokenStream
             {
                 pub fn #original_fn_name (&self, arg : &#backed_type_in) -> #backed_type_ret
                 {
-                    let out : #backed_type_ret = self.proxy.call(method_id!(#fn_name), &arg);
+                    let out : #backed_type_ret = self.proxy.call(::scs_callable_attr::method_id!(#fn_name), &arg);
                     out
                 }
             }
@@ -274,7 +274,7 @@ pub fn scs_interface_method(attr: TokenStream, item: TokenStream) -> TokenStream
             {
                 pub fn #original_fn_name (&self, arg : &#backed_type_in )
                 {
-                    self.proxy.call_noret(method_id!(#fn_name), &arg);
+                    self.proxy.call_noret(::scs_callable_attr::method_id!(#fn_name), &arg);
                 }
             }
 
@@ -289,7 +289,7 @@ pub fn scs_interface_method(attr: TokenStream, item: TokenStream) -> TokenStream
             {
                 pub fn #original_fn_name (&self) -> #backed_type_ret
                 {
-                    let out : #backed_type_ret = self.proxy.call_noargs(method_id!(#fn_name));
+                    let out : #backed_type_ret = self.proxy.call_noargs(::scs_callable_attr::method_id!(#fn_name));
                     out
                 }
             }
@@ -304,7 +304,7 @@ pub fn scs_interface_method(attr: TokenStream, item: TokenStream) -> TokenStream
             {
                 pub fn #original_fn_name (&self)
                 {
-                    self.proxy.call_noargs_noret(method_id!(#fn_name));
+                    self.proxy.call_noargs_noret(::scs_callable_attr::method_id!(#fn_name));
                 }
             }
         }
