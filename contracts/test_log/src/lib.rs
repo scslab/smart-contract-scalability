@@ -15,7 +15,6 @@ pub fn test_log(calldata_len : i32)
 #[scs_public_function]
 pub fn try_macros(calldata_len : i32)
 {
-
 	let addr = sdk::types::Address::new();
 
 	let proxy = sdk::call_argument::ContractProxy::new(&addr);

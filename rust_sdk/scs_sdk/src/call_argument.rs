@@ -1,5 +1,6 @@
 use crate::types::Address;
 use crate::builtin_fns;
+use crate::rt::trap;
 
 use core::marker::PhantomData;
 
@@ -27,7 +28,8 @@ impl <T, const SZ : usize> BackedType<T, SZ>
 
 		if (calldata_len as usize) > out.get_backing_len()
 		{
-			panic!("too much calldata");
+			trap();
+		//	panic!("too much calldata");
 		}
 
 		unsafe {
@@ -82,7 +84,8 @@ impl <'a> ContractProxy<'a>
 		let out = BackedType::<R, RSIZE>::new();
 		if RSIZE != core::mem::size_of::<R>() || TSIZE != core::mem::size_of::<T>()
 		{
-			panic!("sizeof mismatch");
+			trap();
+			//panic!("sizeof mismatch");
 		}
 		unsafe
 		{
@@ -116,7 +119,8 @@ impl <'a> ContractProxy<'a>
 		let out = BackedType::<R, RSIZE>::new();
 		if RSIZE != core::mem::size_of::<R>()
 		{
-			panic!("sizeof mismatch");
+			trap();
+		//	panic!("sizeof mismatch");
 		}
 		unsafe
 		{
