@@ -28,6 +28,11 @@ impl <T, const SZ : usize> BackedType<T, SZ>
 
 		if (calldata_len as usize) > out.get_backing_len()
 		{
+/*			unsafe
+			{
+				builtin_fns::print_debug(calldata_len);
+				builtin_fns::print_debug(out.get_backing_len() as i32);
+			}*/
 			trap();
 		//	panic!("too much calldata");
 		}

@@ -6,4 +6,5 @@ extern "C"
 	pub(crate) fn host_log(offset: i32, len: i32);
 	pub(crate) fn invoke(addr_offset : i32, methodname : i32, calldata_offset : i32, calldata_len : i32, return_offset : i32, return_len : i32);
 	pub(crate) fn get_calldata(offset: i32, len: i32);
+	pub(crate) fn print_debug(value: i32);
 }

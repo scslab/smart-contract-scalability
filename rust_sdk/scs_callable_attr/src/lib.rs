@@ -7,6 +7,7 @@ use syn::ItemFn;
 use syn::LitStr;
 use syn::FnArg::Typed;
 use syn::Ident;
+use syn::Type::Reference;
 
 use syn::ReturnType::{Default, Type};
 
@@ -143,7 +144,16 @@ pub fn scs_public_function(_attr: TokenStream, item: TokenStream) -> TokenStream
             };
 
             //let arg_type = format_type!("{}", (*t.ty).to_token_stream().to_string());
-            let arg_type = &*t.ty;
+            let arg_type = match &*t.ty
+            {
+                Reference(rt) => &*rt.elem,
+                _ => {
+                        let res = quote!{
+                            compile_error!("invalid output");
+                        };
+                        return TokenStream::from(res);
+                    },
+            };
 
             let backed_type_in = quote!(
                 ::scs_sdk::call_argument::BackedType::<#arg_type, {core::mem::size_of::<#arg_type>()}>
@@ -237,7 +247,7 @@ pub fn scs_interface_method(attr: TokenStream, item: TokenStream) -> TokenStream
             },
             Type(_, t) =>
             {
-                format_ident!("{}", (*t).to_token_stream().to_string())
+                ((*t).to_token_stream())
             },
         };
 

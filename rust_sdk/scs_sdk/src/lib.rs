@@ -3,8 +3,8 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 
-mod builtin_fns;
-mod rt;
+pub mod builtin_fns;
+pub mod rt;
 pub mod call_argument;
 pub mod types;
 
