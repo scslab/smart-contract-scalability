@@ -45,5 +45,11 @@ DeltaVector::add_delta(StorageDelta&& d, DeltaPriority&& p)
 	deltas.insert(std::make_pair(std::move(d), std::move(p)));
 }
 
+ObjectType
+DeltaVector::get_initial_type_if_default() const
+{
+	return deltas.begin()->first.type();
+}
+
 
 } /* scs */

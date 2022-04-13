@@ -23,8 +23,6 @@ class TxBlock
 			: invocation(invocation)
 			, invalid()
 			{}
-
-		void copy_data(std::vector<uint8_t>& v) {}
 	};
 
 	using ptr_value_t = trie::PointerValue<ValueT>;

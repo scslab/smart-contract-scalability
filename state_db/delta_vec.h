@@ -20,8 +20,12 @@ public:
 
 	void add_delta(StorageDelta&& d, DeltaPriority&& p);
 
-	const set_t& get_sorted_deltas() const;
+	const set_t& get_sorted_deltas() const
+	{
+		return deltas;
+	}
 
+	ObjectType get_initial_type_if_default() const;
 };
 
 } /* scs */

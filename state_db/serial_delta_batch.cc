@@ -13,7 +13,7 @@ SerialDeltaBatch::add_delta(const Address& addr, const InvariantKey& key, Storag
 	memcpy(ak.data(), addr.data(), addr.size());
 	memcpy(ak.data() + addr.size(), key.data(), key.size());
 
-	deltas[ak].add_delta(std::move(delta), std::move(priority));
+	deltas[ak].first.add_delta(std::move(delta), std::move(priority));
 }
 
 void 
