@@ -8,23 +8,22 @@ use scs_callable_attr::{scs_public_function, scs_interface_method, create_interf
 create_interface!{InterfaceERC20}
 
 #[scs_interface_method(InterfaceERC20)]
-#[scs_public_function]
+#[scs_public_function(erc20)]
 pub fn noret_args(calldata_len : &i32)
 {
 	// do nothing
 }
 
 #[scs_interface_method(InterfaceERC20)]
-#[scs_public_function]
+#[scs_public_function(erc20)]
 pub fn ret_args(calldata_len : &i32) -> i64
 {
 	0
 	// do nothing
 }
 
-
 #[scs_interface_method(InterfaceERC20)]
-#[scs_public_function]
+#[scs_public_function(erc20)]
 pub fn ret_noargs() -> i64
 {
 	0
@@ -32,10 +31,19 @@ pub fn ret_noargs() -> i64
 }
 
 #[scs_interface_method(InterfaceERC20)]
-#[scs_public_function]
+#[scs_public_function(erc20)]
 pub fn noret_noargs()
 {
 	// do nothing
 }
+
+#[scs_interface_method(InterfaceERC20)]
+#[scs_public_function(erc20)]
+pub fn name() -> sdk::types::FixedLenString::<10>
+{
+	sdk::types::FixedLenString::<10>::new(b"test erc20")
+}
+
+
 
 

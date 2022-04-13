@@ -76,13 +76,20 @@ pub fn method_id(item : TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
-pub fn scs_public_function(_attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn scs_public_function(attr: TokenStream, item: TokenStream) -> TokenStream {
     let func : ItemFn = parse_macro_input!(item as ItemFn);
+
+    let ident : Ident = parse_macro_input!(attr as Ident);
+
+    let formatted = format!("{}", ident);
 
     let sig = &func.sig;
 
     let name = sig.ident.to_string();
 
+    let cfg_module = quote!{
+        #[cfg(module=#formatted)]
+    };
 
     if sig.inputs.len() >= 2
     {
@@ -119,6 +126,7 @@ pub fn scs_public_function(_attr: TokenStream, item: TokenStream) -> TokenStream
                 #always_inline
                 #func
 
+                #cfg_module
                 #no_mangle
                 fn #m_write ( calldata_len : i32)
                 {
@@ -163,6 +171,7 @@ pub fn scs_public_function(_attr: TokenStream, item: TokenStream) -> TokenStream
                 #always_inline
                 #func
 
+                #cfg_module
                 #no_mangle
                 fn #m_write ( calldata_len : i32)
                 {
@@ -178,6 +187,7 @@ pub fn scs_public_function(_attr: TokenStream, item: TokenStream) -> TokenStream
 
 #[proc_macro_attribute]
 pub fn scs_interface_method(attr: TokenStream, item: TokenStream) -> TokenStream {
+
     let func : ItemFn = parse_macro_input!(item as ItemFn);
 
     let sig = &func.sig;
@@ -247,7 +257,7 @@ pub fn scs_interface_method(attr: TokenStream, item: TokenStream) -> TokenStream
             },
             Type(_, t) =>
             {
-                ((*t).to_token_stream())
+                (*t).to_token_stream()
             },
         };
 

@@ -40,7 +40,7 @@ impl <const SZ : usize>FixedLenString<SZ>
 			let from_ptr = from.as_ptr();
 			let data_ptr : *mut u8 = core::mem::transmute(&out.data);
 
-			data_ptr.copy_from(data_ptr, from.len());
+			data_ptr.copy_from(from_ptr, from.len());
 		}
 		out
 	}

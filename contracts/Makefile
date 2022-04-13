@@ -7,7 +7,7 @@
 
 
 %.wasm : Makefile $(wildcard $</src/*.rs)
-	cargo rustc --target wasm32-unknown-unknown --release --verbose -p $(basename $@) -- -C link-args=-zstack-size=65328 && \
+	RUSTFLAGS='--cfg module="$(basename $@)"' cargo rustc --target wasm32-unknown-unknown --release --verbose -p $(basename $@) -- -C link-args=-zstack-size=64000  && \
 	wasm-opt -Oz target/wasm32-unknown-unknown/release/$@ -o built_wasms/$@
 
 clean:

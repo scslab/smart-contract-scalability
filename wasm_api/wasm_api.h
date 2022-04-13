@@ -70,6 +70,9 @@ public:
 
 	virtual void link_fn(
 		const char* module_name, const char* fn_name, 
+		void (*f) (int32_t)) = 0;
+	virtual void link_fn(
+		const char* module_name, const char* fn_name, 
 		void (*f) (int32_t, int32_t)) = 0;
 	virtual void link_fn(
 		const char* module_name, const char* fn_name, 
@@ -167,6 +170,11 @@ public:
 		, runtime(std::move(r))
 		, module(std::move(m))
 		{}
+
+	void link_fn(const char* module_name, const char* fn_name, void(*f)(int32_t)) override final
+	{
+		module.link_optional(module_name, fn_name, f);
+	}
 
 	void link_fn(const char* module_name, const char* fn_name, void(*f)(int32_t, int32_t)) override final
 	{

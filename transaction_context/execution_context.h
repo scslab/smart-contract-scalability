@@ -13,6 +13,9 @@ namespace scs
 
 struct BuiltinFnWrappers
 {
+	static void
+	builtin_scs_print_debug(int32_t value);
+
 	static void 
 	builtin_scs_return(int32_t offset, int32_t len);
 

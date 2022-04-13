@@ -5,6 +5,12 @@
 namespace scs
 {
 
+void
+BuiltinFnWrappers::builtin_scs_print_debug(int32_t value)
+{
+	std::printf("print value: %ld\n", value);
+}
+
 void 
 BuiltinFnWrappers::builtin_scs_return(int32_t offset, int32_t len)
 {
@@ -100,6 +106,11 @@ ExecutionContext::link_builtin_fns(WasmRuntime& runtime)
 		"scs",
 		"host_log",
 		&BuiltinFnWrappers::builtin_scs_log);
+
+	runtime.link_fn(
+		"scs",
+		"print_debug",
+		&BuiltinFnWrappers::builtin_scs_print_debug);
 }
 
 void 

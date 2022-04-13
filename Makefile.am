@@ -5,6 +5,7 @@ SUBDIRS = $(PKGCONFIG_SUBDIRS)
 CLEANFILES = *~ .*~
 
 X_FILES = \
+	xdr/storage.x \
 	xdr/types.x \
 	xdr/transaction.x
 
@@ -20,6 +21,13 @@ SUFFIXES = .x .h .wat .wasm
 
 CONTRACT_DB_SRCS = \
 	contract_db/contract_db.cc
+
+CRYPTO_SRCS = \
+	crypto/crypto_utils.cc
+
+STATE_DB_SRCS = \
+	state_db/delta_vec.cc \
+	state_db/serial_delta_batch.cc
 
 TRANSACTION_CONTEXT_SRCS = \
 	transaction_context/execution_context.cc \
@@ -47,6 +55,8 @@ WASM3_SRCS = \
 
 SRCS = \
 	$(CONTRACT_DB_SRCS) \
+	$(CRYPTO_SRCS) \
+	$(STATE_DB_SRCS) \
 	$(TRANSACTION_CONTEXT_SRCS) \
 	$(WASM_API_SRCS) \
 	$(WASM3_SRCS)

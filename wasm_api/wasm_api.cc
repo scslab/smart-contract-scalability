@@ -22,7 +22,10 @@ Wasm3_WasmContext::new_runtime_instance(Address const& contract_address)
 void  
 Wasm3_WasmRuntime::invoke(MethodInvocation const& invocation)
 {
-	CONTRACT_INFO("Call: Address %s Method %s", debug::array_to_str(invocation.addr).c_str(), invocation.get_invocable_methodname().c_str());
+	CONTRACT_INFO("Call: Address %s Method %s Calldata_len %lu", 
+		debug::array_to_str(invocation.addr).c_str(), 
+		invocation.get_invocable_methodname().c_str(),
+		invocation.calldata.size());
 
 	auto fn = runtime.find_function(invocation.get_invocable_methodname().c_str());
 

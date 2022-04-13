@@ -18,7 +18,10 @@ typedef opaque SecretKey[64]; //ed25519 secret key len is 64 bytes, at least on 
 
 typedef opaque Address[32]; // 256 bit contract addresses
 
-typedef opaque InvariantKey[40]; // 32 bytes for address, 8 bytes for invariant id
+typedef opaque InvariantKey[32]; // arbitrary 32 bytes.
+
+typedef opaque AddressAndKey[64]; // in global storage: [contract address + invariant key] = 64 bytes
+// Contracts are free to set their own conventions for keys.
 
 typedef opaque Contract<>;
 
