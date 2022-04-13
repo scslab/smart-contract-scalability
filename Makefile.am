@@ -33,6 +33,9 @@ TRANSACTION_CONTEXT_SRCS = \
 	transaction_context/execution_context.cc \
 	transaction_context/method_invocation.cc
 
+TX_BLOCK_SRCS = \
+	tx_block/tx_block.cc
+
 WASM_API_SRCS = \
 	wasm_api/wasm_api.cc
 
@@ -58,6 +61,7 @@ SRCS = \
 	$(CRYPTO_SRCS) \
 	$(STATE_DB_SRCS) \
 	$(TRANSACTION_CONTEXT_SRCS) \
+	$(TX_BLOCK_SRCS) \
 	$(WASM_API_SRCS) \
 	$(WASM3_SRCS)
 
