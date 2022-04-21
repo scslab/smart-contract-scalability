@@ -4,137 +4,29 @@
 
 #include "debug/debug_macros.h"
 
+#include "builtin_fns/builtin_fns.h"
+
 namespace scs
 {
-
-void
-BuiltinFnWrappers::builtin_scs_print_debug(int32_t value)
-{
-	std::printf("logging int32: %ld\n", value);
-}
-
-void 
-BuiltinFnWrappers::builtin_scs_return(int32_t offset, int32_t len)
-{
-	auto& tx_ctx = ThreadlocalExecutionContext::get_ctx().get_transaction_context();
-
-	tx_ctx.return_buf = tx_ctx.get_current_runtime()->template load_from_memory<std::vector<uint8_t>>(offset, len);
-}
-
-void 
-BuiltinFnWrappers::builtin_scs_get_calldata(int32_t offset, int32_t len)
-{
-	auto& tx_ctx = ThreadlocalExecutionContext::get_ctx().get_transaction_context();
-
-	auto& calldata = tx_ctx.get_current_method_invocation().calldata;
-	if (len > calldata.size())
-	{
-		throw std::runtime_error("insufficient calldata");
-	}
-
-	tx_ctx.get_current_runtime() -> write_to_memory(calldata, offset, len);
-}
-
-void 
-BuiltinFnWrappers::builtin_scs_invoke(
-	int32_t addr_offset, 
-	int32_t methodname, 
-	int32_t calldata_offset, 
-	int32_t calldata_len,
-	int32_t return_offset,
-	int32_t return_len)
-{
-	auto& tx_ctx = ThreadlocalExecutionContext::get_ctx().get_transaction_context();
-
-	auto& runtime = *tx_ctx.get_current_runtime();
-
-	MethodInvocation invocation(
-		runtime.template load_from_memory_to_const_size_buf<Address>(addr_offset),
-		static_cast<uint32_t>(methodname),
-		runtime.template load_from_memory<std::vector<uint8_t>>(calldata_offset, calldata_len));
-
-	ThreadlocalExecutionContext::get_ctx().invoke_subroutine(invocation);
-
-	if (return_len > 0)
-	{
-		runtime.write_to_memory(tx_ctx.return_buf, return_offset, return_len);
-	}
-
-	tx_ctx.return_buf.clear();
-}
-
-void
-BuiltinFnWrappers::builtin_scs_log(
-	int32_t log_offset,
-	int32_t log_len)
-{
-	auto& tx_ctx = ThreadlocalExecutionContext::get_ctx().get_transaction_context();
-
-	auto& runtime = *tx_ctx.get_current_runtime();
-
-	CONTRACT_INFO("Logging offset=%lu len=%lu", log_offset, log_len);
-
-	auto log = runtime.template load_from_memory<std::vector<uint8_t>>(log_offset, log_len);
-
-	tx_ctx.logs.push_back(log);
-}
-
-void 
-ExecutionContext::link_builtin_fns(WasmRuntime& runtime)
-{
-	//TODO
-
-	runtime.link_fn(
-		"scs", 
-		"invoke", 
-		&BuiltinFnWrappers::builtin_scs_invoke);
-
-	runtime.link_fn(
-		"scs",
-		"return",
-		&BuiltinFnWrappers::builtin_scs_return);
-
-	runtime.link_fn(
-		"scs",
-		"get_calldata",
-		&BuiltinFnWrappers::builtin_scs_get_calldata);
-
-	runtime.link_fn(
-		"scs",
-		"host_log",
-		&BuiltinFnWrappers::builtin_scs_log);
-
-	runtime.link_fn(
-		"scs",
-		"print_debug",
-		&BuiltinFnWrappers::builtin_scs_print_debug);
-}
 
 void 
 ExecutionContext::invoke_subroutine(MethodInvocation invocation)
 {
-	//tx_context->invocation_stack.push_back(invocation);
-
 	auto iter = active_runtimes.find(invocation.addr);
 	if (iter == active_runtimes.end())
 	{
 		CONTRACT_INFO("creating new runtime for contract at %s", debug::array_to_str(invocation.addr).c_str());
 		active_runtimes.emplace(invocation.addr, wasm_context->new_runtime_instance(invocation.addr));
-		link_builtin_fns(*active_runtimes.at(invocation.addr));
+		BuiltinFns::link_fns(*active_runtimes.at(invocation.addr));
 	}
 
 	auto* runtime = active_runtimes.at(invocation.addr).get();
 
 	tx_context -> push_invocation_stack(runtime, invocation);
 
-	//tx_context -> runtime_stack.push_back(runtime);
-
 	runtime->invoke(invocation);
 
 	tx_context -> pop_invocation_stack();
-
-	//tx_context -> runtime_stack.pop_back();
-	//tx_context->invocation_stack.pop_back();
 }
 
 TransactionStatus
@@ -168,7 +60,6 @@ ExecutionContext::reset()
 {
 	// nothing to do to clear wasm_context
 	active_runtimes.clear();
-	//tx_state_delta.clear();
 	tx_context.reset();
 	executed = false;
 }
@@ -192,18 +83,6 @@ ExecutionContext::get_logs()
 		throw std::runtime_error("can't get logs before execution");
 	}
 	return tx_context -> logs;
-}
-
-ExecutionContext&  
-ThreadlocalExecutionContext::get_ctx()
-{
-	return *ctx;
-}
-
-void 
-ThreadlocalExecutionContext::make_ctx(std::unique_ptr<WasmContext>&& c)
-{
-	ctx = std::unique_ptr<ExecutionContext>(new ExecutionContext(std::move(c)));
 }
 
 } /* scs */

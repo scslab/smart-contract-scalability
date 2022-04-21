@@ -8,15 +8,16 @@ TransactionContext::TransactionContext(uint64_t gas_limit, uint64_t gas_rate_bid
 	, invocation_stack()
 	, runtime_stack()
 	, gas_limit(gas_limit)
-	, gas_used(0)
 	, gas_rate_bid(gas_rate_bid)
+	, gas_used(0)
 	, return_buf()
 	{}
 
 DeltaPriority 
-TransactionContext::get_next_priority()
+TransactionContext::get_next_priority(uint64_t priority)
 {
 	current_priority.delta_id_number++;
+	current_priority.custom_priority = priority;
 	return current_priority;
 }
 

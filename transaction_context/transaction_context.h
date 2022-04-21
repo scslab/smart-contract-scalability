@@ -31,7 +31,7 @@ public:
 	TransactionContext(uint64_t gas_limit, uint64_t gas_rate_bid, Hash tx_hash);
 
 	DeltaPriority 
-	get_next_priority();
+	get_next_priority(uint64_t priority);
 
 	WasmRuntime*
 	get_current_runtime();

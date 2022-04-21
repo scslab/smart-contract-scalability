@@ -19,6 +19,11 @@ SUFFIXES = .x .h .wat .wasm
 .x.h:
 	$(XDRC)  -hh -o $@ $<
 
+BUILTIN_FNS_SRCS = \
+	builtin_fns/builtin_fns.cc \
+	builtin_fns/logging.cc \
+	builtin_fns/runtime.cc
+
 CONTRACT_DB_SRCS = \
 	contract_db/contract_db.cc
 
@@ -35,6 +40,7 @@ STATE_DB_SRCS = \
 TRANSACTION_CONTEXT_SRCS = \
 	transaction_context/execution_context.cc \
 	transaction_context/method_invocation.cc \
+	transaction_context/threadlocal_context.cc \
 	transaction_context/transaction_context.cc
 
 TX_BLOCK_SRCS = \
@@ -61,6 +67,7 @@ WASM3_SRCS = \
 	wasm3/source/m3_parse.c
 
 SRCS = \
+	$(BUILTIN_FNS_SRCS) \
 	$(CONTRACT_DB_SRCS) \
 	$(CRYPTO_SRCS) \
 	$(STATE_DB_SRCS) \

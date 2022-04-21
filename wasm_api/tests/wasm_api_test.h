@@ -3,6 +3,7 @@
 #include "debug/debug_macros.h"
 
 #include "transaction_context/execution_context.h"
+#include "transaction_context/threadlocal_context.h"
 
 #include "wasm_api/wasm_api.h"
 
@@ -63,9 +64,9 @@ public:
 
 		std::unique_ptr<WasmContext> p = std::unique_ptr<WasmContext>(new Wasm3_WasmContext(db));
 
-		ThreadlocalExecutionContext::make_ctx(std::move(p));
+		ThreadlocalContextStore::make_ctx(std::move(p));
 
-		auto& exec_ctx = ThreadlocalExecutionContext::get_ctx();
+		auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
 		TransactionInvocation invocation (
 			addr,
@@ -91,9 +92,9 @@ public:
 
 		std::unique_ptr<WasmContext> p = std::unique_ptr<WasmContext>(new Wasm3_WasmContext(db));
 
-		ThreadlocalExecutionContext::make_ctx(std::move(p));
+		ThreadlocalContextStore::make_ctx(std::move(p));
 
-		auto& exec_ctx = ThreadlocalExecutionContext::get_ctx();
+		auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
 		TransactionInvocation invocation (
 			addr,
@@ -134,9 +135,9 @@ public:
 
 		std::unique_ptr<WasmContext> p = std::unique_ptr<WasmContext>(new Wasm3_WasmContext(db));
 
-		ThreadlocalExecutionContext::make_ctx(std::move(p));
+		ThreadlocalContextStore::make_ctx(std::move(p));
 
-		auto& exec_ctx = ThreadlocalExecutionContext::get_ctx();
+		auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
 		xdr::opaque_vec<>calldata = {0, 1, 2, 3, 4, 5, 6, 7};
 
@@ -177,8 +178,8 @@ public:
 		TS_ASSERT(db.register_contract(addr1, c));
 
 		std::unique_ptr<WasmContext> p = std::unique_ptr<WasmContext>(new Wasm3_WasmContext(db));
-		ThreadlocalExecutionContext::make_ctx(std::move(p));
-		auto& exec_ctx = ThreadlocalExecutionContext::get_ctx();
+		ThreadlocalContextStore::make_ctx(std::move(p));
+		auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
 		TransactionInvocation invocation (
 			addr0,
@@ -212,8 +213,8 @@ public:
 		TS_ASSERT(db.register_contract(addr0, c));
 
 		std::unique_ptr<WasmContext> p = std::unique_ptr<WasmContext>(new Wasm3_WasmContext(db));
-		ThreadlocalExecutionContext::make_ctx(std::move(p));
-		auto& exec_ctx = ThreadlocalExecutionContext::get_ctx();
+		ThreadlocalContextStore::make_ctx(std::move(p));
+		auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
 		TransactionInvocation invocation (
 			addr0,
@@ -246,8 +247,8 @@ public:
 		TS_ASSERT(db.register_contract(addr0, c));
 
 		std::unique_ptr<WasmContext> p = std::unique_ptr<WasmContext>(new Wasm3_WasmContext(db));
-		ThreadlocalExecutionContext::make_ctx(std::move(p));
-		auto& exec_ctx = ThreadlocalExecutionContext::get_ctx();
+		ThreadlocalContextStore::make_ctx(std::move(p));
+		auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
 		uint32_t val1 = 5;
 

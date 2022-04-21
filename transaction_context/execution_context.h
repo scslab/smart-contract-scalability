@@ -13,65 +13,18 @@
 namespace scs
 {
 
-struct BuiltinFnWrappers
-{
-	static void
-	builtin_scs_print_debug(int32_t value);
-
-	static void 
-	builtin_scs_return(int32_t offset, int32_t len);
-
-	static void
-	builtin_scs_get_calldata(int32_t offset, int32_t len);
-
-	static void
-	builtin_scs_invoke(
-		int32_t addr_offset, 
-		int32_t methodname, 
-		int32_t calldata_offset, 
-		int32_t calldata_len,
-		int32_t return_offset,
-		int32_t return_len);
-
-	static void
-	builtin_scs_log(
-		int32_t log_offset,
-		int32_t log_len);
-
-	static int32_t
-	builtin_scs_storage_get_type(
-		int32_t key_offset);
-
-	static void
-	builtin_scs_storage_raw_memory_get(
-		int32_t key_offset,
-		/* key_len = 32 */
-		int32_t output_offset,
-		int32_t output_max_len);
-
-	static void
-	builtin_scs_storage_raw_memory_set(
-		int32_t key_offset,
-		/* key_len = 32 */
-		int32_t input_offset,
-		int32_t input_len);
-};
-
 class ExecutionContext {
 
 	std::unique_ptr<WasmContext> wasm_context;
 
 	std::map<Address, std::unique_ptr<WasmRuntime>> active_runtimes;
 
-	//TransactionStateDeltaBatch tx_state_delta;
-
 	std::unique_ptr<TransactionContext> tx_context;
 
 	bool executed;
 
-	void link_builtin_fns(WasmRuntime& runtime);
+	//void link_builtin_fns(WasmRuntime& runtime);
 
-	friend class ThreadlocalExecutionContext;
 
 	ExecutionContext(std::unique_ptr<WasmContext> ctx)
 		: wasm_context(std::move(ctx))
@@ -81,7 +34,8 @@ class ExecutionContext {
 		, executed(false)
 		{}
 
-	friend class BuiltinFnWrappers;
+	friend class ThreadlocalContextStore;
+	friend class BuiltinFns;
 
 	// should only be used by builtin fns
 	void invoke_subroutine(MethodInvocation invocation);
@@ -97,16 +51,6 @@ public:
 
 	std::vector<std::vector<uint8_t>> const&
 	get_logs();
-};
-
-class ThreadlocalExecutionContext {
-	inline static thread_local std::unique_ptr<ExecutionContext> ctx;
-
-	ThreadlocalExecutionContext() = delete;
-
-public:
-	static ExecutionContext& get_ctx();
-	static void make_ctx(std::unique_ptr<WasmContext>&& c);
 };
 
 } /* scs */
