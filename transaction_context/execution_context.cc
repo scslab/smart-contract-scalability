@@ -148,11 +148,7 @@ ExecutionContext::execute(Transaction const& root)
 
 	MethodInvocation invocation(root.invocation);
 
-	DeltaPriority p;
-	p.gas_rate_bid = root.gas_rate_bid;
-	p.tx_hash = hash_xdr(root);
-
-	tx_context = std::make_unique<TransactionContext>(root.gas_limit, invocation.addr, p);
+	tx_context = std::make_unique<TransactionContext>(root.gas_limit, root.gas_rate_bid, hash_xdr(root));
 
 	try
 	{

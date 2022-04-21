@@ -21,23 +21,14 @@ class TransactionContext {
 public:
 
 	const uint64_t gas_limit;
+	const uint64_t gas_rate_bid;
 	uint64_t gas_used;
-
-	const Address source_account;
 
 	std::vector<uint8_t> return_buf;
 
 	std::vector<std::vector<uint8_t>> logs;
 
-	TransactionContext(uint64_t gas_limit, Address const& src, DeltaPriority d)
-		: current_priority(d)
-		, invocation_stack()
-		, runtime_stack()
-		, gas_limit(gas_limit)
-		, gas_used(0)
-		, source_account(src)
-		, return_buf()
-		{}
+	TransactionContext(uint64_t gas_limit, uint64_t gas_rate_bid, Hash tx_hash);
 
 	DeltaPriority 
 	get_next_priority();

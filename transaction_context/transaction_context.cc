@@ -3,6 +3,16 @@
 namespace scs
 {
 
+TransactionContext::TransactionContext(uint64_t gas_limit, uint64_t gas_rate_bid, Hash tx_hash)
+	: current_priority(0, gas_rate_bid, tx_hash, 0)
+	, invocation_stack()
+	, runtime_stack()
+	, gas_limit(gas_limit)
+	, gas_used(0)
+	, gas_rate_bid(gas_rate_bid)
+	, return_buf()
+	{}
+
 DeltaPriority 
 TransactionContext::get_next_priority()
 {
