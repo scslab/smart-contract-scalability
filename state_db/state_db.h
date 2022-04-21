@@ -9,6 +9,7 @@ namespace scs
 {
 
 class SerialDeltaBatch;
+class DeltaBatch;
 
 class StateDB
 {
@@ -18,7 +19,7 @@ public:
 
 	void populate_delta_batch(SerialDeltaBatch& delta_batch) const;
 
-	void apply_delta_batch(SerialDeltaBatch const& delta_batch);
+	void apply_delta_batch(DeltaBatch const& delta_batch);
 };
 
 

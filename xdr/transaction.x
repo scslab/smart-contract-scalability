@@ -14,8 +14,15 @@ enum TransactionStatus
 struct TransactionInvocation
 {
 	Address invokedAddress;
-	opaque methodName<>;
+	uint32 method_name;
 	opaque calldata<>;
+};
+
+struct Transaction
+{
+	TransactionInvocation invocation;
+	uint64 gas_limit;
+	uint64 gas_rate_bid;
 };
 	
 } /* scs */

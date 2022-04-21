@@ -21,12 +21,11 @@ public:
 	void test_methodname()
 	{
 		TEST_START();
-		MethodInvocation invocation
-		{
-			.addr = Address{},
-			.method_name=0xABCDEF01,
-			.calldata = {}
-		};
+		MethodInvocation invocation(
+			Address{},
+			0xABCDEF01,
+			std::vector<uint8_t>()
+		);
 
 		std::string expect = "pub01EFCDAB";
 
@@ -38,12 +37,11 @@ public:
 	void test_methodname_zeroes()
 	{
 		TEST_START();
-		MethodInvocation invocation
-		{
-			.addr = Address{},
-			.method_name=0,
-			.calldata = {}
-		};
+		MethodInvocation invocation(
+			Address{},
+			0,
+			std::vector<uint8_t>()
+		);
 
 		std::string expect = "pub00000000";
 
@@ -69,15 +67,15 @@ public:
 
 		auto& exec_ctx = ThreadlocalExecutionContext::get_ctx();
 
-		MethodInvocation invocation {
-			.addr = addr,
-			.method_name = 1,
-			.calldata = {}
-		};
+		TransactionInvocation invocation (
+			addr,
+			1,
+			xdr::opaque_vec<>()
+		);
 
 		TS_ASSERT_EQUALS(
 			TransactionStatus::SUCCESS,
-			exec_ctx.execute(invocation, UINT64_MAX));
+			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1)));
 	}
 
 	void test_log_zeroed_array()
@@ -97,15 +95,20 @@ public:
 
 		auto& exec_ctx = ThreadlocalExecutionContext::get_ctx();
 
-		MethodInvocation invocation {
-			.addr = addr,
-			.method_name = 0, //call_log
-			.calldata = {0, 1, 0, 2, 0, 3, 0, 4}
-		};
+		TransactionInvocation invocation (
+			addr,
+			0, //call_log
+			xdr::opaque_vec<>({0, 1, 0, 2, 0, 3, 0, 4})
+		);
+
+		Transaction tx(
+			invocation,
+			UINT64_MAX,
+			1);
 
 		TS_ASSERT_EQUALS(
 			TransactionStatus::SUCCESS,
-			exec_ctx.execute(invocation, UINT64_MAX));
+			exec_ctx.execute(tx));
 
 		auto const& logs = exec_ctx.get_logs();
 
@@ -135,17 +138,17 @@ public:
 
 		auto& exec_ctx = ThreadlocalExecutionContext::get_ctx();
 
-		std::vector<uint8_t> calldata = {0, 1, 2, 3, 4, 5, 6, 7};
+		xdr::opaque_vec<>calldata = {0, 1, 2, 3, 4, 5, 6, 7};
 
-		MethodInvocation invocation {
-			.addr = addr,
-			.method_name = 0, // call_log
-			.calldata = calldata
-		};
+		TransactionInvocation invocation (
+			addr,
+			0, // call_log
+			calldata
+		);
 
 		TS_ASSERT_EQUALS(
 			TransactionStatus::SUCCESS,
-			exec_ctx.execute(invocation, UINT64_MAX));
+			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1)));
 
 		auto const& logs = exec_ctx.get_logs();
 
@@ -177,15 +180,15 @@ public:
 		ThreadlocalExecutionContext::make_ctx(std::move(p));
 		auto& exec_ctx = ThreadlocalExecutionContext::get_ctx();
 
-		MethodInvocation invocation {
-			.addr = addr0,
-			.method_name = 0, // call_log
-			.calldata = {addr1.begin(), addr1.end()}
-		};
+		TransactionInvocation invocation (
+			addr0,
+			0, // call_log
+			xdr::opaque_vec<>{addr1.begin(), addr1.end()}
+		);
 
 		TS_ASSERT_EQUALS(
 			TransactionStatus::SUCCESS,
-			exec_ctx.execute(invocation, UINT64_MAX));
+			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1)));
 		
 		auto const& logs = exec_ctx.get_logs();
 
@@ -212,16 +215,15 @@ public:
 		ThreadlocalExecutionContext::make_ctx(std::move(p));
 		auto& exec_ctx = ThreadlocalExecutionContext::get_ctx();
 
-		MethodInvocation invocation
-		{
-			.addr = addr0,
-			.method_name = test::method_name_from_human_readable("test_log"),
-			.calldata = {}
-		};
+		TransactionInvocation invocation (
+			addr0,
+			test::method_name_from_human_readable("test_log"),
+			xdr::opaque_vec<>{}
+		);
 
 		TS_ASSERT_EQUALS(
 			TransactionStatus::SUCCESS,
-			exec_ctx.execute(invocation, UINT64_MAX));
+			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1)));
 		
 		auto const& logs = exec_ctx.get_logs();
 
@@ -263,16 +265,15 @@ public:
 
 		uint8_t* ptr = reinterpret_cast<uint8_t*>(&to_be_serialized);
 
-		MethodInvocation invocation
-		{
-			.addr = addr0,
-			.method_name = test::method_name_from_human_readable("try_fancy_call"),
-			.calldata = {ptr, ptr + sizeof(to_be_serialized)}
-		};
+		TransactionInvocation invocation (
+			addr0,
+			test::method_name_from_human_readable("try_fancy_call"),
+			xdr::opaque_vec<>{ptr, ptr + sizeof(to_be_serialized)}
+		);
 
 		TS_ASSERT_EQUALS(
 			TransactionStatus::SUCCESS,
-			exec_ctx.execute(invocation, UINT64_MAX));
+			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1)));
 		
 		auto const& logs = exec_ctx.get_logs();
 

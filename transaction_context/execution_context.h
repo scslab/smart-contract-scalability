@@ -8,6 +8,8 @@
 
 #include "wasm_api/wasm_api.h"
 
+#include "xdr/transaction.h"
+
 namespace scs
 {
 
@@ -35,6 +37,24 @@ struct BuiltinFnWrappers
 	builtin_scs_log(
 		int32_t log_offset,
 		int32_t log_len);
+
+	static int32_t
+	builtin_scs_storage_get_type(
+		int32_t key_offset);
+
+	static void
+	builtin_scs_storage_raw_memory_get(
+		int32_t key_offset,
+		/* key_len = 32 */
+		int32_t output_offset,
+		int32_t output_max_len);
+
+	static void
+	builtin_scs_storage_raw_memory_set(
+		int32_t key_offset,
+		/* key_len = 32 */
+		int32_t input_offset,
+		int32_t input_len);
 };
 
 class ExecutionContext {
@@ -71,7 +91,7 @@ class ExecutionContext {
 public:
 
 	TransactionStatus
-	execute(MethodInvocation const& invocation, uint64_t gas_limit);
+	execute(Transaction const& invocation);
 
 	void reset();
 

@@ -1,5 +1,7 @@
 #include "transaction_context/execution_context.h"
 
+#include "crypto/hash.h"
+
 #include "debug/debug_macros.h"
 
 namespace scs
@@ -8,7 +10,7 @@ namespace scs
 void
 BuiltinFnWrappers::builtin_scs_print_debug(int32_t value)
 {
-	std::printf("print value: %ld\n", value);
+	std::printf("logging int32: %ld\n", value);
 }
 
 void 
@@ -16,7 +18,7 @@ BuiltinFnWrappers::builtin_scs_return(int32_t offset, int32_t len)
 {
 	auto& tx_ctx = ThreadlocalExecutionContext::get_ctx().get_transaction_context();
 
-	tx_ctx.return_buf = tx_ctx.runtime_stack.back()->template load_from_memory<std::vector<uint8_t>>(offset, len);
+	tx_ctx.return_buf = tx_ctx.get_current_runtime()->template load_from_memory<std::vector<uint8_t>>(offset, len);
 }
 
 void 
@@ -24,15 +26,14 @@ BuiltinFnWrappers::builtin_scs_get_calldata(int32_t offset, int32_t len)
 {
 	auto& tx_ctx = ThreadlocalExecutionContext::get_ctx().get_transaction_context();
 
-	auto& calldata = tx_ctx.invocation_stack.back().calldata;
+	auto& calldata = tx_ctx.get_current_method_invocation().calldata;
 	if (len > calldata.size())
 	{
 		throw std::runtime_error("insufficient calldata");
 	}
 
-	tx_ctx.runtime_stack.back() -> write_to_memory(calldata, offset, len);
+	tx_ctx.get_current_runtime() -> write_to_memory(calldata, offset, len);
 }
-
 
 void 
 BuiltinFnWrappers::builtin_scs_invoke(
@@ -45,16 +46,12 @@ BuiltinFnWrappers::builtin_scs_invoke(
 {
 	auto& tx_ctx = ThreadlocalExecutionContext::get_ctx().get_transaction_context();
 
-	auto& runtime = *tx_ctx.runtime_stack.back();
+	auto& runtime = *tx_ctx.get_current_runtime();
 
-	MethodInvocation invocation
-	{
-		.addr = runtime.template load_from_memory_to_const_size_buf<Address>(addr_offset),
-		.method_name = static_cast<uint32_t>(methodname),
-		.calldata = runtime.template load_from_memory<std::vector<uint8_t>>(calldata_offset, calldata_len)
-	};
-
-
+	MethodInvocation invocation(
+		runtime.template load_from_memory_to_const_size_buf<Address>(addr_offset),
+		static_cast<uint32_t>(methodname),
+		runtime.template load_from_memory<std::vector<uint8_t>>(calldata_offset, calldata_len));
 
 	ThreadlocalExecutionContext::get_ctx().invoke_subroutine(invocation);
 
@@ -73,7 +70,7 @@ BuiltinFnWrappers::builtin_scs_log(
 {
 	auto& tx_ctx = ThreadlocalExecutionContext::get_ctx().get_transaction_context();
 
-	auto& runtime = *tx_ctx.runtime_stack.back();
+	auto& runtime = *tx_ctx.get_current_runtime();
 
 	CONTRACT_INFO("Logging offset=%lu len=%lu", log_offset, log_len);
 
@@ -116,7 +113,7 @@ ExecutionContext::link_builtin_fns(WasmRuntime& runtime)
 void 
 ExecutionContext::invoke_subroutine(MethodInvocation invocation)
 {
-	tx_context->invocation_stack.push_back(invocation);
+	//tx_context->invocation_stack.push_back(invocation);
 
 	auto iter = active_runtimes.find(invocation.addr);
 	if (iter == active_runtimes.end())
@@ -128,17 +125,20 @@ ExecutionContext::invoke_subroutine(MethodInvocation invocation)
 
 	auto* runtime = active_runtimes.at(invocation.addr).get();
 
-	tx_context -> runtime_stack.push_back(runtime);
+	tx_context -> push_invocation_stack(runtime, invocation);
+
+	//tx_context -> runtime_stack.push_back(runtime);
 
 	runtime->invoke(invocation);
 
-	tx_context -> runtime_stack.pop_back();
+	tx_context -> pop_invocation_stack();
 
-	tx_context->invocation_stack.pop_back();
+	//tx_context -> runtime_stack.pop_back();
+	//tx_context->invocation_stack.pop_back();
 }
 
 TransactionStatus
-ExecutionContext::execute(MethodInvocation const& invocation, uint64_t gas_limit)
+ExecutionContext::execute(Transaction const& root)
 {
 	if (executed)
 	{
@@ -146,7 +146,13 @@ ExecutionContext::execute(MethodInvocation const& invocation, uint64_t gas_limit
 	}
 	executed = true;
 
-	tx_context = std::make_unique<TransactionContext>(gas_limit, invocation.addr);
+	MethodInvocation invocation(root.invocation);
+
+	DeltaPriority p;
+	p.gas_rate_bid = root.gas_rate_bid;
+	p.tx_hash = hash_xdr(root);
+
+	tx_context = std::make_unique<TransactionContext>(root.gas_limit, invocation.addr, p);
 
 	try
 	{

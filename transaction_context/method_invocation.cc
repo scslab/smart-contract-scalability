@@ -8,6 +8,19 @@
 namespace scs
 {
 
+MethodInvocation::MethodInvocation(TransactionInvocation const& root_invocation)
+	: addr(root_invocation.invokedAddress)
+	, method_name(root_invocation.method_name)
+	, calldata(root_invocation.calldata)
+	{}
+
+MethodInvocation::MethodInvocation(const Address& addr, uint32_t method, std::vector<uint8_t>&& calldata)
+	: addr(addr)
+	, method_name(method)
+	, calldata(std::move(calldata))
+	{}
+
+
 std::string 
 MethodInvocation::get_invocable_methodname() const
 {
@@ -25,5 +38,9 @@ MethodInvocation::get_invocable_methodname() const
 
 	return ss.str();
 }
+
+
+
+
 
 } /* scs */

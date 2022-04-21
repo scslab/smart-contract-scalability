@@ -26,6 +26,7 @@ CRYPTO_SRCS = \
 	crypto/crypto_utils.cc
 
 STATE_DB_SRCS = \
+	state_db/delta_batch.cc \
 	state_db/delta_vec.cc \
 	state_db/object_mutator.cc \
 	state_db/serial_delta_batch.cc \
@@ -33,7 +34,8 @@ STATE_DB_SRCS = \
 
 TRANSACTION_CONTEXT_SRCS = \
 	transaction_context/execution_context.cc \
-	transaction_context/method_invocation.cc
+	transaction_context/method_invocation.cc \
+	transaction_context/transaction_context.cc
 
 TX_BLOCK_SRCS = \
 	tx_block/tx_block.cc

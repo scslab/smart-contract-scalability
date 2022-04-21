@@ -5,7 +5,8 @@ namespace scs
 
 enum ObjectType
 {
-	RAW_MEMORY = 0
+	NONE = 0,
+	RAW_MEMORY = 1
 };
 
 const RAW_MEMORY_MAX_LEN = 512;
@@ -15,6 +16,7 @@ struct RawMemoryStorage
 	opaque data<RAW_MEMORY_MAX_LEN>;
 };
 
+// these unions should never have a NONE case arm
 union StorageObject switch (ObjectType type)
 {
 	case RAW_MEMORY:
@@ -34,7 +36,7 @@ struct DeltaPriority
 	uint64 custom_priority;
 
 	//higher gas bid wins ties
-	uint64 gas_bid;
+	uint64 gas_rate_bid;
 
 	Hash tx_hash;
 

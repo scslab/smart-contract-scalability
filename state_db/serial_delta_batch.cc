@@ -25,4 +25,5 @@ SerialDeltaBatch::add_delta_raw_memory(const Address& addr, const InvariantKey& 
 	add_delta(addr, key, std::move(d), std::move(priority));
 }
 
+
 } /* scs */

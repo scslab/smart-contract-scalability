@@ -13,7 +13,7 @@ std::strong_ordering operator<=>(const DeltaPriority& d1, const DeltaPriority& d
 		return priority;
 	}
 
-	auto gas = d1.gas_bid <=> d2.gas_bid;
+	auto gas = d1.gas_rate_bid <=> d2.gas_rate_bid;
 	if (gas != std::strong_ordering::equal)
 	{
 		return gas;
