@@ -13,11 +13,16 @@ ThreadlocalContextStore::get_exec_ctx()
 	return *ctx;
 }
 
+template<typename WasmContext_T, typename ...Args>
+requires std::derived_from<WasmContext_T, WasmContext>
 void 
-ThreadlocalContextStore::make_ctx(std::unique_ptr<WasmContext>&& c)
+ThreadlocalContextStore::make_ctx(Args&... args)
 {
-	ctx = std::unique_ptr<ExecutionContext>(new ExecutionContext(std::move(c)));
+	ctx = std::unique_ptr<ExecutionContext>(new ExecutionContext(new WasmContext_T(args...)));
 }
+
+template
+void ThreadlocalContextStore::make_ctx<Wasm3_WasmContext>(ContractDB& db);
 
 SerialDeltaBatch&
 ThreadlocalContextStore::get_delta_batch()

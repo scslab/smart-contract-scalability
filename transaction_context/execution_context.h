@@ -26,8 +26,8 @@ class ExecutionContext {
 	//void link_builtin_fns(WasmRuntime& runtime);
 
 
-	ExecutionContext(std::unique_ptr<WasmContext> ctx)
-		: wasm_context(std::move(ctx))
+	ExecutionContext(WasmContext* ctx)
+		: wasm_context(ctx)
 		, active_runtimes()
 		//, tx_state_delta()
 		, tx_context(nullptr)

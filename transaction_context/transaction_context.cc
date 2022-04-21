@@ -27,7 +27,7 @@ TransactionContext::get_current_runtime()
 	return runtime_stack.back();
 }
 
-MethodInvocation& 
+const MethodInvocation& 
 TransactionContext::get_current_method_invocation()
 {
 	return invocation_stack.back();

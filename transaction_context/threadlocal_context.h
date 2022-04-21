@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <memory>
 
 #include "mtt/utils/threadlocal_cache.h"
@@ -21,7 +22,9 @@ class ThreadlocalContextStore {
 public:
 	static ExecutionContext& get_exec_ctx();
 	static SerialDeltaBatch& get_delta_batch();
-	static void make_ctx(std::unique_ptr<WasmContext>&& c);
+	template<typename WasmContext_T, typename ...Args>
+	requires std::derived_from<WasmContext_T, WasmContext>
+	static void make_ctx(Args&... args);
 
 	static void post_block_clear();
 };

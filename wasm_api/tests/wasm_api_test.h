@@ -62,9 +62,7 @@ public:
 
 		TS_ASSERT(db.register_contract(addr, c));
 
-		std::unique_ptr<WasmContext> p = std::unique_ptr<WasmContext>(new Wasm3_WasmContext(db));
-
-		ThreadlocalContextStore::make_ctx(std::move(p));
+		ThreadlocalContextStore::template make_ctx<Wasm3_WasmContext>(db);
 
 		auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
@@ -90,9 +88,7 @@ public:
 
 		TS_ASSERT(db.register_contract(addr, c));
 
-		std::unique_ptr<WasmContext> p = std::unique_ptr<WasmContext>(new Wasm3_WasmContext(db));
-
-		ThreadlocalContextStore::make_ctx(std::move(p));
+		ThreadlocalContextStore::template make_ctx<Wasm3_WasmContext>(db);
 
 		auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
@@ -133,9 +129,7 @@ public:
 
 		TS_ASSERT(db.register_contract(addr, c));
 
-		std::unique_ptr<WasmContext> p = std::unique_ptr<WasmContext>(new Wasm3_WasmContext(db));
-
-		ThreadlocalContextStore::make_ctx(std::move(p));
+		ThreadlocalContextStore::template make_ctx<Wasm3_WasmContext>(db);
 
 		auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
@@ -177,8 +171,7 @@ public:
 
 		TS_ASSERT(db.register_contract(addr1, c));
 
-		std::unique_ptr<WasmContext> p = std::unique_ptr<WasmContext>(new Wasm3_WasmContext(db));
-		ThreadlocalContextStore::make_ctx(std::move(p));
+		ThreadlocalContextStore::template make_ctx<Wasm3_WasmContext>(db);
 		auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
 		TransactionInvocation invocation (
@@ -212,8 +205,7 @@ public:
 
 		TS_ASSERT(db.register_contract(addr0, c));
 
-		std::unique_ptr<WasmContext> p = std::unique_ptr<WasmContext>(new Wasm3_WasmContext(db));
-		ThreadlocalContextStore::make_ctx(std::move(p));
+		ThreadlocalContextStore::template make_ctx<Wasm3_WasmContext>(db);
 		auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
 		TransactionInvocation invocation (
@@ -246,8 +238,7 @@ public:
 
 		TS_ASSERT(db.register_contract(addr0, c));
 
-		std::unique_ptr<WasmContext> p = std::unique_ptr<WasmContext>(new Wasm3_WasmContext(db));
-		ThreadlocalContextStore::make_ctx(std::move(p));
+		ThreadlocalContextStore::template make_ctx<Wasm3_WasmContext>(db);
 		auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
 		uint32_t val1 = 5;

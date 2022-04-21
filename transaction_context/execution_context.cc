@@ -67,7 +67,6 @@ ExecutionContext::reset()
 TransactionContext& 
 ExecutionContext::get_transaction_context()
 {
-
 	if (!executed)
 	{
 		throw std::runtime_error("can't get ctx before execution");

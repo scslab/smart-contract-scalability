@@ -14,6 +14,7 @@ class ContractDB {
 
 	ContractDB(ContractDB&) = delete;
 	ContractDB& operator=(ContractDB&) = delete;
+	ContractDB(ContractDB&&) = delete;
 
 public:
 

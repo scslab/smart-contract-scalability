@@ -36,7 +36,7 @@ public:
 	WasmRuntime*
 	get_current_runtime();
 
-	MethodInvocation& 
+	const MethodInvocation& 
 	get_current_method_invocation();
 
 	void pop_invocation_stack();
