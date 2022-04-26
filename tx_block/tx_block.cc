@@ -16,17 +16,33 @@ TxBlock::insert_tx(TransactionInvocation const& invocation)
 }
 
 bool 
-TxBlock::is_valid(const Hash& hash) const
+TxBlock::is_valid(TransactionFailurePoint failure_point, const Hash& hash) const
 {
 	auto const& res = tx_trie.get_value_nolocks(hash_prefix_t(hash));
-	return !(res.v -> invalid.test());
+	return (res.v -> validity.load(std::memory_order_relaxed) <= static_cast<uint32_t>(failure_point));
 }
 
+template<TransactionFailurePoint failure_point>
+struct InvalidateFn
+{
+	template<typename ptr_value_t> 
+	static void
+	apply(ptr_value_t& val)
+	{
+		val.v -> validity.fetch_or(failure_point, std::memory_order_relaxed);
+	}
+};
+
+template<TransactionFailurePoint failure_point>
 void 
 TxBlock::invalidate(const Hash& hash)
 {
-	tx_trie.template modify_value_nolocks<InvalidateFn>(hash_prefix_t(hash));
+	tx_trie.template modify_value_nolocks<InvalidateFn<failure_point>>(hash_prefix_t(hash));
 }
 
+template
+void TxBlock::invalidate<TransactionFailurePoint::COMPUTE>(const Hash& hash);
+template
+void TxBlock::invalidate<TransactionFailurePoint::CONFLICT_PHASE_1>(const Hash& hash);
 
 } /* scs */

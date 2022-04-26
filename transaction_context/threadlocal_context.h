@@ -22,6 +22,7 @@ class ThreadlocalContextStore {
 public:
 	static ExecutionContext& get_exec_ctx();
 	static SerialDeltaBatch& get_delta_batch();
+	
 	template<typename WasmContext_T, typename ...Args>
 	requires std::derived_from<WasmContext_T, WasmContext>
 	static void make_ctx(Args&... args);

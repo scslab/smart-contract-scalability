@@ -15,6 +15,16 @@ class GlobalContext
 public:
 
 	GlobalContext();
+
+	ContractDB& get_contract_db()
+	{
+		return contract_db;
+	}
+
+	TxBlock& get_tx_block()
+	{
+		return tx_block;
+	}
 };
 
 class StaticGlobalContext
@@ -26,6 +36,11 @@ class StaticGlobalContext
 public:
 	// takes ownership of c
 	void set(GlobalContext* c);
+
+	GlobalContext& get()
+	{
+		return *context;
+	}
 };
 
 void

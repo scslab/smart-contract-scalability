@@ -11,6 +11,13 @@ enum TransactionStatus
 	//TODO other statuses
 };
 
+enum TransactionFailurePoint
+{
+	COMPUTE = 0x1,
+	CONFLICT_PHASE_1 = 0x2,
+	FINAL = 0
+};
+
 struct TransactionInvocation
 {
 	Address invokedAddress;

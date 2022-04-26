@@ -17,24 +17,15 @@ class TxBlock
 	struct ValueT
 	{
 		TransactionInvocation invocation;
-		std::atomic_flag invalid;
+		std::atomic<uint32_t> validity;
 
 		ValueT(TransactionInvocation const& invocation)
 			: invocation(invocation)
-			, invalid()
+			, validity(0)
 			{}
 	};
 
 	using ptr_value_t = trie::PointerValue<ValueT>;
-
-	struct InvalidateFn
-	{
-		static void
-		apply(ptr_value_t& val)
-		{
-			val.v->invalid.test_and_set();
-		}
-	};
 
 	using trie_t = trie::MerkleTrie<hash_prefix_t, ptr_value_t>;
 
@@ -48,8 +39,9 @@ public:
 
 	void insert_tx(TransactionInvocation const& invocation);
 
-	bool is_valid(const Hash& hash) const;
+	bool is_valid(TransactionFailurePoint failure_point, const Hash& hash) const;
 
+	template<TransactionFailurePoint failure_point>
 	void invalidate(const Hash& hash);
 
 };
