@@ -13,6 +13,7 @@
 namespace scs
 {
 
+class GlobalContext;
 class ExecutionContext {
 
 	std::unique_ptr<WasmContext> wasm_context;
@@ -45,7 +46,7 @@ class ExecutionContext {
 public:
 
 	TransactionStatus
-	execute(Transaction const& invocation);
+	execute(Transaction const& invocation, GlobalContext& context);
 
 	void reset();
 

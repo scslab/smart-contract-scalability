@@ -4,6 +4,7 @@
 
 #include "transaction_context/execution_context.h"
 #include "transaction_context/threadlocal_context.h"
+#include "transaction_context/global_context.h"
 
 #include "wasm_api/wasm_api.h"
 
@@ -18,6 +19,11 @@ using namespace scs::test;
 class WasmApiTestSuite : public CxxTest::TestSuite {
 
 public:
+
+	void tearDown()
+	{
+		ThreadlocalContextStore::clear_entire_context();
+	}
 
 	void test_methodname()
 	{
@@ -54,7 +60,8 @@ public:
 	void test_execute_simple()
 	{
 		TEST_START();
-		ContractDB db;
+		GlobalContext context;
+		auto& db = context.get_contract_db();
 
 		std::shared_ptr<Contract> c = std::make_shared<Contract>(load_wasm_from_file("wasm_api/tests/wat/test_call_simple.wasm"));
 
@@ -74,14 +81,15 @@ public:
 
 		TS_ASSERT_EQUALS(
 			TransactionStatus::SUCCESS,
-			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1)));
+			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1), context));
 	}
 
 	void test_log_zeroed_array()
 	{
 		TEST_START();
-		ContractDB db;
-
+		GlobalContext context;
+		auto& db = context.get_contract_db();
+		
 		std::shared_ptr<Contract> c = std::make_shared<Contract>(load_wasm_from_file("wasm_api/tests/wat/test_log.wasm"));
 
 		Address addr = address_from_uint64(0);
@@ -105,7 +113,7 @@ public:
 
 		TS_ASSERT_EQUALS(
 			TransactionStatus::SUCCESS,
-			exec_ctx.execute(tx));
+			exec_ctx.execute(tx, context));
 
 		auto const& logs = exec_ctx.get_logs();
 
@@ -121,7 +129,8 @@ public:
 
 	void test_log_calldata()
 	{
-		ContractDB db;
+		GlobalContext context;
+		auto& db = context.get_contract_db();
 
 		std::shared_ptr<Contract> c = std::make_shared<Contract>(load_wasm_from_file("wasm_api/tests/wat/test_log.wasm"));
 
@@ -143,7 +152,7 @@ public:
 
 		TS_ASSERT_EQUALS(
 			TransactionStatus::SUCCESS,
-			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1)));
+			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1), context));
 
 		auto const& logs = exec_ctx.get_logs();
 
@@ -159,7 +168,8 @@ public:
 
 	void test_cross_call()
 	{
-		ContractDB db;
+		GlobalContext context;
+		auto& db = context.get_contract_db();
 
 		std::shared_ptr<Contract> c = std::make_shared<Contract>(load_wasm_from_file("wasm_api/tests/wat/test_cross_call_1.wasm"));
 		Address addr0 = address_from_uint64(0);
@@ -182,7 +192,7 @@ public:
 
 		TS_ASSERT_EQUALS(
 			TransactionStatus::SUCCESS,
-			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1)));
+			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1), context));
 		
 		auto const& logs = exec_ctx.get_logs();
 
@@ -198,7 +208,8 @@ public:
 
 	void test_rustsdk_log()
 	{
-		ContractDB db;
+		GlobalContext context;
+		auto& db = context.get_contract_db();
 
 		std::shared_ptr<Contract> c = std::make_shared<Contract>(load_wasm_from_file("contracts/built_wasms/test_log.wasm"));
 		Address addr0 = address_from_uint64(0);
@@ -216,7 +227,7 @@ public:
 
 		TS_ASSERT_EQUALS(
 			TransactionStatus::SUCCESS,
-			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1)));
+			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1), context));
 		
 		auto const& logs = exec_ctx.get_logs();
 
@@ -231,7 +242,8 @@ public:
 
 	void test_rustsdk_log_fancy()
 	{
-		ContractDB db;
+		GlobalContext context;
+		auto& db = context.get_contract_db();
 
 		std::shared_ptr<Contract> c = std::make_shared<Contract>(load_wasm_from_file("contracts/built_wasms/test_log.wasm"));
 		Address addr0 = address_from_uint64(0);
@@ -265,7 +277,7 @@ public:
 
 		TS_ASSERT_EQUALS(
 			TransactionStatus::SUCCESS,
-			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1)));
+			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1), context));
 		
 		auto const& logs = exec_ctx.get_logs();
 

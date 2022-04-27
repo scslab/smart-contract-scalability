@@ -5,6 +5,17 @@
 namespace scs
 {
 
+StorageObject
+StateDB::get(AddressAndKey const& a) const
+{
+	auto it = state_db.find(a);
+	if (it == state_db.end())
+	{
+		throw std::runtime_error("storage key not found");
+	}
+	return it -> second;
+}
+
 void 
 StateDB::populate_delta_batch(SerialDeltaBatch& delta_batch) const
 {

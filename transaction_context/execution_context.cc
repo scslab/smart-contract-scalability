@@ -1,4 +1,5 @@
 #include "transaction_context/execution_context.h"
+#include "transaction_context/global_context.h"
 
 #include "crypto/hash.h"
 
@@ -30,7 +31,7 @@ ExecutionContext::invoke_subroutine(MethodInvocation invocation)
 }
 
 TransactionStatus
-ExecutionContext::execute(Transaction const& root)
+ExecutionContext::execute(Transaction const& root, GlobalContext& context)
 {
 	if (executed)
 	{
@@ -40,7 +41,7 @@ ExecutionContext::execute(Transaction const& root)
 
 	MethodInvocation invocation(root.invocation);
 
-	tx_context = std::make_unique<TransactionContext>(root.gas_limit, root.gas_rate_bid, hash_xdr(root));
+	tx_context = std::make_unique<TransactionContext>(root.gas_limit, root.gas_rate_bid, hash_xdr(root), context);
 
 	try
 	{

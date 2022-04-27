@@ -3,6 +3,7 @@
 #include "contract_db/contract_db.h"
 
 #include "tx_block/tx_block.h"
+#include "state_db/state_db.h"
 
 namespace scs
 {
@@ -11,6 +12,7 @@ class GlobalContext
 {
 	ContractDB contract_db;
 	TxBlock tx_block;
+	StateDB state_db;
 
 public:
 
@@ -25,8 +27,14 @@ public:
 	{
 		return tx_block;
 	}
+
+	StateDB& get_state_db()
+	{
+		return state_db;
+	}
 };
 
+/*
 class StaticGlobalContext
 {
 	inline static GlobalContext* context;
@@ -46,5 +54,6 @@ public:
 void
 __attribute__((destructor))
 _free_global_context();
+*/
 
 } /* scs */

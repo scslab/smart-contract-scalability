@@ -1,12 +1,16 @@
 #include "transaction_context/transaction_context.h"
+#include "transaction_context/global_context.h"
+#include "tx_block/tx_block.h"
 
 namespace scs
 {
 
-TransactionContext::TransactionContext(uint64_t gas_limit, uint64_t gas_rate_bid, Hash tx_hash)
+TransactionContext::TransactionContext(uint64_t gas_limit, uint64_t gas_rate_bid, Hash tx_hash, GlobalContext& context)
 	: current_priority(0, gas_rate_bid, tx_hash, 0)
 	, invocation_stack()
 	, runtime_stack()
+	, storage_cache(context.get_state_db())
+	, tx_block(context.get_tx_block())
 	, gas_limit(gas_limit)
 	, gas_rate_bid(gas_rate_bid)
 	, gas_used(0)

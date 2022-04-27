@@ -37,5 +37,12 @@ ThreadlocalContextStore::post_block_clear()
 	ctx -> reset();
 }
 
+void
+ThreadlocalContextStore::clear_entire_context()
+{
+	delta_batches.clear();
+	ctx = nullptr;
+}
+
 
 } /* scs */

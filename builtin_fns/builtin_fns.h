@@ -42,6 +42,27 @@ class BuiltinFns
 		/* addr_len = 32 */
 		);
 
+	/* -- raw memory storage fns -- */
+
+	static void
+	scs_raw_memory_set(
+		int32_t key_offset,
+		int32_t key_len,
+		int32_t mem_offset,
+		int32_t mem_len);
+
+	static void
+	scs_raw_memory_get(
+		int32_t key_offset,
+		int32_t key_len,
+		int32_t output_offset,
+		int32_t output_max_len);
+
+	static int32_t
+	scs_raw_memory_get_len(
+		int32_t key_offset,
+		int32_t key_len);
+
 	BuiltinFns() = delete;
 
 public:

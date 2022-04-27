@@ -3,6 +3,13 @@
 namespace scs
 {
 
+GlobalContext::GlobalContext()
+	: contract_db()
+	, tx_block()
+	, state_db()
+	{}
+
+/*
 void 
 StaticGlobalContext::set(GlobalContext* c)
 {
@@ -21,6 +28,6 @@ _free_global_context()
 	{
 		delete p;
 	}
-}
+} */
 
 } /* scs */
