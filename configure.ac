@@ -46,15 +46,16 @@ AS_IF([test -n "$XDRC"],,
 if test -z "$XDRC"; then
    AC_MSG_ERROR(Cannot find xdrc)
 fi
+
 AC_MSG_RESULT($XDRC)
 AC_SUBST(XDRC)
 
 ALREADY_HAVE_XDRC=../$XDRC
 
-mtt_disable_tests=yes
-export mtt_disable_tests
-
 export ALREADY_HAVE_XDRC
+
+AC_MSG_CHECKING(ALREADY_HAVE_XDRC)
+
 export xdrpp_LIBS
 export xdrpp_CFLAGS
 

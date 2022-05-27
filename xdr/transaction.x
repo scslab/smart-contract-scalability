@@ -11,11 +11,14 @@ enum TransactionStatus
 	//TODO other statuses
 };
 
+// validity check: flip bit <phase_num> if you fail
+// validation in phase <phase_num>.
+// valid in phase (phase_num) if (validity bits) <= phase_enum
 enum TransactionFailurePoint
 {
-	COMPUTE = 0x1,
-	CONFLICT_PHASE_1 = 0x2,
-	FINAL = 0
+	COMPUTE          = 0x80000000,
+	CONFLICT_PHASE_1 = 0x40000000,
+	FINAL            = 0
 };
 
 struct TransactionInvocation
