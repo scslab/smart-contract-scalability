@@ -47,6 +47,28 @@ TEST_CASE("test log", "[builtin]")
 			REQUIRE(logs[0] == std::vector<uint8_t>{0x11, 0x00, 0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA});
 		}
 	}
+	SECTION("log calldata")
+	{
+		TransactionInvocation invocation (
+			h,
+			1,
+			xdr::opaque_vec<>{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}
+		);
+
+		REQUIRE(
+			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1))
+			== TransactionStatus::SUCCESS);
+
+		auto const& logs = exec_ctx.get_logs();
+
+		REQUIRE(logs.size() == 1);
+
+		if (logs.size() >= 1)
+		{
+			REQUIRE(logs[0].size() == 8);
+			REQUIRE(logs[0] == std::vector<uint8_t>{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07});
+		}
+	}
 
 
 }

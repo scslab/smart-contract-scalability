@@ -10,15 +10,17 @@ namespace sdk
 namespace detail
 {
 
-BUILTIN("log")
-void log(uint32_t offset, uint32_t len);
+BUILTIN("get_calldata")
+void get_calldata(uint32_t offset, uint32_t len);
 
 } /* detail */
 
 template<TriviallyCopyable T>
-void log(T const& val)
+T get_calldata()
 {
-	detail::log(sdk::to_offset(&val), sizeof(T));
+	T out;
+	detail::get_calldata(to_offset(&out), sizeof(T));
+	return out;
 }
 
 } /* sdk */

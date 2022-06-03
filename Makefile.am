@@ -81,13 +81,15 @@ contracts/built_wasms/%.wasm : $(wildcard contracts/*/src/*.rs) $(wildcard rust_
 CC_WASMS = \
 	cpp_contracts/test_log.cc
 
-.cc.wasm: cpp_contracts/sdk/alloc.h cpp_contracts/sdk/log.h Makefile.am
+.cc.wasm:
 	wasi/wasi-sdk/bin/clang -Os -mtune=native -march=native -I./cpp_contracts/ $< -o $@ \
 		--sysroot=wasi/wasi-sdk/share/wasi-sysroot \
 		-nostdlib \
 		-std=gnu++2a \
 		-Wl,--no-entry -fno-exceptions -Wl,--allow-undefined && \
 	echo $(COMPLETE_SRCS)
+
+$(CC_WASMS:.cc=.wasm) : $(wildcard cpp_contracts/sdk/*.h)
 
 AM_CPPFLAGS = $(xdrpp_CFLAGS) $(libsodium_CFLAGS) $(LIBFYAML_CFLAGS) $(tbb_CFLAGS) $(merkle_trie_toolkit_CFLAGS) $(wasm_api_CFLAGS) $(Catch2_CFLAGS)
 LDADD = $(xdrpp_LIBS) $(libsodium_LIBS) $(LIBFYAML_LIBS) $(tbb_LIBS) $(merkle_trie_toolkit_LIBS) $(wasm_api_LIBS) $(Catch2_LIBS)

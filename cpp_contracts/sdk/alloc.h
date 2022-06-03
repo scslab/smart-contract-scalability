@@ -1,3 +1,4 @@
+#pragma once
 
 #include <new>
 #ifndef HEAP_SIZE
