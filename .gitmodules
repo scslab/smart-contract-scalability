@@ -1,9 +1,9 @@
-[submodule "wasm3"]
-	path = wasm3
-	url = git@github.com:wasm3/wasm3.git
 [submodule "xdrpp"]
 	path = xdrpp
 	url = git@github.com:gramseyer/xdrpp.git
 [submodule "merkle_trie_toolkit"]
 	path = merkle_trie_toolkit
 	url = git@github.com:gramseyer/merkle_trie_toolkit.git
+[submodule "wasm_api"]
+	path = wasm_api
+	url = git@github.com:gramseyer/wasm_api.git

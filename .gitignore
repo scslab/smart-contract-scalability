@@ -18,7 +18,6 @@ doc/
 *.dirstamp
 depcomp
 test_runner.cc
-README
 ylwrap
 test-driver
 ar-lib

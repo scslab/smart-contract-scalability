@@ -48,35 +48,13 @@ TRANSACTION_CONTEXT_SRCS = \
 TX_BLOCK_SRCS = \
 	tx_block/tx_block.cc
 
-WASM_API_SRCS = \
-	wasm_api/wasm_api.cc
-
-WASM3_SRCS = \
-	wasm3/source/m3_api_libc.c \
-	wasm3/source/m3_api_meta_wasi.c \
-	wasm3/source/m3_api_tracer.c \
-	wasm3/source/m3_api_uvwasi.c \
-	wasm3/source/m3_api_wasi.c \
-	wasm3/source/m3_bind.c \
-	wasm3/source/m3_code.c \
-	wasm3/source/m3_compile.c \
-	wasm3/source/m3_core.c \
-	wasm3/source/m3_env.c \
-	wasm3/source/m3_exec.c \
-	wasm3/source/m3_function.c \
-	wasm3/source/m3_info.c \
-	wasm3/source/m3_module.c \
-	wasm3/source/m3_parse.c
-
 SRCS = \
 	$(BUILTIN_FNS_SRCS) \
 	$(CONTRACT_DB_SRCS) \
 	$(CRYPTO_SRCS) \
 	$(STATE_DB_SRCS) \
 	$(TRANSACTION_CONTEXT_SRCS) \
-	$(TX_BLOCK_SRCS) \
-	$(WASM_API_SRCS) \
-	$(WASM3_SRCS)
+	$(TX_BLOCK_SRCS)
 
 MTT_TESTS = \
 	$(wildcard merkle_trie_toolkit/tests/*.h)
@@ -103,8 +81,8 @@ contracts/built_wasms/%.wasm : $(wildcard contracts/*/src/*.rs) $(wildcard rust_
 .wat.wasm:
 	wat2wasm -o $@ $<
 
-AM_CPPFLAGS = $(xdrpp_CFLAGS) $(libsodium_CFLAGS) $(LIBFYAML_CFLAGS) $(tbb_CFLAGS) $(merkle_trie_toolkit_CFLAGS)
-LDADD = $(xdrpp_LIBS) $(libsodium_LIBS) $(LIBFYAML_LIBS) $(tbb_LIBS) $(merkle_trie_toolkit_LIBS)
+AM_CPPFLAGS = $(xdrpp_CFLAGS) $(libsodium_CFLAGS) $(LIBFYAML_CFLAGS) $(tbb_CFLAGS) $(merkle_trie_toolkit_CFLAGS) $(wasm_api_CFLAGS)
+LDADD = $(xdrpp_LIBS) $(libsodium_LIBS) $(LIBFYAML_LIBS) $(tbb_LIBS) $(merkle_trie_toolkit_LIBS) $(wasm_api_LIBS)
 
 $(SRCS:.cc=.o) : $(XH_FILES)
 $(MAIN_CCS:.cc=.o) : $(XH_FILES)

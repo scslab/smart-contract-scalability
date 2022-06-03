@@ -51,7 +51,8 @@ AC_MSG_RESULT($XDRC)
 AC_SUBST(XDRC)
 
 ALREADY_HAVE_XDRC=../$XDRC
-
+real_top_builddir=$PWD
+export real_top_builddir
 export ALREADY_HAVE_XDRC
 
 export xdrpp_LIBS
