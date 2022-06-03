@@ -13,6 +13,8 @@
 
 namespace scs {
 
+class GlobalContext;
+
 class TransactionContext {
 
 	DeltaPriority current_priority;
@@ -30,7 +32,9 @@ public:
 
 	std::vector<std::vector<uint8_t>> logs;
 
-	TransactionContext(uint64_t gas_limit, uint64_t gas_rate_bid, Hash tx_hash);
+	StorageCache storage_proxy;
+
+	TransactionContext(uint64_t gas_limit, uint64_t gas_rate_bid, Hash tx_hash, GlobalContext const& scs_data_structures);
 
 	DeltaPriority 
 	get_next_priority(uint64_t priority);

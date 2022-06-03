@@ -8,6 +8,15 @@ namespace scs
 void
 BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 {
+	/* -- env -- */
+
+	runtime.template link_env<&BuiltinFns::memcmp>(
+		"memcmp");
+	runtime.template link_env<&BuiltinFns::memset>(
+		"memset");
+	runtime.template link_env<&BuiltinFns::memcpy>(
+		"memcpy");
+
 	/* -- logging functions -- */
 
 	runtime.template link_fn<&BuiltinFns::scs_log>(

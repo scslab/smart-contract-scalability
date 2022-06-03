@@ -4,7 +4,11 @@
 namespace scs
 {
 
-TransactionContext::TransactionContext(uint64_t gas_limit, uint64_t gas_rate_bid, Hash tx_hash)
+TransactionContext::TransactionContext(
+	uint64_t gas_limit, 
+	uint64_t gas_rate_bid, 
+	Hash tx_hash, 
+	GlobalContext const& global_context)
 	: current_priority(0, gas_rate_bid, tx_hash, 0)
 	, invocation_stack()
 	, runtime_stack()
@@ -12,6 +16,8 @@ TransactionContext::TransactionContext(uint64_t gas_limit, uint64_t gas_rate_bid
 	, gas_rate_bid(gas_rate_bid)
 	, gas_used(0)
 	, return_buf()
+	, logs()
+	, storage_proxy(global_context.state_db)
 	{}
 
 DeltaPriority 
@@ -25,6 +31,10 @@ TransactionContext::get_next_priority(uint64_t priority)
 wasm_api::WasmRuntime*
 TransactionContext::get_current_runtime()
 {
+	if (runtime_stack.size() == 0)
+	{
+		throw std::runtime_error("no active runtime during get_current_runtime() call");
+	}
 	return runtime_stack.back();
 }
 
