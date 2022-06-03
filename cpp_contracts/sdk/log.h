@@ -9,7 +9,7 @@ namespace sdk
 namespace detail
 {
 
-BUILTIN("scs_log")
+BUILTIN("log")
 void log(uint32_t offset, uint32_t len);
 
 } /* detail */

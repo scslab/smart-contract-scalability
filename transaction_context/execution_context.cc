@@ -25,7 +25,7 @@ ExecutionContext::invoke_subroutine(MethodInvocation const& invocation)
 
 	tx_context -> push_invocation_stack(runtime, invocation);
 
-	runtime->invoke(invocation.get_invocable_methodname().c_str());
+	runtime->template invoke<int32_t>(invocation.get_invocable_methodname().c_str());
 
 	tx_context -> pop_invocation_stack();
 }
@@ -49,7 +49,7 @@ ExecutionContext::execute(Transaction const& root)
 	} 
 	catch(wasm_api::WasmError& e)
 	{
-		std::printf("Execution error: %s\n", e.what());
+		CONTRACT_INFO("Execution error: %s", e.what());
 		return TransactionStatus::FAILURE;
 	}
 	catch(...)

@@ -21,7 +21,7 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 
 	runtime.template link_fn<&BuiltinFns::scs_log>(
 		"scs",
-		"host_log");
+		"log");
 
 /*	runtime. link_fn(
 		"scs",
@@ -29,19 +29,19 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 		&BuiltinFns::scs_print_debug); */
 
 	/* -- runtime functions -- */
-	runtime.link_fn<&BuiltinFns::scs_invoke>(
+	runtime.template link_fn<&BuiltinFns::scs_invoke>(
 		"scs", 
 		"invoke");
 
-	runtime.link_fn<&BuiltinFns::scs_return>(
+	runtime.template link_fn<&BuiltinFns::scs_return>(
 		"scs",
 		"return");
 
-	runtime.link_fn<&BuiltinFns::scs_get_calldata>(
+	runtime.template link_fn<&BuiltinFns::scs_get_calldata>(
 		"scs",
 		"get_calldata");
 
-	runtime.link_fn<&BuiltinFns::scs_get_msg_sender>(
+	runtime.template link_fn<&BuiltinFns::scs_get_msg_sender>(
 		"scs",
 		"get_msg_sender");
 }

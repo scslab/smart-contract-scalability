@@ -31,4 +31,17 @@ public:
 	static void clear_entire_context();
 };
 
+namespace test
+{
+
+struct DeferredContextClear
+{
+	~DeferredContextClear()
+	{
+		ThreadlocalContextStore::clear_entire_context();
+	}
+};
+
+} /* test */
+
 } /* scs */

@@ -11,7 +11,8 @@ namespace test
 {
 
 [[maybe_unused]]
-Contract load_wasm_from_file(const char* filename)
+std::unique_ptr<Contract>
+load_wasm_from_file(const char* filename)
 {
 	FILE* f = std::fopen(filename, "r");
 
@@ -19,7 +20,7 @@ Contract load_wasm_from_file(const char* filename)
 		throw std::runtime_error("failed to load wasm file");
 	}
 
-	Contract contents;
+	auto contents = std::make_unique<Contract>();
 
 	const int BUF_SIZE = 65536;
 	char buf[BUF_SIZE];
@@ -28,7 +29,7 @@ Contract load_wasm_from_file(const char* filename)
 	while (count != 0) {
 		count = std::fread(buf, sizeof(char), BUF_SIZE, f);
 		if (count > 0) {
-			contents.insert(contents.end(), buf, buf+count);
+			contents->insert(contents->end(), buf, buf+count);
 		}
 	}
 	std::fclose(f);
