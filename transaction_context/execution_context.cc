@@ -11,13 +11,13 @@ namespace scs
 {
 
 void 
-ExecutionContext::invoke_subroutine(MethodInvocation invocation)
+ExecutionContext::invoke_subroutine(MethodInvocation const& invocation)
 {
 	auto iter = active_runtimes.find(invocation.addr);
 	if (iter == active_runtimes.end())
 	{
 		CONTRACT_INFO("creating new runtime for contract at %s", debug::array_to_str(invocation.addr).c_str());
-		active_runtimes.emplace(invocation.addr, wasm_context->new_runtime_instance(invocation.addr));
+		active_runtimes.emplace(invocation.addr, wasm_context.new_runtime_instance(invocation.addr));
 		BuiltinFns::link_fns(*active_runtimes.at(invocation.addr));
 	}
 
@@ -25,13 +25,13 @@ ExecutionContext::invoke_subroutine(MethodInvocation invocation)
 
 	tx_context -> push_invocation_stack(runtime, invocation);
 
-	runtime->invoke(invocation);
+	runtime->invoke(invocation.get_invocable_methodname().c_str());
 
 	tx_context -> pop_invocation_stack();
 }
 
 TransactionStatus
-ExecutionContext::execute(Transaction const& root, GlobalContext& context)
+ExecutionContext::execute(Transaction const& root)
 {
 	if (executed)
 	{
@@ -41,16 +41,21 @@ ExecutionContext::execute(Transaction const& root, GlobalContext& context)
 
 	MethodInvocation invocation(root.invocation);
 
-	tx_context = std::make_unique<TransactionContext>(root.gas_limit, root.gas_rate_bid, hash_xdr(root), context);
+	tx_context = std::make_unique<TransactionContext>(root.gas_limit, root.gas_rate_bid, hash_xdr(root));
 
 	try
 	{
 		invoke_subroutine(invocation);
 	} 
-	catch(const std::exception& e)
+	catch(wasm_api::WasmError& e)
 	{
 		std::printf("Execution error: %s\n", e.what());
 		return TransactionStatus::FAILURE;
+	}
+	catch(...)
+	{
+		std::printf("unrecoverable error!\n");
+		std::abort();
 	}
 
 	return TransactionStatus::SUCCESS;

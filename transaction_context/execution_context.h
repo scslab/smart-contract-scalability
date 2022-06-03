@@ -10,27 +10,28 @@
 
 #include "xdr/transaction.h"
 
+#include "transaction_context/global_context.h"
+
+#include "wasm_api/wasm_api.h"
+
 namespace scs
 {
 
-class GlobalContext;
 class ExecutionContext {
 
-	std::unique_ptr<WasmContext> wasm_context;
+	wasm_api::WasmContext wasm_context;
+	GlobalContext const& scs_data_structures;
 
-	std::map<Address, std::unique_ptr<WasmRuntime>> active_runtimes;
+	std::map<Address, std::unique_ptr<wasm_api::WasmRuntime>> active_runtimes;
 
 	std::unique_ptr<TransactionContext> tx_context;
 
 	bool executed;
 
-	//void link_builtin_fns(WasmRuntime& runtime);
-
-
-	ExecutionContext(WasmContext* ctx)
-		: wasm_context(ctx)
+	ExecutionContext(GlobalContext const& scs_data_structures)
+		: wasm_context(scs_data_structures.contract_db, MAX_STACK_BYTES)
+		, scs_data_structures(scs_data_structures)
 		, active_runtimes()
-		//, tx_state_delta()
 		, tx_context(nullptr)
 		, executed(false)
 		{}
@@ -39,14 +40,14 @@ class ExecutionContext {
 	friend class BuiltinFns;
 
 	// should only be used by builtin fns
-	void invoke_subroutine(MethodInvocation invocation);
+	void invoke_subroutine(MethodInvocation const& invocation);
 
 	TransactionContext& get_transaction_context();
 
 public:
 
 	TransactionStatus
-	execute(Transaction const& invocation, GlobalContext& context);
+	execute(Transaction const& invocation);
 
 	void reset();
 

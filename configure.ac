@@ -22,6 +22,7 @@ CXXFLAGS="$CXXFLAGS $WFLAGS"
 PKG_PROG_PKG_CONFIG
 PKG_CHECK_MODULES([libsodium], [libsodium])
 PKG_CHECK_MODULES([tbb], [tbb]);
+PKG_CHECK_MODULES([Catch2], [Catch2])
 
 PKG_CHECK_MODULES(LIBFYAML, [ libfyaml ], HAVE_LIBFYAML=1, HAVE_LIBFYAML=0)
 
@@ -59,6 +60,7 @@ export xdrpp_LIBS
 export xdrpp_CFLAGS
 
 AX_PKGCONFIG_SUBDIR(merkle_trie_toolkit)
+AX_PKGCONFIG_SUBDIR(wasm_api)
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile])

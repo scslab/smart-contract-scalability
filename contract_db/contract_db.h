@@ -5,12 +5,17 @@
 #include <map>
 #include <memory>
 
+#include <wasm_api/wasm_api.h>
+
 namespace scs {
 
 using xdr::operator==;
 
-class ContractDB {
-	std::map<Address, std::shared_ptr<const Contract>> contracts;
+class ContractDB : public wasm_api::ScriptDB {
+
+	static_assert(sizeof(wasm_api::Hash) == sizeof(Address), "mismatch between addresses in scs and addresses in wasm api");
+
+	std::map<wasm_api::Hash, std::unique_ptr<const Contract>> contracts;
 
 	ContractDB(ContractDB&) = delete;
 	ContractDB& operator=(ContractDB&) = delete;
@@ -20,11 +25,11 @@ public:
 
 	ContractDB() : contracts() {}
 
-	std::shared_ptr<const Contract>
-	get_contract(Address const& addr) const;
+	const std::vector<uint8_t>*
+	get_script(wasm_api::Hash const& addr) const override final;
 
 	bool
-	register_contract(Address const& addr, std::shared_ptr<const Contract> contract);
+	register_contract(Address const& addr, std::unique_ptr<const Contract>&& contract);
 };
 
 } /* scs */

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "xdr/storage.h"
+#include "xdr/types.h"
 
 #include <cstdint>
 #include <vector>
@@ -15,13 +16,13 @@ class StorageCache
 
 	StateDB const& state_db;
 
-	std::map<std::vector<uint8_t>, StorageObject> cache;
+	std::map<AddressAndKey, StorageObject> cache;
 
 public:
 
 	StorageCache(const StateDB& state_db);
 
-	StorageObject const& get(std::vector<uint8_t> const& key);
+	StorageObject const& get(AddressAndKey const& key);
 };
 
 } /* scs */

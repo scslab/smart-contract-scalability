@@ -39,8 +39,4 @@ MethodInvocation::get_invocable_methodname() const
 	return ss.str();
 }
 
-
-
-
-
 } /* scs */

@@ -15,7 +15,7 @@ struct MethodInvocation
 	// Copying from eth design:
 	// method names are 4 bytes (of valid ascii);
 	// Here, public/private is denoted by method prefix
-	// full method name is pub_{XXXX}
+	// full method name is pub{XXXX}
 	const uint32_t method_name;
 	const std::vector<uint8_t> calldata;
 
@@ -24,8 +24,6 @@ struct MethodInvocation
 
 	MethodInvocation(TransactionInvocation const& root_invocation);
 	MethodInvocation(const Address& addr, uint32_t method, std::vector<uint8_t>&& calldata);
-
-
 };
 
 } /* scs */

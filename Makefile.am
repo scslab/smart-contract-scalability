@@ -56,13 +56,6 @@ SRCS = \
 	$(TRANSACTION_CONTEXT_SRCS) \
 	$(TX_BLOCK_SRCS)
 
-MTT_TESTS = \
-	$(wildcard merkle_trie_toolkit/tests/*.h)
-
-TEST_SRCS = \
-	wasm_api/tests/wasm3_test.h \
-	wasm_api/tests/wasm_api_test.h
-
 MAIN_CCS = \
 	main/simple.cc
 
@@ -81,16 +74,11 @@ contracts/built_wasms/%.wasm : $(wildcard contracts/*/src/*.rs) $(wildcard rust_
 .wat.wasm:
 	wat2wasm -o $@ $<
 
-AM_CPPFLAGS = $(xdrpp_CFLAGS) $(libsodium_CFLAGS) $(LIBFYAML_CFLAGS) $(tbb_CFLAGS) $(merkle_trie_toolkit_CFLAGS) $(wasm_api_CFLAGS)
-LDADD = $(xdrpp_LIBS) $(libsodium_LIBS) $(LIBFYAML_LIBS) $(tbb_LIBS) $(merkle_trie_toolkit_LIBS) $(wasm_api_LIBS)
+AM_CPPFLAGS = $(xdrpp_CFLAGS) $(libsodium_CFLAGS) $(LIBFYAML_CFLAGS) $(tbb_CFLAGS) $(merkle_trie_toolkit_CFLAGS) $(wasm_api_CFLAGS) $(Catch2_CFLAGS)
+LDADD = $(xdrpp_LIBS) $(libsodium_LIBS) $(LIBFYAML_LIBS) $(tbb_LIBS) $(merkle_trie_toolkit_LIBS) $(wasm_api_LIBS) $(Catch2_LIBS)
 
 $(SRCS:.cc=.o) : $(XH_FILES)
 $(MAIN_CCS:.cc=.o) : $(XH_FILES)
-
-test_runner.cc : $(TEST_SRCS) $(MTT_TESTS) $(XH_FILES) $(TEST_WASMS) $(TEST_RUST_WASMS)
-	cxxtestgen --error-printer -o test_runner.cc $(TEST_SRCS) $(MTT_TESTS)
-
-test_runner.o : CXXFLAGS += -I./merkle_trie_toolkit
 
 
 bin_PROGRAMS = \
@@ -100,7 +88,7 @@ bin_PROGRAMS = \
 #test: $(TEST_WASMS) $(TEST_SRCS) $(SRCS) test_runner.cc
 
 simple_SOURCES = $(SRCS) main/simple.cc
-test_SOURCES = $(SRCS) test_runner.cc
+test_SOURCES = $(SRCS) main/test.cc
 
 
 

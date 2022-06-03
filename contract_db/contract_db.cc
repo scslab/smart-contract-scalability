@@ -3,19 +3,19 @@
 namespace scs
 {
 
-std::shared_ptr<const Contract>
-ContractDB::get_contract(Address const& addr) const
+const std::vector<uint8_t>*
+ContractDB::get_script(wasm_api::Hash const& addr) const
 {
 	auto it = contracts.find(addr);
 	if (it == contracts.end())
 	{
 		return nullptr;
 	}
-	return it->second;
+	return it->second.get();
 }
 
 bool 
-ContractDB::register_contract(Address const& addr, std::shared_ptr<const Contract> contract)
+ContractDB::register_contract(Address const& addr, std::unique_ptr<const Contract>&& contract)
 {
 	auto it = contracts.find(addr);
 	if (it != contracts.end())
@@ -23,7 +23,7 @@ ContractDB::register_contract(Address const& addr, std::shared_ptr<const Contrac
 		return false;
 	}
 
-	contracts.emplace(addr, contract);
+	contracts.emplace(addr, std::move(contract));
 	return true;
 }
 

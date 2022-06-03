@@ -13,15 +13,15 @@ namespace scs
 {
 
 void
-BuiltinFns::scs_print_debug(int32_t value)
+BuiltinFns::scs_print_debug(uint32_t value)
 {
 	std::printf("logging int32: %ld\n", value);
 }
 
 void
 BuiltinFns::scs_log(
-	int32_t log_offset,
-	int32_t log_len)
+	uint32_t log_offset,
+	uint32_t log_len)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
 

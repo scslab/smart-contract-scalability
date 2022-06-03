@@ -2,43 +2,54 @@
 
 #include <cstdint>
 
+#include <wasm_api/wasm_api.h>
+
 namespace scs
 {
 
-class WasmRuntime;
-
 class BuiltinFns
 {
+	/* env */
+	static int32_t
+	memcmp(uint32_t lhs, uint32_t rhs, uint32_t sz);
+
+	static uint32_t
+	memset(uint32_t p, uint32_t val, uint32_t sz);
+
+	static uint32_t
+	memcpy(uint32_t dst, uint32_t src, uint32_t sz);
+
 	/* -- logging functions -- */
 
 	static void
 	scs_log(
-		int32_t log_offset,
-		int32_t log_len);
+		uint32_t log_offset,
+		uint32_t log_len);
 
 	static void
-	scs_print_debug(int32_t value);
+	scs_print_debug(uint32_t value);
 
 	/* -- runtime functions -- */
 
 	static void 
-	scs_return(int32_t offset, int32_t len);
+	scs_return(uint32_t offset, uint32_t len);
 
 	static void
-	scs_get_calldata(int32_t offset, int32_t len);
+	scs_get_calldata(uint32_t offset, uint32_t len);
 
-	static void
+	//returns realized return_len
+	static uint32_t
 	scs_invoke(
-		int32_t addr_offset, 
-		int32_t methodname, 
-		int32_t calldata_offset, 
-		int32_t calldata_len,
-		int32_t return_offset,
-		int32_t return_len);
+		uint32_t addr_offset, 
+		uint32_t methodname, 
+		uint32_t calldata_offset, 
+		uint32_t calldata_len,
+		uint32_t return_offset,
+		uint32_t return_len);
 
 	static void
 	scs_get_msg_sender(
-		int32_t addr_offset
+		uint32_t addr_offset
 		/* addr_len = 32 */
 		);
 
@@ -68,7 +79,7 @@ class BuiltinFns
 public:
 
 	static void
-	link_fns(WasmRuntime& runtime);
+	link_fns(wasm_api::WasmRuntime& runtime);
 };
 
 } /* scs */

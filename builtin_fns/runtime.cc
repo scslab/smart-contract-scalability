@@ -8,15 +8,16 @@ namespace scs
 {
 
 void 
-BuiltinFns::scs_return(int32_t offset, int32_t len)
+BuiltinFns::scs_return(uint32_t offset, uint32_t len)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
 
 	tx_ctx.return_buf = tx_ctx.get_current_runtime()->template load_from_memory<std::vector<uint8_t>>(offset, len);
+	return;
 }
 
 void 
-BuiltinFns::scs_get_calldata(int32_t offset, int32_t len)
+BuiltinFns::scs_get_calldata(uint32_t offset, uint32_t len)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
 
@@ -29,14 +30,14 @@ BuiltinFns::scs_get_calldata(int32_t offset, int32_t len)
 	tx_ctx.get_current_runtime() -> write_to_memory(calldata, offset, len);
 }
 
-void 
+uint32_t 
 BuiltinFns::scs_invoke(
-	int32_t addr_offset, 
-	int32_t methodname, 
-	int32_t calldata_offset, 
-	int32_t calldata_len,
-	int32_t return_offset,
-	int32_t return_len)
+	uint32_t addr_offset, 
+	uint32_t methodname, 
+	uint32_t calldata_offset, 
+	uint32_t calldata_len,
+	uint32_t return_offset,
+	uint32_t return_len)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
 
@@ -55,11 +56,13 @@ BuiltinFns::scs_invoke(
 	}
 
 	tx_ctx.return_buf.clear();
+
+	return return_len;
 }
 
 void
 BuiltinFns::scs_get_msg_sender(
-	int32_t addr_offset
+	uint32_t addr_offset
 	/* addr_len = 32 */
 	)
 {

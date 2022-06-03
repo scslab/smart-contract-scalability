@@ -6,24 +6,19 @@
 #include "transaction_context/method_invocation.h"
 #include "transaction_context/storage_cache.h"
 
-#include "wasm_api/wasm_api.h"
+#include <wasm_api/wasm_api.h>
 
 #include "xdr/transaction.h"
 #include "xdr/storage.h"
 
 namespace scs {
 
-class GlobalContext;
-class TxBlock;
 class TransactionContext {
 
 	DeltaPriority current_priority;
 
 	std::vector<MethodInvocation> invocation_stack;
-	std::vector<WasmRuntime*> runtime_stack;
-
-	StorageCache storage_cache;
-	TxBlock& tx_block;
+	std::vector<wasm_api::WasmRuntime*> runtime_stack;
 
 public:
 
@@ -35,22 +30,19 @@ public:
 
 	std::vector<std::vector<uint8_t>> logs;
 
-	TransactionContext(uint64_t gas_limit, uint64_t gas_rate_bid, Hash tx_hash, GlobalContext& context);
+	TransactionContext(uint64_t gas_limit, uint64_t gas_rate_bid, Hash tx_hash);
 
 	DeltaPriority 
 	get_next_priority(uint64_t priority);
 
-	WasmRuntime*
+	wasm_api::WasmRuntime*
 	get_current_runtime();
 
 	const MethodInvocation& 
-	get_current_method_invocation();
-
-	StorageCache& 
-	get_storage_cache();
+	get_current_method_invocation() const;
 
 	void pop_invocation_stack();
-	void push_invocation_stack(WasmRuntime* runtime, MethodInvocation const& invocation);
+	void push_invocation_stack(wasm_api::WasmRuntime* runtime, MethodInvocation const& invocation);
 
 };
 

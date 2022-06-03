@@ -6,40 +6,35 @@ namespace scs
 {
 
 void
-BuiltinFns::link_fns(WasmRuntime& runtime)
+BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 {
 	/* -- logging functions -- */
 
-	runtime.link_fn(
+	runtime.template link_fn<&BuiltinFns::scs_log>(
 		"scs",
-		"host_log",
-		&BuiltinFns::scs_log);
+		"host_log");
 
-	runtime.link_fn(
+/*	runtime. link_fn(
 		"scs",
 		"print_debug",
-		&BuiltinFns::scs_print_debug);
+		&BuiltinFns::scs_print_debug); */
 
 	/* -- runtime functions -- */
-	runtime.link_fn(
+	runtime.link_fn<&BuiltinFns::scs_invoke>(
 		"scs", 
-		"invoke", 
-		&BuiltinFns::scs_invoke);
+		"invoke");
 
-	runtime.link_fn(
+	runtime.link_fn<&BuiltinFns::scs_return>(
 		"scs",
-		"return",
-		&BuiltinFns::scs_return);
+		"return");
 
-	runtime.link_fn(
+	runtime.link_fn<&BuiltinFns::scs_get_calldata>(
 		"scs",
-		"get_calldata",
-		&BuiltinFns::scs_get_calldata);
+		"get_calldata");
 
-	runtime.link_fn(
+	runtime.link_fn<&BuiltinFns::scs_get_msg_sender>(
 		"scs",
-		"get_msg_sender",
-		&BuiltinFns::scs_get_msg_sender);
+		"get_msg_sender");
 }
 
 

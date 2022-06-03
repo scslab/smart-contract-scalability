@@ -1,6 +1,5 @@
 #pragma once
 
-#include <concepts>
 #include <memory>
 
 #include "mtt/utils/threadlocal_cache.h"
@@ -23,8 +22,7 @@ public:
 	static ExecutionContext& get_exec_ctx();
 	static SerialDeltaBatch& get_delta_batch();
 
-	template<typename WasmContext_T, typename ...Args>
-	requires std::derived_from<WasmContext_T, WasmContext>
+	template<typename ...Args>
 	static void make_ctx(Args&... args);
 
 	static void post_block_clear();

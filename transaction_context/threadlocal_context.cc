@@ -4,6 +4,8 @@
 
 #include "wasm_api/wasm_api.h"
 
+#include "transaction_context/global_context.h"
+
 namespace scs
 {
 
@@ -13,16 +15,15 @@ ThreadlocalContextStore::get_exec_ctx()
 	return *ctx;
 }
 
-template<typename WasmContext_T, typename ...Args>
-requires std::derived_from<WasmContext_T, WasmContext>
+template<typename ...Args>
 void 
 ThreadlocalContextStore::make_ctx(Args&... args)
 {
-	ctx = std::unique_ptr<ExecutionContext>(new ExecutionContext(new WasmContext_T(args...)));
+	ctx = std::unique_ptr<ExecutionContext>(new ExecutionContext(args...));
 }
 
 template
-void ThreadlocalContextStore::make_ctx<Wasm3_WasmContext>(ContractDB& db);
+void ThreadlocalContextStore::make_ctx(GlobalContext&);
 
 SerialDeltaBatch&
 ThreadlocalContextStore::get_delta_batch()

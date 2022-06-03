@@ -3,12 +3,6 @@
 namespace scs
 {
 
-GlobalContext::GlobalContext()
-	: contract_db()
-	, tx_block()
-	, state_db()
-	{}
-
 /*
 void 
 StaticGlobalContext::set(GlobalContext* c)

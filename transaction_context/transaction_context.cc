@@ -1,16 +1,13 @@
 #include "transaction_context/transaction_context.h"
 #include "transaction_context/global_context.h"
-#include "tx_block/tx_block.h"
 
 namespace scs
 {
 
-TransactionContext::TransactionContext(uint64_t gas_limit, uint64_t gas_rate_bid, Hash tx_hash, GlobalContext& context)
+TransactionContext::TransactionContext(uint64_t gas_limit, uint64_t gas_rate_bid, Hash tx_hash)
 	: current_priority(0, gas_rate_bid, tx_hash, 0)
 	, invocation_stack()
 	, runtime_stack()
-	, storage_cache(context.get_state_db())
-	, tx_block(context.get_tx_block())
 	, gas_limit(gas_limit)
 	, gas_rate_bid(gas_rate_bid)
 	, gas_used(0)
@@ -25,14 +22,14 @@ TransactionContext::get_next_priority(uint64_t priority)
 	return current_priority;
 }
 
-WasmRuntime*
+wasm_api::WasmRuntime*
 TransactionContext::get_current_runtime()
 {
 	return runtime_stack.back();
 }
 
 const MethodInvocation& 
-TransactionContext::get_current_method_invocation()
+TransactionContext::get_current_method_invocation() const
 {
 	return invocation_stack.back();
 }
@@ -45,7 +42,9 @@ TransactionContext::pop_invocation_stack()
 }
 
 void 
-TransactionContext::push_invocation_stack(WasmRuntime* runtime, MethodInvocation const& invocation)
+TransactionContext::push_invocation_stack(
+	wasm_api::WasmRuntime* runtime, 
+	MethodInvocation const& invocation)
 {
 	invocation_stack.push_back(invocation);
 	runtime_stack.push_back(runtime);
