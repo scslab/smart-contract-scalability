@@ -75,16 +75,27 @@ contracts/built_wasms/%.wasm : $(wildcard contracts/*/src/*.rs) $(wildcard rust_
 .wat.wasm:
 	wat2wasm -o $@ $<
 
+CC_WASMS = \
+	$(wildcard cpp_contracts/*.cc)
+
+.cc.wasm: $(wildcard cpp_contracts/sdk/*.h) Makefile.am
+	wasi/wasi-sdk/bin/clang -Os -mtune=native -march=native -I./cpp_contracts/ $< -o $@ \
+		--sysroot=wasi/wasi-sdk/share/wasi-sysroot \
+		-nostdlib \
+		-std=gnu++2a \
+		-Wl,--no-entry -fno-exceptions -Wl,--allow-undefined
+
 AM_CPPFLAGS = $(xdrpp_CFLAGS) $(libsodium_CFLAGS) $(LIBFYAML_CFLAGS) $(tbb_CFLAGS) $(merkle_trie_toolkit_CFLAGS) $(wasm_api_CFLAGS) $(Catch2_CFLAGS)
 LDADD = $(xdrpp_LIBS) $(libsodium_LIBS) $(LIBFYAML_LIBS) $(tbb_LIBS) $(merkle_trie_toolkit_LIBS) $(wasm_api_LIBS) $(Catch2_LIBS)
 
 $(SRCS:.cc=.o) : $(XH_FILES)
 $(MAIN_CCS:.cc=.o) : $(XH_FILES)
 
-
 bin_PROGRAMS = \
 	simple \
 	test
+
+main/test.o : $(CC_WASMS:.cc=.wasm)
 
 #test: $(TEST_WASMS) $(TEST_SRCS) $(SRCS) test_runner.cc
 
