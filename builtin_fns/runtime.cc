@@ -4,6 +4,8 @@
 #include "transaction_context/threadlocal_context.h"
 #include "transaction_context/method_invocation.h"
 
+#include "debug/debug_macros.h"
+
 namespace scs
 {
 
@@ -45,8 +47,10 @@ BuiltinFns::scs_invoke(
 
 	MethodInvocation invocation(
 		runtime.template load_from_memory_to_const_size_buf<Address>(addr_offset),
-		static_cast<uint32_t>(methodname),
+		methodname,
 		runtime.template load_from_memory<std::vector<uint8_t>>(calldata_offset, calldata_len));
+
+	CONTRACT_INFO("call into %s method %lu", debug::array_to_str(invocation.addr).c_str(), methodname);
 
 	ThreadlocalContextStore::get_exec_ctx().invoke_subroutine(invocation);
 

@@ -16,12 +16,14 @@ void* alloc(size_t count) noexcept
 }
 
 // std::abort compiles to `asm ("unreachable")`
-/*
-void abort()
+
+void 
+abort()
 {
-  std::abort();
- //compiles to  `asm ("unreachable");`
-} */
+  // the logic of when abort calls into abort() and when it just does unreachable is beyond me
+  //std::abort();
+  asm ("unreachable");
+}
 
 /**
  * Taken from

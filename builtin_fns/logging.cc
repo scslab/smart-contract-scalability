@@ -13,9 +13,16 @@ namespace scs
 {
 
 void
-BuiltinFns::scs_print_debug(uint32_t value)
+BuiltinFns::scs_print_debug(uint32_t addr, uint32_t len)
 {
-	std::printf("logging int32: %ld\n", value);
+	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+
+	auto& runtime = *tx_ctx.get_current_runtime();
+
+	auto log = runtime.template load_from_memory<std::vector<uint8_t>>(addr, len);
+
+	CONTRACT_INFO("print: addr %lu len %lu value %s", addr, len, debug::array_to_str(log).c_str());
+
 }
 
 void

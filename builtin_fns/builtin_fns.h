@@ -27,7 +27,7 @@ class BuiltinFns
 		uint32_t log_len);
 
 	static void
-	scs_print_debug(uint32_t value);
+	scs_print_debug(uint32_t addr, uint32_t len);
 
 	/* -- runtime functions -- */
 

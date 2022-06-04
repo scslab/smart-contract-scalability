@@ -17,7 +17,14 @@ ExecutionContext::invoke_subroutine(MethodInvocation const& invocation)
 	if (iter == active_runtimes.end())
 	{
 		CONTRACT_INFO("creating new runtime for contract at %s", debug::array_to_str(invocation.addr).c_str());
-		active_runtimes.emplace(invocation.addr, wasm_context.new_runtime_instance(invocation.addr));
+
+		auto runtime_instance = wasm_context.new_runtime_instance(invocation.addr);
+		if (!runtime_instance)
+		{
+			throw wasm_api::HostError("cannot find target address");
+		}
+
+		active_runtimes.emplace(invocation.addr, std::move(runtime_instance));
 		BuiltinFns::link_fns(*active_runtimes.at(invocation.addr));
 	}
 

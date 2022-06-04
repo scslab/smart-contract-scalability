@@ -12,7 +12,7 @@ namespace test
 
 [[maybe_unused]]
 std::unique_ptr<Contract>
-load_wasm_from_file(const char* filename)
+static load_wasm_from_file(const char* filename)
 {
 	FILE* f = std::fopen(filename, "r");
 

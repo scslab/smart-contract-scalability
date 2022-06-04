@@ -58,7 +58,8 @@ SRCS = \
 	$(TX_BLOCK_SRCS)
 
 TESTS_CCS = \
-	tests/builtin_fns_log_tests.cc
+	tests/builtin_fns_log_tests.cc \
+	tests/builtin_fns_invoke_tests.cc
 
 MAIN_CCS = \
 	main/simple.cc
@@ -79,15 +80,15 @@ contracts/built_wasms/%.wasm : $(wildcard contracts/*/src/*.rs) $(wildcard rust_
 	wat2wasm -o $@ $<
 
 CC_WASMS = \
-	cpp_contracts/test_log.cc
+	cpp_contracts/test_log.cc \
+	cpp_contracts/test_redirect_call.cc
 
 .cc.wasm:
 	wasi/wasi-sdk/bin/clang -Os -mtune=native -march=native -I./cpp_contracts/ $< -o $@ \
 		--sysroot=wasi/wasi-sdk/share/wasi-sysroot \
 		-nostdlib \
 		-std=gnu++2a \
-		-Wl,--no-entry -fno-exceptions -Wl,--allow-undefined && \
-	echo $(COMPLETE_SRCS)
+		-Wl,--no-entry -fno-exceptions -Wl,--allow-undefined
 
 $(CC_WASMS:.cc=.wasm) : $(wildcard cpp_contracts/sdk/*.h)
 
