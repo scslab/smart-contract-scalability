@@ -70,7 +70,29 @@ TEST_CASE("test log", "[builtin]")
 		}
 	}
 
+	SECTION("log twice")
+	{
+		TransactionInvocation invocation (
+			h,
+			2,
+			xdr::opaque_vec<>{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}
+		);
 
+		REQUIRE(
+			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1))
+			== TransactionStatus::SUCCESS);
+
+		auto const& logs = exec_ctx.get_logs();
+
+		REQUIRE(logs.size() == 2);
+
+		if (logs.size() >= 2)
+		{
+			REQUIRE(logs[0].size() == 4);
+			REQUIRE(logs[0] == std::vector<uint8_t>{0x00, 0x01, 0x02, 0x03});
+			REQUIRE(logs[1] == std::vector<uint8_t>{0x04, 0x05, 0x06, 0x07});
+		}
+	}
 }
 
 } /* scs */

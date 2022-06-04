@@ -24,3 +24,20 @@ log_calldata()
 	sdk::log(calldata);
 	return 0;
 }
+
+EXPORT("pub02000000")
+log_data_twice();
+
+int32_t
+log_data_twice()
+{
+	struct calldata_t {
+		uint32_t a;
+		uint32_t b;
+	};
+
+	auto calldata = sdk::get_calldata<calldata_t>();
+	sdk::log(calldata.a);
+	sdk::log(calldata.b);
+	return 0;
+}
