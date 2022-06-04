@@ -26,7 +26,7 @@ BuiltinFns::scs_get_calldata(uint32_t offset, uint32_t len)
 	auto& calldata = tx_ctx.get_current_method_invocation().calldata;
 	if (static_cast<uint32_t>(len) > calldata.size())
 	{
-		throw std::runtime_error("insufficient calldata");
+		throw wasm_api::HostError("insufficient calldata");
 	}
 
 	tx_ctx.get_current_runtime() -> write_to_memory(calldata, offset, len);

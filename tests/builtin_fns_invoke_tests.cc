@@ -87,6 +87,46 @@ TEST_CASE("test invoke", "[builtin]")
 
 	}
 
+	SECTION("invoke other")
+	{
+		struct calldata_t {
+			Address callee;
+			uint32_t method;
+		};
+
+		calldata_t data {
+			.callee = h1,
+			.method = 0
+		};
+
+		TransactionInvocation invocation (
+			h2,
+			0,
+			test::make_calldata(data)
+		);
+
+		REQUIRE(
+			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1))
+			== TransactionStatus::SUCCESS);
+
+		auto const& logs = exec_ctx.get_logs();
+
+		REQUIRE(logs.size() == 1);
+	}
+
+	SECTION("invoke insufficient calldata")
+	{
+		TransactionInvocation invocation (
+			h1,
+			1,
+			xdr::opaque_vec<>()
+		);
+
+		REQUIRE(
+			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1))
+			!= TransactionStatus::SUCCESS);
+	}
+
 	SECTION("invoke nonexistent")
 	{
 		struct calldata_t {
