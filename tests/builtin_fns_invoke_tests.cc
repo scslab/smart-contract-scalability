@@ -48,8 +48,6 @@ TEST_CASE("test invoke", "[builtin]")
 			test::make_calldata(data)
 		);
 
-		std::printf("calldata: %s\n", debug::array_to_str(invocation.calldata).c_str());
-
 		REQUIRE(
 			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1))
 			== TransactionStatus::SUCCESS);
@@ -63,6 +61,30 @@ TEST_CASE("test invoke", "[builtin]")
 			REQUIRE(logs[0].size() == 1);
 			REQUIRE(logs[0] == std::vector<uint8_t>{0xFF});
 		}
+	}
+
+	SECTION("invoke self with reentrance guard")
+	{
+		struct calldata_t {
+			Address callee;
+			uint32_t method;
+		};
+
+		calldata_t data {
+			.callee = h2,
+			.method = 2
+		};
+
+		TransactionInvocation invocation (
+			h2,
+			0,
+			test::make_calldata(data)
+		);
+
+		REQUIRE(
+			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1))
+			!= TransactionStatus::SUCCESS);
+
 	}
 
 	SECTION("invoke nonexistent")
