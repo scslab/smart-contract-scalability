@@ -1,5 +1,6 @@
 #include "sdk/log.h"
 #include "sdk/calldata.h"
+#include "sdk/invoke.h"
 
 EXPORT("pub00000000")
 log_value();
@@ -39,5 +40,13 @@ log_data_twice()
 	auto calldata = sdk::get_calldata<calldata_t>();
 	sdk::log(calldata.a);
 	sdk::log(calldata.b);
+	return 0;
+}
+
+EXPORT("pub03000000")
+log_msg_sender()
+{
+	auto addr = sdk::get_msg_sender();
+	sdk::log(addr);
 	return 0;
 }

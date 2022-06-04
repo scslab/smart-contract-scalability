@@ -48,7 +48,7 @@ ExecutionContext::execute(Transaction const& root)
 
 	MethodInvocation invocation(root.invocation);
 
-	tx_context = std::make_unique<TransactionContext>(root.gas_limit, root.gas_rate_bid, hash_xdr(root), scs_data_structures);
+	tx_context = std::make_unique<TransactionContext>(root.gas_limit, root.gas_rate_bid, hash_xdr(root), root.sender, scs_data_structures);
 
 	try
 	{

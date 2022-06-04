@@ -25,6 +25,8 @@ TEST_CASE("test log", "[builtin]")
 
 	auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
+	Address sender;
+
 	SECTION("log hardcoded")
 	{
 		TransactionInvocation invocation (
@@ -34,7 +36,7 @@ TEST_CASE("test log", "[builtin]")
 		);
 
 		REQUIRE(
-			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1))
+			exec_ctx.execute(Transaction(sender, invocation, UINT64_MAX, 1))
 			== TransactionStatus::SUCCESS);
 
 		auto const& logs = exec_ctx.get_logs();
@@ -56,7 +58,7 @@ TEST_CASE("test log", "[builtin]")
 		);
 
 		REQUIRE(
-			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1))
+			exec_ctx.execute(Transaction(sender, invocation, UINT64_MAX, 1))
 			== TransactionStatus::SUCCESS);
 
 		auto const& logs = exec_ctx.get_logs();
@@ -79,7 +81,7 @@ TEST_CASE("test log", "[builtin]")
 		);
 
 		REQUIRE(
-			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1))
+			exec_ctx.execute(Transaction(sender, invocation, UINT64_MAX, 1))
 			== TransactionStatus::SUCCESS);
 
 		auto const& logs = exec_ctx.get_logs();

@@ -24,6 +24,11 @@ invoke(
 	uint32_t return_offset,
 	uint32_t return_len);
 
+BUILTIN("get_msg_sender")
+void
+get_msg_sender(
+	uint32_t offset);
+
 } /* detail */
 
 // only works for fixed-size types here
@@ -44,6 +49,14 @@ ret invoke(Address const& addr, uint32_t methodname, calldata const& data)
 	{
 		abort();
 	}
+	return out;
+}
+
+Address
+get_msg_sender()
+{
+	Address out;
+	detail::get_msg_sender(to_offset(&out));
 	return out;
 }
 

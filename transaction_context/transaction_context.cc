@@ -7,11 +7,13 @@ namespace scs
 TransactionContext::TransactionContext(
 	uint64_t gas_limit, 
 	uint64_t gas_rate_bid, 
-	Hash tx_hash, 
+	Hash tx_hash,
+	Address const& sender,
 	GlobalContext const& global_context)
 	: current_priority(0, gas_rate_bid, tx_hash, 0)
 	, invocation_stack()
 	, runtime_stack()
+	, sender(sender)
 	, gas_limit(gas_limit)
 	, gas_rate_bid(gas_rate_bid)
 	, gas_used(0)
@@ -58,6 +60,16 @@ TransactionContext::push_invocation_stack(
 {
 	invocation_stack.push_back(invocation);
 	runtime_stack.push_back(runtime);
+}
+
+const Address&
+TransactionContext::get_msg_sender() const
+{
+	if (invocation_stack.size() <= 1)
+	{
+		return sender;
+	}
+	return invocation_stack[invocation_stack.size() - 2].addr;
 }
 
 } /* scs */

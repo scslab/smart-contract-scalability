@@ -28,8 +28,11 @@ struct TransactionInvocation
 	opaque calldata<>;
 };
 
+% static_assert(sizeof(Address) == sizeof(PublicKey), "pk size should be addr size");
+
 struct Transaction
 {
+	Address sender;
 	TransactionInvocation invocation;
 	uint64 gas_limit;
 	uint64 gas_rate_bid;

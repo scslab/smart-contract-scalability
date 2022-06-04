@@ -22,6 +22,8 @@ class TransactionContext {
 	std::vector<MethodInvocation> invocation_stack;
 	std::vector<wasm_api::WasmRuntime*> runtime_stack;
 
+	Address sender;
+
 public:
 
 	const uint64_t gas_limit;
@@ -34,7 +36,7 @@ public:
 
 	StorageCache storage_proxy;
 
-	TransactionContext(uint64_t gas_limit, uint64_t gas_rate_bid, Hash tx_hash, GlobalContext const& scs_data_structures);
+	TransactionContext(uint64_t gas_limit, uint64_t gas_rate_bid, Hash tx_hash, Address const& sender, GlobalContext const& scs_data_structures);
 
 	DeltaPriority 
 	get_next_priority(uint64_t priority);
@@ -44,6 +46,9 @@ public:
 
 	const MethodInvocation& 
 	get_current_method_invocation() const;
+
+	const Address&
+	get_msg_sender() const;
 
 	void pop_invocation_stack();
 	void push_invocation_stack(wasm_api::WasmRuntime* runtime, MethodInvocation const& invocation);

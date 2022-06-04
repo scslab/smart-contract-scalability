@@ -73,9 +73,9 @@ BuiltinFns::scs_get_msg_sender(
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
 	auto& runtime = *tx_ctx.get_current_runtime();
 
-	auto const& invocation = tx_ctx.get_current_method_invocation();
+	auto const& sender = tx_ctx.get_msg_sender();
 
-	runtime.write_to_memory(invocation.addr, addr_offset, sizeof(invocation.addr));
+	runtime.write_to_memory(sender, addr_offset, sizeof(sender));
 }
 
 } /* scs */

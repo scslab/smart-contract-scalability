@@ -30,6 +30,67 @@ TEST_CASE("test invoke", "[builtin]")
 
 	auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
+	Address sender;
+
+	Hash h_val = hash_xdr<uint64>(0);
+	std::memcpy(sender.data(), h_val.data(), h_val.size());
+
+	SECTION("msg sender self")
+	{
+		TransactionInvocation invocation(
+			h1,
+			3,
+			xdr::opaque_vec<>()
+		);
+
+		REQUIRE(
+			exec_ctx.execute(Transaction(sender, invocation, UINT64_MAX, 1))
+			== TransactionStatus::SUCCESS);
+
+		auto const& logs = exec_ctx.get_logs();
+
+		REQUIRE(logs.size() == 1);
+
+		if (logs.size() >= 1)
+		{
+			REQUIRE(logs[0].size() == 32);
+			REQUIRE(memcmp(logs[0].data(), sender.data(), 32) == 0);
+		}
+	}
+
+	SECTION("msg sender other")
+	{
+		struct calldata_t {
+			Address callee;
+			uint32_t method;
+		};
+
+		calldata_t data {
+			.callee = h1,
+			.method = 3
+		};
+
+		TransactionInvocation invocation (
+			h2,
+			0,
+			test::make_calldata(data)
+		);
+
+		REQUIRE(
+			exec_ctx.execute(Transaction(sender, invocation, UINT64_MAX, 1))
+			== TransactionStatus::SUCCESS);
+
+		auto const& logs = exec_ctx.get_logs();
+
+		REQUIRE(logs.size() == 1);
+
+		if (logs.size() >= 1)
+		{
+			REQUIRE(logs[0].size() == 32);
+			REQUIRE(memcmp(logs[0].data(), h2.data(), 32) == 0);
+		}
+	}
+
 	SECTION("invoke self")
 	{
 		struct calldata_t {
@@ -49,7 +110,7 @@ TEST_CASE("test invoke", "[builtin]")
 		);
 
 		REQUIRE(
-			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1))
+			exec_ctx.execute(Transaction(sender, invocation, UINT64_MAX, 1))
 			== TransactionStatus::SUCCESS);
 
 		auto const& logs = exec_ctx.get_logs();
@@ -82,7 +143,7 @@ TEST_CASE("test invoke", "[builtin]")
 		);
 
 		REQUIRE(
-			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1))
+			exec_ctx.execute(Transaction(sender, invocation, UINT64_MAX, 1))
 			!= TransactionStatus::SUCCESS);
 
 	}
@@ -106,7 +167,7 @@ TEST_CASE("test invoke", "[builtin]")
 		);
 
 		REQUIRE(
-			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1))
+			exec_ctx.execute(Transaction(sender, invocation, UINT64_MAX, 1))
 			== TransactionStatus::SUCCESS);
 
 		auto const& logs = exec_ctx.get_logs();
@@ -123,7 +184,7 @@ TEST_CASE("test invoke", "[builtin]")
 		);
 
 		REQUIRE(
-			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1))
+			exec_ctx.execute(Transaction(sender, invocation, UINT64_MAX, 1))
 			!= TransactionStatus::SUCCESS);
 	}
 
@@ -148,7 +209,7 @@ TEST_CASE("test invoke", "[builtin]")
 		);
 
 		REQUIRE(
-			exec_ctx.execute(Transaction(invocation, UINT64_MAX, 1))
+			exec_ctx.execute(Transaction(sender, invocation, UINT64_MAX, 1))
 			!= TransactionStatus::SUCCESS);
 	}
 }
