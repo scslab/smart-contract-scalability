@@ -16,11 +16,11 @@ class TxBlock
 	using hash_prefix_t = trie::ByteArrayPrefix<32>;
 	struct ValueT
 	{
-		TransactionInvocation invocation;
+		Transaction tx;
 		std::atomic<uint32_t> validity;
 
-		ValueT(TransactionInvocation const& invocation)
-			: invocation(invocation)
+		ValueT(Transaction const& tx)
+			: tx(tx)
 			, validity(0)
 			{}
 	};
@@ -37,7 +37,7 @@ public:
 		: tx_trie()
 		{}
 
-	void insert_tx(TransactionInvocation const& invocation);
+	Hash insert_tx(Transaction const& tx);
 
 	bool is_valid(TransactionFailurePoint failure_point, const Hash& hash) const;
 

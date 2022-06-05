@@ -15,7 +15,6 @@ struct RawMemoryStorage
 	opaque data<RAW_MEMORY_MAX_LEN>;
 };
 
-// these unions should never have a NONE case arm
 union StorageObject switch (ObjectType type)
 {
 	case RAW_MEMORY:

@@ -5,14 +5,16 @@
 namespace scs
 {
 
-void 
-TxBlock::insert_tx(TransactionInvocation const& invocation)
+Hash 
+TxBlock::insert_tx(Transaction const& tx)
 {
-	Hash h = hash_xdr(invocation);
+	Hash h = hash_xdr(tx);
 
 	hash_prefix_t prefix(h);
 
-	tx_trie.insert(prefix, ptr_value_t(std::make_unique<ValueT>(invocation)));
+	tx_trie.insert(prefix, ptr_value_t(std::make_unique<ValueT>(tx)));
+
+	return h;
 }
 
 bool 
