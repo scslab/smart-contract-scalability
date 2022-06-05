@@ -6,6 +6,7 @@ CLEANFILES = *~ .*~
 
 X_FILES = \
 	xdr/storage.x \
+	xdr/storage_delta.x \
 	xdr/types.x \
 	xdr/transaction.x
 
@@ -34,6 +35,8 @@ CRYPTO_SRCS = \
 STATE_DB_SRCS = \
 	state_db/delta_batch.cc \
 	state_db/delta_vec.cc \
+	state_db/object_defaults.cc \
+	state_db/object_modification_context.cc \
 	state_db/object_mutator.cc \
 	state_db/serial_delta_batch.cc \
 	state_db/state_db.cc

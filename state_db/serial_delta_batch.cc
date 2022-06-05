@@ -17,10 +17,10 @@ SerialDeltaBatch::add_delta(const Address& addr, const InvariantKey& key, Storag
 }
 
 void 
-SerialDeltaBatch::add_delta_raw_memory(const Address& addr, const InvariantKey& key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& data, DeltaPriority&& priority)
+SerialDeltaBatch::add_delta_raw_memory_write(const Address& addr, const InvariantKey& key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& data, DeltaPriority&& priority)
 {
 	StorageDelta d;
-	d.type(RAW_MEMORY);
+	d.type(DeltaType::RAW_MEMORY_WRITE);
 	d.data() = std::move(data);
 	add_delta(addr, key, std::move(d), std::move(priority));
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "xdr/storage.h"
+#include "xdr/storage_delta.h"
 
 #include <compare>
 #include <set>
@@ -24,8 +25,6 @@ public:
 	{
 		return deltas;
 	}
-
-	ObjectType get_initial_type_if_default() const;
 };
 
 } /* scs */

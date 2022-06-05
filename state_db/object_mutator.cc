@@ -1,124 +1,140 @@
 #include "state_db/object_mutator.h"
 
 #include "state_db/delta_vec.h"
+#include "state_db/object_defaults.h"
+
 #include "tx_block/tx_block.h"
+
+#include "state_db/object_modification_context.h"
 
 namespace scs
 {
 
-StorageObject 
-make_default_object(ObjectType type)
-{
-	StorageObject obj;
-	obj.type(type);
+/**
+ * Mod rules on something:
+ * 		- mod, delete
+ * 			- if not exist, create something of default value per type
+ * 			- delete: can coexist with other stuff, but no matter what object's gone at end.
+ * Mod rules on an int:
+ * 		- exclusive: either max(stuff), min(stuff), xor(stuff), add/sub(stuff)
+ */
 
-	switch (type) {
-		case RAW_MEMORY:
-			// default is empty bytestring
-			return obj;
-		default:
-			throw std::runtime_error("unimpl");
-	}
-}
 
-void 
-ObjectMutator::filter_invalid_deltas(const DeltaVector& deltas, TxBlock& txs) const
+template<TransactionFailurePoint prev_failure_point>
+class DeconflictingTxBlock
 {
-	ObjectType t = deltas.get_initial_type_if_default();
-	if (base)
+	TxBlock& base;
+
+public:
+
+	DeconflictingTxBlock(TxBlock& block)
+		: base(block)
+		{}
+
+
+	bool is_valid(const Hash& tx_hash)
 	{
-		t = base->type();
+		return base.is_valid(prev_failure_point, tx_hash);
 	}
 
-	switch(t)
+	void invalidate(const Hash& tx_hash)
 	{
-		case ObjectType::RAW_MEMORY:
-		{
-			filter_invalid_deltas_RAW_MEMORY(deltas, txs);
-			return;
-		}
-		default:
-			throw std::runtime_error("unimpl");
+		base.template invalidate<prev_failure_point>(tx_hash);
+	}
+};
+
+class FinalCheckTxBlock
+{
+	TxBlock const& base;
+
+public:
+	FinalCheckTxBlock(const TxBlock& block)
+		: base(block)
+		{}
+
+	bool is_valid(const Hash& tx_hash)
+	{
+		return base.is_valid(TransactionFailurePoint::FINAL, tx_hash);
 	}
 
+	void invalidate(const Hash& tx_hash)
+	{
+		throw std::runtime_error("cannot invalidate in final check");
+	}
+};
 
-}
-
+template<typename TxBlockWrapper>
 void 
-ObjectMutator::filter_invalid_deltas_RAW_MEMORY(const DeltaVector& deltas, TxBlock& txs) const
+apply_deltas(const DeltaVector& deltas, TxBlockWrapper& txs, std::optional<StorageObject>& base)
 {
-	std::optional<StorageObject> filter_base = base;
-	bool has_been_modified = false;
-
+	ObjectModificationContext mod_context(base);
+	
 	for (auto const& [d, p] : deltas.get_sorted_deltas())
 	{
-		if (!txs.is_valid(TransactionFailurePoint::COMPUTE, p.tx_hash))
+		if (!txs.is_valid(p.tx_hash))
 		{
 			// ignore txs that failed during execution
 			continue;
 		}
-		if (d.type() != ObjectType::RAW_MEMORY)
+		if (!mod_context.can_accept_mod(d.type()))
 		{
-			txs.invalidate<TransactionFailurePoint::CONFLICT_PHASE_1>(p.tx_hash);
-			continue;
-		}
-		// 0: no set, 1: has been set
-		if (!has_been_modified)
-		{
-			if (!filter_base)
-			{
-				filter_base = make_default_object(ObjectType::RAW_MEMORY);
-			}
-			filter_base->raw_memory_storage().data = d.data();
-			has_been_modified = true;
-		} else
-		{
-			if (d.data() != filter_base->raw_memory_storage().data)
-			{
-				txs.invalidate<CONFLICT_PHASE_1>(p.tx_hash);
-			}
-		}
-	}
-}
-
-
-void
-ObjectMutator::apply_valid_deltas(const DeltaVector& deltas, const TxBlock& txs)
-{
-	ObjectType t = deltas.get_initial_type_if_default();
-	if (base)
-	{
-		t = base->type();
-	}
-	switch(t)
-	{
-		case ObjectType::RAW_MEMORY:
-		{
-			apply_valid_deltas_RAW_MEMORY(deltas, txs);
-			return;
-		}
-		default:
-			throw std::runtime_error("unimpl");
-	}
-}
-
-void
-ObjectMutator::apply_valid_deltas_RAW_MEMORY(const DeltaVector& deltas, const TxBlock& txs)
-{
-	for (auto const& [d, p] : deltas.get_sorted_deltas())
-	{
-		if (!txs.is_valid(TransactionFailurePoint::FINAL, p.tx_hash))
-		{
+			txs.invalidate(p.tx_hash);
 			continue;
 		}
 
 		if (!base)
 		{
-			base = make_default_object(ObjectType::RAW_MEMORY);
+			base = make_default_object(d.type());
 		}
 
-		base->raw_memory_storage().data = d.data();
+		switch(base -> type())
+		{
+			case ObjectType::RAW_MEMORY:
+			{
+				if (!mod_context.raw_mem_set_called)
+				{
+					// acceptable
+					break;
+				}
+				if (d.data() != base -> raw_memory_storage().data)
+				{
+					txs.invalidate(p.tx_hash);
+					continue;
+				}
+			}
+			break;
+			default:
+				throw std::runtime_error("unimpl");
+		}
+
+		mod_context.accept_mod(d.type());
 	}
+
+	if (mod_context.is_deleted)
+	{
+		base = std::nullopt;
+	}
+}
+
+template<TransactionFailurePoint prev_failure_point>
+void
+ObjectMutator::filter_invalid_deltas(const DeltaVector& deltas, TxBlock& txs) const
+{
+	DeconflictingTxBlock<prev_failure_point> block(txs);
+
+	auto base_copy = base;
+
+	apply_deltas(deltas, block, base_copy);
+}
+
+template
+void ObjectMutator::filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(const DeltaVector&, TxBlock&) const;
+
+void
+ObjectMutator::apply_valid_deltas(const DeltaVector& deltas, const TxBlock& txs)
+{
+	FinalCheckTxBlock block(txs);
+	apply_deltas(deltas, block, base);
 }
 
 } /* scs */

@@ -5,8 +5,7 @@ namespace scs
 
 enum ObjectType
 {
-	NONE = 0,
-	RAW_MEMORY = 1
+	RAW_MEMORY = 0,
 };
 
 const RAW_MEMORY_MAX_LEN = 512;
@@ -21,13 +20,6 @@ union StorageObject switch (ObjectType type)
 {
 	case RAW_MEMORY:
 		RawMemoryStorage raw_memory_storage;
-};
-
-union StorageDelta switch (ObjectType type)
-{
-	case RAW_MEMORY:
-		// implicitly creates RAW_MEMORY if none exists previously
-		opaque data<RAW_MEMORY_MAX_LEN>;
 };
 
 struct DeltaPriority

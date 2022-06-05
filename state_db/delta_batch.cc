@@ -11,6 +11,7 @@ namespace scs
 void 
 DeltaBatch::merge_in_serial_batch(SerialDeltaBatch& batch)
 {
+	throw std::runtime_error("incorrect implementation");
 	auto& m = batch.get_delta_map();
 	deltas.insert(m.begin(), m.end());
 }
@@ -19,7 +20,7 @@ void
 DeltaBatch::filter_invalid_deltas(TxBlock& txs) {
 	for (auto& [_, v] : deltas)
 	{
-		v.second.filter_invalid_deltas(v.first, txs);
+		v.second.filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(v.first, txs);
 	}
 }
 

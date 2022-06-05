@@ -28,7 +28,7 @@ class SerialDeltaBatch
 
 public:
 
-	void add_delta_raw_memory(const Address& addr, const InvariantKey& key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& data, DeltaPriority&& priority);
+	void add_delta_raw_memory_write(const Address& addr, const InvariantKey& key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& data, DeltaPriority&& priority);
 
 	map_t& get_delta_map() {
 		return deltas;
@@ -37,9 +37,6 @@ public:
 	const map_t& get_delta_map() const {
 		return deltas;
 	}
-
-
-
 };
 
 } /* scs */
