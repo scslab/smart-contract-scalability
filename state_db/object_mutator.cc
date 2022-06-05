@@ -87,24 +87,29 @@ apply_deltas(const DeltaVector& deltas, TxBlockWrapper& txs, std::optional<Stora
 			base = make_default_object(d.type());
 		}
 
-		switch(base -> type())
-		{
-			case ObjectType::RAW_MEMORY:
+		// base might be nullopt, if d.type() == DELETE;
+		// only stays that way if it (1) starts as nullopt and (2) sees an uninterrupted sequence
+		// of DELETE
+		if (base) {
+			switch(base -> type())
 			{
-				if (!mod_context.raw_mem_set_called)
+				case ObjectType::RAW_MEMORY:
 				{
-					// acceptable
-					break;
+					if (!mod_context.raw_mem_set_called)
+					{
+						// acceptable
+						break;
+					}
+					if (d.data() != base -> raw_memory_storage().data)
+					{
+						txs.invalidate(p.tx_hash);
+						continue;
+					}
 				}
-				if (d.data() != base -> raw_memory_storage().data)
-				{
-					txs.invalidate(p.tx_hash);
-					continue;
-				}
+				break;
+				default:
+					throw std::runtime_error("unimpl");
 			}
-			break;
-			default:
-				throw std::runtime_error("unimpl");
 		}
 
 		mod_context.accept_mod(d.type());

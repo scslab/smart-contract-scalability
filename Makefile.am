@@ -62,7 +62,8 @@ SRCS = \
 
 TESTS_CCS = \
 	tests/builtin_fns_log_tests.cc \
-	tests/builtin_fns_invoke_tests.cc
+	tests/builtin_fns_invoke_tests.cc \
+	state_db/tests/test_object_mutator.cc
 
 MAIN_CCS = \
 	main/simple.cc
