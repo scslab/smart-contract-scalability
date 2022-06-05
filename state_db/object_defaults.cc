@@ -1,5 +1,7 @@
 #include "state_db/object_defaults.h"
 
+#include <cstring>
+
 namespace scs
 {
 
@@ -13,10 +15,11 @@ make_default_object(DeltaType d_type)
 
 	ObjectType type;
 	switch (d_type) {
-		case RAW_MEMORY_WRITE:
+		case DeltaType::RAW_MEMORY_WRITE:
 			type = ObjectType::RAW_MEMORY;
+			break;
 		default:
-			throw std::runtime_error("invalid type passed to make_default_object (or unimpl)");
+			throw std::runtime_error(std::string("invalid type passed to make_default_object (or unimpl): ") + std::to_string(d_type));
 	}
 	StorageObject out;
 	out.type(type);

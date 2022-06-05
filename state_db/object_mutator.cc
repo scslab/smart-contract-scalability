@@ -90,14 +90,15 @@ apply_deltas(const DeltaVector& deltas, TxBlockWrapper& txs, std::optional<Stora
 		// base might be nullopt, if d.type() == DELETE;
 		// only stays that way if it (1) starts as nullopt and (2) sees an uninterrupted sequence
 		// of DELETE
-		if (base) {
+		if (d.type() != DeltaType::DELETE)
+		{
 			switch(base -> type())
 			{
 				case ObjectType::RAW_MEMORY:
 				{
 					if (!mod_context.raw_mem_set_called)
 					{
-						// acceptable
+						base -> raw_memory_storage().data = d.data();
 						break;
 					}
 					if (d.data() != base -> raw_memory_storage().data)
@@ -140,6 +141,11 @@ ObjectMutator::apply_valid_deltas(const DeltaVector& deltas, const TxBlock& txs)
 {
 	FinalCheckTxBlock block(txs);
 	apply_deltas(deltas, block, base);
+}
+
+std::optional<StorageObject> 
+ObjectMutator::get_object() const {
+	return base;
 }
 
 } /* scs */
