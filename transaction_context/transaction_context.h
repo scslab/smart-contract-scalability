@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "transaction_context/method_invocation.h"
-#include "transaction_context/storage_cache.h"
+#include "storage_proxy/storage_proxy.h"
 
 #include <wasm_api/wasm_api.h>
 
@@ -14,6 +14,7 @@
 namespace scs {
 
 class GlobalContext;
+class SerialDeltaBatch;
 
 class TransactionContext {
 
@@ -34,9 +35,15 @@ public:
 
 	std::vector<std::vector<uint8_t>> logs;
 
-	StorageCache storage_proxy;
+	StorageProxy storage_proxy;
 
-	TransactionContext(uint64_t gas_limit, uint64_t gas_rate_bid, Hash tx_hash, Address const& sender, GlobalContext const& scs_data_structures);
+	TransactionContext(
+		uint64_t gas_limit, 
+		uint64_t gas_rate_bid, 
+		Hash tx_hash, 
+		Address const& sender, 
+		GlobalContext const& scs_data_structures,
+		SerialDeltaBatch& local_delta_batch);
 
 	DeltaPriority 
 	get_next_priority(uint64_t priority);

@@ -1,4 +1,4 @@
-#include "state_db/object_modification_context.h"
+#include "object/object_modification_context.h"
 
 namespace scs
 {

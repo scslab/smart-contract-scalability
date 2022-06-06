@@ -32,20 +32,26 @@ CONTRACT_DB_SRCS = \
 CRYPTO_SRCS = \
 	crypto/crypto_utils.cc
 
+OBJECT_SRCS = \
+	object/delta_applicator.cc \
+	object/make_delta.cc \
+	object/object_defaults.cc \
+	object/object_modification_context.cc \
+	object/object_mutator.cc
+
 STATE_DB_SRCS = \
 	state_db/delta_batch.cc \
 	state_db/delta_vec.cc \
-	state_db/object_defaults.cc \
-	state_db/object_modification_context.cc \
-	state_db/object_mutator.cc \
 	state_db/serial_delta_batch.cc \
 	state_db/state_db.cc
+
+STORAGE_PROXY_SRCS = \
+	storage_proxy/storage_proxy.cc
 
 TRANSACTION_CONTEXT_SRCS = \
 	transaction_context/execution_context.cc \
 	transaction_context/global_context.cc \
 	transaction_context/method_invocation.cc \
-	transaction_context/storage_cache.cc \
 	transaction_context/threadlocal_context.cc \
 	transaction_context/transaction_context.cc
 
@@ -56,14 +62,16 @@ SRCS = \
 	$(BUILTIN_FNS_SRCS) \
 	$(CONTRACT_DB_SRCS) \
 	$(CRYPTO_SRCS) \
+	$(OBJECT_SRCS) \
 	$(STATE_DB_SRCS) \
+	$(STORAGE_PROXY_SRCS) \
 	$(TRANSACTION_CONTEXT_SRCS) \
 	$(TX_BLOCK_SRCS)
 
 TESTS_CCS = \
 	tests/builtin_fns_log_tests.cc \
 	tests/builtin_fns_invoke_tests.cc \
-	state_db/tests/test_object_mutator.cc
+	object/tests/test_object_mutator.cc
 
 MAIN_CCS = \
 	main/simple.cc

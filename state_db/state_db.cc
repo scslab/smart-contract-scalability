@@ -5,13 +5,13 @@
 namespace scs
 {
 
-StorageObject
+std::optional<StorageObject>
 StateDB::get(AddressAndKey const& a) const
 {
 	auto it = state_db.find(a);
 	if (it == state_db.end())
 	{
-		throw std::runtime_error("storage key not found");
+		return std::nullopt;
 	}
 	return it -> second;
 }

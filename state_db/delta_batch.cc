@@ -1,6 +1,5 @@
 #include "state_db/delta_batch.h"
 #include "state_db/delta_vec.h"
-#include "state_db/object_mutator.h"
 #include "state_db/serial_delta_batch.h"
 
 #include "tx_block/tx_block.h"

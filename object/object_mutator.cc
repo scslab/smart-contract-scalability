@@ -1,11 +1,11 @@
-#include "state_db/object_mutator.h"
+#include "object/object_mutator.h"
 
 #include "state_db/delta_vec.h"
-#include "state_db/object_defaults.h"
+#include "object/object_defaults.h"
 
 #include "tx_block/tx_block.h"
-
-#include "state_db/object_modification_context.h"
+#include "object/object_modification_context.h"
+#include "object/delta_applicator.h"
 
 namespace scs
 {
@@ -67,7 +67,26 @@ template<typename TxBlockWrapper>
 void 
 apply_deltas(const DeltaVector& deltas, TxBlockWrapper& txs, std::optional<StorageObject>& base)
 {
-	ObjectModificationContext mod_context(base);
+	DeltaApplicator applicator(base);
+
+	for (auto const& [d, p] : deltas.get_sorted_deltas())
+	{
+		if (!txs.is_valid(p.tx_hash))
+		{
+			//ignore, failed during execution or was pruned out
+			continue;
+		}
+
+		if (!applicator.try_apply(d))
+		{
+			txs.invalidate(p.tx_hash);
+			continue;
+		}
+	}
+
+	base = applicator.get();
+
+	/*ObjectModificationContext mod_context(base);
 	
 	for (auto const& [d, p] : deltas.get_sorted_deltas())
 	{
@@ -119,7 +138,7 @@ apply_deltas(const DeltaVector& deltas, TxBlockWrapper& txs, std::optional<Stora
 	if (mod_context.is_deleted)
 	{
 		base = std::nullopt;
-	}
+	} */
 }
 
 template<TransactionFailurePoint prev_failure_point>

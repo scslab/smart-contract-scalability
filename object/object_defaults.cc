@@ -1,4 +1,4 @@
-#include "state_db/object_defaults.h"
+#include "object/object_defaults.h"
 
 #include <cstring>
 

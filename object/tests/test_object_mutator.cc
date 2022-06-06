@@ -2,7 +2,7 @@
 
 #include "tx_block/tx_block.h"
 
-#include "state_db/object_mutator.h"
+#include "object/object_mutator.h"
 #include "state_db/delta_vec.h"
 
 #include "xdr/storage_delta.h"
@@ -283,11 +283,6 @@ TEST_CASE("raw mem only", "[mutator]")
 			REQUIRE(*base.get_object() == obj);
 		}
 	}
-
-
-
-
-
 }
 
 } /* scs */

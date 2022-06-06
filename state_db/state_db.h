@@ -3,6 +3,7 @@
 #include "xdr/storage.h"
 #include "xdr/types.h"
 
+#include <optional>
 #include <map>
 
 namespace scs
@@ -17,7 +18,7 @@ class StateDB
 
 public:
 
-	StorageObject 
+	std::optional<StorageObject> 
 	get(const AddressAndKey& a) const;
 
 	void 

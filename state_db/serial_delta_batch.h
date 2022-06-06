@@ -1,7 +1,7 @@
 #pragma once
 
 #include "state_db/delta_vec.h"
-#include "state_db/object_mutator.h"
+#include "object/object_mutator.h"
 
 #include "xdr/storage.h"
 #include "xdr/types.h"
@@ -24,11 +24,11 @@ class SerialDeltaBatch
 
 	map_t deltas;
 
-	void add_delta(const Address& addr, const InvariantKey& key, StorageDelta&& delta, DeltaPriority&& priority);
-
 public:
 
-	void add_delta_raw_memory_write(const Address& addr, const InvariantKey& key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& data, DeltaPriority&& priority);
+	void add_delta(const AddressAndKey& key, StorageDelta&& delta, DeltaPriority&& priority);
+
+	//void add_delta_raw_memory_write(AddressAndKey const& key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& data, DeltaPriority&& priority);
 
 	map_t& get_delta_map() {
 		return deltas;

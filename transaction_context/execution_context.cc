@@ -1,5 +1,6 @@
 #include "transaction_context/execution_context.h"
 #include "transaction_context/global_context.h"
+#include "transaction_context/threadlocal_context.h"
 
 #include "crypto/hash.h"
 
@@ -48,7 +49,13 @@ ExecutionContext::execute(Transaction const& root)
 
 	MethodInvocation invocation(root.invocation);
 
-	tx_context = std::make_unique<TransactionContext>(root.gas_limit, root.gas_rate_bid, hash_xdr(root), root.sender, scs_data_structures);
+	tx_context = std::make_unique<TransactionContext>(
+		root.gas_limit, 
+		root.gas_rate_bid,
+		hash_xdr(root), 
+		root.sender, 
+		scs_data_structures,
+		ThreadlocalContextStore::get_delta_batch());
 
 	try
 	{
