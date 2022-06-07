@@ -11,4 +11,6 @@ namespace scs
 
 StorageDelta make_raw_memory_write(xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& data);
 
+StorageDelta make_delete();
+
 } /* scs */

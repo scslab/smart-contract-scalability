@@ -17,7 +17,7 @@ DeltaApplicator::try_apply(StorageDelta const& d)
 
 	if (!base)
 	{
-		base = make_default_object(d.type());
+		base = make_default_object_by_delta(d.type());
 	}
 
 	// base might be nullopt, if d.type() == DELETE;

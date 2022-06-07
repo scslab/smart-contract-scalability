@@ -6,7 +6,7 @@ namespace scs
 {
 
 std::optional<StorageObject>
-make_default_object(DeltaType d_type)
+make_default_object_by_delta(DeltaType d_type)
 {
 	if (d_type == DELETE)
 	{
@@ -21,6 +21,12 @@ make_default_object(DeltaType d_type)
 		default:
 			throw std::runtime_error(std::string("invalid type passed to make_default_object (or unimpl): ") + std::to_string(d_type));
 	}
+	return make_default_object_by_type(type);
+}
+
+StorageObject
+make_default_object_by_type(ObjectType type)
+{
 	StorageObject out;
 	out.type(type);
 	switch(type)

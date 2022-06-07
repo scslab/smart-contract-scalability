@@ -18,7 +18,16 @@ class SerialDeltaBatch
 	// ultimately will have threadlocal cache of these
 	// Each vec is kept in sort order by priority
 
-	using value_t = std::pair<DeltaVector, ObjectMutator>;
+	struct value_t
+	{
+		DeltaVector vec;
+		//std::optional<StorageObject> base_obj;
+
+		/*value_t(std::optional<StorageObject> const& obj)
+			: vec()
+			, base_obj(obj)
+			{} */
+	};
 
 	using map_t = std::map<AddressAndKey, value_t>;
 
@@ -27,8 +36,6 @@ class SerialDeltaBatch
 public:
 
 	void add_delta(const AddressAndKey& key, StorageDelta&& delta, DeltaPriority&& priority);
-
-	//void add_delta_raw_memory_write(AddressAndKey const& key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& data, DeltaPriority&& priority);
 
 	map_t& get_delta_map() {
 		return deltas;

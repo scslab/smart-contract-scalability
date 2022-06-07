@@ -21,6 +21,15 @@ public:
 
 	void add_delta(StorageDelta&& d, DeltaPriority&& p);
 
+	void add(DeltaVector&& other)
+	{
+		deltas.merge(other.deltas);
+		if (other.deltas.size() != 0)
+		{
+			throw std::runtime_error("collision within delta_vec");
+		}
+	}
+
 	const set_t& get_sorted_deltas() const
 	{
 		return deltas;

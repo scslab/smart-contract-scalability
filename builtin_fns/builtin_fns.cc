@@ -43,7 +43,17 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 	runtime.template link_fn<&BuiltinFns::scs_get_msg_sender>(
 		"scs",
 		"get_msg_sender");
-}
 
+	/* -- storage -- */
+	runtime.template link_fn<&BuiltinFns::scs_raw_memory_set>(
+		"scs",
+		"raw_mem_set");
+	runtime.template link_fn<&BuiltinFns::scs_raw_memory_get>(
+		"scs",
+		"raw_mem_get");
+	runtime.template link_fn<&BuiltinFns::scs_raw_memory_get_len>(
+		"scs",
+		"raw_mem_len");
+}
 
 } /* scs */

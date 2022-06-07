@@ -24,7 +24,7 @@ TransactionContext::TransactionContext(
 	{}
 
 DeltaPriority 
-TransactionContext::get_next_priority(uint64_t priority)
+TransactionContext::get_next_priority(uint32_t priority)
 {
 	current_priority.delta_id_number++;
 	current_priority.custom_priority = priority;
@@ -62,6 +62,20 @@ TransactionContext::push_invocation_stack(
 	invocation_stack.push_back(invocation);
 	runtime_stack.push_back(runtime);
 }
+
+AddressAndKey 
+TransactionContext::get_storage_key(InvariantKey const& key) const
+{
+	static_assert(sizeof(Address) + sizeof(InvariantKey) == sizeof(AddressAndKey), "size mismatch");
+
+	AddressAndKey out;
+	auto const& cur_addr = get_current_method_invocation().addr;
+	std::memcpy(out.data(), cur_addr.data(), sizeof(Address));
+
+	std::memcpy(out.data() + sizeof(Address), key.data(), sizeof(InvariantKey));
+	return out;
+}
+
 
 const Address&
 TransactionContext::get_msg_sender() const

@@ -24,7 +24,7 @@ union StorageObject switch (ObjectType type)
 struct DeltaPriority
 {
 	// higher custom_priority beats lower (empty) custom_priority
-	uint64 custom_priority;
+	uint32 custom_priority;
 
 	//higher gas bid wins ties
 	uint64 gas_rate_bid;

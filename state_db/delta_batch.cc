@@ -2,33 +2,56 @@
 #include "state_db/delta_vec.h"
 #include "state_db/serial_delta_batch.h"
 
+#include "state_db/state_db.h"
+
 #include "tx_block/tx_block.h"
 
 namespace scs
 {
 
 void 
-DeltaBatch::merge_in_serial_batch(SerialDeltaBatch& batch)
+DeltaBatch::merge_in_serial_batches(batch_array_t&& batches)
 {
-	throw std::runtime_error("incorrect implementation");
-	auto& m = batch.get_delta_map();
-	deltas.insert(m.begin(), m.end());
+
+	for (auto& b : batches)
+	{
+		if (!b) continue;
+
+		auto& m = b->get_delta_map();
+
+		for (auto& [k, v] : m)
+		{
+			auto it = deltas.emplace(k, value_t());
+			it.first->second.vec.add(std::move(v.vec));
+		}
+	}
 }
 
 void 
 DeltaBatch::filter_invalid_deltas(TxBlock& txs) {
+	if (!populated)
+	{
+		throw std::runtime_error("cannot filter before populating with db values");
+	}
 	for (auto& [_, v] : deltas)
 	{
-		v.second.filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(v.first, txs);
+		v.mutator.filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(v.vec, txs);
 	}
+	filtered = true;
 }
 
 void 
-DeltaBatch::apply_valid_deltas(TxBlock const& txs) {
+DeltaBatch::apply_valid_deltas(TxBlock const& txs)
+{
+	if (!filtered)
+	{
+		throw std::runtime_error("cannot apply before filtering");
+	}
 	for (auto& [_, v] : deltas)
 	{
-		v.second.apply_valid_deltas(v.first, txs);
+		v.mutator.apply_valid_deltas(v.vec, txs);
 	}
+	applied = true;
 }
 
 } /* scs */

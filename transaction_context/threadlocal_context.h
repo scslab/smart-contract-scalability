@@ -4,6 +4,7 @@
 
 #include "mtt/utils/threadlocal_cache.h"
 #include "state_db/serial_delta_batch.h"
+#include "transaction_context/execution_context.h"
 
 namespace scs
 {
@@ -21,6 +22,14 @@ class ThreadlocalContextStore {
 public:
 	static ExecutionContext& get_exec_ctx();
 	static SerialDeltaBatch& get_delta_batch();
+
+	using batch_array_t = typename utils::ThreadlocalCache<SerialDeltaBatch>::cache_array_t;
+
+	batch_array_t const& 
+	get_all_delta_batches() const
+	{
+		return delta_batches.get_objects();
+	}
 
 	template<typename ...Args>
 	static void make_ctx(Args&... args);

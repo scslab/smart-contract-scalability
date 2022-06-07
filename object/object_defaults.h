@@ -9,6 +9,9 @@ namespace scs
 {
 
 std::optional<StorageObject>
-make_default_object(DeltaType d_type);
+make_default_object_by_delta(DeltaType d_type);
+
+StorageObject
+make_default_object_by_type(ObjectType type);
 
 } /* scs */

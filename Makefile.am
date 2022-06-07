@@ -24,7 +24,8 @@ BUILTIN_FNS_SRCS = \
 	builtin_fns/builtin_fns.cc \
 	builtin_fns/env.cc \
 	builtin_fns/logging.cc \
-	builtin_fns/runtime.cc
+	builtin_fns/runtime.cc \
+	builtin_fns/raw_memory.cc
 
 CONTRACT_DB_SRCS = \
 	contract_db/contract_db.cc

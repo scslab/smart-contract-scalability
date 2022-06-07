@@ -18,13 +18,15 @@ class StorageProxy
 {
 	StateDB const& state_db;
 
-	using map_value_t = DeltaApplicator;
+	using value_t = DeltaApplicator;
 
-	std::map<AddressAndKey, map_value_t> cache;
+	std::map<AddressAndKey, value_t> cache;
 
 	// may not be empty -- can accumulate deltas from 
 	// an entire thread's worth of work
 	SerialDeltaBatch& local_delta_batch;
+
+	value_t& get_local(AddressAndKey const& key);
 
 public:
 
@@ -35,6 +37,9 @@ public:
 
 	void
 	raw_memory_write(AddressAndKey const& key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& bytes, DeltaPriority&& priority);
+
+	void
+	delete_object(AddressAndKey const& key, DeltaPriority&& priority);
 };
 
 } /* scs */

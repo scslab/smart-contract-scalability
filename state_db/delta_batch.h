@@ -5,6 +5,8 @@
 
 #include "xdr/types.h"
 
+#include "transaction_context/threadlocal_context.h"
+
 namespace scs 
 {
 
@@ -12,24 +14,38 @@ class DeltaVector;
 class ObjectMutator;
 class SerialDeltaBatch;
 class TxBlock;
+class StateDB;
 
 class DeltaBatch
 {
-	using value_t = std::pair<DeltaVector, ObjectMutator>;
+	struct value_t {
+		DeltaVector vec;
+		ObjectMutator mutator;
+
+		value_t()
+			: vec()
+			, mutator()
+			{}
+	};
+
 	using map_t = std::map<AddressAndKey, value_t>;
 
 	map_t deltas;
 
+	using batch_array_t = ThreadlocalContextStore::batch_array_t;
+
+	bool populated = false;
+	bool filtered = false;
+	bool applied = false;
+
+	friend class StateDB;
+
 public:
 
-	void merge_in_serial_batch(SerialDeltaBatch& batch);
- 
+	void merge_in_serial_batches(batch_array_t&& batches);
+
 	void filter_invalid_deltas(TxBlock& txs);
 	void apply_valid_deltas(TxBlock const& txs);
-
-	const map_t& get_delta_map() const {
-		return deltas;
-	}
 };
 
 } /* scs */

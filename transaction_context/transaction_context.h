@@ -46,7 +46,7 @@ public:
 		SerialDeltaBatch& local_delta_batch);
 
 	DeltaPriority 
-	get_next_priority(uint64_t priority);
+	get_next_priority(uint32_t priority);
 
 	wasm_api::WasmRuntime*
 	get_current_runtime();
@@ -56,6 +56,8 @@ public:
 
 	const Address&
 	get_msg_sender() const;
+
+	AddressAndKey get_storage_key(InvariantKey const& key) const;
 
 	void pop_invocation_stack();
 	void push_invocation_stack(wasm_api::WasmRuntime* runtime, MethodInvocation const& invocation);

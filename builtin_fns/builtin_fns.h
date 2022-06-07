@@ -57,22 +57,20 @@ class BuiltinFns
 
 	static void
 	scs_raw_memory_set(
-		int32_t key_offset,
-		int32_t key_len,
-		int32_t mem_offset,
-		int32_t mem_len);
+		uint32_t key_offset,
+		uint32_t mem_offset,
+		uint32_t mem_len,
+		uint32_t priority);
 
-	static void
+	static uint32_t
 	scs_raw_memory_get(
-		int32_t key_offset,
-		int32_t key_len,
-		int32_t output_offset,
-		int32_t output_max_len);
+		uint32_t key_offset,
+		uint32_t output_offset,
+		uint32_t output_max_len);
 
-	static int32_t
+	static uint32_t
 	scs_raw_memory_get_len(
-		int32_t key_offset,
-		int32_t key_len);
+		uint32_t key_offset);
 
 	BuiltinFns() = delete;
 
