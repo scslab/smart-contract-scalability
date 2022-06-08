@@ -56,6 +56,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 	auto finish_block = [&] () {
 		phase_merge_delta_batches(delta_batch);
 		phase_filter_deltas(scs_data_structures, delta_batch, tx_block);
+		phase_compute_state_updates(delta_batch, tx_block);
 		phase_finish_block(scs_data_structures, delta_batch, tx_block);
 	};
 
@@ -92,9 +93,9 @@ TEST_CASE("raw mem storage write", "[storage]")
 		REQUIRE(
 			tx_block.is_valid(TransactionFailurePoint::FINAL, tx_hash));
 
-		auto a0k0 = make_key(a0, k0);
+		auto hk0 = make_key(h, k0);
 
-		auto db_val = state_db.get(a0k0);
+		auto db_val = state_db.get(hk0);
 
 		REQUIRE(!!db_val);
 

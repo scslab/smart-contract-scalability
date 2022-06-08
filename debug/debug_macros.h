@@ -3,6 +3,7 @@
 #include "mtt/trie/debug_levels.h"
 
 #define CONTRACT_DEBUG DEBUG_LEVEL_INFO
+#define OBJECT_DEBUG DEBUG_LEVEL_INFO
 
 #if CONTRACT_DEBUG <= DEBUG_LEVEL_ERROR
 #define CONTRACT_ERROR(s, ...) LOG(s, __VA_ARGS__)
@@ -18,6 +19,14 @@
 #else
 #define CONTRACT_INFO(s, ...) (void)0
 #define CONTRACT_INFO_F(s) (void)0
+#endif
+
+#if OBJECT_DEBUG <= DEBUG_LEVEL_INFO
+#define OBJECT_INFO(s, ...) LOG(s, __VA_ARGS__)
+#define OBJECT_INFO_F(s) s
+#else
+#define OBJECT_INFO(s, ...) (void)0
+#define OBJECT_INFO_F(s) (void)0
 #endif
 
 #ifndef TEST_START_ON

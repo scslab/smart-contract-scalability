@@ -50,7 +50,7 @@ public:
 
 	void commit(const TxBlock& tx_block)
 	{
-		throw std::runtime_error("unimpl");
+		uncommitted_contracts.add_valid_contracts(contracts, tx_block);
 	}
 };
 

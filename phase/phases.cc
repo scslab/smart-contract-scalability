@@ -26,6 +26,12 @@ phase_filter_deltas(GlobalContext const& global_structures, DeltaBatch& delta_ba
 	delta_batch.filter_invalid_deltas(tx_block);
 }
 
+void
+phase_compute_state_updates(DeltaBatch& delta_batch, const TxBlock& tx_block)
+{
+	delta_batch.apply_valid_deltas(tx_block);
+}
+
 void 
 phase_finish_block(GlobalContext& global_structures, const DeltaBatch& delta_batch, const TxBlock& tx_block)
 {

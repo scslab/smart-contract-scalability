@@ -37,6 +37,7 @@ class DeltaBatch
 	bool populated = false;
 	bool filtered = false;
 	bool applied = false;
+	mutable bool written_to_state_db = false;
 
 	friend class StateDB;
 

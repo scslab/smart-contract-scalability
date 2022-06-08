@@ -19,7 +19,7 @@ make_default_object_by_delta(DeltaType d_type)
 			type = ObjectType::RAW_MEMORY;
 			break;
 		default:
-			throw std::runtime_error(std::string("invalid type passed to make_default_object (or unimpl): ") + std::to_string(d_type));
+			throw std::runtime_error(std::string("invalid type passed to make_default_object: ") + std::to_string(d_type));
 	}
 	return make_default_object_by_type(type);
 }
@@ -34,6 +34,8 @@ make_default_object_by_type(ObjectType type)
 		case ObjectType::RAW_MEMORY:
 			// default is empty data field
 			break;
+		default:
+			throw std::runtime_error("unknown object type");
 			
 	}
 	return out;

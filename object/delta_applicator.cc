@@ -2,6 +2,9 @@
 
 #include "object/object_defaults.h"
 
+#include "debug/debug_utils.h"
+#include "debug/debug_macros.h"
+
 #include "xdr/storage_delta.h"
 
 namespace scs
@@ -40,11 +43,12 @@ DeltaApplicator::try_apply(StorageDelta const& d)
 			}
 			break;
 			default:
-				throw std::runtime_error("unimpl");
+				throw std::runtime_error("unknown object type");
 		}
 	}
 
 	mod_context.accept_mod(d.type());
+	OBJECT_INFO("updated state to %s", debug::storage_object_to_str(base).c_str());
 	return true;
 }
 
@@ -58,8 +62,10 @@ DeltaApplicator::get() const
 	// taken by the application for use elsewhere).
 	if (mod_context.is_deleted)
 	{
+		OBJECT_INFO("returning deleted object");
 		return null_obj;
 	}
+	OBJECT_INFO("returning %s", debug::storage_object_to_str(base).c_str());
 	return base;
 }
 

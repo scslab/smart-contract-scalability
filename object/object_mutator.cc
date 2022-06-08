@@ -7,6 +7,9 @@
 #include "object/object_modification_context.h"
 #include "object/delta_applicator.h"
 
+#include "debug/debug_utils.h"
+#include "debug/debug_macros.h"
+
 namespace scs
 {
 
@@ -68,6 +71,7 @@ void
 apply_deltas(const DeltaVector& deltas, TxBlockWrapper& txs, std::optional<StorageObject>& base)
 {
 	DeltaApplicator applicator(base);
+	OBJECT_INFO("starting apply to object %s", debug::storage_object_to_str(base).c_str());
 
 	for (auto const& [d, p] : deltas.get_sorted_deltas())
 	{
@@ -79,6 +83,7 @@ apply_deltas(const DeltaVector& deltas, TxBlockWrapper& txs, std::optional<Stora
 
 		if (!applicator.try_apply(d))
 		{
+			std::printf("pruning out %s\n", debug::array_to_str(p.tx_hash).c_str());
 			txs.invalidate(p.tx_hash);
 			continue;
 		}
@@ -160,10 +165,12 @@ ObjectMutator::apply_valid_deltas(const DeltaVector& deltas, const TxBlock& txs)
 {
 	FinalCheckTxBlock block(txs);
 	apply_deltas(deltas, block, base);
+	OBJECT_INFO("post apply: base = %s", debug::storage_object_to_str(base).c_str());
 }
 
 std::optional<StorageObject> 
 ObjectMutator::get_object() const {
+	OBJECT_INFO("get_object(): base = %s", debug::storage_object_to_str(base).c_str());
 	return base;
 }
 

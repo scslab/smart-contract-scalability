@@ -33,6 +33,9 @@ CONTRACT_DB_SRCS = \
 CRYPTO_SRCS = \
 	crypto/crypto_utils.cc
 
+DEBUG_SRCS = \
+	debug/debug_utils.cc
+
 OBJECT_SRCS = \
 	object/comparators.cc \
 	object/delta_applicator.cc \
@@ -67,6 +70,7 @@ SRCS = \
 	$(BUILTIN_FNS_SRCS) \
 	$(CONTRACT_DB_SRCS) \
 	$(CRYPTO_SRCS) \
+	$(DEBUG_SRCS) \
 	$(OBJECT_SRCS) \
 	$(PHASE_SRCS) \
 	$(STATE_DB_SRCS) \

@@ -23,7 +23,7 @@ ObjectModificationContext::can_accept_mod(DeltaType dt) const
 		case DeltaType::RAW_MEMORY_WRITE:
 			return *current_type == ObjectType::RAW_MEMORY;
 		default:
-			throw std::runtime_error("unimpl");
+			throw std::runtime_error("unknown delta type in can accept mod");
 	}
 }
 
@@ -39,7 +39,7 @@ ObjectModificationContext::accept_mod(DeltaType dt)
 			raw_mem_set_called = true;
 			break;
 		default:
-			throw std::runtime_error("unimpl");
+			throw std::runtime_error("unknown delta type in accept mod");
 	}
 }
 
