@@ -33,7 +33,7 @@ ExecutionContext::invoke_subroutine(MethodInvocation const& invocation)
 
 	tx_context -> push_invocation_stack(runtime, invocation);
 
-	runtime->template invoke<int32_t>(invocation.get_invocable_methodname().c_str());
+	runtime->template invoke<void>(invocation.get_invocable_methodname().c_str());
 
 	tx_context -> pop_invocation_stack();
 }

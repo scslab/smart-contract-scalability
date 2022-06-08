@@ -20,15 +20,12 @@ redirect_call_to_proxy()
 	flag = 1;
 	sdk::invoke(calldata.callee, calldata.method, sdk::EmptyStruct{});
 	flag = 0;
-
-	return 0;
 }
 
 EXPORT("pub01000000")
 self_call()
 {
 	sdk::log((uint8_t)0xFF);
-	return 0;
 }
 
 EXPORT("pub02000000")
@@ -37,5 +34,4 @@ self_call_reentrant_guard()
 	if (flag) {
 		abort();
 	}
-	return 0;
 }

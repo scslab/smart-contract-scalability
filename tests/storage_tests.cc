@@ -77,7 +77,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 		TransactionInvocation invocation (
 			h,
-			0,
+			1,
 			test::make_calldata(data)
 		);
 
