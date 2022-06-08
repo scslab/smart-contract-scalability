@@ -34,6 +34,7 @@ CRYPTO_SRCS = \
 	crypto/crypto_utils.cc
 
 OBJECT_SRCS = \
+	object/comparators.cc \
 	object/delta_applicator.cc \
 	object/make_delta.cc \
 	object/object_defaults.cc \

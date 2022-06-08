@@ -5,7 +5,7 @@
 
 #include "xdr/types.h"
 
-#include "transaction_context/threadlocal_context.h"
+#include "transaction_context/threadlocal_types.h"
 
 namespace scs 
 {
@@ -32,7 +32,7 @@ class DeltaBatch
 
 	map_t deltas;
 
-	using batch_array_t = ThreadlocalContextStore::batch_array_t;
+	using batch_array_t = batch_delta_array_t;
 
 	bool populated = false;
 	bool filtered = false;

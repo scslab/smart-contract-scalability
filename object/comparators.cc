@@ -1,0 +1,43 @@
+#include "object/comparators.h"
+
+#include "xdr/storage.h"
+#include "xdr/storage_delta.h"
+
+namespace scs
+{
+
+std::strong_ordering operator<=>(const DeltaPriority& d1, const DeltaPriority& d2)
+{
+	auto priority = d1.custom_priority <=> d2.custom_priority;
+	if (priority != std::strong_ordering::equal)
+	{
+		return priority;
+	}
+
+	auto gas = d1.gas_rate_bid <=> d2.gas_rate_bid;
+	if (gas != std::strong_ordering::equal)
+	{
+		return gas;
+	}
+
+	auto hash = d1.tx_hash <=> d2.tx_hash;
+	if (hash != std::strong_ordering::equal)
+	{
+		return hash;
+	}
+
+	return d1.delta_id_number <=> d2.delta_id_number;
+}
+
+std::weak_ordering operator<=>(const std::pair<StorageDelta, DeltaPriority>& d1, const std::pair<StorageDelta, DeltaPriority>& d2)
+{
+	auto res = d1.second <=> d2.second;
+	if (res != std::strong_ordering::equal)
+	{
+		return res;
+	}
+	return std::weak_ordering::equivalent;
+}
+
+
+} /* scs */

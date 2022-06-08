@@ -46,3 +46,4 @@ check_self_writes_visible()
 	sdk::invoke(self, 1, c1_1);
 	sdk::invoke(self, 0, c0);
 }
+

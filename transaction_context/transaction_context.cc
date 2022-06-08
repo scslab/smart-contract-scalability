@@ -87,4 +87,10 @@ TransactionContext::get_msg_sender() const
 	return invocation_stack[invocation_stack.size() - 2].addr;
 }
 
+const Hash&
+TransactionContext::get_src_tx_hash() const
+{
+	return current_priority.tx_hash;
+}
+
 } /* scs */

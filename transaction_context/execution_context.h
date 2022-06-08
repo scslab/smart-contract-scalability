@@ -6,13 +6,11 @@
 
 #include "transaction_context/transaction_context.h"
 
-#include "wasm_api/wasm_api.h"
+#include <wasm_api/wasm_api.h>
 
 #include "xdr/transaction.h"
 
 #include "transaction_context/global_context.h"
-
-#include "wasm_api/wasm_api.h"
 
 namespace scs
 {

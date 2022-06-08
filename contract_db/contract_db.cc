@@ -4,7 +4,7 @@ namespace scs
 {
 
 const std::vector<uint8_t>*
-ContractDB::get_script(wasm_api::Hash const& addr) const
+ContractDB::get_script(wasm_api::Hash const& addr, const wasm_api::script_context_t& context) const
 {
 	auto it = contracts.find(addr);
 	if (it == contracts.end())
@@ -17,6 +17,7 @@ ContractDB::get_script(wasm_api::Hash const& addr) const
 bool 
 ContractDB::register_contract(Address const& addr, std::unique_ptr<const Contract>&& contract)
 {
+	
 	auto it = contracts.find(addr);
 	if (it != contracts.end())
 	{
@@ -26,7 +27,6 @@ ContractDB::register_contract(Address const& addr, std::unique_ptr<const Contrac
 	contracts.emplace(addr, std::move(contract));
 	return true;
 }
-
 
 
 } /* scs */

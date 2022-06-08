@@ -19,7 +19,7 @@ ExecutionContext::invoke_subroutine(MethodInvocation const& invocation)
 	{
 		CONTRACT_INFO("creating new runtime for contract at %s", debug::array_to_str(invocation.addr).c_str());
 
-		auto runtime_instance = wasm_context.new_runtime_instance(invocation.addr);
+		auto runtime_instance = wasm_context.new_runtime_instance(invocation.addr, static_cast<const void*>(&(tx_context->get_src_tx_hash())));
 		if (!runtime_instance)
 		{
 			throw wasm_api::HostError("cannot find target address");

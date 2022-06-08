@@ -3,14 +3,12 @@
 #include "xdr/storage.h"
 #include "xdr/storage_delta.h"
 
-#include <compare>
+#include "object/comparators.h"
+
 #include <set>
 
 namespace scs
 {
-
-std::strong_ordering operator<=>(const DeltaPriority& d1, const DeltaPriority& d2);
-std::weak_ordering operator<=>(const std::pair<StorageDelta, DeltaPriority>& d1, const std::pair<StorageDelta, DeltaPriority>& d2);
 
 class DeltaVector
 {
