@@ -35,7 +35,7 @@ public:
 	}
 
 	const std::vector<uint8_t>*
-	get_script(wasm_api::Hash const& addr, const Hash& src_tx)
+	get_script(wasm_api::Hash const& addr, const Hash& src_tx) const
 	{
 		return nullptr;
 	}

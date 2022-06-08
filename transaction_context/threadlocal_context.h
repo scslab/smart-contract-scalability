@@ -25,10 +25,12 @@ public:
 	static ExecutionContext& get_exec_ctx();
 	static SerialDeltaBatch& get_delta_batch();
 
-	batch_delta_array_t const& 
-	get_all_delta_batches() const
+	static batch_delta_array_t
+	extract_all_delta_batches()
 	{
-		return delta_batches.get_objects();
+		batch_delta_array_t b = std::move(delta_batches.get_objects());
+		delta_batches.clear();
+		return b;
 	}
 
 	template<typename ...Args>

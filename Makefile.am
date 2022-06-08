@@ -41,6 +41,9 @@ OBJECT_SRCS = \
 	object/object_modification_context.cc \
 	object/object_mutator.cc
 
+PHASE_SRCS = \
+	phase/phases.cc
+
 STATE_DB_SRCS = \
 	state_db/delta_batch.cc \
 	state_db/delta_vec.cc \
@@ -65,6 +68,7 @@ SRCS = \
 	$(CONTRACT_DB_SRCS) \
 	$(CRYPTO_SRCS) \
 	$(OBJECT_SRCS) \
+	$(PHASE_SRCS) \
 	$(STATE_DB_SRCS) \
 	$(STORAGE_PROXY_SRCS) \
 	$(TRANSACTION_CONTEXT_SRCS) \

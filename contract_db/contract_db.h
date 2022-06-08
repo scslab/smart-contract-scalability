@@ -13,6 +13,8 @@
 
 namespace scs {
 
+class TxBlock;
+
 using xdr::operator==;
 
 class ContractDB : public wasm_api::ScriptDB {
@@ -46,7 +48,7 @@ public:
 		return uncommitted_contracts;
 	}
 
-	void commit()
+	void commit(const TxBlock& tx_block)
 	{
 		throw std::runtime_error("unimpl");
 	}
