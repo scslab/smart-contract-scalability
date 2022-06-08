@@ -12,7 +12,10 @@ namespace scs
 void 
 DeltaBatch::merge_in_serial_batches(batch_array_t&& batches)
 {
-
+	if (populated)
+	{
+		throw std::runtime_error("add batches after populating");
+	}
 	for (auto& b : batches)
 	{
 		if (!b) continue;
