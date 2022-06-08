@@ -31,9 +31,11 @@ set_key()
 }
 
 EXPORT("pub02000000")
-check_self_writes_visible()
+check_double_write_fail()
 {
-	sdk::StorageKey key;
+	auto calldata = sdk::get_calldata<calldata_0>();
+
+	auto const& key = calldata.key;
 
 	calldata_0 c0 {.key = key};
 	calldata_1 c1 {.key = key, .value = 0x1234};
@@ -44,6 +46,22 @@ check_self_writes_visible()
 	sdk::invoke(self, 1, c1);
 	sdk::invoke(self, 0, c0);
 	sdk::invoke(self, 1, c1_1);
+	sdk::invoke(self, 0, c0);
+}
+
+EXPORT("pub03000000")
+check_read_self_writes()
+{
+	auto calldata = sdk::get_calldata<calldata_0>();
+
+	auto const& key = calldata.key;
+
+	calldata_0 c0 {.key = key};
+	calldata_1 c1 {.key = key, .value = 0x1234};
+
+	auto self = sdk::get_self();
+
+	sdk::invoke(self, 1, c1);
 	sdk::invoke(self, 0, c0);
 }
 
