@@ -60,7 +60,8 @@ public:
 	const Hash&
 	get_src_tx_hash() const;
 
-	AddressAndKey get_storage_key(InvariantKey const& key) const;
+	AddressAndKey 
+	get_storage_key(InvariantKey const& key) const;
 
 	void pop_invocation_stack();
 	void push_invocation_stack(wasm_api::WasmRuntime* runtime, MethodInvocation const& invocation);
