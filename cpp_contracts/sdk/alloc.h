@@ -20,7 +20,7 @@ void* alloc(size_t count) noexcept
 void 
 abort()
 {
-  // the logic of when abort calls into abort() and when it just does unreachable is beyond me
+  // the logic of when abort calls into env.abort() and when it just does unreachable is beyond me
   //std::abort();
   asm ("unreachable");
 }
@@ -43,8 +43,8 @@ void* operator new  (std::size_t n, const std::nothrow_t& tag) noexcept { (void)
 void* operator new[](std::size_t n, const std::nothrow_t& tag) noexcept { (void)(tag); return alloc(n); }
 
 #if (__cplusplus >= 201402L || _MSC_VER >= 1916)
-void operator delete  (void* p, std::size_t n) noexcept { std::abort(); };
-void operator delete[](void* p, std::size_t n) noexcept { std::abort(); };
+void operator delete  (void* p, std::size_t n) noexcept { abort(); };
+void operator delete[](void* p, std::size_t n) noexcept { abort(); };
 #endif
 
 #if (__cplusplus > 201402L || defined(__cpp_aligned_new))
@@ -55,8 +55,8 @@ void operator delete[](void* p, std::size_t n, std::align_val_t al) noexcept {  
 void operator delete  (void* p, std::align_val_t al, const std::nothrow_t& tag) noexcept {  }
 void operator delete[](void* p, std::align_val_t al, const std::nothrow_t& tag) noexcept {  }
 
-void* operator new  (std::size_t n, std::align_val_t al) noexcept(false) { std::abort(); }
-void* operator new[](std::size_t n, std::align_val_t al) noexcept(false) { std::abort(); }
-void* operator new  (std::size_t n, std::align_val_t al, const std::nothrow_t&) noexcept { std::abort(); }
-void* operator new[](std::size_t n, std::align_val_t al, const std::nothrow_t&) noexcept { std::abort(); }
+void* operator new  (std::size_t n, std::align_val_t al) noexcept(false) { abort(); }
+void* operator new[](std::size_t n, std::align_val_t al) noexcept(false) { abort(); }
+void* operator new  (std::size_t n, std::align_val_t al, const std::nothrow_t&) noexcept { abort(); }
+void* operator new[](std::size_t n, std::align_val_t al, const std::nothrow_t&) noexcept { abort(); }
 #endif

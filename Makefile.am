@@ -94,7 +94,8 @@ contracts/built_wasms/%.wasm : $(wildcard contracts/*/src/*.rs) $(wildcard rust_
 
 CC_WASMS = \
 	cpp_contracts/test_log.cc \
-	cpp_contracts/test_redirect_call.cc
+	cpp_contracts/test_redirect_call.cc \
+	cpp_contracts/test_raw_memory.cc
 
 .cc.wasm:
 	wasi/wasi-sdk/bin/clang -Os -mtune=native -march=native -I./cpp_contracts/ $< -o $@ \

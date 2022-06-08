@@ -27,7 +27,8 @@ class TxBlock
 	};
 
 	static
-	std::vector<uint8_t> serialize(const ValueT& v)
+	std::vector<uint8_t> 
+	serialize(const ValueT& v)
 	{
 		return trie::no_serialization_fn<ValueT>(v);
 	}

@@ -44,6 +44,10 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 		"scs",
 		"get_msg_sender");
 
+	runtime.template link_fn<&BuiltinFns::scs_get_self_addr>(
+		"scs",
+		"get_self");
+
 	/* -- storage -- */
 	runtime.template link_fn<&BuiltinFns::scs_raw_memory_set>(
 		"scs",

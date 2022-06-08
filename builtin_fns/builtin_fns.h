@@ -53,6 +53,12 @@ class BuiltinFns
 		/* addr_len = 32 */
 		);
 
+	static void
+	scs_get_self_addr(
+		uint32_t addr_offset
+		/* addr_len = 32 */
+		);
+
 	/* -- raw memory storage fns -- */
 
 	static void

@@ -29,6 +29,11 @@ void
 get_msg_sender(
 	uint32_t offset);
 
+BUILTIN("get_self")
+void
+get_self(
+	uint32_t offset);
+
 } /* detail */
 
 // only works for fixed-size types here
@@ -57,6 +62,14 @@ get_msg_sender()
 {
 	Address out;
 	detail::get_msg_sender(to_offset(&out));
+	return out;
+}
+
+Address
+get_self()
+{
+	Address out;
+	detail::get_self(to_offset(&out));
 	return out;
 }
 
