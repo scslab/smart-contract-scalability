@@ -68,6 +68,17 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 		"scs",
 		"delete_key_last");
 
+	/* -- nonnegative int64 -- */
+	runtime.template link_fn<&BuiltinFns::scs_nonnegative_int64_set_add>(
+		"scs",
+		"nn_int64_set_add");
+
+	runtime.template link_fn<&BuiltinFns::scs_nonnegative_int64_get>(
+		"scs",
+		"nn_int64_get");
+
+
+
 }
 
 } /* scs */
