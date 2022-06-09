@@ -55,21 +55,17 @@ std::weak_ordering type_ordering_compare(const DeltaType& dt1, const DeltaType& 
 
 std::weak_ordering operator<=>(const std::pair<StorageDelta, DeltaPriority>& d1, const std::pair<StorageDelta, DeltaPriority>& d2)
 {
-	std::printf("invoking comparison %lu %lu\n", d1.first.type(), d2.first.type());
 	auto t_res = type_ordering_compare(d1.first.type(), d2.first.type());
 	if (t_res != std::weak_ordering::equivalent)
 	{
-		std::printf("nequal via type %ld %ld\n", d1.first.type(), d2.first.type());
 		return t_res;
 	}
 
 	auto res = d1.second <=> d2.second;
 	if (res != std::strong_ordering::equal)
 	{
-		std::printf("nequal via priority\n");
 		return res;
 	}
-	std::printf("equal overall\n");
 	return std::weak_ordering::equivalent;
 }
 

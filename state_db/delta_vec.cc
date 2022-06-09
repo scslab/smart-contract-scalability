@@ -8,9 +8,7 @@ namespace scs
 void
 DeltaVector::add_delta(StorageDelta&& d, DeltaPriority&& p)
 {
-	std::printf("insertion oldsz %lu \n", deltas.size());
 	deltas.insert(std::make_pair(std::move(d), std::move(p)));
-	std::printf("new sz: %lu\n", deltas.size());
 }
 
 DeltaTypeClass
