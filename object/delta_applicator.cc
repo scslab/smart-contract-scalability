@@ -32,7 +32,7 @@ DeltaApplicator::try_apply(StorageDelta const& d)
 
 	if (!base)
 	{
-		base = make_default_object_by_delta(d.type());
+		base = make_default_object_by_delta(d);
 	}
 
 	if (d.type() == DeltaType::DELETE_FIRST)
@@ -55,7 +55,7 @@ DeltaApplicator::try_apply(StorageDelta const& d)
 					return false;
 				}
 				std::printf("nothing to do\n");
-			}				
+			}
 			break;
 
 			default:

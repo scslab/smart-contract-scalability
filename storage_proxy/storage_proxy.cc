@@ -52,6 +52,20 @@ StorageProxy::raw_memory_write(
 	v.vec.add_delta(std::move(delta), std::move(priority));
 }
 
+void
+StorageProxy::nonnegative_int64_set_add(AddressAndKey const& key, int64_t set_value, int64_t delta_value, DeltaPriority&& priority)
+{
+	auto& v = get_local(key);
+	auto delta = make_nonnegative_int64_set_add(set_value, delta_value);
+
+	if (!v.applicator.try_apply(delta))
+	{
+		throw wasm_api::HostError("failed to apply nonnegative_int64_set_add");
+	}
+
+	v.vec.add_delta(std::move(delta), std::move(priority));
+}
+
 
 void
 StorageProxy::delete_object_last(AddressAndKey const& key, DeltaPriority&& priority)
@@ -62,7 +76,7 @@ StorageProxy::delete_object_last(AddressAndKey const& key, DeltaPriority&& prior
 
 	if (!v.applicator.try_apply(delta))
 	{
-		throw wasm_api::HostError("failed to apply delete");
+		throw wasm_api::HostError("failed to apply delete_last");
 	}
 	v.vec.add_delta(std::move(delta), std::move(priority));
 }
@@ -76,7 +90,7 @@ StorageProxy::delete_object_first(AddressAndKey const& key, DeltaPriority&& prio
 
 	if (!v.applicator.try_apply(delta))
 	{
-		throw wasm_api::HostError("failed to apply delete");
+		throw wasm_api::HostError("failed to apply delete_first");
 	}
 	v.vec.add_delta(std::move(delta), std::move(priority));
 }

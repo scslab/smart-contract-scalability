@@ -46,6 +46,9 @@ public:
 	raw_memory_write(AddressAndKey const& key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& bytes, DeltaPriority&& priority);
 
 	void
+	nonnegative_int64_set_add(AddressAndKey const& key, int64_t set_value, int64_t delta, DeltaPriority&& priority);
+
+	void
 	delete_object_last(AddressAndKey const& key, DeltaPriority&& priority);
 
 	void

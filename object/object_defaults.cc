@@ -22,13 +22,16 @@ object_type_from_delta_type(DeltaType d_type)
 }
 
 std::optional<StorageObject>
-make_default_object_by_delta(DeltaType d_type)
+make_default_object_by_delta(StorageDelta const& d)
 {
+	auto d_type = d.type();
+
 	if (d_type == DeltaType::DELETE_FIRST || d_type == DeltaType::DELETE_LAST)
 	{
 		return std::nullopt;
 	}
 
+	std::optional<StorageObject> out = StorageObject();
 	ObjectType type;
 	switch (d_type) {
 		case DeltaType::RAW_MEMORY_WRITE:
@@ -40,9 +43,21 @@ make_default_object_by_delta(DeltaType d_type)
 		default:
 			throw std::runtime_error(std::string("invalid type passed to make_default_object: ") + std::to_string(d_type));
 	}
-	return make_default_object_by_type(type);
-}
 
+	out->type(type);
+	switch(d_type)
+	{
+		case DeltaType::RAW_MEMORY_WRITE:
+			return out;
+		case DeltaType::NONNEGATIVE_INT64_SET_ADD:
+			out -> nonnegative_int64() = d.set_add_nonnegative_int64().set_value;
+			return out;
+		// warning police
+		default:
+			throw std::runtime_error("unknown d_type in make_default_object");
+	}
+}
+/*
 StorageObject
 make_default_object_by_type(ObjectType type)
 {
@@ -61,6 +76,6 @@ make_default_object_by_type(ObjectType type)
 			
 	}
 	return out;
-}
+} */
 
 } /* scs */

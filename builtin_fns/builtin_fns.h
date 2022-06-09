@@ -92,6 +92,23 @@ class BuiltinFns
 		/* key_len = 32 */
 		uint32_t priority);
 
+	/* -- nonnegative int fns -- */
+
+	static void
+	scs_nonnegative_int64_set_add(
+		uint32_t key_offset,
+		/* key_len = 32 */
+		int64_t set_value,
+		int64_t delta,
+		uint32_t priority);
+
+	static uint32_t 
+	scs_nonnegative_int64_get(
+		uint32_t key_offset,
+		/* key_len = 32 */
+		uint32_t output_offset
+		/* output_len = 8 */);
+
 
 	BuiltinFns() = delete;
 
