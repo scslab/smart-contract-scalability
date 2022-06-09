@@ -15,28 +15,41 @@ DeltaApplicator::try_apply(StorageDelta const& d)
 {
 	std::printf("start try apply with delta type %lu\n", d.type());
 
-	struct reset_typeclass
+	struct resetter
 	{
-		bool do_reset = false;
-		std::optional<DeltaTypeClass>& ref;
+		bool do_reset_typeclass = false;
+		bool do_reset_base = false;
 
-		reset_typeclass(std::optional<DeltaTypeClass>& ref)
+		std::optional<DeltaTypeClass>& ref;
+		std::optional<StorageObject>& base;
+
+		resetter(std::optional<DeltaTypeClass>& ref, std::optional<StorageObject>& base)
 			: ref(ref)
+			, base(base)
 			{}
-		~reset_typeclass()
+		~resetter()
 		{
-			if (do_reset)
+			if (do_reset_typeclass)
 			{
 				ref = std::nullopt;
 			}
+			if (do_reset_base) {
+				base = std::nullopt;
+			}
+		}
+
+		void clear()
+		{
+			do_reset_typeclass = false;
+			do_reset_base = false;
 		}
 	};
 
-	reset_typeclass r(typeclass);
+	resetter r(typeclass, base);
 
 	if (!typeclass)
 	{
-		r.do_reset = true;
+		r.do_reset_typeclass = true;
 		typeclass = std::make_optional<DeltaTypeClass>(d);
 	}
 
@@ -53,6 +66,7 @@ DeltaApplicator::try_apply(StorageDelta const& d)
 
 	if (!base)
 	{
+		r.do_reset_base = true;
 		base = make_default_object_by_delta(d);
 	}
 
@@ -75,7 +89,6 @@ DeltaApplicator::try_apply(StorageDelta const& d)
 					std::printf("return by mismatch reject\n");
 					return false;
 				}
-				std::printf("nothing to do\n");
 			}
 			break;
 			case ObjectType::NONNEGATIVE_INT64:
@@ -95,24 +108,23 @@ DeltaApplicator::try_apply(StorageDelta const& d)
 					}
 				}
 
-				if (!mod_context.int64_set_add_called)
-				{
-					base -> nonnegative_int64() = base_val;
-				}
-
 
 				if (delta < 0)
 				{
 					int64_t trial = 0;
 					if (__builtin_saddll_overflow(mod_context.subtracted_amount, -delta, &trial))
 					{
-						// such a delta is always invalid, should always be rejected
 						return false;
 					}
-					if (trial > base -> nonnegative_int64())
+					if (trial > base_val)
 					{
 						return false;
 					}
+				}
+
+				if (!mod_context.int64_set_add_called)
+				{
+					base -> nonnegative_int64() = base_val;
 				}
 			}
 			break;
@@ -123,7 +135,7 @@ DeltaApplicator::try_apply(StorageDelta const& d)
 	}
 
 	mod_context.accept_mod(d);
-	r.do_reset = false;
+	r.clear();
 	return true;
 }
 
