@@ -58,6 +58,16 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 	runtime.template link_fn<&BuiltinFns::scs_raw_memory_get_len>(
 		"scs",
 		"raw_mem_len");
+
+	/* -- deletions -- */
+	runtime.template link_fn<&BuiltinFns::scs_delete_key_first>(
+		"scs",
+		"delete_key_first");
+
+	runtime.template link_fn<&BuiltinFns::scs_delete_key_last>(
+		"scs",
+		"delete_key_last");
+
 }
 
 } /* scs */

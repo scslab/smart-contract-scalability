@@ -21,7 +21,7 @@ storage_object_to_str(scs::StorageObject const& obj)
 	switch(obj.type())
 	{
 		case scs::ObjectType::RAW_MEMORY:
-			return "[raw_memory: " + debug::array_to_str(obj.raw_memory_storage().data) + "]";			
+			return "[raw_memory: " + debug::array_to_str(obj.raw_memory_storage().data) + "]";		
 	}
 	throw std::runtime_error("unknown object type in storage_object_to_str");
 }

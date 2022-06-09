@@ -24,7 +24,6 @@ DeltaBatch::merge_in_serial_batches(batch_array_t&& batches)
 
 		for (auto& [k, v] : m)
 		{
-
 			auto it = deltas.find(k);
 
 			auto tc = v.vec.get_typeclass_vote();

@@ -22,5 +22,4 @@ DeltaVector::get_typeclass_vote() const
 	return DeltaTypeClass(deltas.begin() -> first, deltas.begin() -> second);
 }
 
-
 } /* scs */

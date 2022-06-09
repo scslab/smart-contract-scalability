@@ -39,7 +39,6 @@ BuiltinFns::scs_raw_memory_set(
 	auto addr_and_key = tx_ctx.get_storage_key(key);
 
 	tx_ctx.storage_proxy.raw_memory_write(addr_and_key, std::move(data), tx_ctx.get_next_priority(priority));
-
 }
 
 //return 1 if key exists, 0 else

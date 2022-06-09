@@ -59,6 +59,9 @@ StateDB::apply_delta_batch(DeltaBatch const& delta_batch)
 		{
 			CONTRACT_INFO("writing %s", debug::storage_object_to_str(*res).c_str());
 			state_db[k] = *res;
+		} else
+		{
+			state_db.erase(k);
 		}
 	}
 }

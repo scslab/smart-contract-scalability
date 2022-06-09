@@ -11,6 +11,13 @@ StorageDelta make_raw_memory_write(xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& data)
 	return d;
 }
 
+StorageDelta make_delete_first()
+{
+	StorageDelta d;
+	d.type(DeltaType::DELETE_FIRST);
+	return d;
+}
+
 StorageDelta make_delete_last()
 {
 	StorageDelta d;

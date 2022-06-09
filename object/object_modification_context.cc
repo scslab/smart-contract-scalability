@@ -47,6 +47,9 @@ ObjectModificationContext::accept_mod(DeltaType dt)
 		case DeltaType::DELETE_LAST:
 			is_deleted_last = true;
 			break;
+		case DeltaType::DELETE_FIRST:
+			is_deleted_first = true;
+			break;
 		case DeltaType::RAW_MEMORY_WRITE:
 			raw_mem_set_called = true;
 			break;

@@ -2,6 +2,7 @@
 #include "sdk/log.h"
 #include "sdk/raw_memory.h"
 #include "sdk/invoke.h"
+#include "sdk/delete.h"
 
 struct calldata_0 {
 	sdk::StorageKey key;
@@ -65,3 +66,18 @@ check_read_self_writes()
 	sdk::invoke(self, 0, c0);
 }
 
+EXPORT("pub04000000")
+delete_key_first()
+{
+	auto calldata = sdk::get_calldata<calldata_0>();
+	auto const& key = calldata.key;
+	sdk::delete_first(key);
+}
+
+EXPORT("pub05000000")
+delete_key_last()
+{
+	auto calldata = sdk::get_calldata<calldata_0>();
+	auto const& key = calldata.key;
+	sdk::delete_last(key);
+}

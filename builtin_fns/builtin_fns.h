@@ -78,6 +78,21 @@ class BuiltinFns
 	scs_raw_memory_get_len(
 		uint32_t key_offset);
 
+	/* -- delete storage fns -- */
+	
+	static void
+	scs_delete_key_first(
+		uint32_t key_offset,
+		/* key_len = 32 */
+		uint32_t priority);
+
+	static void
+	scs_delete_key_last(
+		uint32_t key_offset,
+		/* key_len = 32 */
+		uint32_t priority);
+
+
 	BuiltinFns() = delete;
 
 public:

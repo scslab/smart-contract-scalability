@@ -67,6 +67,20 @@ StorageProxy::delete_object_last(AddressAndKey const& key, DeltaPriority&& prior
 	v.vec.add_delta(std::move(delta), std::move(priority));
 }
 
+void
+StorageProxy::delete_object_first(AddressAndKey const& key, DeltaPriority&& priority)
+{
+	auto& v = get_local(key);
+
+	auto delta = make_delete_first();
+
+	if (!v.applicator.try_apply(delta))
+	{
+		throw wasm_api::HostError("failed to apply delete");
+	}
+	v.vec.add_delta(std::move(delta), std::move(priority));
+}
+
 void 
 StorageProxy::push_deltas_to_batch()
 {

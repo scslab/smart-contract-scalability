@@ -48,6 +48,9 @@ public:
 	void
 	delete_object_last(AddressAndKey const& key, DeltaPriority&& priority);
 
+	void
+	delete_object_first(AddressAndKey const& key, DeltaPriority&& priority);
+
 	void push_deltas_to_batch();
 };
 
