@@ -6,25 +6,28 @@ namespace scs
 
 enum DeltaType
 {
-	DELETE = 0,
-	RAW_MEMORY_WRITE = 1,
-	NONNEGATIVE_INT64_SET = 2,
-	NONNEGATIVE_INT64_ADD = 3,
-	NONNEGATIVE_INT64_SUB = 4,
+	DELETE_FIRST = 0,
+	DELETE_LAST = 1,
+	RAW_MEMORY_WRITE = 2,
+	NONNEGATIVE_INT64_SET_ADD = 3,
+};
+
+struct set_add_t
+{
+	int64 set_value;
+	int64 delta;
 };
 
 union StorageDelta switch (DeltaType type)
 {
-	case DELETE:
+	case DELETE_FIRST:
+		void;
+	case DELETE_LAST:
 		void;
 	case RAW_MEMORY_WRITE:
 		opaque data<RAW_MEMORY_MAX_LEN>;
-	case NONNEGATIVE_INT64_SET:
-		int64 set_nonnegative_int64;
-	case NONNEGATIVE_INT64_ADD:
-		int64 add_nonnegative_int64;
-	case NONNEGATIVE_INT64_SUB:
-		int64 sub_nonnegative_int64;
+	case NONNEGATIVE_INT64_SET_ADD:
+		set_add_t set_add_nonnegative_int64;
 };
 
 } /* scs */

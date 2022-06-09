@@ -3,6 +3,7 @@
 #include <optional>
 
 #include "object/object_modification_context.h"
+#include "object/delta_type_class.h"
 
 #include "xdr/storage.h"
 
@@ -20,6 +21,7 @@ class DeltaApplicator
 	#endif
 
 	std::optional<StorageObject> base;
+	std::optional<DeltaTypeClass> typeclass;
 
 	ObjectModificationContext mod_context;
 
@@ -27,6 +29,7 @@ public:
 
 	DeltaApplicator(std::optional<StorageObject> const& base)
 		: base(base)
+		, typeclass(std::nullopt)
 		, mod_context(base)
 		{}
 

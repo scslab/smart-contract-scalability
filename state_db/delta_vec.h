@@ -5,6 +5,8 @@
 
 #include "object/comparators.h"
 
+#include "object/delta_type_class.h"
+
 #include <set>
 
 namespace scs
@@ -31,6 +33,13 @@ public:
 	const set_t& get_sorted_deltas() const
 	{
 		return deltas;
+	}
+
+	DeltaTypeClass get_typeclass_vote() const;
+
+	size_t size() const
+	{
+		return deltas.size();
 	}
 };
 

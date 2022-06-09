@@ -6,6 +6,7 @@
 #include "xdr/types.h"
 
 #include "transaction_context/threadlocal_types.h"
+#include "object/delta_type_class.h"
 
 namespace scs 
 {
@@ -21,10 +22,11 @@ class DeltaBatch
 	struct value_t {
 		DeltaVector vec;
 		ObjectMutator mutator;
-
-		value_t()
+		DeltaTypeClass typeclass;
+		value_t(DeltaTypeClass& tc)
 			: vec()
 			, mutator()
+			, typeclass(tc)
 			{}
 	};
 

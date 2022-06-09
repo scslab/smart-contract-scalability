@@ -4,6 +4,7 @@
 #include "xdr/types.h"
 
 #include "object/delta_applicator.h"
+#include "state_db/delta_vec.h"
 
 #include <cstdint>
 #include <vector>
@@ -18,7 +19,11 @@ class StorageProxy
 {
 	StateDB const& state_db;
 
-	using value_t = DeltaApplicator;
+	struct value_t
+	{
+		DeltaApplicator applicator;
+		DeltaVector vec;
+	};
 
 	std::map<AddressAndKey, value_t> cache;
 
@@ -27,6 +32,8 @@ class StorageProxy
 	SerialDeltaBatch& local_delta_batch;
 
 	value_t& get_local(AddressAndKey const& key);
+
+	bool committed_local_values = false;
 
 public:
 
@@ -39,7 +46,9 @@ public:
 	raw_memory_write(AddressAndKey const& key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& bytes, DeltaPriority&& priority);
 
 	void
-	delete_object(AddressAndKey const& key, DeltaPriority&& priority);
+	delete_object_last(AddressAndKey const& key, DeltaPriority&& priority);
+
+	void push_deltas_to_batch();
 };
 
 } /* scs */

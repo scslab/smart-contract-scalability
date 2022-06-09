@@ -72,6 +72,8 @@ ExecutionContext::execute(Transaction const& root)
 		std::abort();
 	}
 
+	tx_context->storage_proxy.push_deltas_to_batch();
+
 	return TransactionStatus::SUCCESS;
 }
 

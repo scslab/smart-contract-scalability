@@ -71,12 +71,13 @@ void
 apply_deltas(const DeltaVector& deltas, TxBlockWrapper& txs, std::optional<StorageObject>& base)
 {
 	DeltaApplicator applicator(base);
-	OBJECT_INFO("starting apply to object %s", debug::storage_object_to_str(base).c_str());
+	OBJECT_INFO("starting apply to object %s num_deltas = %lu", debug::storage_object_to_str(base).c_str(), deltas.size());
 
 	for (auto const& [d, p] : deltas.get_sorted_deltas())
 	{
 		if (!txs.is_valid(p.tx_hash))
 		{
+			std::printf("ignoring bc failed\n");
 			//ignore, failed during execution or was pruned out
 			continue;
 		}

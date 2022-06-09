@@ -28,12 +28,10 @@ StorageProxy::get_local(AddressAndKey const& key)
 	return it->second;
 }
 
-
-
 std::optional<StorageObject> const& 
 StorageProxy::get(AddressAndKey const& key)
 {
-	return get_local(key).get();
+	return get_local(key).applicator.get();
 }
 
 void
@@ -42,31 +40,47 @@ StorageProxy::raw_memory_write(
 	xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& bytes, 
 	DeltaPriority&& priority)
 {
-	auto& applicator = get_local(key);
+	auto& v = get_local(key);
 
 	auto delta = make_raw_memory_write(std::move(bytes));
 
-	if (!applicator.try_apply(delta))
+	if (!v.applicator.try_apply(delta))
 	{
 		throw wasm_api::HostError("failed to apply raw_memory_write");
 	}
 
-	local_delta_batch.add_delta(key, std::move(delta), std::move(priority));
+	v.vec.add_delta(std::move(delta), std::move(priority));
 }
 
 
 void
-StorageProxy::delete_object(AddressAndKey const& key, DeltaPriority&& priority)
+StorageProxy::delete_object_last(AddressAndKey const& key, DeltaPriority&& priority)
 {
-	auto& applicator = get_local(key);
+	auto& v = get_local(key);
 
-	auto delta = make_delete();
+	auto delta = make_delete_last();
 
-	if (!applicator.try_apply(delta))
+	if (!v.applicator.try_apply(delta))
 	{
 		throw wasm_api::HostError("failed to apply delete");
 	}
-	local_delta_batch.add_delta(key, std::move(delta), std::move(priority));
+	v.vec.add_delta(std::move(delta), std::move(priority));
+}
+
+void 
+StorageProxy::push_deltas_to_batch()
+{
+	if (committed_local_values)
+	{
+		throw std::runtime_error("double push to batch");
+	}
+
+	for (auto& [k, v] : cache)
+	{
+		local_delta_batch.add_deltas(k, std::move(v.vec));
+	}
+
+	committed_local_values = true;
 }
 
 

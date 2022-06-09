@@ -39,6 +39,7 @@ DEBUG_SRCS = \
 OBJECT_SRCS = \
 	object/comparators.cc \
 	object/delta_applicator.cc \
+	object/delta_type_class.cc \
 	object/make_delta.cc \
 	object/object_defaults.cc \
 	object/object_modification_context.cc \

@@ -40,7 +40,7 @@ TEST_CASE("raw mem only", "[mutator]")
 	auto make_delete_delta = [] 
 	{
 		StorageDelta out;
-		out.type(DeltaType::DELETE);
+		out.type(DeltaType::DELETE_LAST);
 		return out;
 	};
 	auto make_raw_mem_write = [] (raw_mem_val b)
@@ -182,11 +182,13 @@ TEST_CASE("raw mem only", "[mutator]")
 		}
 		SECTION("write and delete swap prio")
 		{
+			std::printf("start test\n");
 			vec.add_delta(make_raw_mem_write(val1), make_priority(h1, 1));
 			vec.add_delta(make_delete_delta(), make_priority(h2, 2));
 
 			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
 
+			std::printf("done filter\n");
 			check_valid(h1);
 			check_valid(h2);
 
@@ -242,7 +244,6 @@ TEST_CASE("raw mem only", "[mutator]")
 			check_valid(h1);
 
 			base.apply_valid_deltas(vec, txs);
-
 
 			REQUIRE(!base.get_object());
 		}

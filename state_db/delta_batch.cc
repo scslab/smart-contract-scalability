@@ -24,8 +24,19 @@ DeltaBatch::merge_in_serial_batches(batch_array_t&& batches)
 
 		for (auto& [k, v] : m)
 		{
-			auto it = deltas.emplace(k, value_t());
-			it.first->second.vec.add(std::move(v.vec));
+
+			auto it = deltas.find(k);
+
+			auto tc = v.vec.get_typeclass_vote();
+			if (it == deltas.end())
+			{
+				it = deltas.emplace(k, value_t(tc)).first;
+			}
+			it->second.vec.add(std::move(v.vec));
+			if (it -> second.typeclass.is_lower_rank_than(tc))
+			{
+				it->second.typeclass = tc;
+			}
 		}
 	}
 }

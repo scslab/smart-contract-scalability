@@ -35,7 +35,7 @@ class SerialDeltaBatch
 
 public:
 
-	void add_delta(const AddressAndKey& key, StorageDelta&& delta, DeltaPriority&& priority);
+	void add_deltas(const AddressAndKey& key, DeltaVector&& dv);
 
 	map_t& get_delta_map() {
 		return deltas;

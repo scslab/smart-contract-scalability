@@ -13,20 +13,33 @@ namespace scs
 bool 
 DeltaApplicator::try_apply(StorageDelta const& d)
 {
-	if (!mod_context.can_accept_mod(d.type()))
+	std::printf("start try apply\n");
+	if (!typeclass)
 	{
+		typeclass = std::make_optional<DeltaTypeClass>(d);
+	}
+
+	if (!(*typeclass).accepts(d))
+	{
+		std::printf("typeclass rejects delta\n");
 		return false;
 	}
+
+//	if (!mod_context.can_accept_mod(d.type()))
+//	{
+//		return false;
+//	}
 
 	if (!base)
 	{
 		base = make_default_object_by_delta(d.type());
 	}
 
-	// base might be nullopt, if d.type() == DELETE;
-	// only stays that way if it (1) starts as nullopt and (2) sees an uninterrupted sequence
-	// of DELETE
-	if (d.type() != DeltaType::DELETE)
+	if (base.has_value() && d.type() == DeltaType::DELETE_FIRST)
+	{
+		base = std::nullopt;
+	}
+	else if (base.has_value() && d.type() != DeltaType::DELETE_LAST)
 	{
 		switch(base -> type())
 		{
@@ -38,10 +51,13 @@ DeltaApplicator::try_apply(StorageDelta const& d)
 				}
 				else if (d.data() != base -> raw_memory_storage().data)
 				{
+					std::printf("return by mismatch reject\n");
 					return false;
 				}
-			}
+				std::printf("nothing to do\n");
+			}				
 			break;
+
 			default:
 				throw std::runtime_error("unknown object type");
 		}
@@ -60,7 +76,7 @@ DeltaApplicator::get() const
 	// internally until we know no more deltas
 	// will be applied (i.e. until the obj is
 	// taken by the application for use elsewhere).
-	if (mod_context.is_deleted)
+	if (mod_context.is_deleted_last)
 	{
 		OBJECT_INFO("returning deleted object");
 		return null_obj;
