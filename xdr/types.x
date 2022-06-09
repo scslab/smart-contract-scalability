@@ -8,7 +8,6 @@ typedef unsigned hyper uint64;
 typedef hyper int64;
 
 typedef opaque uint128[16];
-
 typedef opaque uint256[32];
 
 typedef opaque Signature[64]; //ed25519 sig len is 512 bits

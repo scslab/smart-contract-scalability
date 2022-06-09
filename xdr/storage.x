@@ -6,6 +6,7 @@ namespace scs
 enum ObjectType
 {
 	RAW_MEMORY = 0,
+	NONNEGATIVE_INT64 = 1,
 };
 
 const RAW_MEMORY_MAX_LEN = 512;
@@ -19,6 +20,8 @@ union StorageObject switch (ObjectType type)
 {
 	case RAW_MEMORY:
 		RawMemoryStorage raw_memory_storage;
+	case NONNEGATIVE_INT64:
+		int64 nonnegative_int64;
 };
 
 struct DeltaPriority
