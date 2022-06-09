@@ -159,7 +159,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 			REQUIRE(db_val->raw_memory_storage().data == xdr::opaque_vec<RAW_MEMORY_MAX_LEN>{0x10, 0x00, 0xF0, 0xE0, 0xD0, 0xC0, 0xB0, 0xA0});
 		}
-		
+
 		SECTION("delete_first key solo")
 		{
 			calldata_0 data {
@@ -212,6 +212,102 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 			REQUIRE(
 				tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
+
+			auto hk0 = make_key(h, k0);
+
+			auto db_val = state_db.get(hk0);
+
+			REQUIRE(!db_val);
+		}
+
+		SECTION("delete_last + write ok")
+		{
+			calldata_0 data {
+				.key = k0
+			};
+
+			TransactionInvocation invocation (
+				h,
+				5,
+				test::make_calldata(data)
+			);
+
+			auto [tx_hash, tx] = make_transaction(a0, invocation);
+
+			REQUIRE(
+				exec_ctx.execute(tx)
+				== TransactionStatus::SUCCESS);
+
+			calldata_1 data2 {
+				.key = k0,
+				.value = 0xA0B0C0D0E0F00010
+			};
+
+			TransactionInvocation invocation2 (
+				h,
+				1,
+				test::make_calldata(data2)
+			);
+
+			auto [tx_hash2, tx2] = make_transaction(a0, invocation2);
+
+			finish_block();
+
+			REQUIRE(
+				tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
+			REQUIRE(
+				tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash2));
+
+			auto hk0 = make_key(h, k0);
+
+			auto db_val = state_db.get(hk0);
+
+			REQUIRE(!db_val);
+		}
+
+		SECTION("delete_first + write bad")
+		{
+			calldata_0 data {
+				.key = k0
+			};
+
+			TransactionInvocation invocation (
+				h,
+				4,
+				test::make_calldata(data)
+			);
+
+			auto [tx_hash, tx] = make_transaction(a0, invocation);
+
+			REQUIRE(
+				exec_ctx.execute(tx)
+				== TransactionStatus::SUCCESS);
+
+			calldata_1 data2 {
+				.key = k0,
+				.value = 0xA0B0C0D0E0F00010
+			};
+
+			TransactionInvocation invocation2 (
+				h,
+				1,
+				test::make_calldata(data2)
+			);
+
+			auto [tx_hash2, tx2] = make_transaction(a0, invocation2);
+
+			exec_ctx.reset();
+
+			REQUIRE(
+				exec_ctx.execute(tx2)
+				== TransactionStatus::SUCCESS);
+
+			finish_block();
+
+			REQUIRE(
+				tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
+			REQUIRE(
+				!tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash2));
 
 			auto hk0 = make_key(h, k0);
 

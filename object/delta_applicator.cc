@@ -13,7 +13,7 @@ namespace scs
 bool 
 DeltaApplicator::try_apply(StorageDelta const& d)
 {
-	std::printf("start try apply\n");
+	std::printf("start try apply with delta type %lu\n", d.type());
 	if (!typeclass)
 	{
 		typeclass = std::make_optional<DeltaTypeClass>(d);
@@ -35,7 +35,7 @@ DeltaApplicator::try_apply(StorageDelta const& d)
 		base = make_default_object_by_delta(d.type());
 	}
 
-	if (base.has_value() && d.type() == DeltaType::DELETE_FIRST)
+	if (d.type() == DeltaType::DELETE_FIRST)
 	{
 		base = std::nullopt;
 	}

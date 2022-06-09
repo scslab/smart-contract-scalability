@@ -22,7 +22,6 @@ BuiltinFns::scs_print_debug(uint32_t addr, uint32_t len)
 	auto log = runtime.template load_from_memory<std::vector<uint8_t>>(addr, len);
 
 	CONTRACT_INFO("print: addr %lu len %lu value %s", addr, len, debug::array_to_str(log).c_str());
-
 }
 
 void
