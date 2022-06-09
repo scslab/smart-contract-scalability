@@ -83,7 +83,8 @@ TESTS_CCS = \
 	tests/builtin_fns_log_tests.cc \
 	tests/builtin_fns_invoke_tests.cc \
 	tests/storage_tests.cc \
-	object/tests/test_object_mutator.cc
+	object/tests/test_object_mutator.cc \
+	object/tests/test_comparator.cc
 
 MAIN_CCS = \
 	main/simple.cc
