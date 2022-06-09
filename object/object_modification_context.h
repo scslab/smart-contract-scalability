@@ -22,6 +22,8 @@ struct ObjectModificationContext
 	/* -- int64 records -- */
 
 	bool int64_set_add_called = false;
+	int64_t subtracted_amount = 0;
+	uint64_t added_amount = 0;
 
 	ObjectModificationContext(std::optional<StorageObject> const& obj);
 
@@ -30,7 +32,7 @@ struct ObjectModificationContext
 //	can_accept_mod(DeltaType dt) const;
 
 	void
-	accept_mod(DeltaType dt);
+	accept_mod(StorageDelta const& delta);
 };
 
 } /* scs */

@@ -40,8 +40,11 @@ ObjectModificationContext::can_accept_mod(DeltaType dt) const
 } */
 
 void
-ObjectModificationContext::accept_mod(DeltaType dt)
+ObjectModificationContext::accept_mod(StorageDelta const& d)
 {
+
+	auto dt = d.type();
+
 	switch (dt)
 	{
 		case DeltaType::DELETE_LAST:
@@ -54,8 +57,26 @@ ObjectModificationContext::accept_mod(DeltaType dt)
 			raw_mem_set_called = true;
 			break;
 		case DeltaType::NONNEGATIVE_INT64_SET_ADD:
+		{
 			int64_set_add_called = true;
-			break;
+			int64_t delta = d.set_add_nonnegative_int64().delta;
+			if (delta < 0)
+			{
+				if (__builtin_sub_overflow_p(subtracted_amount, delta, static_cast<int64_t>(0)))
+				{
+					throw std::runtime_error("overflow in mod_context::accept_mod!  Should have been handled in DeltaApplicator");
+				}
+				subtracted_amount += -delta;
+			}
+			else
+			{
+				if (__builtin_uaddll_overflow(added_amount, (uint64_t)delta, &added_amount))
+				{
+					added_amount = UINT64_MAX;
+				}
+			}
+		}
+		break;
 		default:
 			throw std::runtime_error("unknown delta type in accept mod");
 	}

@@ -25,10 +25,11 @@ StorageProxy::get_local(AddressAndKey const& key)
 		auto res = state_db.get(key);
 		it = cache.emplace(key, res).first;
 	}
+	std::printf("local_addr %p\n", &(it -> second));
 	return it->second;
 }
 
-std::optional<StorageObject> const& 
+std::optional<StorageObject>
 StorageProxy::get(AddressAndKey const& key)
 {
 	return get_local(key).applicator.get();

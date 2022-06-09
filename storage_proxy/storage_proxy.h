@@ -39,7 +39,7 @@ public:
 
 	StorageProxy(const StateDB& state_db, SerialDeltaBatch& local_delta_batch);
 
-	std::optional<StorageObject> const& 
+	std::optional<StorageObject>
 	get(AddressAndKey const& key);
 
 	void

@@ -14,8 +14,29 @@ bool
 DeltaApplicator::try_apply(StorageDelta const& d)
 {
 	std::printf("start try apply with delta type %lu\n", d.type());
+
+	struct reset_typeclass
+	{
+		bool do_reset = false;
+		std::optional<DeltaTypeClass>& ref;
+
+		reset_typeclass(std::optional<DeltaTypeClass>& ref)
+			: ref(ref)
+			{}
+		~reset_typeclass()
+		{
+			if (do_reset)
+			{
+				ref = std::nullopt;
+			}
+		}
+	};
+
+	reset_typeclass r(typeclass);
+
 	if (!typeclass)
 	{
+		r.do_reset = true;
 		typeclass = std::make_optional<DeltaTypeClass>(d);
 	}
 
@@ -57,18 +78,56 @@ DeltaApplicator::try_apply(StorageDelta const& d)
 				std::printf("nothing to do\n");
 			}
 			break;
+			case ObjectType::NONNEGATIVE_INT64:
+			{
+				static_assert(sizeof(long long) == 8, "int width mismatch");
+
+				int64_t base_val = d.set_add_nonnegative_int64().set_value;
+				int64_t delta = d.set_add_nonnegative_int64().delta;
+
+				if (delta < 0)
+				{
+					if (delta == INT64_MIN || base_val < -delta)
+					{
+						std::printf("returning bc invalid delta\n");
+						// such a delta is always invalid, should always be rejected
+						return false;
+					}
+				}
+
+				if (!mod_context.int64_set_add_called)
+				{
+					base -> nonnegative_int64() = base_val;
+				}
+
+
+				if (delta < 0)
+				{
+					int64_t trial = 0;
+					if (__builtin_saddll_overflow(mod_context.subtracted_amount, -delta, &trial))
+					{
+						// such a delta is always invalid, should always be rejected
+						return false;
+					}
+					if (trial > base -> nonnegative_int64())
+					{
+						return false;
+					}
+				}
+			}
+			break;
 
 			default:
 				throw std::runtime_error("unknown object type");
 		}
 	}
 
-	mod_context.accept_mod(d.type());
-	OBJECT_INFO("updated state to %s", debug::storage_object_to_str(base).c_str());
+	mod_context.accept_mod(d);
+	r.do_reset = false;
 	return true;
 }
 
-std::optional<StorageObject> const& 
+std::optional<StorageObject>
 DeltaApplicator::get() const
 {
 	// deletions are always applied at end
@@ -79,8 +138,31 @@ DeltaApplicator::get() const
 	if (mod_context.is_deleted_last)
 	{
 		OBJECT_INFO("returning deleted object");
-		return null_obj;
+		return std::nullopt;
 	}
+
+	if (!base)
+	{
+		return std::nullopt;
+	}
+
+	if (base -> type() == ObjectType::NONNEGATIVE_INT64)
+	{
+		StorageObject out = *base;
+
+		out.nonnegative_int64() = base -> nonnegative_int64() - mod_context.subtracted_amount;
+
+		if (__builtin_add_overflow_p(out.nonnegative_int64(), mod_context.added_amount, static_cast<int64_t>(0)))
+		{
+			out.nonnegative_int64() = INT64_MAX;
+		} else
+		{
+			out.nonnegative_int64() += mod_context.added_amount;
+		}
+		OBJECT_INFO("returning %s", debug::storage_object_to_str(out).c_str());
+		return out;
+	}
+
 	OBJECT_INFO("returning %s", debug::storage_object_to_str(base).c_str());
 	return base;
 }
