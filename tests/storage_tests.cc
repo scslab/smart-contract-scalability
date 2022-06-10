@@ -46,7 +46,7 @@ TEST_CASE("int64 storage write", "[storage]")
 		uint64_t value;
 	};
 
-	auto make_set_add_tx = [&] (Address const& sender, InvariantKey const& key, int64_t set, int64_t add) -> Hash
+	auto make_set_add_tx = [&] (Address const& sender, InvariantKey const& key, int64_t set, int64_t add, bool success = true) -> Hash
 	{
 		struct calldata_1 {
 			InvariantKey key;
@@ -68,6 +68,21 @@ TEST_CASE("int64 storage write", "[storage]")
 
 		Transaction tx = Transaction(sender, invocation, UINT64_MAX, 1);
 		auto hash = tx_block->insert_tx(tx);
+
+		if (success)
+		{
+			REQUIRE(
+				exec_ctx.execute(hash, tx, *tx_block)
+				== TransactionStatus::SUCCESS);
+		} else
+		{
+			REQUIRE(
+				exec_ctx.execute(hash, tx, *tx_block)
+				!= TransactionStatus::SUCCESS);
+		}
+
+		exec_ctx.reset();
+
 		return hash;
 	};
 
@@ -158,6 +173,49 @@ TEST_CASE("int64 storage write", "[storage]")
 
 			REQUIRE(!!db_val);
 			REQUIRE(db_val->nonnegative_int64() == 5);
+		}
+
+		SECTION("with set")
+		{
+
+			auto h1 = make_set_add_tx(a0, k0, 10, -1);
+			auto h2 = make_set_add_tx(a0, k0, 10, -2);
+			auto h3 = make_set_add_tx(a0, k0, 10, 5);
+			auto h4 = make_set_add_tx(a0, k0, 10, 0);
+
+			finish_block();
+
+			check_valid(h1);
+			check_valid(h2);
+			check_valid(h3);
+			check_valid(h4);
+
+			auto hk0 = make_key(h, k0);
+			auto db_val = state_db.get(hk0);
+
+			REQUIRE(!!db_val);
+			REQUIRE(db_val->nonnegative_int64() == 12);
+		}
+
+		SECTION("with negative set")
+		{
+			auto h1 = make_set_add_tx(a0, k0, -10, -1, false);
+			auto h2 = make_set_add_tx(a0, k0, -10, -2, false);
+			auto h3 = make_set_add_tx(a0, k0, -10, 5);
+			auto h4 = make_set_add_tx(a0, k0, -10, 0);
+
+			finish_block();
+
+			check_invalid(h1);
+			check_invalid(h2);
+			check_valid(h3);
+			check_valid(h4);
+
+			auto hk0 = make_key(h, k0);
+			auto db_val = state_db.get(hk0);
+
+			REQUIRE(!!db_val);
+			REQUIRE(db_val->nonnegative_int64() == -5);
 		}
 	}
 }
