@@ -6,6 +6,8 @@
 #include "xdr/storage.h"
 #include "xdr/types.h"
 
+#include "state_db/delta_batch_value.h"
+
 #include <map>
 #include <vector>
 
@@ -18,16 +20,18 @@ class SerialDeltaBatch
 	// ultimately will have threadlocal cache of these
 	// Each vec is kept in sort order by priority
 
-	struct value_t
+	/*struct value_t
 	{
 		DeltaVector vec;
 		//std::optional<StorageObject> base_obj;
 
-		/*value_t(std::optional<StorageObject> const& obj)
+		value_t(std::optional<StorageObject> const& obj)
 			: vec()
 			, base_obj(obj)
-			{} */
-	};
+			{}
+	}; */
+
+	using value_t = DeltaBatchValue;
 
 	using map_t = std::map<AddressAndKey, value_t>;
 

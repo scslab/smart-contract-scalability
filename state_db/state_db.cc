@@ -29,7 +29,7 @@ StateDB::populate_delta_batch(DeltaBatch& delta_batch) const
 		auto it = state_db.find(k);
 		if (it != state_db.end())
 		{
-			v.mutator.populate_base(it->second);
+			v.context -> mutator.populate_base(it->second);
 		}
 	}
 
@@ -54,7 +54,7 @@ StateDB::apply_delta_batch(DeltaBatch const& delta_batch)
 	for (auto const& [k, v] : map)
 	{
 		CONTRACT_INFO("applying delta to key %s", debug::array_to_str(k).c_str());
-		auto res = v.mutator.get_object();
+		auto res = v.context -> mutator.get_object();
 		if (res)
 		{
 			CONTRACT_INFO("writing %s", debug::storage_object_to_str(*res).c_str());

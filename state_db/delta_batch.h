@@ -8,6 +8,8 @@
 #include "transaction_context/threadlocal_types.h"
 #include "object/delta_type_class.h"
 
+#include "state_db/delta_batch_value.h"
+
 namespace scs 
 {
 
@@ -19,18 +21,9 @@ class StateDB;
 
 class DeltaBatch
 {
-	struct value_t {
-		DeltaVector vec;
-		ObjectMutator mutator;
-		DeltaTypeClass typeclass;
-		value_t(DeltaTypeClass& tc)
-			: vec()
-			, mutator()
-			, typeclass(tc)
-			{}
-	};
 
-	using map_t = std::map<AddressAndKey, value_t>;
+	using map_t = std::map<AddressAndKey, DeltaBatchValue>;
+	using value_t = DeltaBatchValue;
 
 	map_t deltas;
 

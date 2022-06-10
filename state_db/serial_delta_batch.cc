@@ -14,8 +14,9 @@ SerialDeltaBatch::add_deltas(const AddressAndKey& key, DeltaVector&& dv)
 	if (it == deltas.end()) {
 		//throw std::runtime_error("can't lookup without preloading obj into batch");
 		it = deltas.emplace(key, value_t()).first;
+		it->second.vectors.push_back(std::make_unique<DeltaVector>());
 	}
-	it->second.vec.add(std::move(dv));
+	it->second.vectors.back()->add(std::move(dv));
 }
 
 } /* scs */

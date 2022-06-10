@@ -26,16 +26,19 @@ DeltaBatch::merge_in_serial_batches(batch_array_t&& batches)
 		{
 			auto it = deltas.find(k);
 
-			auto tc = v.vec.get_typeclass_vote();
+			auto tc = (*v.vectors.begin())->get_typeclass_vote();
 			if (it == deltas.end())
 			{
 				it = deltas.emplace(k, value_t(tc)).first;
 			}
-			it->second.vec.add(std::move(v.vec));
-			if (it -> second.typeclass.is_lower_rank_than(tc))
+			//it->second.vec.add(std::move(v.vec));
+			if (it -> second.context->typeclass.is_lower_rank_than(tc))
 			{
-				it->second.typeclass = tc;
+				it->second.context->typeclass = tc;
 			}
+			auto& main_vec = it->second.vectors;
+
+			main_vec.insert(main_vec.end(), std::make_move_iterator(v.vectors.begin()), std::make_move_iterator(v.vectors.end()));
 		}
 	}
 }
@@ -48,7 +51,12 @@ DeltaBatch::filter_invalid_deltas(TxBlock& txs) {
 	}
 	for (auto& [_, v] : deltas)
 	{
-		v.mutator.filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(v.vec, txs);
+		for (auto& dvs : v.vectors)
+		{
+			v.context->dv_all.add(std::move(*dvs));
+		}
+		// TODO switch away from singlethreaded mutator
+		v.context -> mutator.filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(v.context -> dv_all, txs);
 	}
 	filtered = true;
 }
@@ -62,7 +70,7 @@ DeltaBatch::apply_valid_deltas(TxBlock const& txs)
 	}
 	for (auto& [_, v] : deltas)
 	{
-		v.mutator.apply_valid_deltas(v.vec, txs);
+		v.context -> mutator.apply_valid_deltas(v.context -> dv_all, txs);
 	}
 	applied = true;
 }
