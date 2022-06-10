@@ -19,6 +19,8 @@ class DeltaTypeClass
 
 	StorageDelta base_delta;
 
+	bool is_lower_rank_than(StorageDelta const& new_delta, DeltaPriority const& new_priority) const;
+
 public:
 
 	DeltaTypeClass(StorageDelta const& origin_delta, DeltaPriority const& priority);
@@ -31,7 +33,6 @@ public:
 	// taking deletion ordering into account.
 	// if returns true, then the delta batch should swap in 
 	// the new delta as the base typeclass
-	bool is_lower_rank_than(StorageDelta const& new_delta, DeltaPriority const& new_priority) const;
 	bool is_lower_rank_than(DeltaTypeClass const& other) const;
 
 	// reminder -- cannot be used during serial compute phase,
@@ -39,7 +40,11 @@ public:
 	// until we batch merge all threads' results
 	bool accepts(StorageDelta const& delta) const;
 
-
+	const StorageDelta&
+	get_base_delta() const
+	{
+		return base_delta;
+	}
 };
 
 } /* scs */

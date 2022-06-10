@@ -101,11 +101,7 @@ DeltaApplicator::try_apply(StorageDelta const& d)
 						// such a delta is always invalid, should always be rejected
 						return false;
 					}
-				}
-
-
-				if (delta < 0)
-				{
+					
 					int64_t trial = 0;
 					if (__builtin_saddll_overflow(mod_context.subtracted_amount, -delta, &trial))
 					{

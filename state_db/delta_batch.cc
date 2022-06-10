@@ -39,6 +39,7 @@ DeltaBatch::merge_in_serial_batches(batch_array_t&& batches)
 			auto& main_vec = it->second.vectors;
 
 			main_vec.insert(main_vec.end(), std::make_move_iterator(v.vectors.begin()), std::make_move_iterator(v.vectors.end()));
+			v.vectors.clear();
 		}
 	}
 }

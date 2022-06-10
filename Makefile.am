@@ -38,6 +38,9 @@ CRYPTO_SRCS = \
 DEBUG_SRCS = \
 	debug/debug_utils.cc
 
+MUTATOR_SRCS = \
+	mutator/batch_filter.cc
+
 OBJECT_SRCS = \
 	object/comparators.cc \
 	object/delta_applicator.cc \
@@ -74,6 +77,7 @@ SRCS = \
 	$(CONTRACT_DB_SRCS) \
 	$(CRYPTO_SRCS) \
 	$(DEBUG_SRCS) \
+	$(MUTATOR_SRCS) \
 	$(OBJECT_SRCS) \
 	$(PHASE_SRCS) \
 	$(STATE_DB_SRCS) \
@@ -89,7 +93,7 @@ TESTS_CCS = \
 	object/tests/test_comparator.cc
 
 MAIN_CCS = \
-	main/simple.cc
+	main/filter_perf.cc
 
 TEST_WATS = \
 	$(wildcard */tests/wat/*.wat)
@@ -129,14 +133,14 @@ $(TESTS_CCS:.cc=.o) : $(XH_FILES)
 $(MAIN_CCS:.cc=.o) : $(XH_FILES)
 
 bin_PROGRAMS = \
-	simple \
+	filter_perf \
 	test
 
 main/test.o : $(CC_WASMS:.cc=.wasm)
 
 COMPLETE_SRCS = $(SRCS) $(TESTS_CCS)
 
-simple_SOURCES = $(SRCS) main/simple.cc
+filter_perf_SOURCES = $(SRCS) main/filter_perf.cc
 test_SOURCES = main/test.cc $(COMPLETE_SRCS)
 
 

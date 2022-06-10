@@ -4,6 +4,8 @@
 #include <memory>
 #include <optional>
 
+#include "object/object_mutator.h"
+
 #include "object/delta_type_class.h"
 #include "state_db/delta_vec.h"
 

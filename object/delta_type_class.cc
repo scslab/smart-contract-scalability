@@ -23,11 +23,17 @@ DeltaTypeClass::is_lower_rank_than(StorageDelta const& new_delta, DeltaPriority 
 	{
 		throw std::runtime_error("cannot compare rank without self priority");
 	}
-	if (new_delta.type() == DeltaType::DELETE_LAST)
+
+	if (new_delta.type() == base_delta.type())
+	{
+		return (*priority) < new_priority;
+	}
+
+	if (new_delta.type() == DeltaType::DELETE_LAST) // and base_delta.type() != DELETE_LAST
 	{
 		return false;
 	}
-	if (base_delta.type() == DeltaType::DELETE_FIRST)
+	if (base_delta.type() == DeltaType::DELETE_FIRST) // and new_delta.type() != DELETE_FIRST
 	{
 		return true;
 	}
