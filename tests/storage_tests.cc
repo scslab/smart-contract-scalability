@@ -14,6 +14,154 @@ using namespace scs;
 
 using xdr::operator==;
 
+TEST_CASE("int64 storage write", "[storage]")
+{
+	GlobalContext scs_data_structures;
+	auto& script_db = scs_data_structures.contract_db;
+	auto& state_db = scs_data_structures.state_db;
+
+	auto c = test::load_wasm_from_file("cpp_contracts/test_nn_int64.wasm");
+	
+	auto h = hash_xdr(*c);
+
+	REQUIRE(script_db.register_contract(h, std::move(c)));
+
+	ThreadlocalContextStore::make_ctx(scs_data_structures);
+	test::DeferredContextClear defer;
+
+	auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
+
+	Address a0 = hash_xdr<uint64_t>(0);
+
+	InvariantKey k0 = hash_xdr<uint64_t>(0);
+
+	std::unique_ptr<DeltaBatch> delta_batch = std::make_unique<DeltaBatch>();
+	std::unique_ptr<TxBlock> tx_block = std::make_unique<TxBlock>();
+
+	struct calldata_0 {
+		InvariantKey key;
+	};
+	struct calldata_1 {
+		InvariantKey key;
+		uint64_t value;
+	};
+
+	auto make_set_add_tx = [&] (Address const& sender, InvariantKey const& key, int64_t set, int64_t add) -> Hash
+	{
+		struct calldata_1 {
+			InvariantKey key;
+			int64_t set;
+			int64_t delta;
+		};
+
+		calldata_1 data {
+			.key = key,
+			.set = set,
+			.delta = add
+		};
+
+		TransactionInvocation invocation(
+			h,
+			1,
+			test::make_calldata(data)
+		);
+
+		Transaction tx = Transaction(sender, invocation, UINT64_MAX, 1);
+		auto hash = tx_block->insert_tx(tx);
+		return hash;
+	};
+
+	auto make_add_tx = [&] (Address const& sender, InvariantKey const& key, int64_t add, bool success = true) -> Hash
+	{
+		struct calldata_0 {
+			InvariantKey key;
+			int64_t delta;
+		};
+
+		calldata_0 data {
+			.key = key,
+			.delta = add
+		};
+
+		TransactionInvocation invocation(
+			h,
+			0,
+			test::make_calldata(data)
+		);
+		
+		Transaction tx = Transaction(sender, invocation, UINT64_MAX, 1);
+		auto hash = tx_block->insert_tx(tx);
+
+		if (success)
+		{
+			REQUIRE(
+				exec_ctx.execute(hash, tx, *tx_block)
+				== TransactionStatus::SUCCESS);
+		} else
+		{
+			REQUIRE(
+				exec_ctx.execute(hash, tx, *tx_block)
+				!= TransactionStatus::SUCCESS);
+		}
+
+		exec_ctx.reset();
+		
+		return hash;
+	};
+
+	auto finish_block = [&] () {
+		phase_merge_delta_batches(*delta_batch);
+		phase_filter_deltas(scs_data_structures, *delta_batch, *tx_block);
+		phase_compute_state_updates(*delta_batch, *tx_block);
+		phase_finish_block(scs_data_structures, *delta_batch, *tx_block);
+	};
+
+	auto make_key = [] (Address const& addr, InvariantKey const& key) -> AddressAndKey
+	{
+		AddressAndKey out;
+		std::memcpy(out.data(), addr.data(), sizeof(Address));
+
+		std::memcpy(out.data() + sizeof(Address), key.data(), sizeof(InvariantKey));
+		return out;
+	};
+
+	auto check_valid = [&] (const Hash& tx_hash)
+	{
+		REQUIRE(
+			tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
+	};
+
+	auto check_invalid = [&] (const Hash& tx_hash)
+	{
+		REQUIRE(
+			!tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
+	};
+
+	SECTION("write to empty slot")
+	{
+		SECTION("no set")
+		{
+			auto h1 = make_add_tx(a0, k0, -1, false);
+			auto h2 = make_add_tx(a0, k0, -2, false);
+			auto h3 = make_add_tx(a0, k0, 5);
+			auto h4 = make_add_tx(a0, k0, 0);
+
+			finish_block();
+
+			check_invalid(h1);
+			check_invalid(h2);
+			check_valid(h3);
+			check_valid(h4);
+
+			auto hk0 = make_key(h, k0);
+			auto db_val = state_db.get(hk0);
+
+			REQUIRE(!!db_val);
+			REQUIRE(db_val->nonnegative_int64() == 5);
+		}
+	}
+}
+
 TEST_CASE("raw mem storage write", "[storage]")
 {
 	GlobalContext scs_data_structures;
@@ -69,6 +217,20 @@ TEST_CASE("raw mem storage write", "[storage]")
 		return out;
 	};
 
+	auto exec_success = [&] (const Hash& tx_hash, const Transaction& tx)
+	{
+		REQUIRE(
+			exec_ctx.execute(tx_hash, tx, *tx_block)
+			== TransactionStatus::SUCCESS);
+	};
+
+	auto exec_fail = [&] (const Hash& tx_hash, const Transaction& tx)
+	{
+		REQUIRE(
+			exec_ctx.execute(tx_hash, tx, *tx_block)
+			!= TransactionStatus::SUCCESS);
+	};
+
 	SECTION("write to empty slot")
 	{
 		calldata_1 data {
@@ -84,9 +246,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 		auto [tx_hash, tx] = make_transaction(a0, invocation);
 
-		REQUIRE(
-			exec_ctx.execute(tx)
-			== TransactionStatus::SUCCESS);
+		exec_success(tx_hash, tx);
 
 		finish_block();
 
@@ -119,9 +279,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 			auto [tx_hash, tx] = make_transaction(a0, invocation);
 
-			REQUIRE(
-				exec_ctx.execute(tx)
-				== TransactionStatus::SUCCESS);
+			exec_success(tx_hash, tx);
 
 			auto const& logs = exec_ctx.get_logs();
 			REQUIRE(logs.size() == 1);
@@ -142,9 +300,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 			auto [tx_hash, tx] = make_transaction(a0, invocation);
 
-			REQUIRE(
-				exec_ctx.execute(tx)
-				== TransactionStatus::SUCCESS);
+			exec_success(tx_hash, tx);
 
 			finish_block();
 
@@ -174,9 +330,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 			auto [tx_hash, tx] = make_transaction(a0, invocation);
 
-			REQUIRE(
-				exec_ctx.execute(tx)
-				== TransactionStatus::SUCCESS);
+			exec_success(tx_hash, tx);
 
 			finish_block();
 
@@ -204,9 +358,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 			auto [tx_hash, tx] = make_transaction(a0, invocation);
 
-			REQUIRE(
-				exec_ctx.execute(tx)
-				== TransactionStatus::SUCCESS);
+			exec_success(tx_hash, tx);
 
 			finish_block();
 
@@ -234,9 +386,9 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 			auto [tx_hash, tx] = make_transaction(a0, invocation);
 
-			REQUIRE(
-				exec_ctx.execute(tx)
-				== TransactionStatus::SUCCESS);
+			exec_success(tx_hash, tx);
+
+			exec_ctx.reset();
 
 			calldata_1 data2 {
 				.key = k0,
@@ -250,6 +402,8 @@ TEST_CASE("raw mem storage write", "[storage]")
 			);
 
 			auto [tx_hash2, tx2] = make_transaction(a0, invocation2);
+
+			exec_success(tx_hash2, tx2);
 
 			finish_block();
 
@@ -279,9 +433,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 			auto [tx_hash, tx] = make_transaction(a0, invocation);
 
-			REQUIRE(
-				exec_ctx.execute(tx)
-				== TransactionStatus::SUCCESS);
+			exec_success(tx_hash, tx);
 
 			calldata_1 data2 {
 				.key = k0,
@@ -298,9 +450,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 			exec_ctx.reset();
 
-			REQUIRE(
-				exec_ctx.execute(tx2)
-				== TransactionStatus::SUCCESS);
+			exec_success(tx_hash2, tx2);
 
 			finish_block();
 
@@ -331,9 +481,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 		auto [tx_hash, tx] = make_transaction(a0, invocation);
 
-		REQUIRE(
-			exec_ctx.execute(tx)
-			!= TransactionStatus::SUCCESS);
+		exec_fail(tx_hash, tx);
 	}
 
 	SECTION("double write fail")
@@ -351,9 +499,8 @@ TEST_CASE("raw mem storage write", "[storage]")
 		auto [tx_hash, tx] = make_transaction(a0, invocation);
 
 		// fails because it tries to call set() on one mem location twice in a tx
-		REQUIRE(
-			exec_ctx.execute(tx)
-			!= TransactionStatus::SUCCESS);
+		exec_fail(tx_hash, tx);
+
 		{
 			auto const& logs = exec_ctx.get_logs();
 			REQUIRE(logs.size() == 1);
@@ -387,9 +534,8 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 		auto [tx_hash, tx] = make_transaction(a0, invocation);
 
-		REQUIRE(
-			exec_ctx.execute(tx)
-			== TransactionStatus::SUCCESS);
+		exec_success(tx_hash, tx);
+
 		{
 			auto const& logs = exec_ctx.get_logs();
 			REQUIRE(logs.size() == 1);

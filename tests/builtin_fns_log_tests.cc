@@ -26,6 +26,30 @@ TEST_CASE("test log", "[builtin]")
 	auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
 	Address sender;
+	TxBlock txs;
+
+	auto exec_success = [&] (const Hash& tx_hash, const Transaction& tx)
+	{
+		REQUIRE(
+			exec_ctx.execute(tx_hash, tx, txs)
+			== TransactionStatus::SUCCESS);
+	};
+
+	auto exec_fail = [&] (const Hash& tx_hash, const Transaction& tx)
+	{
+		REQUIRE(
+			exec_ctx.execute(tx_hash, tx, txs)
+			!= TransactionStatus::SUCCESS);
+	};
+
+
+	auto make_tx = [&] (TransactionInvocation const& invocation) -> std::pair<Hash, Transaction>
+	{
+		Transaction tx(sender, invocation, UINT64_MAX, 1);
+
+		auto h = txs.insert_tx(tx);
+		return {h, tx};
+	};
 
 	SECTION("log hardcoded")
 	{
@@ -35,9 +59,9 @@ TEST_CASE("test log", "[builtin]")
 			xdr::opaque_vec<>()
 		);
 
-		REQUIRE(
-			exec_ctx.execute(Transaction(sender, invocation, UINT64_MAX, 1))
-			== TransactionStatus::SUCCESS);
+		auto [h, tx] = make_tx(invocation);
+
+		exec_success(h, tx);
 
 		auto const& logs = exec_ctx.get_logs();
 
@@ -57,9 +81,8 @@ TEST_CASE("test log", "[builtin]")
 			xdr::opaque_vec<>{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}
 		);
 
-		REQUIRE(
-			exec_ctx.execute(Transaction(sender, invocation, UINT64_MAX, 1))
-			== TransactionStatus::SUCCESS);
+		auto [h, tx] = make_tx(invocation);
+		exec_success(h, tx);
 
 		auto const& logs = exec_ctx.get_logs();
 
@@ -80,9 +103,8 @@ TEST_CASE("test log", "[builtin]")
 			xdr::opaque_vec<>{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}
 		);
 
-		REQUIRE(
-			exec_ctx.execute(Transaction(sender, invocation, UINT64_MAX, 1))
-			== TransactionStatus::SUCCESS);
+		auto [h, tx] = make_tx(invocation);
+		exec_success(h, tx);
 
 		auto const& logs = exec_ctx.get_logs();
 

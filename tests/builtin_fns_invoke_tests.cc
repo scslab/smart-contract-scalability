@@ -35,6 +35,29 @@ TEST_CASE("test invoke", "[builtin]")
 	Hash h_val = hash_xdr<uint64>(0);
 	std::memcpy(sender.data(), h_val.data(), h_val.size());
 
+	TxBlock txs;
+	auto exec_success = [&] (const Hash& tx_hash, const Transaction& tx)
+	{
+		REQUIRE(
+			exec_ctx.execute(tx_hash, tx, txs)
+			== TransactionStatus::SUCCESS);
+	};
+
+	auto exec_fail = [&] (const Hash& tx_hash, const Transaction& tx)
+	{
+		REQUIRE(
+			exec_ctx.execute(tx_hash, tx, txs)
+			!= TransactionStatus::SUCCESS);
+	};
+
+	auto make_tx = [&] (TransactionInvocation const& invocation) -> std::pair<Hash, Transaction>
+	{
+		Transaction tx(sender, invocation, UINT64_MAX, 1);
+
+		auto h = txs.insert_tx(tx);
+		return {h, tx};
+	};
+
 	SECTION("msg sender self")
 	{
 		TransactionInvocation invocation(
@@ -43,9 +66,8 @@ TEST_CASE("test invoke", "[builtin]")
 			xdr::opaque_vec<>()
 		);
 
-		REQUIRE(
-			exec_ctx.execute(Transaction(sender, invocation, UINT64_MAX, 1))
-			== TransactionStatus::SUCCESS);
+		auto [h, tx] = make_tx(invocation);
+		exec_success(h, tx);
 
 		auto const& logs = exec_ctx.get_logs();
 
@@ -76,9 +98,8 @@ TEST_CASE("test invoke", "[builtin]")
 			test::make_calldata(data)
 		);
 
-		REQUIRE(
-			exec_ctx.execute(Transaction(sender, invocation, UINT64_MAX, 1))
-			== TransactionStatus::SUCCESS);
+		auto [h, tx] = make_tx(invocation);
+		exec_success(h, tx);
 
 		auto const& logs = exec_ctx.get_logs();
 
@@ -109,9 +130,8 @@ TEST_CASE("test invoke", "[builtin]")
 			test::make_calldata(data)
 		);
 
-		REQUIRE(
-			exec_ctx.execute(Transaction(sender, invocation, UINT64_MAX, 1))
-			== TransactionStatus::SUCCESS);
+		auto [h, tx] = make_tx(invocation);
+		exec_success(h, tx);
 
 		auto const& logs = exec_ctx.get_logs();
 
@@ -142,9 +162,8 @@ TEST_CASE("test invoke", "[builtin]")
 			test::make_calldata(data)
 		);
 
-		REQUIRE(
-			exec_ctx.execute(Transaction(sender, invocation, UINT64_MAX, 1))
-			!= TransactionStatus::SUCCESS);
+		auto [h, tx] = make_tx(invocation);
+		exec_fail(h, tx);
 
 	}
 
@@ -166,9 +185,8 @@ TEST_CASE("test invoke", "[builtin]")
 			test::make_calldata(data)
 		);
 
-		REQUIRE(
-			exec_ctx.execute(Transaction(sender, invocation, UINT64_MAX, 1))
-			== TransactionStatus::SUCCESS);
+		auto [h, tx] = make_tx(invocation);
+		exec_success(h, tx);
 
 		auto const& logs = exec_ctx.get_logs();
 
@@ -183,9 +201,8 @@ TEST_CASE("test invoke", "[builtin]")
 			xdr::opaque_vec<>()
 		);
 
-		REQUIRE(
-			exec_ctx.execute(Transaction(sender, invocation, UINT64_MAX, 1))
-			!= TransactionStatus::SUCCESS);
+		auto [h, tx] = make_tx(invocation);
+		exec_fail(h, tx);
 	}
 
 	SECTION("invoke nonexistent")
@@ -208,9 +225,8 @@ TEST_CASE("test invoke", "[builtin]")
 			test::make_calldata(data)
 		);
 
-		REQUIRE(
-			exec_ctx.execute(Transaction(sender, invocation, UINT64_MAX, 1))
-			!= TransactionStatus::SUCCESS);
+		auto [h, tx] = make_tx(invocation);
+		exec_fail(h, tx);
 	}
 }
 

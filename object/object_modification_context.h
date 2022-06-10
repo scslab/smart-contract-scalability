@@ -27,10 +27,6 @@ struct ObjectModificationContext
 
 	ObjectModificationContext(std::optional<StorageObject> const& obj);
 
-//	bool
-//	__attribute__((warn_unused_result))
-//	can_accept_mod(DeltaType dt) const;
-
 	void
 	accept_mod(StorageDelta const& delta);
 };

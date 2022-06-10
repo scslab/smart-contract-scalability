@@ -15,6 +15,8 @@
 namespace scs
 {
 
+class TxBlock;
+
 class ExecutionContext {
 
 	wasm_api::WasmContext wasm_context;
@@ -45,7 +47,7 @@ class ExecutionContext {
 public:
 
 	TransactionStatus
-	execute(Transaction const& invocation);
+	execute(Hash const& tx_hash, Transaction const& tx, TxBlock& txs);
 
 	void reset();
 

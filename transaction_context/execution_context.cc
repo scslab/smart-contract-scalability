@@ -2,6 +2,8 @@
 #include "transaction_context/global_context.h"
 #include "transaction_context/threadlocal_context.h"
 
+#include "tx_block/tx_block.h"
+
 #include "crypto/hash.h"
 
 #include "debug/debug_macros.h"
@@ -39,7 +41,7 @@ ExecutionContext::invoke_subroutine(MethodInvocation const& invocation)
 }
 
 TransactionStatus
-ExecutionContext::execute(Transaction const& root)
+ExecutionContext::execute(Hash const& tx_hash, Transaction const& tx, TxBlock& txs)
 {
 	if (executed)
 	{
@@ -47,13 +49,13 @@ ExecutionContext::execute(Transaction const& root)
 	}
 	executed = true;
 
-	MethodInvocation invocation(root.invocation);
+	MethodInvocation invocation(tx.invocation);
 
 	tx_context = std::make_unique<TransactionContext>(
-		root.gas_limit, 
-		root.gas_rate_bid,
-		hash_xdr(root), 
-		root.sender, 
+		tx.gas_limit, 
+		tx.gas_rate_bid,
+		tx_hash, 
+		tx.sender, 
 		scs_data_structures,
 		ThreadlocalContextStore::get_delta_batch());
 
@@ -64,6 +66,7 @@ ExecutionContext::execute(Transaction const& root)
 	catch(wasm_api::WasmError& e)
 	{
 		CONTRACT_INFO("Execution error: %s", e.what());
+		txs.template invalidate<TransactionFailurePoint::COMPUTE>(tx_hash);
 		return TransactionStatus::FAILURE;
 	}
 	catch(...)

@@ -23,7 +23,6 @@ struct calldata_1 {
 	int64_t delta;
 };
 
-
 EXPORT("pub01000000")
 call_int64_set_add()
 {

@@ -59,11 +59,6 @@ DeltaApplicator::try_apply(StorageDelta const& d)
 		return false;
 	}
 
-//	if (!mod_context.can_accept_mod(d.type()))
-//	{
-//		return false;
-//	}
-
 	if (!base)
 	{
 		r.do_reset_base = true;
