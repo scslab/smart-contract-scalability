@@ -218,6 +218,68 @@ TEST_CASE("int64 storage write", "[storage]")
 			REQUIRE(db_val->nonnegative_int64() == -5);
 		}
 	}
+	SECTION("with prev value")
+	{
+
+		auto h0 = make_set_add_tx(a0, k0, 100, 0);
+
+		finish_block();
+
+		check_valid(h0);
+
+
+		auto hk0 = make_key(h, k0);
+		auto db_val = state_db.get(hk0);
+
+		REQUIRE(!!db_val);
+		REQUIRE(db_val->nonnegative_int64() == 100);
+
+		delta_batch.reset(new DeltaBatch());
+		tx_block.reset(new TxBlock());
+
+		SECTION("without set")
+		{
+			auto h1 = make_add_tx(a0, k0, -10);
+			auto h2 = make_add_tx(a0, k0, -20);
+			auto h3 = make_add_tx(a0, k0, 5);
+			auto h4 = make_add_tx(a0, k0, 0);
+
+			finish_block();
+
+			check_valid(h1);
+			check_valid(h2);
+			check_valid(h3);
+			check_valid(h4);
+
+			auto hk0 = make_key(h, k0);
+			auto db_val = state_db.get(hk0);
+
+			REQUIRE(!!db_val);
+			REQUIRE(db_val->nonnegative_int64() == 75);
+		}
+		SECTION("without set some dropped")
+		{
+			auto h1 = make_add_tx(a0, k0, -50);
+			auto h2 = make_add_tx(a0, k0, -60);
+			auto h3 = make_add_tx(a0, k0, 5);
+			auto h4 = make_add_tx(a0, k0, 0);
+
+			REQUIRE(h1 > h2);
+
+			finish_block();
+
+			check_valid(h1);
+			check_invalid(h2);
+			check_valid(h3);
+			check_valid(h4);
+
+			auto hk0 = make_key(h, k0);
+			auto db_val = state_db.get(hk0);
+
+			REQUIRE(!!db_val);
+			REQUIRE(db_val->nonnegative_int64() == 55);
+		}
+	}
 }
 
 TEST_CASE("raw mem storage write", "[storage]")
