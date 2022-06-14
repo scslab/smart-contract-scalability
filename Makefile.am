@@ -30,7 +30,8 @@ BUILTIN_FNS_SRCS = \
 	builtin_fns/raw_memory.cc
 
 CONTRACT_DB_SRCS = \
-	contract_db/contract_db.cc
+	contract_db/contract_db.cc \
+	contract_db/uncommitted_contracts.cc
 
 CRYPTO_SRCS = \
 	crypto/crypto_utils.cc

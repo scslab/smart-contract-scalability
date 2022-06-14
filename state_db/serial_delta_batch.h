@@ -8,12 +8,15 @@
 
 #include "state_db/delta_batch_value.h"
 
+#include "mtt/trie/recycling_impl/trie.h"
+
 #include <map>
 #include <vector>
 
 namespace scs
 {
 
+class DeltaBatch;
 class SerialDeltaBatch
 {
 	// accumulator for all deltas in a block.
@@ -32,22 +35,20 @@ class SerialDeltaBatch
 	}; */
 
 	using value_t = DeltaBatchValue;
+	using trie_prefix_t = trie::ByteArrayPrefix<sizeof(AddressAndKey)>;
 
-	using map_t = std::map<AddressAndKey, value_t>;
+	using map_t = trie::SerialRecyclingTrie<value_t, trie_prefix_t, DeltaBatchValueMetadata>;
 
-	map_t deltas;
+	map_t& deltas;
 
 public:
 
+	SerialDeltaBatch(map_t& serial_trie);
+
+	SerialDeltaBatch(const SerialDeltaBatch& other) = delete;
+	SerialDeltaBatch(SerialDeltaBatch&& other) = default;
+
 	void add_deltas(const AddressAndKey& key, DeltaVector&& dv);
-
-	map_t& get_delta_map() {
-		return deltas;
-	}
-
-	const map_t& get_delta_map() const {
-		return deltas;
-	}
 };
 
 } /* scs */

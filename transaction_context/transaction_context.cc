@@ -10,7 +10,7 @@ TransactionContext::TransactionContext(
 	Hash tx_hash,
 	Address const& sender,
 	GlobalContext const& global_context,
-	SerialDeltaBatch& local_delta_batch)
+	SerialDeltaBatch&& local_delta_batch)
 	: current_priority(0, gas_rate_bid, tx_hash, 0)
 	, invocation_stack()
 	, runtime_stack()
@@ -20,7 +20,7 @@ TransactionContext::TransactionContext(
 	, gas_used(0)
 	, return_buf()
 	, logs()
-	, storage_proxy(global_context.state_db, local_delta_batch)
+	, storage_proxy(global_context.state_db, std::move(local_delta_batch))
 	{}
 
 DeltaPriority 

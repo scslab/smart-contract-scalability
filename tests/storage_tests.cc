@@ -72,12 +72,12 @@ TEST_CASE("int64 storage write", "[storage]")
 		if (success)
 		{
 			REQUIRE(
-				exec_ctx.execute(hash, tx, *tx_block)
+				exec_ctx.execute(hash, tx, *tx_block, *delta_batch)
 				== TransactionStatus::SUCCESS);
 		} else
 		{
 			REQUIRE(
-				exec_ctx.execute(hash, tx, *tx_block)
+				exec_ctx.execute(hash, tx, *tx_block, *delta_batch)
 				!= TransactionStatus::SUCCESS);
 		}
 
@@ -110,12 +110,12 @@ TEST_CASE("int64 storage write", "[storage]")
 		if (success)
 		{
 			REQUIRE(
-				exec_ctx.execute(hash, tx, *tx_block)
+				exec_ctx.execute(hash, tx, *tx_block, *delta_batch)
 				== TransactionStatus::SUCCESS);
 		} else
 		{
 			REQUIRE(
-				exec_ctx.execute(hash, tx, *tx_block)
+				exec_ctx.execute(hash, tx, *tx_block, *delta_batch)
 				!= TransactionStatus::SUCCESS);
 		}
 
@@ -340,14 +340,14 @@ TEST_CASE("raw mem storage write", "[storage]")
 	auto exec_success = [&] (const Hash& tx_hash, const Transaction& tx)
 	{
 		REQUIRE(
-			exec_ctx.execute(tx_hash, tx, *tx_block)
+			exec_ctx.execute(tx_hash, tx, *tx_block, *delta_batch)
 			== TransactionStatus::SUCCESS);
 	};
 
 	auto exec_fail = [&] (const Hash& tx_hash, const Transaction& tx)
 	{
 		REQUIRE(
-			exec_ctx.execute(tx_hash, tx, *tx_block)
+			exec_ctx.execute(tx_hash, tx, *tx_block, *delta_batch)
 			!= TransactionStatus::SUCCESS);
 	};
 

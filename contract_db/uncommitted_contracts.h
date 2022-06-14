@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <map>
 #include <vector>
 
 #include <wasm_api/wasm_api.h>
@@ -41,13 +42,7 @@ public:
 	}
 
 	void
-	add_valid_contracts(std::map<wasm_api::Hash, std::unique_ptr<const Contract>>& existing_contracts, const TxBlock& tx_block)
-	{
-		for (auto& [addr, mentry] : contracts)
-		{
-			throw std::runtime_error("UncommittedContracts::add_valid_contracts unimpl when nonempty");
-		}
-	}
+	add_valid_contracts(std::map<wasm_api::Hash, std::unique_ptr<const Contract>>& existing_contracts, const TxBlock& tx_block);
 };
 
 } /* scs */

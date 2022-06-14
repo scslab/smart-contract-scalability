@@ -12,26 +12,16 @@
 namespace scs
 {
 
+class DeltaBatch;
 class WasmContext;
 
 class ThreadlocalContextStore {
 	inline static thread_local std::unique_ptr<ExecutionContext> ctx;
 
-	inline static utils::ThreadlocalCache<SerialDeltaBatch> delta_batches;
-
 	ThreadlocalContextStore() = delete;
 
 public:
 	static ExecutionContext& get_exec_ctx();
-	static SerialDeltaBatch& get_delta_batch();
-
-	static batch_delta_array_t
-	extract_all_delta_batches()
-	{
-		batch_delta_array_t b = std::move(delta_batches.get_objects());
-		delta_batches.clear();
-		return b;
-	}
 
 	template<typename ...Args>
 	static void make_ctx(Args&... args);

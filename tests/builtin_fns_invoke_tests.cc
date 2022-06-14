@@ -36,17 +36,19 @@ TEST_CASE("test invoke", "[builtin]")
 	std::memcpy(sender.data(), h_val.data(), h_val.size());
 
 	TxBlock txs;
+	DeltaBatch delta_batch;
+
 	auto exec_success = [&] (const Hash& tx_hash, const Transaction& tx)
 	{
 		REQUIRE(
-			exec_ctx.execute(tx_hash, tx, txs)
+			exec_ctx.execute(tx_hash, tx, txs, delta_batch)
 			== TransactionStatus::SUCCESS);
 	};
 
 	auto exec_fail = [&] (const Hash& tx_hash, const Transaction& tx)
 	{
 		REQUIRE(
-			exec_ctx.execute(tx_hash, tx, txs)
+			exec_ctx.execute(tx_hash, tx, txs, delta_batch)
 			!= TransactionStatus::SUCCESS);
 	};
 

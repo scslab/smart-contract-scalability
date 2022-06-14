@@ -16,6 +16,7 @@ namespace scs
 {
 
 class TxBlock;
+class DeltaBatch;
 
 class ExecutionContext {
 
@@ -47,7 +48,7 @@ class ExecutionContext {
 public:
 
 	TransactionStatus
-	execute(Hash const& tx_hash, Transaction const& tx, TxBlock& txs);
+	execute(Hash const& tx_hash, Transaction const& tx, TxBlock& txs, DeltaBatch& delta_batch);
 
 	void reset();
 

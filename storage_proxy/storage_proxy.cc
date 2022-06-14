@@ -5,15 +5,14 @@
 #include <wasm_api/error.h>
 
 #include "object/make_delta.h"
-#include "state_db/serial_delta_batch.h"
 
 namespace scs
 {
 
-StorageProxy::StorageProxy(const StateDB& state_db, SerialDeltaBatch& local_delta_batch)
+StorageProxy::StorageProxy(const StateDB& state_db, SerialDeltaBatch&& local_delta_batch)
 	: state_db(state_db)
 	, cache()
-	, local_delta_batch(local_delta_batch)
+	, local_delta_batch(std::move(local_delta_batch))
 	{}
 
 StorageProxy::value_t& 

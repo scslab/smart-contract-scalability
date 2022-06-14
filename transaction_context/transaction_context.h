@@ -43,7 +43,7 @@ public:
 		Hash tx_hash, 
 		Address const& sender, 
 		GlobalContext const& scs_data_structures,
-		SerialDeltaBatch& local_delta_batch);
+		SerialDeltaBatch&& local_delta_batch);
 
 	DeltaPriority 
 	get_next_priority(uint32_t priority);

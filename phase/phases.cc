@@ -14,8 +14,8 @@ namespace scs
 void
 phase_merge_delta_batches(DeltaBatch& delta_batch)
 {
-	delta_batch.merge_in_serial_batches(
-		ThreadlocalContextStore::extract_all_delta_batches());
+	delta_batch.merge_in_serial_batches();
+		//ThreadlocalContextStore::extract_all_delta_batches());
 }
 
 void

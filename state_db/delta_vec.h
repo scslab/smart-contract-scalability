@@ -19,16 +19,15 @@ class DeltaVector
 	set_t deltas;
 public:
 
+	DeltaVector()
+		: deltas()
+		{}
+
+	DeltaVector(const DeltaVector& other) = delete;
+
 	void add_delta(StorageDelta&& d, DeltaPriority&& p);
 
-	void add(DeltaVector&& other)
-	{
-		deltas.merge(other.deltas);
-		if (other.deltas.size() != 0)
-		{
-			throw std::runtime_error("collision within delta_vec");
-		}
-	}
+	void add(DeltaVector&& other);
 
 	const set_t& get_sorted_deltas() const
 	{

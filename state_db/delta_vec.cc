@@ -22,4 +22,14 @@ DeltaVector::get_typeclass_vote() const
 	return DeltaTypeClass(deltas.begin() -> first, deltas.begin() -> second);
 }
 
+void 
+DeltaVector::add(DeltaVector&& other)
+{
+	deltas.merge(other.deltas);
+	if (other.deltas.size() != 0)
+	{
+		throw std::runtime_error("collision within delta_vec");
+	}
+}
+
 } /* scs */

@@ -25,23 +25,15 @@ ThreadlocalContextStore::make_ctx(Args&... args)
 template
 void ThreadlocalContextStore::make_ctx(GlobalContext&);
 
-SerialDeltaBatch&
-ThreadlocalContextStore::get_delta_batch()
-{
-	return delta_batches.get();
-}
-
 void
 ThreadlocalContextStore::post_block_clear()
 {
-	delta_batches.clear();
 	ctx -> reset();
 }
 
 void
 ThreadlocalContextStore::clear_entire_context()
 {
-	delta_batches.clear();
 	ctx = nullptr;
 }
 

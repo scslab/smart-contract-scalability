@@ -145,24 +145,20 @@ filter_serial(DeltaBatchValue& v, TxBlock& txs)
 	{
 		if (!txs.is_valid(TransactionFailurePoint::COMPUTE, p.tx_hash))
 		{
-		//	std::printf("fail from compute check\n");
 			continue;
 		}
 
 		if (!filter -> matches_typeclass(d))
 		{
-	//		std::printf("mismatch typeclass \n");
 			txs.template invalidate<TransactionFailurePoint::CONFLICT_PHASE_1>(p.tx_hash);
 			continue;
 		}
 
 		if (!filter -> add(d))
 		{
-	//		std::printf("filter add fail\n");
 			txs.template invalidate<TransactionFailurePoint::CONFLICT_PHASE_1>(p.tx_hash);
 			continue;
 		}
-	//	std::printf("success\n");
 	}
 }
 

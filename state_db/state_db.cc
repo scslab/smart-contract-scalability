@@ -23,7 +23,10 @@ StateDB::get(AddressAndKey const& a) const
 void 
 StateDB::populate_delta_batch(DeltaBatch& delta_batch) const
 {
-	auto& map = delta_batch.deltas;
+	// do nothing
+	// we'll deal with side effects during apply
+
+	/*auto& map = delta_batch.deltas;
 	for (auto& [k, v] : map)
 	{
 		auto it = state_db.find(k);
@@ -31,7 +34,8 @@ StateDB::populate_delta_batch(DeltaBatch& delta_batch) const
 		{
 			v.context -> mutator.populate_base(it->second);
 		}
-	}
+	} */
+
 
 	delta_batch.populated = true;
 }
@@ -50,7 +54,7 @@ StateDB::apply_delta_batch(DeltaBatch const& delta_batch)
 	}
 	delta_batch.written_to_state_db = true;
 
-	auto const& map = delta_batch.deltas;
+	/*&auto const& map = delta_batch.deltas;
 	for (auto const& [k, v] : map)
 	{
 		CONTRACT_INFO("applying delta to key %s", debug::array_to_str(k).c_str());
@@ -63,7 +67,9 @@ StateDB::apply_delta_batch(DeltaBatch const& delta_batch)
 		{
 			state_db.erase(k);
 		}
-	}
+	} */
+
+	throw std::runtime_error("unimplemented");
 }
 
 } /* scs */

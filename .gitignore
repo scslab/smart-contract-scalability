@@ -26,7 +26,7 @@ compile
 xdr/*.h
 
 #binaries
-simple
+filter_perf
 test
 
 #mac

@@ -10,6 +10,8 @@
 
 #include "builtin_fns/builtin_fns.h"
 
+#include "state_db/delta_batch.h"
+
 namespace scs
 {
 
@@ -41,7 +43,7 @@ ExecutionContext::invoke_subroutine(MethodInvocation const& invocation)
 }
 
 TransactionStatus
-ExecutionContext::execute(Hash const& tx_hash, Transaction const& tx, TxBlock& txs)
+ExecutionContext::execute(Hash const& tx_hash, Transaction const& tx, TxBlock& txs, DeltaBatch& delta_batch)
 {
 	if (executed)
 	{
@@ -57,7 +59,7 @@ ExecutionContext::execute(Hash const& tx_hash, Transaction const& tx, TxBlock& t
 		tx_hash, 
 		tx.sender, 
 		scs_data_structures,
-		ThreadlocalContextStore::get_delta_batch());
+		delta_batch.get_serial_subsidiary());
 
 	try
 	{

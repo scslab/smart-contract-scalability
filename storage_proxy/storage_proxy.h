@@ -5,6 +5,8 @@
 
 #include "object/delta_applicator.h"
 #include "state_db/delta_vec.h"
+#include "state_db/serial_delta_batch.h"
+
 
 #include <cstdint>
 #include <vector>
@@ -29,7 +31,7 @@ class StorageProxy
 
 	// may not be empty -- can accumulate deltas from 
 	// an entire thread's worth of work
-	SerialDeltaBatch& local_delta_batch;
+	SerialDeltaBatch local_delta_batch;
 
 	value_t& get_local(AddressAndKey const& key);
 
@@ -37,7 +39,7 @@ class StorageProxy
 
 public:
 
-	StorageProxy(const StateDB& state_db, SerialDeltaBatch& local_delta_batch);
+	StorageProxy(const StateDB& state_db, SerialDeltaBatch&& local_delta_batch);
 
 	std::optional<StorageObject>
 	get(AddressAndKey const& key);
