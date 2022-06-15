@@ -40,7 +40,8 @@ DEBUG_SRCS = \
 	debug/debug_utils.cc
 
 MUTATOR_SRCS = \
-	mutator/batch_filter.cc
+	mutator/batch_filter.cc \
+	mutator/filter_context.cc
 
 OBJECT_SRCS = \
 	object/comparators.cc \

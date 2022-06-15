@@ -54,15 +54,18 @@ DeltaTypeClass::is_lower_rank_than(DeltaTypeClass const& other) const
 bool 
 DeltaTypeClass::accepts(StorageDelta const& delta) const
 {
-	if (base_delta.type() == DeltaType::DELETE_FIRST)
-	{
-		return delta.type() == DeltaType::DELETE_FIRST;
-	}
-
+	// always accept delete_last
 	if (delta.type() == DeltaType::DELETE_LAST)
 	{
 		return true;
 	}
+
+	/*
+	//redundant 
+	if (base_delta.type() == DeltaType::DELETE_FIRST)
+	{
+		return delta.type() == DeltaType::DELETE_FIRST;
+	} */
 
 	if (base_delta.type() != delta.type()) {
 		return false;

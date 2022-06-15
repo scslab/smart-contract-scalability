@@ -9,6 +9,8 @@
 #include "object/delta_type_class.h"
 #include "state_db/delta_vec.h"
 
+#include "mutator/filter_context.h"
+
 namespace scs
 {
 
@@ -19,10 +21,15 @@ struct DeltaBatchValueContext
 
 	DeltaVector dv_all;
 
+	std::unique_ptr<DeltaTypeClassFilter> filter;
+	std::unique_ptr<DeltaTypeClassApplier> applier;
+
 	DeltaBatchValueContext(DeltaTypeClass const& tc)
 		: typeclass(tc)
 	//	, mutator()
 		, dv_all()
+		, filter(DeltaTypeClassFilter::make(tc))
+		, applier(DeltaTypeClassApplier::make(tc))
 		{}
 };
 
