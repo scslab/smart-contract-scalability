@@ -1,0 +1,14 @@
+
+* Replay prevention
+* Ratchet (e.g., for payment channel)
+* Relative timelock (payment channels)
+    - async calls schedule tx to run automatically N blocks/time
+      in the future, unless someone objects/disables it
+* Atomic swap
+* Auctions
+* Liquidation events (auctioning collateral)
+* Sidechain / SPEEDEX
+* Atomic swap
+* Mutual exclusion / semaphore
+  Many people try something, it only happens once (or N times)
+* Multipart transactions (Tx1 only happens if Tx2 did)

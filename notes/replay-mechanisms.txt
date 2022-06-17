@@ -1,0 +1,35 @@
+
+Tx format:
+  - replay-info(*)                            ]
+  - metadata (gas limit, fee)                 ]
+  - exec-script                 	      ]  covered by TxID
+  - method                 		      ]
+  - call-data                 		      ]
+  - witness-data
+
+
+(*) What is replay-info?  possibilities below:
+
+# Design 1
+
+replay info is list of:  <replay-cache-id, seqNum>
+
+Replay cache (first-class ledger entry):
+  - seqNum
+  - key-(seqNum,value) map
+  - validation script: (tx, replay-cache) -> ⊥ | replay-cache-entries
+
+Tx invalid if seqNum in replay-info is less than in replay cache
+
+Bumping seqNum (in exec-script) deletes all entries in the map with
+lower seqNum values
+
+Replay prevention:
+  seqNum is timestamp (minute granularity epoch #)
+  script refuses if timestamp < seqNum
+  script requires witness-data to include appropriate signature
+  script updates seqNum to timestamp (flushing timestamp-1 and earlier)
+  No coordination needed between machines issuing payments at bank
+
+Ratchet: bump sequence number to invalidate old signed transaction
+
