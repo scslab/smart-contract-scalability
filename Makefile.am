@@ -39,6 +39,9 @@ CRYPTO_SRCS = \
 DEBUG_SRCS = \
 	debug/debug_utils.cc
 
+FILTER_SRCS = \
+	filter/filter_context.cc
+
 #MUTATOR_SRCS = \
 #	mutator/batch_filter.cc \
 #	mutator/filter_context.cc
@@ -77,6 +80,7 @@ SRCS = \
 	$(CONTRACT_DB_SRCS) \
 	$(CRYPTO_SRCS) \
 	$(DEBUG_SRCS) \
+	$(FILTER_SRCS) \
 	$(MUTATOR_SRCS) \
 	$(OBJECT_SRCS) \
 	$(PHASE_SRCS) \
@@ -89,7 +93,9 @@ TESTS_CCS = \
 	tests/builtin_fns_log_tests.cc \
 	tests/builtin_fns_invoke_tests.cc \
 	tests/storage_tests.cc \
-	storage_proxy/tests/test_proxy_applicator.cc
+	storage_proxy/tests/test_proxy_applicator.cc \
+	object/tests/test_delta_typeclass.cc
+
 MAIN_CCS = \
 	main/filter_perf.cc
 

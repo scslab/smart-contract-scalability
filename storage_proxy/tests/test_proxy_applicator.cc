@@ -34,7 +34,6 @@ TEST_CASE("raw mem only", "[mutator]")
 		return make_raw_memory_write(std::move(copy));
 	};
 
-
 	auto expect_valence = [&] (TypeclassValence tcv)
 	{
 		REQUIRE(applicator->get_tc().get_valence().tv.type() == tcv);
@@ -174,85 +173,64 @@ TEST_CASE("raw mem only", "[mutator]")
 		obj.raw_memory_storage().data = val1;
 
 		applicator = std::make_unique<ProxyApplicator>(obj);
-/*
+
 		SECTION("write one same")
 		{
-			vec.add_delta(make_raw_mem_write(val1), make_priority(h1, 3));
+			check_valid(make_raw_mem_write(val1));
 
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
+			expect_valence(TypeclassValence::TV_RAW_MEMORY_WRITE);
 
-			check_valid(h1);
-
-			base.apply_valid_deltas(vec, txs);
-
-			REQUIRE((bool)base.get_object());
-			REQUIRE(*base.get_object() == obj);
+			tc_expect_mem_value(val1);
+			val_expect_mem_value(val1);
 		}
 
 		SECTION("write one diff")
 		{
-			vec.add_delta(make_raw_mem_write(val2), make_priority(h1, 3));
+			check_valid(make_raw_mem_write(val2));
 
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
+			expect_valence(TypeclassValence::TV_RAW_MEMORY_WRITE);
 
-			check_valid(h1);
-
-			base.apply_valid_deltas(vec, txs);
-
-			obj.raw_memory_storage().data = val2;
-
-			REQUIRE((bool)base.get_object());
-			REQUIRE(*base.get_object() == obj);
+			tc_expect_mem_value(val2);
+			val_expect_mem_value(val2);
 		}
 
-		SECTION("one delete")
+		SECTION("one delete last")
 		{
-			vec.add_delta(make_delete_delta(), make_priority(h1, 3));
+			check_valid(make_delete_last());
 
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
+			expect_valence(TypeclassValence::TV_FREE);
+			tc_expect_deleted_last();
+			val_expect_nullopt();
+		}
+		SECTION("one delete first")
+		{
 
-			check_valid(h1);
+			check_valid(make_delete_first());
 
-			base.apply_valid_deltas(vec, txs);
-
-			REQUIRE(!base.get_object());
+			expect_valence(TypeclassValence::TV_DELETE_FIRST);
+			val_expect_nullopt();
 		}
 
 		SECTION("two writes of same (different from init) value")
 		{
-			vec.add_delta(make_raw_mem_write(val2), make_priority(h1, 3));
-			vec.add_delta(make_raw_mem_write(val2), make_priority(h2, 3));
+			check_valid(make_raw_mem_write(val2));
+			check_valid(make_raw_mem_write(val2));
 
+			expect_valence(TypeclassValence::TV_RAW_MEMORY_WRITE);
 
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
-
-			check_valid(h1);
-			check_valid(h2);
-
-			base.apply_valid_deltas(vec, txs);
-
-			obj.raw_memory_storage().data = val2;
-
-			REQUIRE((bool)base.get_object());
-			REQUIRE(*base.get_object() == obj);
+			tc_expect_mem_value(val2);
+			val_expect_mem_value(val2);
 		}
 		SECTION("two writes of diff values")
 		{
-			vec.add_delta(make_raw_mem_write(val2), make_priority(h1, 3));
-			vec.add_delta(make_raw_mem_write(val1), make_priority(h2, 2));
+			check_valid(make_raw_mem_write(val2));
+			check_invalid(make_raw_mem_write(val1));
 
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
+			expect_valence(TypeclassValence::TV_RAW_MEMORY_WRITE);
 
-			check_valid(h1);
-			check_invalid(h2);
-
-			base.apply_valid_deltas(vec, txs);
-
-			obj.raw_memory_storage().data = val2;
-
-			REQUIRE((bool)base.get_object());
-			REQUIRE(*base.get_object() == obj);
-		} */
+			tc_expect_mem_value(val2);
+			val_expect_mem_value(val2);
+		} 
 	} 
 }
 /*

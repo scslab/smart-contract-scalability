@@ -38,6 +38,12 @@ public:
 		return deltas.size();
 	}
 
+	vector_t const&
+	get() const
+	{
+		return deltas;
+	}
+
 };
 
 #if 0

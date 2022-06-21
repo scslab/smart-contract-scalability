@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <memory>
+#include <atomic>
 #include <optional>
 
 #include "object/object_mutator.h"
@@ -9,40 +10,55 @@
 #include "object/delta_type_class.h"
 #include "state_db/delta_vec.h"
 
+#include "filter/filter_context.h"
+
+#include "utils/atomic_singleton.h"
+
 namespace scs
 {
 
-/*
+
 struct DeltaBatchValueContext
 {
 
-	std::unique_ptr<DeltaTypeClassFilter> filter;
-	std::unique_ptr<DeltaTypeClassApplier> applier;
+	std::unique_ptr<FilterContext> filter;
+	//std::unique_ptr<DeltaTypeClassApplier> applier;
 
 	DeltaBatchValueContext(DeltaTypeClass const& tc)
-		: filter(DeltaTypeClassFilter::make(tc))
-		, applier(DeltaTypeClassApplier::make(tc))
+		: filter(make_filter_context(tc))
+		//, applier(DeltaTypeClassApplier::make(tc))
 		{}
-}; */
+};
 
-struct DeltaBatchValue
+class DeltaBatchValue
 {
+
+	std::unique_ptr<AtomicSingleton<DeltaBatchValueContext>> context;
+	// null in serial instances, nonnull otherwise
+
+public:
+
 	std::vector<DeltaVector> vectors;
 	DeltaTypeClass tc;
 	
-	// null in serial instances, nonnull otherwise
-	//std::unique_ptr<DeltaBatchValueContext> context;
-
 	DeltaBatchValue()
-		: vectors()
+		: context()
+		, vectors()
 		, tc()
-		//, context()
-		{}
+
+		{
+			vectors.emplace_back();
+		}
+
+	DeltaBatchValueContext& get_context()
+	{
+		return context -> get(tc);
+	}
 };
 
 struct DeltaBatchValueMetadata
 {
-	//TODO compress into one 4 bit value?
+	//TODO compress into one 4 byte value?
 	// It should be _ok_ now, with only adding 8 bytes
 	int32_t num_deltas = 0;
 	int32_t num_vectors = 0;
@@ -85,7 +101,7 @@ struct DeltaBatchValueMetadata
 	DeltaBatchValueMetadata
 	from_value(DeltaBatchValue const& val)
 	{
-		DeltaBatchValueMetadata meta;
+		DeltaBatchValueMetadata meta = DeltaBatchValueMetadata::zero();
 		for (auto const& v : val.vectors)
 		{
 			meta.num_vectors++;

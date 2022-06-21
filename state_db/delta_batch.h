@@ -18,7 +18,6 @@ namespace scs
 {
 
 class DeltaVector;
-class ObjectMutator;
 class TxBlock;
 class StateDB;
 

@@ -20,9 +20,10 @@ struct AppendInsertFn
 	base_value_type
 	new_value(const prefix_t& prefix)
 	{
-		base_value_type out;
-		out.vectors.emplace_back();
-		return out;
+		return base_value_type();
+	//	base_value_type out;
+	//	out.vectors.emplace_back();
+	//	return out;
 	}
 
 	static void 
