@@ -2,6 +2,8 @@
 
 #include "state_db/delta_batch.h"
 
+#include "storage_proxy/storage_proxy_value.h"
+
 namespace scs 
 {
 
@@ -19,25 +21,28 @@ struct AppendInsertFn
 	new_value(const prefix_t& prefix)
 	{
 		base_value_type out;
-		out.vectors.push_back(std::make_unique<DeltaVector>());
+		out.vectors.emplace_back();
 		return out;
 	}
 
 	static void 
-	value_insert(base_value_type& main_value, DeltaVector&& vec) {
-		main_value.vectors.back()->add(std::move(vec));
+	value_insert(base_value_type& main_value, StorageProxyValue&& v) {
+		main_value.vectors.back().add(std::move(v.vec));
+		main_value.tc.add(v.get_tc());
 	}
 };
 
 
 void 
-SerialDeltaBatch::add_deltas(const AddressAndKey& key, DeltaVector&& dv)
+SerialDeltaBatch::add_deltas(const AddressAndKey& key, StorageProxyValue&& v)
 {
-	if (dv.size() == 0) {
+
+
+	if (v.vec.size() == 0) {
 		return;
 	}
 
-	deltas.template insert<AppendInsertFn>((key), std::move(dv));
+	deltas.template insert<AppendInsertFn>((key), std::move(v));
 
 
 	

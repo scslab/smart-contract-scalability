@@ -3,10 +3,7 @@
 #include "xdr/storage.h"
 #include "xdr/types.h"
 
-#include "object/delta_applicator.h"
-#include "state_db/delta_vec.h"
-#include "state_db/serial_delta_batch.h"
-
+#include "storage_proxy/storage_proxy_value.h"
 
 #include <cstdint>
 #include <vector>
@@ -21,17 +18,9 @@ class StorageProxy
 {
 	StateDB const& state_db;
 
-	struct value_t
-	{
-		DeltaApplicator applicator;
-		DeltaVector vec;
-	};
+	using value_t = StorageProxyValue;
 
 	std::map<AddressAndKey, value_t> cache;
-
-	// may not be empty -- can accumulate deltas from 
-	// an entire thread's worth of work
-	SerialDeltaBatch local_delta_batch;
 
 	value_t& get_local(AddressAndKey const& key);
 
@@ -39,24 +28,26 @@ class StorageProxy
 
 public:
 
-	StorageProxy(const StateDB& state_db, SerialDeltaBatch&& local_delta_batch);
+	using delta_identifier_t = Hash; // was DeltaPriority
+
+	StorageProxy(const StateDB& state_db);
 
 	std::optional<StorageObject>
 	get(AddressAndKey const& key);
 
 	void
-	raw_memory_write(AddressAndKey const& key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& bytes, DeltaPriority&& priority);
+	raw_memory_write(AddressAndKey const& key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& bytes, delta_identifier_t id);
 
 	void
-	nonnegative_int64_set_add(AddressAndKey const& key, int64_t set_value, int64_t delta, DeltaPriority&& priority);
+	nonnegative_int64_set_add(AddressAndKey const& key, int64_t set_value, int64_t delta, delta_identifier_t id);
 
 	void
-	delete_object_last(AddressAndKey const& key, DeltaPriority&& priority);
+	delete_object_last(AddressAndKey const& key, delta_identifier_t id);
 
 	void
-	delete_object_first(AddressAndKey const& key, DeltaPriority&& priority);
+	delete_object_first(AddressAndKey const& key, delta_identifier_t id);
 
-	void push_deltas_to_batch();
+	void push_deltas_to_batch(SerialDeltaBatch& local_delta_batch);
 };
 
 } /* scs */

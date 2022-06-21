@@ -10,20 +10,22 @@
 
 #include "xdr/transaction.h"
 #include "xdr/storage.h"
+#include "state_db/serial_delta_batch.h"
 
 namespace scs {
 
 class GlobalContext;
-class SerialDeltaBatch;
 
 class TransactionContext {
 
-	DeltaPriority current_priority;
+	Hash tx_hash;
 
 	std::vector<MethodInvocation> invocation_stack;
 	std::vector<wasm_api::WasmRuntime*> runtime_stack;
 
 	Address sender;
+
+	SerialDeltaBatch local_delta_batch;
 
 public:
 
@@ -45,9 +47,6 @@ public:
 		GlobalContext const& scs_data_structures,
 		SerialDeltaBatch&& local_delta_batch);
 
-	DeltaPriority 
-	get_next_priority(uint32_t priority);
-
 	wasm_api::WasmRuntime*
 	get_current_runtime();
 
@@ -66,6 +65,10 @@ public:
 	void pop_invocation_stack();
 	void push_invocation_stack(wasm_api::WasmRuntime* runtime, MethodInvocation const& invocation);
 
+	void push_storage_deltas_to_batch()
+	{
+		storage_proxy.push_deltas_to_batch(local_delta_batch);
+	}
 };
 
 } /* namespace scs */

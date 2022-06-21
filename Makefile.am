@@ -39,18 +39,15 @@ CRYPTO_SRCS = \
 DEBUG_SRCS = \
 	debug/debug_utils.cc
 
-MUTATOR_SRCS = \
-	mutator/batch_filter.cc \
-	mutator/filter_context.cc
+#MUTATOR_SRCS = \
+#	mutator/batch_filter.cc \
+#	mutator/filter_context.cc
 
 OBJECT_SRCS = \
 	object/comparators.cc \
-	object/delta_applicator.cc \
 	object/delta_type_class.cc \
 	object/make_delta.cc \
-	object/object_defaults.cc \
-	object/object_modification_context.cc \
-	object/object_mutator.cc
+	object/object_defaults.cc
 
 PHASE_SRCS = \
 	phase/phases.cc
@@ -62,6 +59,7 @@ STATE_DB_SRCS = \
 	state_db/state_db.cc
 
 STORAGE_PROXY_SRCS = \
+	storage_proxy/proxy_applicator.cc \
 	storage_proxy/storage_proxy.cc
 
 TRANSACTION_CONTEXT_SRCS = \
@@ -91,9 +89,7 @@ TESTS_CCS = \
 	tests/builtin_fns_log_tests.cc \
 	tests/builtin_fns_invoke_tests.cc \
 	tests/storage_tests.cc \
-	object/tests/test_object_mutator.cc \
-	object/tests/test_comparator.cc
-
+	storage_proxy/tests/test_proxy_applicator.cc
 MAIN_CCS = \
 	main/filter_perf.cc
 
@@ -135,14 +131,13 @@ $(TESTS_CCS:.cc=.o) : $(XH_FILES)
 $(MAIN_CCS:.cc=.o) : $(XH_FILES)
 
 bin_PROGRAMS = \
-	filter_perf \
 	test
 
 main/test.o : $(CC_WASMS:.cc=.wasm)
 
 COMPLETE_SRCS = $(SRCS) $(TESTS_CCS)
 
-filter_perf_SOURCES = $(SRCS) main/filter_perf.cc
+#filter_perf_SOURCES = $(SRCS) main/filter_perf.cc
 test_SOURCES = main/test.cc $(COMPLETE_SRCS)
 
 

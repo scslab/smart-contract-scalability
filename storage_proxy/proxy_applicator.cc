@@ -1,4 +1,4 @@
-#include "object/delta_applicator.h"
+#include "storage_proxy/proxy_applicator.h"
 
 #include "object/object_defaults.h"
 
@@ -11,28 +11,21 @@ namespace scs
 {
 
 bool 
-DeltaApplicator::try_apply(StorageDelta const& d)
+ProxyApplicator::try_apply(StorageDelta const& d)
 {
 	std::printf("start try apply with delta type %lu\n", d.type());
 
 	struct resetter
 	{
-		bool do_reset_typeclass = false;
 		bool do_reset_base = false;
 
-		std::optional<DeltaTypeClass>& ref;
 		std::optional<StorageObject>& base;
 
-		resetter(std::optional<DeltaTypeClass>& ref, std::optional<StorageObject>& base)
-			: ref(ref)
-			, base(base)
+		resetter(std::optional<StorageObject>& base)
+			: base(base)
 			{}
 		~resetter()
 		{
-			if (do_reset_typeclass)
-			{
-				ref = std::nullopt;
-			}
 			if (do_reset_base) {
 				base = std::nullopt;
 			}
@@ -40,22 +33,14 @@ DeltaApplicator::try_apply(StorageDelta const& d)
 
 		void clear()
 		{
-			do_reset_typeclass = false;
 			do_reset_base = false;
 		}
 	};
 
-	resetter r(typeclass, base);
+	resetter r(base);
 
-	if (!typeclass)
+	if (!typeclass.can_accept(d))
 	{
-		r.do_reset_typeclass = true;
-		typeclass = std::make_optional<DeltaTypeClass>(d);
-	}
-
-	if (!(*typeclass).accepts(d))
-	{
-		std::printf("typeclass rejects delta\n");
 		return false;
 	}
 
@@ -65,23 +50,35 @@ DeltaApplicator::try_apply(StorageDelta const& d)
 		base = make_default_object_by_delta(d);
 	}
 
-	if (d.type() == DeltaType::DELETE_FIRST)
+	if (d.type() == DeltaType::DELETE_FIRST
+		|| d.type() == DeltaType::DELETE_LAST)
 	{
 		base = std::nullopt;
+		is_deleted = true;
 	}
-	else if (base.has_value() && d.type() != DeltaType::DELETE_LAST)
+	else
 	{
+		if (is_deleted)
+		{
+			return false;
+		}
+
+		if (!base.has_value())
+		{
+			throw std::runtime_error("no value when there should be");
+		}
+
 		switch(base -> type())
 		{
 			case ObjectType::RAW_MEMORY:
 			{
-				if (!mod_context.raw_mem_set_called)
+				if (!mem_set_called)
 				{
 					base -> raw_memory_storage().data = d.data();
+					mem_set_called = true;
 				}
 				else if (d.data() != base -> raw_memory_storage().data)
 				{
-					std::printf("return by mismatch reject\n");
 					return false;
 				}
 			}
@@ -93,30 +90,50 @@ DeltaApplicator::try_apply(StorageDelta const& d)
 				int64_t base_val = d.set_add_nonnegative_int64().set_value;
 				int64_t delta = d.set_add_nonnegative_int64().delta;
 
+				// typeclass check means that all deltas that get this far have the same
+				// set_value
+
+				int64_t prev_value = base -> nonnegative_int64();
+				if (!nn_int64_set_called)
+				{
+					prev_value = base_val;
+				}
+
 				if (delta < 0)
 				{
 					if (delta == INT64_MIN || base_val < -delta)
 					{
 						std::printf("returning bc invalid delta\n");
 						// such a delta is always invalid, should always be rejected
+						// can't take -INT64_MIN
 						return false;
 					}
-					
-					int64_t trial = 0;
-					if (__builtin_saddll_overflow(mod_context.subtracted_amount, -delta, &trial))
+
+					if (__builtin_add_overflow_p(prev_value, delta, static_cast<int64_t>(0)))
 					{
 						return false;
 					}
-					if (trial > base_val)
+
+					prev_value += delta;
+					if (prev_value < 0)
 					{
 						return false;
+					}
+				}
+				else
+				{
+					if (__builtin_add_overflow_p(prev_value, delta, static_cast<int64_t>(0)))
+					{
+						prev_value = INT64_MAX;
+					} 
+					else
+					{
+						prev_value += delta;
 					}
 				}
 
-				if (!mod_context.int64_set_add_called)
-				{
-					base -> nonnegative_int64() = base_val;
-				}
+				base -> nonnegative_int64() = prev_value;
+				nn_int64_set_called = true;
 			}
 			break;
 
@@ -124,36 +141,35 @@ DeltaApplicator::try_apply(StorageDelta const& d)
 				throw std::runtime_error("unknown object type");
 		}
 	}
-
-	mod_context.accept_mod(d);
+	typeclass.add(d);
 	r.clear();
 	return true;
 }
 
-std::optional<StorageObject>
-DeltaApplicator::get() const
+std::optional<StorageObject> const&
+ProxyApplicator::get() const
 {
 	// deletions are always applied at end
 	// can't materialize the deletion
 	// internally until we know no more deltas
 	// will be applied (i.e. until the obj is
 	// taken by the application for use elsewhere).
-	if (mod_context.is_deleted_last)
+	if (is_deleted)
 	{
 		OBJECT_INFO("returning deleted object");
-		return std::nullopt;
+		return null_obj;
 	}
 
 	if (!base)
 	{
-		return std::nullopt;
+		return null_obj;
 	}
-
+/*
 	if (base -> type() == ObjectType::NONNEGATIVE_INT64)
 	{
 		StorageObject out = *base;
 
-		out.nonnegative_int64() = base -> nonnegative_int64() - mod_context.subtracted_amount;
+		out.nonnegative_int64() = base -> nonnegative_int64() - subtracted_amount;
 
 		if (__builtin_add_overflow_p(out.nonnegative_int64(), mod_context.added_amount, static_cast<int64_t>(0)))
 		{
@@ -164,7 +180,7 @@ DeltaApplicator::get() const
 		}
 		OBJECT_INFO("returning %s", debug::storage_object_to_str(out).c_str());
 		return out;
-	}
+	}*/
 
 	OBJECT_INFO("returning %s", debug::storage_object_to_str(base).c_str());
 	return base;

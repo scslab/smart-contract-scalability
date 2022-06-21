@@ -6,13 +6,14 @@
 
 #include "object/make_delta.h"
 
+#include "state_db/serial_delta_batch.h"
+
 namespace scs
 {
 
-StorageProxy::StorageProxy(const StateDB& state_db, SerialDeltaBatch&& local_delta_batch)
+StorageProxy::StorageProxy(const StateDB& state_db)
 	: state_db(state_db)
 	, cache()
-	, local_delta_batch(std::move(local_delta_batch))
 	{}
 
 StorageProxy::value_t& 
@@ -37,7 +38,7 @@ void
 StorageProxy::raw_memory_write(
 	AddressAndKey const& key, 
 	xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& bytes, 
-	DeltaPriority&& priority)
+	delta_identifier_t id)
 {
 	auto& v = get_local(key);
 
@@ -48,11 +49,15 @@ StorageProxy::raw_memory_write(
 		throw wasm_api::HostError("failed to apply raw_memory_write");
 	}
 
-	v.vec.add_delta(std::move(delta), std::move(priority));
+	v.vec.add_delta(std::move(delta), std::move(id));
 }
 
 void
-StorageProxy::nonnegative_int64_set_add(AddressAndKey const& key, int64_t set_value, int64_t delta_value, DeltaPriority&& priority)
+StorageProxy::nonnegative_int64_set_add(
+	AddressAndKey const& key, 
+	int64_t set_value, 
+	int64_t delta_value, 
+	delta_identifier_t id)
 {
 	auto& v = get_local(key);
 	auto delta = make_nonnegative_int64_set_add(set_value, delta_value);
@@ -62,12 +67,12 @@ StorageProxy::nonnegative_int64_set_add(AddressAndKey const& key, int64_t set_va
 		throw wasm_api::HostError("failed to apply nonnegative_int64_set_add");
 	}
 
-	v.vec.add_delta(std::move(delta), std::move(priority));
+	v.vec.add_delta(std::move(delta), std::move(id));
 }
 
 
 void
-StorageProxy::delete_object_last(AddressAndKey const& key, DeltaPriority&& priority)
+StorageProxy::delete_object_last(AddressAndKey const& key, delta_identifier_t id)
 {
 	auto& v = get_local(key);
 
@@ -77,11 +82,11 @@ StorageProxy::delete_object_last(AddressAndKey const& key, DeltaPriority&& prior
 	{
 		throw wasm_api::HostError("failed to apply delete_last");
 	}
-	v.vec.add_delta(std::move(delta), std::move(priority));
+	v.vec.add_delta(std::move(delta), std::move(id));
 }
 
 void
-StorageProxy::delete_object_first(AddressAndKey const& key, DeltaPriority&& priority)
+StorageProxy::delete_object_first(AddressAndKey const& key, delta_identifier_t id)
 {
 	auto& v = get_local(key);
 
@@ -91,11 +96,11 @@ StorageProxy::delete_object_first(AddressAndKey const& key, DeltaPriority&& prio
 	{
 		throw wasm_api::HostError("failed to apply delete_first");
 	}
-	v.vec.add_delta(std::move(delta), std::move(priority));
+	v.vec.add_delta(std::move(delta), std::move(id));
 }
 
 void 
-StorageProxy::push_deltas_to_batch()
+StorageProxy::push_deltas_to_batch(SerialDeltaBatch& local_delta_batch)
 {
 	if (committed_local_values)
 	{
@@ -104,7 +109,7 @@ StorageProxy::push_deltas_to_batch()
 
 	for (auto& [k, v] : cache)
 	{
-		local_delta_batch.add_deltas(k, std::move(v.vec));
+		local_delta_batch.add_deltas(k, std::move(v));
 	}
 
 	committed_local_values = true;

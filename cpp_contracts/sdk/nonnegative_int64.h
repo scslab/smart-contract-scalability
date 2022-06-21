@@ -21,8 +21,7 @@ nonnegative_int64_set_add(
 	uint32_t key_offset,
 	/* key_len = 32 */
 	int64_t set_value,
-	int64_t delta,
-	uint32_t priority);
+	int64_t delta);
 
 BUILTIN("nn_int64_get")
 uint32_t 
@@ -45,8 +44,7 @@ int64_add(StorageKey const& key, int64_t delta)
 	detail::nonnegative_int64_set_add(
 		to_offset(&key),
 		res,
-		delta,
-		0);
+		delta);
 }
 
 void 
@@ -55,8 +53,7 @@ int64_set_add(StorageKey const& key, int64_t set_value, int64_t delta)
 	detail::nonnegative_int64_set_add(
 		to_offset(&key),
 		set_value,
-		delta,
-		0);
+		delta);
 }
 
 // returns 0 in default case where it does not exist

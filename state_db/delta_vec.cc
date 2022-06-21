@@ -6,11 +6,11 @@ namespace scs
 {
 
 void
-DeltaVector::add_delta(StorageDelta&& d, DeltaPriority&& p)
+DeltaVector::add_delta(StorageDelta&& d, Hash&& p)
 {
-	deltas.insert(std::make_pair(std::move(d), std::move(p)));
+	deltas.emplace_back(std::move(d), std::move(p));
 }
-
+/*
 DeltaTypeClass
 DeltaVector::get_typeclass_vote() const
 {
@@ -20,16 +20,21 @@ DeltaVector::get_typeclass_vote() const
 	}
 
 	return DeltaTypeClass(deltas.begin() -> first, deltas.begin() -> second);
-}
+} */
 
 void 
 DeltaVector::add(DeltaVector&& other)
 {
-	deltas.merge(other.deltas);
-	if (other.deltas.size() != 0)
-	{
-		throw std::runtime_error("collision within delta_vec");
-	}
+	deltas.insert(
+		deltas.end(),
+		std::make_move_iterator(other.deltas.begin()),
+		std::make_move_iterator(other.deltas.end()));
+
+	//deltas.merge(other.deltas);
+	//if (other.deltas.size() != 0)
+//	{
+//		throw std::runtime_error("collision within delta_vec");
+//	}
 }
 
 } /* scs */

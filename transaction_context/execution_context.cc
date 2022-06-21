@@ -77,7 +77,7 @@ ExecutionContext::execute(Hash const& tx_hash, Transaction const& tx, TxBlock& t
 		std::abort();
 	}
 
-	tx_context->storage_proxy.push_deltas_to_batch();
+	tx_context->push_storage_deltas_to_batch();
 
 	return TransactionStatus::SUCCESS;
 }

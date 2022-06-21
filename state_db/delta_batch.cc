@@ -31,6 +31,7 @@ struct DeltaBatchValueMergeFn
 		DeltaBatchValue& merge_in_value)
 	{
 
+/*
 		if (!original_value.context)
 		{
 			if (original_value.vectors.size() != 1)
@@ -59,10 +60,17 @@ struct DeltaBatchValueMergeFn
 				original_value.context -> typeclass = tc_check;
 			}
 		}
+		*/
 
-		original_value.vectors.insert(original_value.vectors.end(),
-			std::make_move_iterator(merge_in_value.vectors.begin()),
-			std::make_move_iterator(merge_in_value.vectors.end()));
+		std::move(
+			merge_in_value.vectors.begin(),
+			merge_in_value.vectors.end(),
+			std::back_inserter(original_value.vectors));
+	//	original_value.vectors.insert(original_value.vectors.end(),
+	//		std::make_move_iterator(merge_in_value.vectors.begin()),
+	//		std::make_move_iterator(merge_in_value.vectors.end()));
+
+		original_value.tc.add(merge_in_value.tc);
 	}
 };
 

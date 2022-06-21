@@ -18,25 +18,23 @@ namespace detail
 BUILTIN("delete_key_first")
 void 
 delete_first(
-	uint32_t key_offset,
-	uint32_t priority);
+	uint32_t key_offset);
 
 BUILTIN("delete_key_last")
 void
 delete_last(
-	uint32_t key_offset,
-	uint32_t priority);
+	uint32_t key_offset);
 
 } /* detail */
 
 void delete_first(StorageKey const& key)
 {
-	detail::delete_first(to_offset(&key), 0);
+	detail::delete_first(to_offset(&key));
 }
 
 void delete_last(StorageKey const& key)
 {
-	detail::delete_last(to_offset(&key), 0);
+	detail::delete_last(to_offset(&key));
 }
 
 } /* sdk */

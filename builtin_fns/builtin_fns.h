@@ -65,8 +65,7 @@ class BuiltinFns
 	scs_raw_memory_set(
 		uint32_t key_offset,
 		uint32_t mem_offset,
-		uint32_t mem_len,
-		uint32_t priority);
+		uint32_t mem_len);
 
 	static uint32_t
 	scs_raw_memory_get(
@@ -82,15 +81,13 @@ class BuiltinFns
 	
 	static void
 	scs_delete_key_first(
-		uint32_t key_offset,
-		/* key_len = 32 */
-		uint32_t priority);
+		uint32_t key_offset
+		/* key_len = 32 */);
 
 	static void
 	scs_delete_key_last(
-		uint32_t key_offset,
-		/* key_len = 32 */
-		uint32_t priority);
+		uint32_t key_offset
+		/* key_len = 32 */);
 
 	/* -- nonnegative int fns -- */
 
@@ -99,8 +96,7 @@ class BuiltinFns
 		uint32_t key_offset,
 		/* key_len = 32 */
 		int64_t set_value,
-		int64_t delta,
-		uint32_t priority);
+		int64_t delta);
 
 	static uint32_t 
 	scs_nonnegative_int64_get(

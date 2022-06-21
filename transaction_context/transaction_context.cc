@@ -11,25 +11,27 @@ TransactionContext::TransactionContext(
 	Address const& sender,
 	GlobalContext const& global_context,
 	SerialDeltaBatch&& local_delta_batch)
-	: current_priority(0, gas_rate_bid, tx_hash, 0)
+	: tx_hash(tx_hash)
 	, invocation_stack()
 	, runtime_stack()
 	, sender(sender)
+	, local_delta_batch(std::move(local_delta_batch))
 	, gas_limit(gas_limit)
 	, gas_rate_bid(gas_rate_bid)
 	, gas_used(0)
 	, return_buf()
 	, logs()
-	, storage_proxy(global_context.state_db, std::move(local_delta_batch))
+	, storage_proxy(global_context.state_db)
 	{}
 
+/*
 DeltaPriority 
 TransactionContext::get_next_priority(uint32_t priority)
 {
 	current_priority.delta_id_number++;
 	current_priority.custom_priority = priority;
 	return current_priority;
-}
+} */
 
 wasm_api::WasmRuntime*
 TransactionContext::get_current_runtime()
@@ -90,7 +92,7 @@ TransactionContext::get_msg_sender() const
 const Hash&
 TransactionContext::get_src_tx_hash() const
 {
-	return current_priority.tx_hash;
+	return tx_hash;
 }
 
 } /* scs */

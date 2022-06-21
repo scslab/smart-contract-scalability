@@ -1,10 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "tx_block/tx_block.h"
-
-#include "object/object_mutator.h"
 #include "object/make_delta.h"
-#include "state_db/delta_vec.h"
+
+#include "storage_proxy/proxy_applicator.h"
 
 #include "xdr/storage_delta.h"
 #include "xdr/transaction.h"
@@ -18,184 +16,155 @@ using raw_mem_val = xdr::opaque_vec<RAW_MEMORY_MAX_LEN>;
 
 TEST_CASE("raw mem only", "[mutator]")
 {
-	TxBlock txs;
+	std::unique_ptr<ProxyApplicator> applicator;
 
-	// just need different hashes
-	Transaction tx1, tx2;
-	tx1.gas_limit = 1;
-	tx2.gas_limit = 2;
-
-	auto h1 = txs.insert_tx(tx1);
-	auto h2 = txs.insert_tx(tx2);
-
-	REQUIRE(h1 != h2);
-
-	auto make_priority = [] (Hash const& h, uint64_t p) -> DeltaPriority
+	auto check_valid = [&] (StorageDelta const& d)
 	{
-		DeltaPriority out;
-		out.tx_hash = h;
-		out.custom_priority = p;
-		return out;
+		REQUIRE(applicator -> try_apply(d));
 	};
 
-	auto make_delete_delta = [] 
+	auto check_invalid = [&] (StorageDelta const& d)
 	{
-		StorageDelta out;
-		out.type(DeltaType::DELETE_LAST);
-		return out;
-	};
-	auto make_raw_mem_write = [] (raw_mem_val b)
-	{
-		StorageDelta out;
-		out.type(DeltaType::RAW_MEMORY_WRITE);
-		out.data() = b;
-		return out;
+		REQUIRE(!applicator -> try_apply(d));
 	};
 
-	auto check_valid = [&] (Hash const& h, TransactionFailurePoint p = TransactionFailurePoint::FINAL)
+	auto make_raw_mem_write = [&] (const raw_mem_val& v) -> StorageDelta
 	{
-		REQUIRE(txs.is_valid(p, h));
-	};
-
-	auto check_invalid = [&] (Hash const& h, TransactionFailurePoint p = TransactionFailurePoint::FINAL)
-	{
-		REQUIRE(!txs.is_valid(p, h));
+		raw_mem_val copy = v;
+		return make_raw_memory_write(std::move(copy));
 	};
 
 
-	DeltaVector vec;
-	ObjectMutator base;
+	auto expect_valence = [&] (TypeclassValence tcv)
+	{
+		REQUIRE(applicator->get_tc().get_valence().tv.type() == tcv);
+	};
+
+	auto tc_expect_mem_value = [&] (raw_mem_val v)
+	{
+		REQUIRE(applicator->get_tc().get_valence().tv.data() == v);
+	};
+
+	auto tc_expect_deleted_last = [&] ()
+	{
+		REQUIRE(applicator->get_tc().get_valence().deleted_last == 1);
+	};
+
+	auto val_expect_mem_value = [&] (raw_mem_val v)
+	{
+		REQUIRE(applicator->get());
+		REQUIRE(applicator->get()->raw_memory_storage().data == v);
+	};
+
+	auto val_expect_nullopt = [&] ()
+	{
+		REQUIRE(!applicator->get());
+	};
 
 	raw_mem_val val1 = {0x01, 0x02, 0x03, 0x04};
 	raw_mem_val val2 = {0x01, 0x03, 0x05, 0x07};
 
 	SECTION("no base obj")
 	{
-		SECTION("one delete")
+		applicator = std::make_unique<ProxyApplicator>(std::nullopt);
+
+		SECTION("one delete first")
 		{
-			vec.add_delta(make_delete_delta(), make_priority(h1, 1));
+			check_valid(make_delete_first());
 
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
+			REQUIRE(applicator->get() == std::nullopt);
+			expect_valence(TypeclassValence::TV_DELETE_FIRST);
+		}
 
-			check_valid(h1);
+		SECTION("one delete last")
+		{
+			check_valid(make_delete_last());
 
-			base.apply_valid_deltas(vec, txs);
+			REQUIRE(applicator->get() == std::nullopt);
+			expect_valence(TypeclassValence::TV_FREE);
+		}
 
-			REQUIRE(base.get_object() == std::nullopt);
+		SECTION("delete first and last")
+		{
+			check_valid(make_delete_first());
+			check_valid(make_delete_last());
+
+			REQUIRE(applicator->get() == std::nullopt);
+			expect_valence(TypeclassValence::TV_DELETE_FIRST);
+			tc_expect_deleted_last();
+		}
+
+		SECTION("delete last and first")
+		{
+			check_valid(make_delete_last());
+			check_valid(make_delete_first());
+
+			REQUIRE(applicator->get() == std::nullopt);
+			expect_valence(TypeclassValence::TV_DELETE_FIRST);
+			tc_expect_deleted_last();
 		}
 
 		SECTION("one write")
 		{
-			vec.add_delta(make_raw_mem_write(val1), make_priority(h1, 1));
+			check_valid(make_raw_mem_write(val1));
 
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
-
-			check_valid(h1);
-
-			base.apply_valid_deltas(vec, txs);
-
-			StorageObject expect;
-			expect.type(RAW_MEMORY);
-			expect.raw_memory_storage().data = val1;
-			REQUIRE((bool)base.get_object());
-			if (base.get_object())
-			{
-				REQUIRE(*base.get_object() == expect);
-			}
+			expect_valence(TypeclassValence::TV_RAW_MEMORY_WRITE);
+			tc_expect_mem_value(val1);
+			val_expect_mem_value(val1);
 		}
 		SECTION("two write different")
 		{
-			vec.add_delta(make_raw_mem_write(val1), make_priority(h1, 1));
-			vec.add_delta(make_raw_mem_write(val2), make_priority(h2, 2));
+			check_valid(make_raw_mem_write(val1));
 
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
+			expect_valence(TypeclassValence::TV_RAW_MEMORY_WRITE);
+			tc_expect_mem_value(val1);
+			val_expect_mem_value(val1);
 
-			check_invalid(h1);
-			check_valid(h2);
+			check_invalid(make_raw_mem_write(val2));
 
-			base.apply_valid_deltas(vec, txs);
-
-			StorageObject expect;
-			expect.type(RAW_MEMORY);
-			expect.raw_memory_storage().data = val2;
-			REQUIRE((bool)base.get_object());
-			if (base.get_object())
-			{
-				REQUIRE(*base.get_object() == expect);
-			}
+			expect_valence(TypeclassValence::TV_RAW_MEMORY_WRITE);
+			tc_expect_mem_value(val1);
+			val_expect_mem_value(val1);
 		}
 
-		SECTION("two write different other order")
-		{
-			vec.add_delta(make_raw_mem_write(val1), make_priority(h1, 3));
-			vec.add_delta(make_raw_mem_write(val2), make_priority(h2, 2));
-
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
-
-			check_valid(h1);
-			check_invalid(h2);
-
-			base.apply_valid_deltas(vec, txs);
-
-			StorageObject expect;
-			expect.type(RAW_MEMORY);
-			expect.raw_memory_storage().data = val1;
-			REQUIRE((bool)base.get_object());
-			if (base.get_object())
-			{
-				REQUIRE(*base.get_object() == expect);
-			}
-		}
 		SECTION("two write same")
 		{
-			vec.add_delta(make_raw_mem_write(val1), make_priority(h1, 3));
-			vec.add_delta(make_raw_mem_write(val1), make_priority(h2, 2));
+			check_valid(make_raw_mem_write(val1));
 
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
+			expect_valence(TypeclassValence::TV_RAW_MEMORY_WRITE);
+			tc_expect_mem_value(val1);
+			val_expect_mem_value(val1);
 
-			check_valid(h1);
-			check_valid(h2);
 
-			base.apply_valid_deltas(vec, txs);
+			check_valid(make_raw_mem_write(val1));
 
-			StorageObject expect;
-			expect.type(RAW_MEMORY);
-			expect.raw_memory_storage().data = val1;
-			REQUIRE((bool)base.get_object());
-			if (base.get_object())
-			{
-				REQUIRE(*base.get_object() == expect);
-			}
+			expect_valence(TypeclassValence::TV_RAW_MEMORY_WRITE);
+			tc_expect_mem_value(val1);
+			val_expect_mem_value(val1);
 		}
+
 		SECTION("write and delete")
 		{
-			vec.add_delta(make_raw_mem_write(val1), make_priority(h1, 3));
-			vec.add_delta(make_delete_delta(), make_priority(h2, 2));
 
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
+			check_valid(make_raw_mem_write(val1));
+			check_valid(make_delete_last());
 
-			check_valid(h1);
-			check_valid(h2);
+			expect_valence(TypeclassValence::TV_RAW_MEMORY_WRITE);
+			tc_expect_deleted_last();
+			tc_expect_mem_value(val1);
+			val_expect_nullopt();
 
-			base.apply_valid_deltas(vec, txs);
-
-			REQUIRE(!base.get_object());
 		}
-		SECTION("write and delete swap prio")
+		SECTION("write and delete swap order")
 		{
-			std::printf("start test\n");
-			vec.add_delta(make_raw_mem_write(val1), make_priority(h1, 1));
-			vec.add_delta(make_delete_delta(), make_priority(h2, 2));
+			// different from regular typeclass rules,
+			// proxyapplicator blocks everything after a delete.
+			check_valid(make_delete_last());
+			check_invalid(make_raw_mem_write(val1));
 
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
-
-			std::printf("done filter\n");
-			check_valid(h1);
-			check_valid(h2);
-
-			base.apply_valid_deltas(vec, txs);
-
-			REQUIRE(!base.get_object());
+			expect_valence(TypeclassValence::TV_FREE);
+			tc_expect_deleted_last();
+			val_expect_nullopt();
 		}
 	}
 	SECTION("populate with something")
@@ -204,8 +173,8 @@ TEST_CASE("raw mem only", "[mutator]")
 		obj.type(RAW_MEMORY);
 		obj.raw_memory_storage().data = val1;
 
-		base.populate_base(obj);
-
+		applicator = std::make_unique<ProxyApplicator>(obj);
+/*
 		SECTION("write one same")
 		{
 			vec.add_delta(make_raw_mem_write(val1), make_priority(h1, 3));
@@ -283,10 +252,10 @@ TEST_CASE("raw mem only", "[mutator]")
 
 			REQUIRE((bool)base.get_object());
 			REQUIRE(*base.get_object() == obj);
-		}
-	}
+		} */
+	} 
 }
-
+/*
 TEST_CASE("nonnegative int64 only", "[mutator]")
 {
 	TxBlock txs;
@@ -469,6 +438,6 @@ TEST_CASE("nonnegative int64 only", "[mutator]")
 			REQUIRE(*base.get_object() == make_expect(9));
 		}
 	}
-}
+} */
 
 } /* scs */

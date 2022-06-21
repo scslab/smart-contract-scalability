@@ -17,6 +17,8 @@ namespace scs
 {
 
 class DeltaBatch;
+struct StorageProxyValue;
+
 class SerialDeltaBatch
 {
 	// accumulator for all deltas in a block.
@@ -48,7 +50,7 @@ public:
 	SerialDeltaBatch(const SerialDeltaBatch& other) = delete;
 	SerialDeltaBatch(SerialDeltaBatch&& other) = default;
 
-	void add_deltas(const AddressAndKey& key, DeltaVector&& dv);
+	void add_deltas(const AddressAndKey& key, StorageProxyValue&& v);
 };
 
 } /* scs */

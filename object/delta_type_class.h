@@ -6,6 +6,35 @@
 namespace scs
 {
 
+
+class DeltaTypeClass
+{
+
+	DeltaValence valence;
+
+	void set_error();
+
+public:
+
+	DeltaTypeClass();
+
+	bool
+	__attribute__((warn_unused_result))
+	can_accept(StorageDelta const& d);
+
+	void add(StorageDelta const& d);
+	void add(DeltaTypeClass const& dtc);
+
+	DeltaValence const&
+	get_valence() const
+	{
+		return valence;
+	}
+};
+
+
+
+#if 0
 /**
  * Each thread maintains per each locally modified key
  * a "vote" on the type of modifications that will
@@ -17,7 +46,12 @@ class DeltaTypeClass
 {
 	std::optional<DeltaPriority> priority;
 
-	StorageDelta base_delta;
+	// typeclass:
+	//   main delta
+	//   delete_last
+
+	std::optional<StorageDelta> base_delta;
+	bool delete_last;
 
 	bool is_lower_rank_than(StorageDelta const& new_delta, DeltaPriority const& new_priority) const;
 
@@ -46,5 +80,7 @@ public:
 		return base_delta;
 	}
 };
+#endif
+
 
 } /* scs */

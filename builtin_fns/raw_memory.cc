@@ -22,8 +22,7 @@ BuiltinFns::scs_raw_memory_set(
 	uint32_t key_offset,
 	/* key_len = 32 */
 	uint32_t mem_offset,
-	uint32_t mem_len,
-	uint32_t priority)
+	uint32_t mem_len)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
 	auto& runtime = *tx_ctx.get_current_runtime();
@@ -38,7 +37,7 @@ BuiltinFns::scs_raw_memory_set(
 
 	auto addr_and_key = tx_ctx.get_storage_key(key);
 
-	tx_ctx.storage_proxy.raw_memory_write(addr_and_key, std::move(data), tx_ctx.get_next_priority(priority));
+	tx_ctx.storage_proxy.raw_memory_write(addr_and_key, std::move(data), tx_ctx.get_src_tx_hash());
 }
 
 //return 1 if key exists, 0 else

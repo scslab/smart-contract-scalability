@@ -24,20 +24,6 @@ union StorageObject switch (ObjectType type)
 		int64 nonnegative_int64;
 };
 
-struct DeltaPriority
-{
-	// higher custom_priority beats lower (empty) custom_priority
-	uint32 custom_priority;
-
-	//higher gas bid wins ties
-	uint64 gas_rate_bid;
-
-	Hash tx_hash;
-
-	// the ith delta created by a tx gets id i.  Final uniqueness tiebreaker.
-	uint32 delta_id_number;
-};
-
 // in case of none:
 // first ensure all are of same type -- if not, all fail
 // then apply the single type semantics, using default starting value

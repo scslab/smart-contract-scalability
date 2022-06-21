@@ -20,8 +20,7 @@ void
 raw_mem_set(
 	uint32_t key_offset,
 	uint32_t mem_offset,
-	uint32_t mem_len,
-	uint32_t priority);
+	uint32_t mem_len);
 
 BUILTIN("raw_mem_get")
 uint32_t
@@ -33,13 +32,12 @@ raw_mem_get(
 } /* detail */
 
 template<TriviallyCopyable T>
-void set_raw_memory(const StorageKey& key, const T& value, uint32_t priority = 0)
+void set_raw_memory(const StorageKey& key, const T& value)
 {
 	detail::raw_mem_set(
 		to_offset(&key),
 		to_offset(&value),
-		sizeof(T),
-		priority);
+		sizeof(T));
 }
 
 template<TriviallyCopyable T>

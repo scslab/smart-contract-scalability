@@ -9,45 +9,34 @@
 #include "object/delta_type_class.h"
 #include "state_db/delta_vec.h"
 
-#include "mutator/filter_context.h"
-
 namespace scs
 {
 
+/*
 struct DeltaBatchValueContext
 {
-	DeltaTypeClass typeclass;
-	//ObjectMutator mutator;
-
-	DeltaVector dv_all;
 
 	std::unique_ptr<DeltaTypeClassFilter> filter;
 	std::unique_ptr<DeltaTypeClassApplier> applier;
 
 	DeltaBatchValueContext(DeltaTypeClass const& tc)
-		: typeclass(tc)
-	//	, mutator()
-		, dv_all()
-		, filter(DeltaTypeClassFilter::make(tc))
+		: filter(DeltaTypeClassFilter::make(tc))
 		, applier(DeltaTypeClassApplier::make(tc))
 		{}
-};
+}; */
 
 struct DeltaBatchValue
 {
-	std::vector<std::unique_ptr<DeltaVector>> vectors;
+	std::vector<DeltaVector> vectors;
+	DeltaTypeClass tc;
 	
 	// null in serial instances, nonnull otherwise
-	std::unique_ptr<DeltaBatchValueContext> context;
+	//std::unique_ptr<DeltaBatchValueContext> context;
 
 	DeltaBatchValue()
 		: vectors()
-		, context()
-		{}
-
-	DeltaBatchValue(DeltaTypeClass const& tc)
-		: vectors()
-		, context(std::make_unique<DeltaBatchValueContext>(tc))
+		, tc()
+		//, context()
 		{}
 };
 
@@ -100,7 +89,7 @@ struct DeltaBatchValueMetadata
 		for (auto const& v : val.vectors)
 		{
 			meta.num_vectors++;
-			meta.num_deltas += v->size();
+			meta.num_deltas += v.size();
 		}
 		return meta;
 	}

@@ -17,9 +17,8 @@ namespace scs
 
 void
 BuiltinFns::scs_delete_key_first(
-	uint32_t key_offset,
-	/* key_len = 32 */
-	uint32_t priority)
+	uint32_t key_offset
+	/* key_len = 32 */)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
 	auto& runtime = *tx_ctx.get_current_runtime();
@@ -28,14 +27,13 @@ BuiltinFns::scs_delete_key_first(
 
 	auto addr_and_key = tx_ctx.get_storage_key(key);
 
-	tx_ctx.storage_proxy.delete_object_first(addr_and_key, tx_ctx.get_next_priority(priority));
+	tx_ctx.storage_proxy.delete_object_first(addr_and_key, tx_ctx.get_src_tx_hash());
 }
 
 void
 BuiltinFns::scs_delete_key_last(
-	uint32_t key_offset,
-	/* key_len = 32 */
-	uint32_t priority)
+	uint32_t key_offset
+	/* key_len = 32 */)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
 	auto& runtime = *tx_ctx.get_current_runtime();
@@ -44,7 +42,7 @@ BuiltinFns::scs_delete_key_last(
 
 	auto addr_and_key = tx_ctx.get_storage_key(key);
 
-	tx_ctx.storage_proxy.delete_object_last(addr_and_key, tx_ctx.get_next_priority(priority));
+	tx_ctx.storage_proxy.delete_object_last(addr_and_key, tx_ctx.get_src_tx_hash());
 }
 
 } /* scs */
