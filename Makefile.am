@@ -40,6 +40,7 @@ DEBUG_SRCS = \
 	debug/debug_utils.cc
 
 FILTER_SRCS = \
+	filter/apply_context.cc \
 	filter/filter_context.cc
 
 #MUTATOR_SRCS = \

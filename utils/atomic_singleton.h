@@ -6,8 +6,8 @@ namespace scs
 template<typename T>
 class AtomicSingleton
 {
-	std::atomic_flag initialized;
-	std::atomic<T*> value;
+	mutable std::atomic_flag initialized;
+	mutable std::atomic<T*> value;
 
 public:
 

@@ -11,6 +11,7 @@
 #include "state_db/delta_vec.h"
 
 #include "filter/filter_context.h"
+#include "filter/apply_context.h"
 
 #include "utils/atomic_singleton.h"
 
@@ -22,11 +23,12 @@ struct DeltaBatchValueContext
 {
 
 	std::unique_ptr<FilterContext> filter;
+	std::unique_ptr<ApplyContext> applier;
 	//std::unique_ptr<DeltaTypeClassApplier> applier;
 
 	DeltaBatchValueContext(DeltaTypeClass const& tc)
 		: filter(make_filter_context(tc))
-		//, applier(DeltaTypeClassApplier::make(tc))
+		, applier(make_apply_context(tc))
 		{}
 };
 
@@ -51,6 +53,11 @@ public:
 		}
 
 	DeltaBatchValueContext& get_context()
+	{
+		return context -> get(tc);
+	}
+	
+	const DeltaBatchValueContext& get_context() const
 	{
 		return context -> get(tc);
 	}
