@@ -40,3 +40,32 @@ for a potentially long period of time (bounded).
 Semaphores only apply to one block.  Any longer-running semaphore-like objects can be built on-chain, in the exec script.
 
 
+Have a simple reader-writer (shared/exclusive) lock.
+
+In a payment channel/relative timelock/declare-then-close paradigm:
+
+Declare transaction require a shared lock
+   Delta is max(prev-version, new-version)
+   Note: technically don't even need the shared lock
+Close transactions require an exclusive lock
+   Enforce relative timelock in the contrack
+
+Q: How to prevent spam on locks
+   Lock has script to validate transaction
+Q: Should we pre-specify all locks
+   Problem: what if you want to auction a lock
+            or otherwise dynamically chose who should get it
+
+Proposal: lock validation script outputs 0 for rejected
+   otherwise, outputs a score.  Highest (score, tx-hash) wins?
+
+Note: we aren't too worried about rogue nodes proposing illegal blocks
+that take time to validate, since there shouldn't be anonymous miners
+participating in a wholesale CBDC.
+
+Declare transaction must write current time for relative timelock.  So
+is that a dynamic delta?  Or is current time/ledger number just one of
+a small number of things that should be encodable in deltas, as well
+as immediate values.
+
+What about oracle feed?  That won't depend on on-chain state.
