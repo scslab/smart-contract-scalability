@@ -12,3 +12,4 @@
 * Mutual exclusion / semaphore
   Many people try something, it only happens once (or N times)
 * Multipart transactions (Tx1 only happens if Tx2 did)
+* Control how much banks can lever their base money
