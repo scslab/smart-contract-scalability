@@ -169,5 +169,3 @@ what happens for filtering on new ledger entries?
 
 
 
-
-
