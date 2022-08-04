@@ -2,9 +2,9 @@
 Tx format:
   - replay-info(*)                            ]
   - metadata (gas limit, fee)                 ]
-  - exec-script                 	      ]  covered by TxID
-  - method                 		      ]
-  - call-data                 		      ]
+  - exec-script                               ]  covered by TxID
+  - method                                    ]
+  - call-data                                 ]
   - witness-data
 
 
@@ -32,4 +32,11 @@ Replay prevention:
   No coordination needed between machines issuing payments at bank
 
 Ratchet: bump sequence number to invalidate old signed transaction
+
+# Design 2
+
+Replay prevention is a mechanism for preventing replays across blocks, needs storage of data
+for a potentially long period of time (bounded).
+Semaphores only apply to one block.  Any longer-running semaphore-like objects can be built on-chain, in the exec script.
+
 
