@@ -1,7 +1,7 @@
 #pragma once
 
-#include "state_db/delta_vec.h"
 #include "object/object_mutator.h"
+#include "state_db/delta_vec.h"
 
 #include "xdr/storage.h"
 #include "xdr/types.h"
@@ -13,44 +13,31 @@
 #include <map>
 #include <vector>
 
-namespace scs
-{
+namespace scs {
 
 class DeltaBatch;
 struct StorageProxyValue;
 
 class SerialDeltaBatch
 {
-	// accumulator for all deltas in a block.
-	// ultimately will have threadlocal cache of these
-	// Each vec is kept in sort order by priority
+    // accumulator for all deltas in a block.
+    // ultimately will have threadlocal cache of these
 
-	/*struct value_t
-	{
-		DeltaVector vec;
-		//std::optional<StorageObject> base_obj;
+    using value_t = DeltaBatchValue;
+    using trie_prefix_t = trie::ByteArrayPrefix<sizeof(AddressAndKey)>;
 
-		value_t(std::optional<StorageObject> const& obj)
-			: vec()
-			, base_obj(obj)
-			{}
-	}; */
+    using map_t = trie::
+        SerialRecyclingTrie<value_t, trie_prefix_t, DeltaBatchValueMetadata>;
 
-	using value_t = DeltaBatchValue;
-	using trie_prefix_t = trie::ByteArrayPrefix<sizeof(AddressAndKey)>;
+    map_t& deltas;
 
-	using map_t = trie::SerialRecyclingTrie<value_t, trie_prefix_t, DeltaBatchValueMetadata>;
+  public:
+    SerialDeltaBatch(map_t& serial_trie);
 
-	map_t& deltas;
+    SerialDeltaBatch(const SerialDeltaBatch& other) = delete;
+    SerialDeltaBatch(SerialDeltaBatch&& other) = default;
 
-public:
-
-	SerialDeltaBatch(map_t& serial_trie);
-
-	SerialDeltaBatch(const SerialDeltaBatch& other) = delete;
-	SerialDeltaBatch(SerialDeltaBatch&& other) = default;
-
-	void add_deltas(const AddressAndKey& key, StorageProxyValue&& v);
+    void add_deltas(const AddressAndKey& key, StorageProxyValue&& v);
 };
 
-} /* scs */
+} // namespace scs

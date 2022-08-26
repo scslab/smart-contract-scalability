@@ -135,21 +135,6 @@ class NNInt64FilterContext : public FilterContext
     }
 };
 
-class RawMemoryFilterContext : public FilterContext
-{
-
-  public:
-    RawMemoryFilterContext(DeltaTypeClass const& dtc)
-        : FilterContext(dtc)
-    {}
-
-    void add_vec_when_tc_valid(DeltaVector const&) override final {}
-
-    void prune_invalid_txs_when_tc_valid(DeltaVector const&,
-                                         TxBlock&) override final
-    {}
-};
-
 class ErrorFilterContext : public FilterContext
 {
 
@@ -192,7 +177,7 @@ make_filter_context(DeltaTypeClass const& dtc)
         case TypeclassValence::TV_DELETE_FIRST:
             return std::make_unique<NoActionFilterContext>(dtc);
         case TypeclassValence::TV_RAW_MEMORY_WRITE:
-            return std::make_unique<RawMemoryFilterContext>(dtc);
+            return std::make_unique<NoActionFilterContext>(dtc);
         case TypeclassValence::TV_NONNEGATIVE_INT64_SET:
             return std::make_unique<NNInt64FilterContext>(dtc);
         case TypeclassValence::TV_ERROR:
