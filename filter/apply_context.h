@@ -28,6 +28,8 @@ protected:
 public:
 
 	virtual void add_vec(DeltaVector const& v, const TxBlock& txs) = 0;
+
+	virtual bool should_ignore() const;
 	
 	std::optional<StorageObject>
 	get_object() const;

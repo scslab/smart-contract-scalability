@@ -257,6 +257,7 @@ TEST_CASE("int64 storage write", "[storage]")
 			REQUIRE(!!db_val);
 			REQUIRE(db_val->nonnegative_int64() == 75);
 		}
+
 		SECTION("without set some dropped")
 		{
 			auto h1 = make_add_tx(a0, k0, -50);
@@ -264,11 +265,9 @@ TEST_CASE("int64 storage write", "[storage]")
 			auto h3 = make_add_tx(a0, k0, 5);
 			auto h4 = make_add_tx(a0, k0, 0);
 
-			REQUIRE(h1 > h2);
-
 			finish_block();
 
-			check_valid(h1);
+			check_invalid(h1);
 			check_invalid(h2);
 			check_valid(h3);
 			check_valid(h4);
@@ -277,7 +276,7 @@ TEST_CASE("int64 storage write", "[storage]")
 			auto db_val = state_db.get(hk0);
 
 			REQUIRE(!!db_val);
-			REQUIRE(db_val->nonnegative_int64() == 55);
+			REQUIRE(db_val->nonnegative_int64() == 105);
 		}
 	}
 }
@@ -494,10 +493,12 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 		SECTION("delete_last + write ok")
 		{
+			std::printf("start delete_last + write_ok\n");
 			calldata_0 data {
 				.key = k0
 			};
 
+			//delete_last on k0
 			TransactionInvocation invocation (
 				h,
 				5,
@@ -515,6 +516,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 				.value = 0xA0B0C0D0E0F00010
 			};
 
+			// write on k0
 			TransactionInvocation invocation2 (
 				h,
 				1,
@@ -545,6 +547,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 				.key = k0
 			};
 
+			// delete_first on k0
 			TransactionInvocation invocation (
 				h,
 				4,
@@ -555,6 +558,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 			exec_success(tx_hash, tx);
 
+			// write on k0
 			calldata_1 data2 {
 				.key = k0,
 				.value = 0xA0B0C0D0E0F00010
@@ -575,7 +579,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 			finish_block();
 
 			REQUIRE(
-				tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
+				!tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
 			REQUIRE(
 				!tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash2));
 
@@ -583,7 +587,10 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 			auto db_val = state_db.get(hk0);
 
-			REQUIRE(!db_val);
+			REQUIRE(!!db_val);
+			// require original value
+			REQUIRE(db_val->raw_memory_storage().data == xdr::opaque_vec<RAW_MEMORY_MAX_LEN>{0x11, 0x00, 0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA});
+
 		}
 	}
 

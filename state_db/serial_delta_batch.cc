@@ -21,15 +21,12 @@ struct AppendInsertFn
 	new_value(const prefix_t& prefix)
 	{
 		return base_value_type();
-	//	base_value_type out;
-	//	out.vectors.emplace_back();
-	//	return out;
 	}
 
 	static void 
 	value_insert(base_value_type& main_value, StorageProxyValue&& v) {
 		main_value.vectors.back().add(std::move(v.vec));
-		main_value.tc.add(v.get_tc());
+		main_value.add_tc(v.get_tc());
 	}
 };
 

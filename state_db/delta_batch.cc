@@ -70,7 +70,7 @@ struct DeltaBatchValueMergeFn
 	//		std::make_move_iterator(merge_in_value.vectors.begin()),
 	//		std::make_move_iterator(merge_in_value.vectors.end()));
 
-		original_value.tc.add(merge_in_value.tc);
+		original_value.add_tc(merge_in_value.get_tc());
 	}
 };
 
@@ -121,6 +121,7 @@ struct BatchApplyRange {
 		: work_list()
 		, work_meta(metadata_t::zero())
 		, allocator(other.allocator) {
+			std::printf("start split\n");
 
 			auto original_deltas = other.work_meta.metadata.num_deltas;
 			if (original_deltas == 0) {
@@ -203,10 +204,10 @@ struct BatchApplyRange {
 
 		uint32_t work_list_idx;
 
-		iterator(std::vector<ptr_t> work_list, std::optional<std::pair<size_t, size_t>> vector_range)
+		iterator(std::vector<ptr_t> work_list, std::optional<std::pair<size_t, size_t>> vector_range, uint32_t work_list_idx = 0)
 			: work_list(work_list)
 			, vector_range(vector_range)
-			, work_list_idx(0)
+			, work_list_idx(work_list_idx)
 			{}
 
 		ptr_t get_node_id()
@@ -243,7 +244,7 @@ struct BatchApplyRange {
 
 	iterator end() const
 	{
-		return iterator(std::vector<ptr_t>{UINT32_MAX}, std::nullopt);
+		return iterator(std::vector<ptr_t>{UINT32_MAX}, std::nullopt, UINT32_MAX);
 	}
 };
 
@@ -297,6 +298,9 @@ struct FilterFn
 				vector_start = config -> first;
 				vector_end = config -> second;
 			}
+
+			dbv.make_context();
+
 			auto& context = dbv.get_context();
 
 			for (size_t i = vector_start; i < vector_end; i++)
@@ -351,6 +355,7 @@ struct ApplyFn
 				vector_start = config -> first;
 				vector_end = config -> second;
 			}
+
 			auto& context = dbv.get_context();
 
 			for (size_t i = vector_start; i < vector_end; i++)
@@ -382,10 +387,9 @@ DeltaBatch::filter_invalid_deltas(TxBlock& txs)
 	FilterFn filter;
 	PruneFn prune(txs);
 
-	deltas.template parallel_batch_value_modify_customrange<FilterFn,BatchApplyRange>(filter);
+	deltas.template parallel_batch_value_modify_customrange<FilterFn, BatchApplyRange>(filter);
 	deltas.template parallel_batch_value_modify_customrange<PruneFn, BatchApplyRange>(prune);
 
-	//throw std::runtime_error("umimpl");
 	filtered = true;
 }
 

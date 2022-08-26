@@ -58,6 +58,7 @@ PHASE_SRCS = \
 
 STATE_DB_SRCS = \
 	state_db/delta_batch.cc \
+	state_db/delta_batch_value.cc \
 	state_db/delta_vec.cc \
 	state_db/serial_delta_batch.cc \
 	state_db/state_db.cc

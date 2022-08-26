@@ -18,7 +18,7 @@ class DeltaBatch;
 class StateDB
 {
 
-	static
+	/*static
 	std::vector<uint8_t> 
 	serialize(const std::optional<StorageObject>& v)
 	{
@@ -27,17 +27,40 @@ class StateDB
 			return std::vector<uint8_t>();
 		}
 		return xdr::xdr_to_opaque(*v);
+	} */
+
+	static std::vector<uint8_t> 
+	serialize(const StorageObject& v)
+	{
+		return xdr::xdr_to_opaque(v);
 	}
+
+	using base_value_struct = trie::SerializeWrapper<StorageObject, &serialize>;
+
+	struct value_struct : public base_value_struct
+	{
+		value_struct(const StorageObject& obj)
+			: base_value_struct(obj)
+			{}
+
+		value_struct()
+			: base_value_struct()
+			{}
+	};
 
 public:
 
 	using prefix_t = trie::ByteArrayPrefix<sizeof(AddressAndKey)>;
-	using metadata_t = trie::CombinedMetadata<trie::SizeMixin>;
-	using value_t = trie::SerializeWrapper<std::optional<StorageObject>, &serialize>; 
+	using metadata_t = trie::CombinedMetadata<trie::SizeMixin, trie::DeletableMixin>;
+
+	using value_t = value_struct;//trie::SerializeWrapper<StorageObject, &serialize>; 
 
 	using trie_t = trie::MerkleTrie<prefix_t, value_t, metadata_t>;
+
+	using cache_t = utils::ThreadlocalCache<trie_t>;
+
 private:
-	//std::map<AddressAndKey, StorageObject> state_db;
+
 	trie_t state_db;
 
 public:

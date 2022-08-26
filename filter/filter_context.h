@@ -11,8 +11,6 @@ class TxBlock;
 
 class FilterContext
 {
-
-
 	bool check_valid_dtc();
 	void invalidate_entire_vector(DeltaVector const& v, TxBlock& txs);
 
@@ -41,7 +39,6 @@ public:
 
 	void add_vec(DeltaVector const& v);
 	void prune_invalid_txs(DeltaVector const& v, TxBlock& txs);
-
 };
 
 std::unique_ptr<FilterContext> 

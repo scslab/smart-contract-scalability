@@ -117,7 +117,42 @@ TEST_CASE("add storage deltas", "[typeclass]")
 			expect_valence_error();
 		}
 	}
+	SECTION("check delete_last overwrites")
+	{
+		DeltaTypeClass dtc2;
 
+		SECTION("free")
+		{
+			dtc.add(make_delete_last());
+
+			require_accept(make_raw_mem_write(val1));
+			dtc2.add(make_raw_mem_write(val1));
+
+			dtc.add(dtc2);
+
+			expect_delete_last();
+		}
+		SECTION("mem write")
+		{
+			dtc.add(make_raw_mem_write(val1));
+
+			dtc2.add(make_delete_last());
+
+			dtc.add(dtc2);
+
+			expect_delete_last();
+		}
+		SECTION("mem write reverse order")
+		{
+			dtc.add(make_delete_last());
+
+			dtc2.add(make_raw_mem_write(val1));
+
+			dtc.add(dtc2);
+
+			expect_delete_last();
+		}
+	}
 }
 
 } /* scs */

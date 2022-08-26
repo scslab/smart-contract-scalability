@@ -13,6 +13,8 @@ class DeltaTypeClass
 	DeltaValence valence;
 
 	void set_error();
+	void overwrite_free_tc(const DeltaValence& other);
+
 
 public:
 
