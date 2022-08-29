@@ -1,9 +1,9 @@
 [submodule "xdrpp"]
-	path = xdrpp
+	path = lib/xdrpp
 	url = git@github.com:gramseyer/xdrpp.git
 [submodule "merkle_trie_toolkit"]
-	path = merkle_trie_toolkit
+	path = lib/merkle_trie_toolkit
 	url = git@github.com:gramseyer/merkle_trie_toolkit.git
 [submodule "wasm_api"]
-	path = wasm_api
+	path = lib/wasm_api
 	url = git@github.com:gramseyer/wasm_api.git

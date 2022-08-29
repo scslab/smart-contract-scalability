@@ -38,11 +38,11 @@ AM_CONDITIONAL([HAVE_LIBFYAML], [ test x$HAVE_LIBFYAML = x1 ])
 
 export CXXFLAGS
 
-AX_PKGCONFIG_SUBDIR(xdrpp)
+AX_PKGCONFIG_SUBDIR(lib/xdrpp)
 AC_MSG_CHECKING(for xdrc)
 AS_IF([test -n "$XDRC"],,
 	    [test -n "$xdrpp_INTERNAL" -a x"$cross_compiling" != xyes],
-	    [XDRC='$(top_builddir)/xdrpp/xdrc/xdrc$(EXEEXT)'],
+	    [XDRC='$(top_builddir)/lib/xdrpp/xdrc/xdrc$(EXEEXT)'],
 	    [AC_PATH_PROG(XDRC, [xdrc])])
 if test -z "$XDRC"; then
    AC_MSG_ERROR(Cannot find xdrc)
@@ -51,8 +51,8 @@ fi
 AC_MSG_RESULT($XDRC)
 AC_SUBST(XDRC)
 
-AX_PKGCONFIG_SUBDIR(merkle_trie_toolkit)
-AX_PKGCONFIG_SUBDIR(wasm_api)
+AX_PKGCONFIG_SUBDIR(lib/merkle_trie_toolkit)
+AX_PKGCONFIG_SUBDIR(lib/wasm_api)
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile])
