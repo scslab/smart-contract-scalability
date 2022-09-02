@@ -6,36 +6,34 @@
 
 #include "transaction_context/global_context.h"
 
-namespace scs
-{
+namespace scs {
 
-ExecutionContext&  
+ExecutionContext&
 ThreadlocalContextStore::get_exec_ctx()
 {
-	return *ctx;
+    return *ctx;
 }
 
-template<typename ...Args>
-void 
+template<typename... Args>
+void
 ThreadlocalContextStore::make_ctx(Args&... args)
 {
-	ctx = std::unique_ptr<ExecutionContext>(new ExecutionContext(args...));
+    ctx = std::unique_ptr<ExecutionContext>(new ExecutionContext(args...));
 }
 
-template
-void ThreadlocalContextStore::make_ctx(GlobalContext&);
+template void
+ThreadlocalContextStore::make_ctx(GlobalContext&);
 
 void
 ThreadlocalContextStore::post_block_clear()
 {
-	ctx -> reset();
+    ctx->reset();
 }
 
 void
 ThreadlocalContextStore::clear_entire_context()
 {
-	ctx = nullptr;
+    ctx = nullptr;
 }
 
-
-} /* scs */
+} // namespace scs

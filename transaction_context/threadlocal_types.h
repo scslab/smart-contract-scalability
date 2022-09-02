@@ -6,6 +6,6 @@
 namespace scs
 {
 
-typedef utils::ThreadlocalCache<SerialDeltaBatch>::cache_array_t batch_delta_array_t;
+//typedef utils::ThreadlocalCache<SerialDeltaBatch>::cache_array_t batch_delta_array_t;
 
 } /* scs */

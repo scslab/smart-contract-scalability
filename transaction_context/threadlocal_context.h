@@ -4,45 +4,39 @@
 
 #include "mtt/utils/threadlocal_cache.h"
 
-#include "state_db/serial_delta_batch.h"
-#include "transaction_context/execution_context.h"
-
 #include "transaction_context/threadlocal_types.h"
 
-namespace scs
+#include "transaction_context/execution_context.h"
+
+namespace scs {
+
+class ExecutionContext;
+
+class ThreadlocalContextStore
 {
+    inline static thread_local std::unique_ptr<ExecutionContext> ctx;
 
-class DeltaBatch;
-class WasmContext;
+    ThreadlocalContextStore() = delete;
 
-class ThreadlocalContextStore {
-	inline static thread_local std::unique_ptr<ExecutionContext> ctx;
+  public:
+    static ExecutionContext& get_exec_ctx();
 
-	ThreadlocalContextStore() = delete;
+    template<typename... Args>
+    static void make_ctx(Args&... args);
 
-public:
-	static ExecutionContext& get_exec_ctx();
+    static void post_block_clear();
 
-	template<typename ...Args>
-	static void make_ctx(Args&... args);
-
-	static void post_block_clear();
-
-	// for testing
-	static void clear_entire_context();
+    // for testing
+    static void clear_entire_context();
 };
 
-namespace test
-{
+namespace test {
 
 struct DeferredContextClear
 {
-	~DeferredContextClear()
-	{
-		ThreadlocalContextStore::clear_entire_context();
-	}
+    ~DeferredContextClear() { ThreadlocalContextStore::clear_entire_context(); }
 };
 
-} /* test */
+} // namespace test
 
-} /* scs */
+} // namespace scs
