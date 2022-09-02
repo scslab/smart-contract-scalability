@@ -10,19 +10,11 @@ std::optional<StorageObject>
 StateDB::get(AddressAndKey const& a) const
 {
     CONTRACT_INFO("get on key %s", debug::array_to_str(a).c_str());
-    /*auto it = state_db.find(a);
-    if (it == state_db.end())
-    {
-            return std::nullopt;
-    }
-    return it -> second; */
     auto res = state_db.get_value(a);
     if (res) {
         return *res;
     }
     return std::nullopt;
-
-    // return state_db.get_value(a);
 }
 
 void
@@ -125,22 +117,6 @@ StateDB::apply_delta_batch(DeltaBatch const& delta_batch)
     state_db.batch_merge_in(new_kvs);
 
     state_db.perform_marked_deletions();
-
-    /*&auto const& map = delta_batch.deltas;
-    for (auto const& [k, v] : map)
-    {
-            CONTRACT_INFO("applying delta to key %s",
-    debug::array_to_str(k).c_str()); auto res = v.context ->
-    mutator.get_object(); if (res)
-            {
-                    CONTRACT_INFO("writing %s",
-    debug::storage_object_to_str(*res).c_str()); state_db[k] = *res; } else
-            {
-                    state_db.erase(k);
-            }
-    } */
-
-    // throw std::runtime_error("unimplemented");
 }
 
 } // namespace scs

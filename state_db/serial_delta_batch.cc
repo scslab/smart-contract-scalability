@@ -27,6 +27,12 @@ struct AppendInsertFn
     }
 };
 
+/** TODO
+ * make a "conditional_add_deltas" method(s) that returns false/is a no-op if
+ * some deltavec can't accept a value.  Need a reserve/commit style system, I
+ * think.
+ */
+
 void
 SerialDeltaBatch::add_deltas(const AddressAndKey& key, StorageProxyValue&& v)
 {
