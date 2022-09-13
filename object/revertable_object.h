@@ -156,6 +156,12 @@ class RewindVector
     std::vector<RevertableObject::DeltaRewind> objs;
 
   public:
+
+    void add(RevertableObject::DeltaRewind&& new_obj)
+    {
+        objs.emplace_back(std::move(new_obj));
+    }
+    
     void commit()
     {
         for (auto& obj : objs) {
