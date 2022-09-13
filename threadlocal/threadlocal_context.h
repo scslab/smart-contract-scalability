@@ -20,19 +20,16 @@ class ThreadlocalContextStore
     {
         std::unique_ptr<ExecutionContext> ctx;
 
-        //GarbageCollector<xdr::opaque_vec<RAW_MEMORY_MAX_LEN>> mem_vec_gc;
-        MultitypeGarbageCollector<uint64_t, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>> gc;
+        MultitypeGarbageCollector<uint64_t, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>>
+            gc;
     };
 
     static utils::ThreadlocalCache<context_t> cache;
-
-    //inline static thread_local std::unique_ptr<ExecutionContext> ctx;
 
     ThreadlocalContextStore() = delete;
 
   public:
     static ExecutionContext& get_exec_ctx();
-
 
     template<typename delete_t>
     static void defer_delete(const delete_t* ptr)

@@ -51,7 +51,8 @@ OBJECT_SRCS = \
 	object/comparators.cc \
 	object/delta_type_class.cc \
 	object/make_delta.cc \
-	object/object_defaults.cc
+	object/object_defaults.cc \
+	object/revertable_object.cc
 
 PHASE_SRCS = \
 	phase/phases.cc
@@ -67,11 +68,13 @@ STORAGE_PROXY_SRCS = \
 	storage_proxy/proxy_applicator.cc \
 	storage_proxy/storage_proxy.cc
 
+THREADLOCAL_SRCS = \
+	threadlocal/threadlocal_context.cc
+
 TRANSACTION_CONTEXT_SRCS = \
 	transaction_context/execution_context.cc \
 	transaction_context/global_context.cc \
 	transaction_context/method_invocation.cc \
-	transaction_context/threadlocal_context.cc \
 	transaction_context/transaction_context.cc
 
 TX_BLOCK_SRCS = \
@@ -88,6 +91,7 @@ SRCS = \
 	$(PHASE_SRCS) \
 	$(STATE_DB_SRCS) \
 	$(STORAGE_PROXY_SRCS) \
+	$(THREADLOCAL_SRCS) \
 	$(TRANSACTION_CONTEXT_SRCS) \
 	$(TX_BLOCK_SRCS)
 
