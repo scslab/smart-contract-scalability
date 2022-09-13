@@ -73,7 +73,7 @@ remove_inflight(uint64_t input)
 bool
 has_inflight(uint64_t input)
 {
-    return (input && 0xFF00);
+    return (input & 0xFF00);
 }
 
 bool
@@ -141,6 +141,7 @@ RevertableBaseObject::try_set(StorageObject const& new_obj)
 
         if (current == nullptr) {
             StorageObject* new_candidate = new StorageObject(new_obj);
+
             uint64_t new_tag = swap_id(t, new_id);
             new_tag = add_inflight(new_tag);
 
@@ -202,6 +203,7 @@ RevertableBaseObject::revert()
 
         if (tag.compare_exchange_weak(
                 expect, new_tag, std::memory_order_release)) {
+            
             if (!has_inflight(new_tag)) {
                 obj.store(nullptr, std::memory_order_release);
                 ThreadlocalContextStore::defer_delete(current);
@@ -370,6 +372,7 @@ void
 RevertableObject::DeltaRewind::commit()
 {
     obj->commit_delta(delta);
+    rewind_base.commit();
     do_rewind = false;
 }
 
