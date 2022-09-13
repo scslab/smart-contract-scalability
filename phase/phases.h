@@ -11,7 +11,6 @@ struct BlockContext;
 
 void phase_finish_block(GlobalContext& global_structures, BlockContext& block_structures);
 
-
 /*
 void
 phase_merge_delta_batches(DeltaBatch& delta_batch);

@@ -100,6 +100,13 @@ class BuiltinFns
 		uint32_t output_offset
 		/* output_len = 8 */);
 
+	/* -- crypto -- */
+	static void
+		scs_hash(
+		uint32_t input_offset,
+		uint32_t input_len,
+		uint32_t output_offset
+		/* output_len = 32 */);
 
 	BuiltinFns() = delete;
 

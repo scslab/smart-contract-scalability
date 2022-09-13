@@ -26,4 +26,7 @@ typedef opaque Contract<>;
 
 const MAX_STACK_BYTES = 65536;
 
+// crypto parameters
+const MAX_HASH_LEN = 512;
+
 } /* scs */

@@ -73,6 +73,11 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 		"scs",
 		"nn_int64_get");
 
+	/* -- crypto -- */
+	runtime.template link_fn<&BuiltinFns::scs_hash>(
+		"scs",
+		"hash");
+
 
 
 }
