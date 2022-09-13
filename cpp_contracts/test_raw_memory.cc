@@ -65,14 +65,14 @@ check_read_self_writes()
 	sdk::invoke(self, 1, c1);
 	sdk::invoke(self, 0, c0);
 }
-
+/*
 EXPORT("pub04000000")
 delete_key_first()
 {
 	auto calldata = sdk::get_calldata<calldata_0>();
 	auto const& key = calldata.key;
 	sdk::delete_first(key);
-}
+} */
 
 EXPORT("pub05000000")
 delete_key_last()

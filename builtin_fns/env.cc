@@ -1,6 +1,6 @@
 #include "builtin_fns/builtin_fns.h"
 
-#include "transaction_context/threadlocal_context.h"
+#include "threadlocal/threadlocal_context.h"
 #include "transaction_context/execution_context.h"
 
 namespace scs

@@ -10,7 +10,6 @@ object_type_from_delta_type(DeltaType d_type)
 {
 	switch(d_type)
 	{
-		case DeltaType::DELETE_FIRST:
 		case DeltaType::DELETE_LAST:
 			return std::nullopt;
 		case DeltaType::RAW_MEMORY_WRITE:
@@ -26,7 +25,7 @@ make_default_object_by_delta(StorageDelta const& d)
 {
 	auto d_type = d.type();
 
-	if (d_type == DeltaType::DELETE_FIRST || d_type == DeltaType::DELETE_LAST)
+	if (d_type == DeltaType::DELETE_LAST)
 	{
 		return std::nullopt;
 	}

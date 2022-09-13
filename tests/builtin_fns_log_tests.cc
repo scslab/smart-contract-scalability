@@ -1,13 +1,14 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include "threadlocal/threadlocal_context.h"
+
 #include "transaction_context/global_context.h"
-#include "transaction_context/threadlocal_context.h"
 #include "transaction_context/execution_context.h"
 
 #include "crypto/hash.h"
 #include "test_utils/load_wasm.h"
 
-#include "state_db/delta_batch.h"
+#include "state_db/modified_keys_list.h"
 
 namespace scs
 {
@@ -29,19 +30,19 @@ TEST_CASE("test log", "[builtin]")
 
 	Address sender;
 	TxBlock txs;
-	DeltaBatch delta_batch;
+	ModifiedKeysList modified_keys_list;
 
 	auto exec_success = [&] (const Hash& tx_hash, const Transaction& tx)
 	{
 		REQUIRE(
-			exec_ctx.execute(tx_hash, tx, txs, delta_batch)
+			exec_ctx.execute(tx_hash, tx, txs, modified_keys_list)
 			== TransactionStatus::SUCCESS);
 	};
 
 	auto exec_fail = [&] (const Hash& tx_hash, const Transaction& tx)
 	{
 		REQUIRE(
-			exec_ctx.execute(tx_hash, tx, txs, delta_batch)
+			exec_ctx.execute(tx_hash, tx, txs, modified_keys_list)
 			!= TransactionStatus::SUCCESS);
 	};
 

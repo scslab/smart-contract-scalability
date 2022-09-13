@@ -11,7 +11,6 @@ namespace scs
 
 StorageDelta make_raw_memory_write(xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& data);
 
-StorageDelta make_delete_first();
 StorageDelta make_delete_last();
 
 StorageDelta make_nonnegative_int64_set_add(int64_t set, int64_t add);

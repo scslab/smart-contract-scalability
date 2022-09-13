@@ -1,7 +1,8 @@
 #include "builtin_fns/builtin_fns.h"
 
+#include "threadlocal/threadlocal_context.h"
+
 #include "transaction_context/execution_context.h"
-#include "transaction_context/threadlocal_context.h"
 #include "transaction_context/method_invocation.h"
 
 #include "wasm_api/error.h"
@@ -15,6 +16,7 @@
 namespace scs
 {
 
+#if 0
 void
 BuiltinFns::scs_delete_key_first(
 	uint32_t key_offset
@@ -29,6 +31,7 @@ BuiltinFns::scs_delete_key_first(
 
 	tx_ctx.storage_proxy.delete_object_first(addr_and_key, tx_ctx.get_src_tx_hash());
 }
+#endif
 
 void
 BuiltinFns::scs_delete_key_last(

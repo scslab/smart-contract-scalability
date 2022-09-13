@@ -17,13 +17,18 @@ void* alloc(size_t count) noexcept
 
 // std::abort compiles to `asm ("unreachable")`
 
-void 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winvalid-noreturn"
+
+void __attribute__((__noreturn__))
 abort()
 {
   // the logic of when abort calls into env.abort() and when it just does unreachable is beyond me
   //std::abort();
   asm ("unreachable");
 }
+
+#pragma GCC diagnostic pop
 
 /**
  * Taken from

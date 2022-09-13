@@ -3,14 +3,14 @@
 namespace scs {
 
 void
-ModifiedKeysList::assert_logs_merged()
+ModifiedKeysList::assert_logs_merged() const
 {
     if (!logs_merged) {
         throw std::runtime_error("logs not merged");
     }
 }
 void
-ModifiedKeysList::assert_logs_not_merged()
+ModifiedKeysList::assert_logs_not_merged() const
 {
     if (logs_merged) {
         throw std::runtime_error("logs already merged");
@@ -20,7 +20,7 @@ ModifiedKeysList::assert_logs_not_merged()
 void
 ModifiedKeysList::log_key(const AddressAndKey& key)
 {
-    assert_not_logs_merged();
+    assert_logs_not_merged();
     auto& local_trie = cache.get(keys);
     local_trie.insert(key, trie::EmptyValue{});
 }
@@ -28,7 +28,7 @@ ModifiedKeysList::log_key(const AddressAndKey& key)
 void
 ModifiedKeysList::merge_logs()
 {
-    assert_not_logs_merged();
+    assert_logs_not_merged();
     keys.template batch_merge_in<trie::OverwriteMergeFn>(cache);
     logs_merged = true;
 }

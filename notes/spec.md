@@ -160,6 +160,12 @@ There are, in my opinion, two natural options for actions that trigger reflectio
 
 
 
+## Proposal Filtering
+
+what happens for filtering on new ledger entries?
+
+
+
 
 
 

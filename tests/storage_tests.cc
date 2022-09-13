@@ -8,7 +8,9 @@
 #include "test_utils/load_wasm.h"
 #include "test_utils/make_calldata.h"
 
-#include "transaction_context/threadlocal_context.h"
+#include "threadlocal/threadlocal_context.h"
+
+#include "state_db/modified_keys_list.h"
 
 using namespace scs;
 
@@ -35,7 +37,7 @@ TEST_CASE("int64 storage write", "[storage]")
 
 	InvariantKey k0 = hash_xdr<uint64_t>(0);
 
-	std::unique_ptr<DeltaBatch> delta_batch = std::make_unique<DeltaBatch>();
+	std::unique_ptr<ModifiedKeysList> modified_keys_list = std::make_unique<ModifiedKeysList>();
 	std::unique_ptr<TxBlock> tx_block = std::make_unique<TxBlock>();
 
 	struct calldata_0 {
@@ -72,12 +74,12 @@ TEST_CASE("int64 storage write", "[storage]")
 		if (success)
 		{
 			REQUIRE(
-				exec_ctx.execute(hash, tx, *tx_block, *delta_batch)
+				exec_ctx.execute(hash, tx, *tx_block, *modified_keys_list)
 				== TransactionStatus::SUCCESS);
 		} else
 		{
 			REQUIRE(
-				exec_ctx.execute(hash, tx, *tx_block, *delta_batch)
+				exec_ctx.execute(hash, tx, *tx_block, *modified_keys_list)
 				!= TransactionStatus::SUCCESS);
 		}
 
@@ -110,12 +112,12 @@ TEST_CASE("int64 storage write", "[storage]")
 		if (success)
 		{
 			REQUIRE(
-				exec_ctx.execute(hash, tx, *tx_block, *delta_batch)
+				exec_ctx.execute(hash, tx, *tx_block, *modified_keys_list)
 				== TransactionStatus::SUCCESS);
 		} else
 		{
 			REQUIRE(
-				exec_ctx.execute(hash, tx, *tx_block, *delta_batch)
+				exec_ctx.execute(hash, tx, *tx_block, *modified_keys_list)
 				!= TransactionStatus::SUCCESS);
 		}
 
@@ -125,10 +127,10 @@ TEST_CASE("int64 storage write", "[storage]")
 	};
 
 	auto finish_block = [&] () {
-		phase_merge_delta_batches(*delta_batch);
-		phase_filter_deltas(scs_data_structures, *delta_batch, *tx_block);
-		phase_compute_state_updates(*delta_batch, *tx_block);
-		phase_finish_block(scs_data_structures, *delta_batch, *tx_block);
+		//phase_merge_delta_batches(*delta_batch);
+		//phase_filter_deltas(scs_data_structures, *delta_batch, *tx_block);
+		//phase_compute_state_updates(*delta_batch, *tx_block);
+		phase_finish_block(scs_data_structures, *tx_block, *modified_keys_list);
 	};
 
 	auto make_key = [] (Address const& addr, InvariantKey const& key) -> AddressAndKey
@@ -169,7 +171,7 @@ TEST_CASE("int64 storage write", "[storage]")
 			check_valid(h4);
 
 			auto hk0 = make_key(h, k0);
-			auto db_val = state_db.get(hk0);
+			auto db_val = state_db.get_committed_value(hk0);
 
 			REQUIRE(!!db_val);
 			REQUIRE(db_val->nonnegative_int64() == 5);
@@ -191,7 +193,7 @@ TEST_CASE("int64 storage write", "[storage]")
 			check_valid(h4);
 
 			auto hk0 = make_key(h, k0);
-			auto db_val = state_db.get(hk0);
+			auto db_val = state_db.get_committed_value(hk0);
 
 			REQUIRE(!!db_val);
 			REQUIRE(db_val->nonnegative_int64() == 12);
@@ -212,7 +214,7 @@ TEST_CASE("int64 storage write", "[storage]")
 			check_valid(h4);
 
 			auto hk0 = make_key(h, k0);
-			auto db_val = state_db.get(hk0);
+			auto db_val = state_db.get_committed_value(hk0);
 
 			REQUIRE(!!db_val);
 			REQUIRE(db_val->nonnegative_int64() == -5);
@@ -229,12 +231,12 @@ TEST_CASE("int64 storage write", "[storage]")
 
 
 		auto hk0 = make_key(h, k0);
-		auto db_val = state_db.get(hk0);
+		auto db_val = state_db.get_committed_value(hk0);
 
 		REQUIRE(!!db_val);
 		REQUIRE(db_val->nonnegative_int64() == 100);
 
-		delta_batch.reset(new DeltaBatch());
+		modified_keys_list.reset(new ModifiedKeysList());
 		tx_block.reset(new TxBlock());
 
 		SECTION("without set")
@@ -252,7 +254,7 @@ TEST_CASE("int64 storage write", "[storage]")
 			check_valid(h4);
 
 			auto hk0 = make_key(h, k0);
-			auto db_val = state_db.get(hk0);
+			auto db_val = state_db.get_committed_value(hk0);
 
 			REQUIRE(!!db_val);
 			REQUIRE(db_val->nonnegative_int64() == 75);
@@ -273,7 +275,7 @@ TEST_CASE("int64 storage write", "[storage]")
 			check_valid(h4);
 
 			auto hk0 = make_key(h, k0);
-			auto db_val = state_db.get(hk0);
+			auto db_val = state_db.get_committed_value(hk0);
 
 			REQUIRE(!!db_val);
 			REQUIRE(db_val->nonnegative_int64() == 105);
@@ -302,7 +304,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 	InvariantKey k0 = hash_xdr<uint64_t>(0);
 
-	std::unique_ptr<DeltaBatch> delta_batch = std::make_unique<DeltaBatch>();
+	std::unique_ptr<ModifiedKeysList> modified_keys_list = std::make_unique<ModifiedKeysList>();
 	std::unique_ptr<TxBlock> tx_block = std::make_unique<TxBlock>();
 
 	struct calldata_0 {
@@ -321,10 +323,10 @@ TEST_CASE("raw mem storage write", "[storage]")
 	};
 
 	auto finish_block = [&] () {
-		phase_merge_delta_batches(*delta_batch);
-		phase_filter_deltas(scs_data_structures, *delta_batch, *tx_block);
-		phase_compute_state_updates(*delta_batch, *tx_block);
-		phase_finish_block(scs_data_structures, *delta_batch, *tx_block);
+		//phase_merge_delta_batches(*delta_batch);
+		//phase_filter_deltas(scs_data_structures, *delta_batch, *tx_block);
+		//phase_compute_state_updates(*delta_batch, *tx_block);
+		phase_finish_block(scs_data_structures, *tx_block,  *modified_keys_list);
 	};
 
 	auto make_key = [] (Address const& addr, InvariantKey const& key) -> AddressAndKey
@@ -339,14 +341,14 @@ TEST_CASE("raw mem storage write", "[storage]")
 	auto exec_success = [&] (const Hash& tx_hash, const Transaction& tx)
 	{
 		REQUIRE(
-			exec_ctx.execute(tx_hash, tx, *tx_block, *delta_batch)
+			exec_ctx.execute(tx_hash, tx, *tx_block, *modified_keys_list)
 			== TransactionStatus::SUCCESS);
 	};
 
 	auto exec_fail = [&] (const Hash& tx_hash, const Transaction& tx)
 	{
 		REQUIRE(
-			exec_ctx.execute(tx_hash, tx, *tx_block, *delta_batch)
+			exec_ctx.execute(tx_hash, tx, *tx_block, *modified_keys_list)
 			!= TransactionStatus::SUCCESS);
 	};
 
@@ -374,14 +376,14 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 		auto hk0 = make_key(h, k0);
 
-		auto db_val = state_db.get(hk0);
+		auto db_val = state_db.get_committed_value(hk0);
 
 		REQUIRE(!!db_val);
 
 		REQUIRE(db_val->raw_memory_storage().data == xdr::opaque_vec<RAW_MEMORY_MAX_LEN>{0x11, 0x00, 0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA});
 
 
-		delta_batch.reset(new DeltaBatch());
+		modified_keys_list.reset(new ModifiedKeysList());
 		tx_block.reset(new TxBlock());
 
 		SECTION("read key from prev block")
@@ -428,13 +430,14 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 			auto hk0 = make_key(h, k0);
 
-			auto db_val = state_db.get(hk0);
+			auto db_val = state_db.get_committed_value(hk0);
 
 			REQUIRE(!!db_val);
 
 			REQUIRE(db_val->raw_memory_storage().data == xdr::opaque_vec<RAW_MEMORY_MAX_LEN>{0x10, 0x00, 0xF0, 0xE0, 0xD0, 0xC0, 0xB0, 0xA0});
 		}
 
+/*
 		SECTION("delete_first key solo")
 		{
 			calldata_0 data {
@@ -458,10 +461,10 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 			auto hk0 = make_key(h, k0);
 
-			auto db_val = state_db.get(hk0);
+			auto db_val = state_db.get_committed_value(hk0);
 
 			REQUIRE(!db_val);
-		}
+		} */
 
 		SECTION("delete_last key solo")
 		{
@@ -486,14 +489,13 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 			auto hk0 = make_key(h, k0);
 
-			auto db_val = state_db.get(hk0);
+			auto db_val = state_db.get_committed_value(hk0);
 
 			REQUIRE(!db_val);
 		}
 
 		SECTION("delete_last + write ok")
 		{
-			std::printf("start delete_last + write_ok\n");
 			calldata_0 data {
 				.key = k0
 			};
@@ -536,11 +538,12 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 			auto hk0 = make_key(h, k0);
 
-			auto db_val = state_db.get(hk0);
+			auto db_val = state_db.get_committed_value(hk0);
 
 			REQUIRE(!db_val);
 		}
 
+/*
 		SECTION("delete_first + write bad")
 		{
 			calldata_0 data {
@@ -585,13 +588,13 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 			auto hk0 = make_key(h, k0);
 
-			auto db_val = state_db.get(hk0);
+			auto db_val = state_db.get_committed_value(hk0);
 
 			REQUIRE(!!db_val);
 			// require original value
 			REQUIRE(db_val->raw_memory_storage().data == xdr::opaque_vec<RAW_MEMORY_MAX_LEN>{0x11, 0x00, 0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA});
 
-		}
+		} */
 	}
 
 	SECTION("get from empty slot")
@@ -642,7 +645,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 		auto hk0 = make_key(h, k0);
 
-		auto db_val = state_db.get(hk0);
+		auto db_val = state_db.get_committed_value(hk0);
 
 		REQUIRE(!db_val);
 	}
@@ -676,7 +679,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 		auto hk0 = make_key(h, k0);
 
-		auto db_val = state_db.get(hk0);
+		auto db_val = state_db.get_committed_value(hk0);
 
 		REQUIRE(!!db_val);
 

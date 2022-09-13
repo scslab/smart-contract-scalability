@@ -20,8 +20,12 @@ TxBlock::insert_tx(Transaction const& tx)
 bool 
 TxBlock::is_valid(TransactionFailurePoint failure_point, const Hash& hash) const
 {
-	auto const& res = tx_trie.get_value_nolocks(hash_prefix_t(hash));
-	return (res.v -> validity.load(std::memory_order_relaxed) <= static_cast<uint32_t>(failure_point));
+	auto const* res = tx_trie.get_value_nolocks(hash_prefix_t(hash));
+	if (res == nullptr)
+	{
+		throw std::runtime_error("query validity on nexist hash");
+	}
+	return (res->v -> validity.load(std::memory_order_relaxed) <= static_cast<uint32_t>(failure_point));
 }
 
 template<TransactionFailurePoint failure_point>

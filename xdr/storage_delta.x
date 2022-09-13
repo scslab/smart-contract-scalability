@@ -6,10 +6,9 @@ namespace scs
 
 enum DeltaType
 {
-	DELETE_FIRST = 0,
-	DELETE_LAST = 1,
-	RAW_MEMORY_WRITE = 2,
-	NONNEGATIVE_INT64_SET_ADD = 3,
+	DELETE_LAST = 0,
+	RAW_MEMORY_WRITE = 1,
+	NONNEGATIVE_INT64_SET_ADD = 2,
 };
 
 struct set_add_t
@@ -20,8 +19,6 @@ struct set_add_t
 
 union StorageDelta switch (DeltaType type)
 {
-	case DELETE_FIRST:
-		void;
 	case DELETE_LAST:
 		void;
 	case RAW_MEMORY_WRITE:
@@ -47,10 +44,9 @@ struct DeltaPriority
 enum TypeclassValence
 {
 	TV_FREE = 0,
-	TV_DELETE_FIRST = 1,
-	TV_RAW_MEMORY_WRITE = 2,
-	TV_NONNEGATIVE_INT64_SET = 3,
-	TV_ERROR = 4,
+	TV_RAW_MEMORY_WRITE = 1,
+	TV_NONNEGATIVE_INT64_SET = 2,
+	TV_ERROR = 3,
 };
 
 struct DeltaValence
@@ -58,8 +54,6 @@ struct DeltaValence
 	union switch(TypeclassValence type)
 	{
 		case TV_FREE:
-			void;
-		case TV_DELETE_FIRST:
 			void;
 		case TV_RAW_MEMORY_WRITE:
 			opaque data<RAW_MEMORY_MAX_LEN>;

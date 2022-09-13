@@ -5,14 +5,7 @@
 
 #include "tx_block/tx_block.h"
 
-#include "transaction_context/threadlocal_context.h"
-
 namespace scs {
-
-DeltaBatch::~DeltaBatch()
-{
-    ThreadlocalContextStore::post_block_clear();
-}
 
 SerialDeltaBatch
 DeltaBatch::get_serial_subsidiary()

@@ -12,11 +12,12 @@
 namespace scs
 {
 class StateDB;
-class SerialDeltaBatch;
+class ModifiedKeysList;
 
 class StorageProxy
 {
-	StateDB const& state_db;
+	StateDB& state_db;
+	ModifiedKeysList& keys;
 
 	using value_t = StorageProxyValue;
 
@@ -30,7 +31,7 @@ public:
 
 	using delta_identifier_t = Hash; // was DeltaPriority
 
-	StorageProxy(const StateDB& state_db);
+	StorageProxy(StateDB& state_db, ModifiedKeysList& keys);
 
 	std::optional<StorageObject>
 	get(AddressAndKey const& key);
@@ -44,10 +45,7 @@ public:
 	void
 	delete_object_last(AddressAndKey const& key, delta_identifier_t id);
 
-	void
-	delete_object_first(AddressAndKey const& key, delta_identifier_t id);
-
-	void push_deltas_to_batch(SerialDeltaBatch& local_delta_batch);
+	void push_deltas_to_statedb();
 };
 
 } /* scs */

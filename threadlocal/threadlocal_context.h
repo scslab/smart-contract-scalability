@@ -9,6 +9,7 @@
 #include "transaction_context/execution_context.h"
 
 #include "threadlocal/gc.h"
+#include "threadlocal/uid.h"
 
 namespace scs {
 
@@ -20,11 +21,13 @@ class ThreadlocalContextStore
     {
         std::unique_ptr<ExecutionContext> ctx;
 
-        MultitypeGarbageCollector<uint64_t, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>>
+        MultitypeGarbageCollector<StorageObject>
             gc;
+
+        UniqueIdentifier uid;
     };
 
-    static utils::ThreadlocalCache<context_t> cache;
+    inline static utils::ThreadlocalCache<context_t> cache;
 
     ThreadlocalContextStore() = delete;
 
@@ -36,6 +39,8 @@ class ThreadlocalContextStore
     {
         (cache.get()).gc.template deferred_delete<delete_t>(ptr);
     }
+
+    static uint64_t get_uid();
 
     template<typename... Args>
     static void make_ctx(Args&... args);

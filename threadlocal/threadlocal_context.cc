@@ -1,4 +1,4 @@
-#include "transaction_context/threadlocal_context.h"
+#include "threadlocal/threadlocal_context.h"
 
 #include "transaction_context/execution_context.h"
 
@@ -12,6 +12,12 @@ ExecutionContext&
 ThreadlocalContextStore::get_exec_ctx()
 {
     return *(cache.get().ctx);
+}
+
+uint64_t
+ThreadlocalContextStore::get_uid()
+{
+    return cache.get().uid.get();
 }
 
 template<typename... Args>

@@ -67,13 +67,13 @@ TEST_CASE("raw mem only", "[mutator]")
 	{
 		applicator = std::make_unique<ProxyApplicator>(std::nullopt);
 
-		SECTION("one delete first")
+	/*	SECTION("one delete first")
 		{
 			check_valid(make_delete_first());
 
 			REQUIRE(applicator->get() == std::nullopt);
 			expect_valence(TypeclassValence::TV_DELETE_FIRST);
-		}
+		} */
 
 		SECTION("one delete last")
 		{
@@ -83,7 +83,7 @@ TEST_CASE("raw mem only", "[mutator]")
 			expect_valence(TypeclassValence::TV_FREE);
 		}
 
-		SECTION("delete first and last")
+		/*SECTION("delete first and last")
 		{
 			check_valid(make_delete_first());
 			check_valid(make_delete_last());
@@ -101,7 +101,7 @@ TEST_CASE("raw mem only", "[mutator]")
 			REQUIRE(applicator->get() == std::nullopt);
 			expect_valence(TypeclassValence::TV_DELETE_FIRST);
 			tc_expect_deleted_last();
-		}
+		} */
 
 		SECTION("one write")
 		{
@@ -202,14 +202,14 @@ TEST_CASE("raw mem only", "[mutator]")
 			tc_expect_deleted_last();
 			val_expect_nullopt();
 		}
-		SECTION("one delete first")
+		/*SECTION("one delete first")
 		{
 
 			check_valid(make_delete_first());
 
 			expect_valence(TypeclassValence::TV_DELETE_FIRST);
 			val_expect_nullopt();
-		}
+		} */
 
 		SECTION("two writes of same (different from init) value")
 		{

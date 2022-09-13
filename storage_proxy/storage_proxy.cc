@@ -1,18 +1,18 @@
 #include "storage_proxy/storage_proxy.h"
 
 #include "state_db/state_db.h"
+#include "state_db/modified_keys_list.h"
 
 #include <wasm_api/error.h>
 
 #include "object/make_delta.h"
 
-#include "state_db/serial_delta_batch.h"
-
 namespace scs
 {
 
-StorageProxy::StorageProxy(const StateDB& state_db)
+StorageProxy::StorageProxy(StateDB& state_db, ModifiedKeysList& keys)
 	: state_db(state_db)
+	, keys(keys)
 	, cache()
 	{}
 
@@ -22,7 +22,7 @@ StorageProxy::get_local(AddressAndKey const& key)
 	auto it = cache.find(key);
 	if (it == cache.end())
 	{
-		auto res = state_db.get(key);
+		auto res = state_db.get_committed_value(key);
 		it = cache.emplace(key, res).first;
 	}
 	return it->second;
@@ -85,20 +85,22 @@ StorageProxy::delete_object_last(AddressAndKey const& key, delta_identifier_t id
 	v.vec.add_delta(std::move(delta), std::move(id));
 }
 
-void
-StorageProxy::delete_object_first(AddressAndKey const& key, delta_identifier_t id)
+
+void 
+StorageProxy::push_deltas_to_statedb()
 {
-	auto& v = get_local(key);
-
-	auto delta = make_delete_first();
-
-	if (!v.applicator.try_apply(delta))
+	if (committed_local_values)
 	{
-		throw wasm_api::HostError("failed to apply delete_first");
+		throw std::runtime_error("double push to batch");
 	}
-	v.vec.add_delta(std::move(delta), std::move(id));
+
+	throw std::runtime_error("unimpl");
+	// add key mod logs here too
+
+	committed_local_values = true;
 }
 
+/*
 void 
 StorageProxy::push_deltas_to_batch(SerialDeltaBatch& local_delta_batch)
 {
@@ -113,7 +115,7 @@ StorageProxy::push_deltas_to_batch(SerialDeltaBatch& local_delta_batch)
 	}
 
 	committed_local_values = true;
-}
+} */
 
 
 

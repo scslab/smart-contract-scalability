@@ -174,8 +174,8 @@ make_filter_context(DeltaTypeClass const& dtc)
         case TypeclassValence::TV_FREE:
             // nothing to filter here
             return std::make_unique<NoActionFilterContext>(dtc);
-        case TypeclassValence::TV_DELETE_FIRST:
-            return std::make_unique<NoActionFilterContext>(dtc);
+    //    case TypeclassValence::TV_DELETE_FIRST:
+      //      return std::make_unique<NoActionFilterContext>(dtc);
         case TypeclassValence::TV_RAW_MEMORY_WRITE:
             return std::make_unique<NoActionFilterContext>(dtc);
         case TypeclassValence::TV_NONNEGATIVE_INT64_SET:

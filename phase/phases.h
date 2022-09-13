@@ -6,7 +6,12 @@ namespace scs
 class DeltaBatch;
 class GlobalContext;
 class TxBlock;
+class ModifiedKeysList;
 
+void phase_finish_block(GlobalContext& global_structures, const TxBlock& tx_block, const ModifiedKeysList& modified_keys_list);
+
+
+/*
 void
 phase_merge_delta_batches(DeltaBatch& delta_batch);
 
@@ -18,4 +23,6 @@ phase_compute_state_updates(DeltaBatch& delta_batch, const TxBlock& tx_block);
 
 void
 phase_finish_block(GlobalContext& global_structures, const DeltaBatch& delta_batch, const TxBlock& tx_block);
+*/
+
 } /* scs */

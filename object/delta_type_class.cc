@@ -1,7 +1,5 @@
 #include "object/delta_type_class.h"
 
-#include "object/comparators.h"
-
 namespace scs {
 
 DeltaTypeClass::DeltaTypeClass()
@@ -24,9 +22,9 @@ DeltaTypeClass::can_accept(StorageDelta const& d)
     switch (valence.tv.type()) {
         case TypeclassValence::TV_FREE:
             return true;
-        case TypeclassValence::TV_DELETE_FIRST:
-            return (d.type() == DeltaType::DELETE_FIRST)
-                   || (d.type() == DeltaType::DELETE_LAST);
+    //    case TypeclassValence::TV_DELETE_FIRST:
+      //      return (d.type() == DeltaType::DELETE_FIRST)
+        //           || (d.type() == DeltaType::DELETE_LAST);
         case TypeclassValence::TV_RAW_MEMORY_WRITE:
             if (d.type() == DeltaType::DELETE_LAST) {
                 return true;
@@ -57,9 +55,9 @@ DeltaTypeClass::add(StorageDelta const& d)
     switch (valence.tv.type()) {
         case TypeclassValence::TV_FREE: {
             switch (d.type()) {
-                case DeltaType::DELETE_FIRST:
-                    valence.tv.type(TypeclassValence::TV_DELETE_FIRST);
-                    break;
+       //         case DeltaType::DELETE_FIRST:
+         //           valence.tv.type(TypeclassValence::TV_DELETE_FIRST);
+           //         break;
                 case DeltaType::DELETE_LAST:
                     valence.deleted_last = 1;
                     break;
@@ -75,7 +73,7 @@ DeltaTypeClass::add(StorageDelta const& d)
             }
             break;
         }
-        case TypeclassValence::TV_DELETE_FIRST: {
+   /*     case TypeclassValence::TV_DELETE_FIRST: {
             switch (d.type()) {
                 case DeltaType::DELETE_FIRST:
                     break;
@@ -86,7 +84,7 @@ DeltaTypeClass::add(StorageDelta const& d)
                     valence.tv.type(TypeclassValence::TV_ERROR);
                     break;
             }
-        } break;
+        } break; */
         case TypeclassValence::TV_RAW_MEMORY_WRITE: {
             switch (d.type()) {
                 case DeltaType::RAW_MEMORY_WRITE:
@@ -145,7 +143,7 @@ DeltaTypeClass::add(DeltaTypeClass const& dtc)
         case TypeclassValence::TV_FREE:
             return;
 
-        case TypeclassValence::TV_DELETE_FIRST: {
+      /*  case TypeclassValence::TV_DELETE_FIRST: {
             switch (valence.tv.type()) {
                 case TypeclassValence::TV_FREE:
                     overwrite_free_tc(dtc.valence);
@@ -156,7 +154,7 @@ DeltaTypeClass::add(DeltaTypeClass const& dtc)
                     valence.tv.type(TypeclassValence::TV_ERROR);
                     return;
             }
-        }
+        } */
         case TypeclassValence::TV_RAW_MEMORY_WRITE: {
             switch (valence.tv.type()) {
                 case TypeclassValence::TV_FREE:

@@ -15,10 +15,10 @@ namespace sdk
 namespace detail
 {
 
-BUILTIN("delete_key_first")
-void 
-delete_first(
-	uint32_t key_offset);
+//BUILTIN("delete_key_first")
+//void 
+//delete_first(
+//	uint32_t key_offset);
 
 BUILTIN("delete_key_last")
 void
@@ -27,10 +27,10 @@ delete_last(
 
 } /* detail */
 
-void delete_first(StorageKey const& key)
-{
-	detail::delete_first(to_offset(&key));
-}
+//void delete_first(StorageKey const& key)
+//{
+//	detail::delete_first(to_offset(&key));
+//}
 
 void delete_last(StorageKey const& key)
 {

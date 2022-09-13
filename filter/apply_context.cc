@@ -180,8 +180,8 @@ make_apply_context(DeltaTypeClass const& dtc)
     switch (dtc.get_valence().tv.type()) {
         case TypeclassValence::TV_FREE:
             return std::make_unique<FreeApplyContext>(dtc);
-        case TypeclassValence::TV_DELETE_FIRST:
-        	return std::make_unique<DeleteFirstApplyContext>(dtc);
+    //    case TypeclassValence::TV_DELETE_FIRST:
+      //  	return std::make_unique<DeleteFirstApplyContext>(dtc);
         case TypeclassValence::TV_RAW_MEMORY_WRITE:
             return std::make_unique<RawMemoryApplyContext>(dtc);
         case TypeclassValence::TV_NONNEGATIVE_INT64_SET:

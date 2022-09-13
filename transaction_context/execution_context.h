@@ -16,12 +16,12 @@ namespace scs
 {
 
 class TxBlock;
-class DeltaBatch;
+class ModifiedKeysList;
 
 class ExecutionContext {
 
 	wasm_api::WasmContext wasm_context;
-	GlobalContext const& scs_data_structures;
+	GlobalContext& scs_data_structures;
 
 	std::map<Address, std::unique_ptr<wasm_api::WasmRuntime>> active_runtimes;
 
@@ -29,7 +29,7 @@ class ExecutionContext {
 
 	bool executed;
 
-	ExecutionContext(GlobalContext const& scs_data_structures)
+	ExecutionContext(GlobalContext& scs_data_structures)
 		: wasm_context(scs_data_structures.contract_db, MAX_STACK_BYTES)
 		, scs_data_structures(scs_data_structures)
 		, active_runtimes()
@@ -48,7 +48,7 @@ class ExecutionContext {
 public:
 
 	TransactionStatus
-	execute(Hash const& tx_hash, Transaction const& tx, TxBlock& txs, DeltaBatch& delta_batch);
+	execute(Hash const& tx_hash, Transaction const& tx, TxBlock& txs, ModifiedKeysList& modified_keys_list);
 
 	void reset();
 

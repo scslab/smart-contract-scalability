@@ -204,7 +204,7 @@ RevertableBaseObject::revert()
                 expect, new_tag, std::memory_order_release)) {
             if (!has_inflight(new_tag)) {
                 obj.store(nullptr, std::memory_order_release);
-                ThreadlocalContext::defer_delete(current);
+                ThreadlocalContextStore::defer_delete(current);
             }
             return;
         }

@@ -27,8 +27,8 @@ class ModifiedKeysList
 
     bool logs_merged = false;
 
-    void assert_logs_merged();
-    void assert_logs_not_merged();
+    void assert_logs_merged() const;
+    void assert_logs_not_merged() const;
 
   public:
     void log_key(const AddressAndKey& key);

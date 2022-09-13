@@ -10,10 +10,15 @@
 
 #include <xdrpp/marshal.h>
 
+#include "object/revertable_object.h"
+
+#include "state_db/new_key_cache.h"
+
 namespace scs
 {
 
 class DeltaBatch;
+class ModifiedKeysList;
 
 class StateDB
 {
@@ -30,17 +35,22 @@ class StateDB
 	} */
 
 	static std::vector<uint8_t> 
-	serialize(const StorageObject& v)
+	serialize(const RevertableObject& v)
 	{
-		return xdr::xdr_to_opaque(v);
+		auto const& res = v.get_committed_object();
+		if (res)
+		{
+			return xdr::xdr_to_opaque(*res);
+		}
+		return {};	
 	}
 
-	using base_value_struct = trie::SerializeWrapper<StorageObject, &serialize>;
+	using base_value_struct = trie::PointerValue<RevertableObject, &serialize>;
 
 	struct value_struct : public base_value_struct
 	{
 		value_struct(const StorageObject& obj)
-			: base_value_struct(obj)
+			: base_value_struct(std::make_unique<RevertableObject>(obj))
 			{}
 
 		value_struct()
@@ -63,16 +73,27 @@ private:
 
 	trie_t state_db;
 
+	NewKeyCache new_key_cache;
+
 public:
 
 	std::optional<StorageObject> 
-	get(const AddressAndKey& a) const;
+	get_committed_value(const AddressAndKey& a) const;
 
+	std::optional<RevertableObject::DeltaRewind>
+	try_apply_delta(const AddressAndKey& a, const StorageDelta& delta);
+
+	void commit_modifications(const ModifiedKeysList& list);
+
+
+#if 0
+// old
 	void 
 	populate_delta_batch(DeltaBatch& delta_batch) const;
 
 	void 
 	apply_delta_batch(DeltaBatch const& delta_batch);
+	#endif
 };
 
 

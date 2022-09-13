@@ -52,10 +52,10 @@ TEST_CASE("add storage deltas", "[typeclass]")
 		REQUIRE(dtc.get_valence().tv.type() == TypeclassValence::TV_ERROR);
 	};
 
-	auto expect_delete_first = [&]
-	{
-		REQUIRE(dtc.get_valence().tv.type() == TypeclassValence::TV_DELETE_FIRST);
-	};
+	//auto expect_delete_first = [&]
+	//{
+	//	REQUIRE(dtc.get_valence().tv.type() == TypeclassValence::TV_DELETE_FIRST);
+	//};
 
 	auto expect_delete_last = [&]
 	{
@@ -64,14 +64,14 @@ TEST_CASE("add storage deltas", "[typeclass]")
 
 	SECTION("delete interactions")
 	{
-		SECTION("first")
+		/*SECTION("first")
 		{
 			require_accept(make_delete_first());
 			expect_valence_free();
 
 			dtc.add(make_delete_first());
 			expect_delete_first();
-		}
+		} */
 		SECTION("last")
 		{
 			require_accept(make_delete_last());
@@ -80,13 +80,13 @@ TEST_CASE("add storage deltas", "[typeclass]")
 			dtc.add(make_delete_last());
 			expect_delete_last();
 		}
-		SECTION("first and last")
+		/*SECTION("first and last")
 		{
 			dtc.add(make_delete_last());
 			dtc.add(make_delete_first());
 			expect_delete_last();
 			expect_delete_first();
-		}
+		} */
 	}
 	SECTION("raw mem writes")
 	{

@@ -50,8 +50,9 @@ ProxyApplicator::try_apply(StorageDelta const& d)
 		base = make_default_object_by_delta(d);
 	}
 
-	if (d.type() == DeltaType::DELETE_FIRST
-		|| d.type() == DeltaType::DELETE_LAST)
+	//if (d.type() == DeltaType::DELETE_FIRST
+	//	|| d.type() == DeltaType::DELETE_LAST)
+	if (d.type() == DeltaType::DELETE_LAST)
 	{
 		base = std::nullopt;
 		is_deleted = true;

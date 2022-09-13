@@ -5,6 +5,8 @@
 #define CONTRACT_DEBUG DEBUG_LEVEL_INFO
 #define OBJECT_DEBUG DEBUG_LEVEL_INFO
 
+#define LOG(s, ...) std::printf((std::string("%-45s") + s + "\n").c_str(), (std::string(__FILE__) + "." + std::to_string(__LINE__) + ":").c_str() __VA_OPT__(,) __VA_ARGS__)
+
 #if CONTRACT_DEBUG <= DEBUG_LEVEL_ERROR
 #define CONTRACT_ERROR(s, ...) LOG(s, __VA_ARGS__)
 #define CONTRACT_ERROR_F(s) s
@@ -29,10 +31,3 @@
 #define OBJECT_INFO_F(s) (void)0
 #endif
 
-#ifndef TEST_START_ON
-	#if CONTRACT_DEBUG <= DEBUG_LEVEL_INFO
-		#define TEST_START_ON 1
-	#endif
-#endif
-
-#include "mtt/trie/debug_macros.h"

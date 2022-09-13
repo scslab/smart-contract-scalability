@@ -1,13 +1,8 @@
 #pragma once
 
-#include "xdr/storage.h"
 #include "xdr/storage_delta.h"
 
-#include "object/comparators.h"
-
-#include "object/delta_type_class.h"
-
-#include <set>
+#include <vector>
 
 namespace scs
 {

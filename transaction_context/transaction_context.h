@@ -10,11 +10,11 @@
 
 #include "xdr/transaction.h"
 #include "xdr/storage.h"
-#include "state_db/serial_delta_batch.h"
 
 namespace scs {
 
 class GlobalContext;
+class ModifiedKeysList;
 
 class TransactionContext {
 
@@ -25,7 +25,15 @@ class TransactionContext {
 
 	Address sender;
 
-	SerialDeltaBatch local_delta_batch;
+	bool committed_to_statedb = false;
+
+	void assert_not_committed()
+	{
+		if (committed_to_statedb)
+		{
+			throw std::runtime_error("double push deltas");
+		}
+	}
 
 public:
 
@@ -44,8 +52,8 @@ public:
 		uint64_t gas_rate_bid, 
 		Hash tx_hash, 
 		Address const& sender, 
-		GlobalContext const& scs_data_structures,
-		SerialDeltaBatch&& local_delta_batch);
+		GlobalContext& scs_data_structures,
+		ModifiedKeysList& modified_keys_list);
 
 	wasm_api::WasmRuntime*
 	get_current_runtime();
@@ -65,10 +73,7 @@ public:
 	void pop_invocation_stack();
 	void push_invocation_stack(wasm_api::WasmRuntime* runtime, MethodInvocation const& invocation);
 
-	void push_storage_deltas_to_batch()
-	{
-		storage_proxy.push_deltas_to_batch(local_delta_batch);
-	}
+	void push_storage_deltas();
 };
 
 } /* namespace scs */

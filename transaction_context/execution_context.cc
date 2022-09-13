@@ -1,16 +1,18 @@
 #include "transaction_context/execution_context.h"
 #include "transaction_context/global_context.h"
-#include "transaction_context/threadlocal_context.h"
+
+#include "threadlocal/threadlocal_context.h"
 
 #include "tx_block/tx_block.h"
 
 #include "crypto/hash.h"
 
 #include "debug/debug_macros.h"
+#include "debug/debug_utils.h"
 
 #include "builtin_fns/builtin_fns.h"
 
-#include "state_db/delta_batch.h"
+#include "state_db/modified_keys_list.h"
 
 namespace scs
 {
@@ -43,7 +45,7 @@ ExecutionContext::invoke_subroutine(MethodInvocation const& invocation)
 }
 
 TransactionStatus
-ExecutionContext::execute(Hash const& tx_hash, Transaction const& tx, TxBlock& txs, DeltaBatch& delta_batch)
+ExecutionContext::execute(Hash const& tx_hash, Transaction const& tx, TxBlock& txs, ModifiedKeysList& modified_keys_list)
 {
 	if (executed)
 	{
@@ -59,7 +61,7 @@ ExecutionContext::execute(Hash const& tx_hash, Transaction const& tx, TxBlock& t
 		tx_hash, 
 		tx.sender, 
 		scs_data_structures,
-		delta_batch.get_serial_subsidiary());
+		modified_keys_list);
 
 	try
 	{
@@ -77,7 +79,7 @@ ExecutionContext::execute(Hash const& tx_hash, Transaction const& tx, TxBlock& t
 		std::abort();
 	}
 
-	tx_context->push_storage_deltas_to_batch();
+	tx_context->push_storage_deltas();
 
 	return TransactionStatus::SUCCESS;
 }

@@ -54,8 +54,6 @@ public:
 
 	void filter_invalid_deltas(TxBlock& txs);
 	void apply_valid_deltas(TxBlock const& txs);
-
-	~DeltaBatch();
 };
 
 } /* scs */
