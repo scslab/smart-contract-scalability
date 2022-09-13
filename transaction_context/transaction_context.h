@@ -73,7 +73,9 @@ public:
 	void pop_invocation_stack();
 	void push_invocation_stack(wasm_api::WasmRuntime* runtime, MethodInvocation const& invocation);
 
-	void push_storage_deltas();
+	bool
+	__attribute__((warn_unused_result))
+	push_storage_deltas();
 };
 
 } /* namespace scs */

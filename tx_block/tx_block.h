@@ -53,7 +53,6 @@ public:
 
 	template<TransactionFailurePoint failure_point>
 	void invalidate(const Hash& hash);
-
 };
 
 } /* scs */

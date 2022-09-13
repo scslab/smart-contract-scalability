@@ -29,20 +29,19 @@ TEST_CASE("test log", "[builtin]")
 	auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
 	Address sender;
-	TxBlock txs;
-	ModifiedKeysList modified_keys_list;
+	BlockContext block_context;
 
 	auto exec_success = [&] (const Hash& tx_hash, const Transaction& tx)
 	{
 		REQUIRE(
-			exec_ctx.execute(tx_hash, tx, txs, modified_keys_list)
+			exec_ctx.execute(tx_hash, tx, block_context)
 			== TransactionStatus::SUCCESS);
 	};
 
 	auto exec_fail = [&] (const Hash& tx_hash, const Transaction& tx)
 	{
 		REQUIRE(
-			exec_ctx.execute(tx_hash, tx, txs, modified_keys_list)
+			exec_ctx.execute(tx_hash, tx, block_context)
 			!= TransactionStatus::SUCCESS);
 	};
 
@@ -51,8 +50,7 @@ TEST_CASE("test log", "[builtin]")
 	{
 		Transaction tx(sender, invocation, UINT64_MAX, 1);
 
-		auto h = txs.insert_tx(tx);
-		return {h, tx};
+		return {hash_xdr(tx), tx};
 	};
 
 	SECTION("log hardcoded")

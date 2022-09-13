@@ -38,20 +38,19 @@ TEST_CASE("test invoke", "[builtin]")
 	Hash h_val = hash_xdr<uint64>(0);
 	std::memcpy(sender.data(), h_val.data(), h_val.size());
 
-	TxBlock txs;
-	ModifiedKeysList modified_keys_list;
+	BlockContext block_context;
 
 	auto exec_success = [&] (const Hash& tx_hash, const Transaction& tx)
 	{
 		REQUIRE(
-			exec_ctx.execute(tx_hash, tx, txs, modified_keys_list)
+			exec_ctx.execute(tx_hash, tx, block_context)
 			== TransactionStatus::SUCCESS);
 	};
 
 	auto exec_fail = [&] (const Hash& tx_hash, const Transaction& tx)
 	{
 		REQUIRE(
-			exec_ctx.execute(tx_hash, tx, txs, modified_keys_list)
+			exec_ctx.execute(tx_hash, tx, block_context)
 			!= TransactionStatus::SUCCESS);
 	};
 
@@ -59,8 +58,8 @@ TEST_CASE("test invoke", "[builtin]")
 	{
 		Transaction tx(sender, invocation, UINT64_MAX, 1);
 
-		auto h = txs.insert_tx(tx);
-		return {h, tx};
+		//auto h = txs.insert_tx(tx);
+		return {hash_xdr(tx), tx};
 	};
 
 	SECTION("msg sender self")

@@ -79,7 +79,8 @@ TRANSACTION_CONTEXT_SRCS = \
 	transaction_context/transaction_context.cc
 
 TX_BLOCK_SRCS = \
-	tx_block/tx_block.cc
+	tx_block/tx_block.cc \
+	tx_block/tx_set.cc
 
 SRCS = \
 	$(BUILTIN_FNS_SRCS) \

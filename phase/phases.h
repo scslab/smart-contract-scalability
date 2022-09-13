@@ -7,8 +7,9 @@ class DeltaBatch;
 class GlobalContext;
 class TxBlock;
 class ModifiedKeysList;
+struct BlockContext;
 
-void phase_finish_block(GlobalContext& global_structures, const TxBlock& tx_block, const ModifiedKeysList& modified_keys_list);
+void phase_finish_block(GlobalContext& global_structures, BlockContext& block_structures);
 
 
 /*

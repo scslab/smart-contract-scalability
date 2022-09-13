@@ -12,8 +12,6 @@
 
 #include "builtin_fns/builtin_fns.h"
 
-#include "state_db/modified_keys_list.h"
-
 namespace scs
 {
 
@@ -45,7 +43,7 @@ ExecutionContext::invoke_subroutine(MethodInvocation const& invocation)
 }
 
 TransactionStatus
-ExecutionContext::execute(Hash const& tx_hash, Transaction const& tx, TxBlock& txs, ModifiedKeysList& modified_keys_list)
+ExecutionContext::execute(Hash const& tx_hash, Transaction const& tx, BlockContext& block_context)
 {
 	if (executed)
 	{
@@ -61,7 +59,7 @@ ExecutionContext::execute(Hash const& tx_hash, Transaction const& tx, TxBlock& t
 		tx_hash, 
 		tx.sender, 
 		scs_data_structures,
-		modified_keys_list);
+		block_context.modified_keys_list);
 
 	try
 	{
@@ -70,7 +68,7 @@ ExecutionContext::execute(Hash const& tx_hash, Transaction const& tx, TxBlock& t
 	catch(wasm_api::WasmError& e)
 	{
 		CONTRACT_INFO("Execution error: %s", e.what());
-		txs.template invalidate<TransactionFailurePoint::COMPUTE>(tx_hash);
+		//txs.template invalidate<TransactionFailurePoint::COMPUTE>(tx_hash);
 		return TransactionStatus::FAILURE;
 	}
 	catch(...)
@@ -79,7 +77,12 @@ ExecutionContext::execute(Hash const& tx_hash, Transaction const& tx, TxBlock& t
 		std::abort();
 	}
 
-	tx_context->push_storage_deltas();
+	if (!tx_context->push_storage_deltas())
+	{
+		return TransactionStatus::FAILURE;
+	}
+
+	block_context.tx_set.add_transaction(tx_hash, tx);
 
 	return TransactionStatus::SUCCESS;
 }

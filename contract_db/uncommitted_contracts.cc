@@ -4,7 +4,7 @@ namespace scs
 {
 
 void
-UncommittedContracts::add_valid_contracts(std::map<wasm_api::Hash, std::unique_ptr<const Contract>>& existing_contracts, const TxBlock& tx_block)
+UncommittedContracts::add_valid_contracts(std::map<wasm_api::Hash, std::unique_ptr<const Contract>>& existing_contracts, const TxSet& tx_set)
 {
 	for (auto& [addr, mentry] : contracts)
 	{

@@ -12,10 +12,12 @@
 namespace scs
 {
 
-void phase_finish_block(GlobalContext& global_structures, const TxBlock& tx_block, const ModifiedKeysList& modified_keys_list)
+void phase_finish_block(GlobalContext& global_structures, BlockContext& block_structures)
 {
-	global_structures.contract_db.commit(tx_block);
-	global_structures.state_db.commit_modifications(modified_keys_list);
+	block_structures.tx_set.finalize();
+	block_structures.modified_keys_list.merge_logs();
+	global_structures.contract_db.commit(block_structures.tx_set);
+	global_structures.state_db.commit_modifications(block_structures.modified_keys_list);
 	ThreadlocalContextStore::post_block_clear();
 }
 

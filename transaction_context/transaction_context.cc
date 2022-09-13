@@ -91,13 +91,13 @@ TransactionContext::get_src_tx_hash() const
     return tx_hash;
 }
 
-void
+bool
 TransactionContext::push_storage_deltas()
 {
     assert_not_committed();
     committed_to_statedb = true;
 
-    storage_proxy.push_deltas_to_statedb();
+    return storage_proxy.push_deltas_to_statedb();
 }
 
 } // namespace scs

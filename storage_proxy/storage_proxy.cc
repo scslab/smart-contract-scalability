@@ -86,7 +86,7 @@ StorageProxy::delete_object_last(AddressAndKey const& key, delta_identifier_t id
 }
 
 
-void 
+bool 
 StorageProxy::push_deltas_to_statedb()
 {
 	if (committed_local_values)
@@ -94,10 +94,35 @@ StorageProxy::push_deltas_to_statedb()
 		throw std::runtime_error("double push to batch");
 	}
 
-	throw std::runtime_error("unimpl");
-	// add key mod logs here too
+	RewindVector vec;
+
+	for (auto const& [k, v] : cache)
+	{
+		auto const& dv = v.vec;
+		auto const& deltas = dv.get();
+		for (auto const& delta : deltas)
+		{
+			auto res = state_db.try_apply_delta(k, delta.first);
+			if (res)
+			{
+				vec.add(std::move(*res));
+			} 
+			else
+			{
+				return false;
+			}
+		}
+	}
+
+	vec.commit();
+
+	for (auto const& [k, _] : cache)
+	{
+		keys.log_key(k);
+	}
 
 	committed_local_values = true;
+	return true;
 }
 
 /*

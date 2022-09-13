@@ -14,7 +14,7 @@
 namespace scs
 {
 
-class TxBlock;
+class TxSet;
 
 class UncommittedContracts
 {
@@ -30,7 +30,7 @@ class UncommittedContracts
 public:
 
 	bool
-	register_contract(Address const& addr, std::unique_ptr<const Contract>&& contract, const DeltaPriority& p, const Hash& src_tx, TxBlock& tx_block)
+	register_contract(Address const& addr, std::unique_ptr<const Contract>&& contract, const DeltaPriority& p, const Hash& src_tx, TxSet& tx_block)
 	{
 		throw std::runtime_error("UncommittedContracts::register_contract unimplemented");
 	}
@@ -42,7 +42,7 @@ public:
 	}
 
 	void
-	add_valid_contracts(std::map<wasm_api::Hash, std::unique_ptr<const Contract>>& existing_contracts, const TxBlock& tx_block);
+	add_valid_contracts(std::map<wasm_api::Hash, std::unique_ptr<const Contract>>& existing_contracts, const TxSet& tx_block);
 };
 
 } /* scs */

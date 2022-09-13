@@ -45,7 +45,9 @@ public:
 	void
 	delete_object_last(AddressAndKey const& key, delta_identifier_t id);
 
-	void push_deltas_to_statedb();
+	bool
+	__attribute__((warn_unused_result))
+	 push_deltas_to_statedb();
 };
 
 } /* scs */

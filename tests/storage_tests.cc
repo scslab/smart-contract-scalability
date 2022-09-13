@@ -37,8 +37,7 @@ TEST_CASE("int64 storage write", "[storage]")
 
 	InvariantKey k0 = hash_xdr<uint64_t>(0);
 
-	std::unique_ptr<ModifiedKeysList> modified_keys_list = std::make_unique<ModifiedKeysList>();
-	std::unique_ptr<TxBlock> tx_block = std::make_unique<TxBlock>();
+	std::unique_ptr<BlockContext> block_context = std::make_unique<BlockContext>();
 
 	struct calldata_0 {
 		InvariantKey key;
@@ -69,17 +68,18 @@ TEST_CASE("int64 storage write", "[storage]")
 		);
 
 		Transaction tx = Transaction(sender, invocation, UINT64_MAX, 1);
-		auto hash = tx_block->insert_tx(tx);
+		auto hash = hash_xdr(tx);
+		//auto hash = tx_block->insert_tx(tx);
 
 		if (success)
 		{
 			REQUIRE(
-				exec_ctx.execute(hash, tx, *tx_block, *modified_keys_list)
+				exec_ctx.execute(hash, tx, *block_context)
 				== TransactionStatus::SUCCESS);
 		} else
 		{
 			REQUIRE(
-				exec_ctx.execute(hash, tx, *tx_block, *modified_keys_list)
+				exec_ctx.execute(hash, tx, *block_context)
 				!= TransactionStatus::SUCCESS);
 		}
 
@@ -107,17 +107,18 @@ TEST_CASE("int64 storage write", "[storage]")
 		);
 		
 		Transaction tx = Transaction(sender, invocation, UINT64_MAX, 1);
-		auto hash = tx_block->insert_tx(tx);
+		auto hash = hash_xdr(tx);
+		//auto hash = tx_block->insert_tx(tx);
 
 		if (success)
 		{
 			REQUIRE(
-				exec_ctx.execute(hash, tx, *tx_block, *modified_keys_list)
+				exec_ctx.execute(hash, tx, *block_context)
 				== TransactionStatus::SUCCESS);
 		} else
 		{
 			REQUIRE(
-				exec_ctx.execute(hash, tx, *tx_block, *modified_keys_list)
+				exec_ctx.execute(hash, tx, *block_context)
 				!= TransactionStatus::SUCCESS);
 		}
 
@@ -130,7 +131,7 @@ TEST_CASE("int64 storage write", "[storage]")
 		//phase_merge_delta_batches(*delta_batch);
 		//phase_filter_deltas(scs_data_structures, *delta_batch, *tx_block);
 		//phase_compute_state_updates(*delta_batch, *tx_block);
-		phase_finish_block(scs_data_structures, *tx_block, *modified_keys_list);
+		phase_finish_block(scs_data_structures, *block_context);
 	};
 
 	auto make_key = [] (Address const& addr, InvariantKey const& key) -> AddressAndKey
@@ -144,14 +145,17 @@ TEST_CASE("int64 storage write", "[storage]")
 
 	auto check_valid = [&] (const Hash& tx_hash)
 	{
-		REQUIRE(
-			tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
+		REQUIRE(block_context -> tx_set.contains_tx(tx_hash));
+		//REQUIRE(
+		//	tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
 	};
 
 	auto check_invalid = [&] (const Hash& tx_hash)
 	{
-		REQUIRE(
-			!tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
+		REQUIRE(!block_context -> tx_set.contains_tx(tx_hash));
+
+		//REQUIRE(
+		//	!tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
 	};
 
 	SECTION("write to empty slot")
@@ -236,8 +240,7 @@ TEST_CASE("int64 storage write", "[storage]")
 		REQUIRE(!!db_val);
 		REQUIRE(db_val->nonnegative_int64() == 100);
 
-		modified_keys_list.reset(new ModifiedKeysList());
-		tx_block.reset(new TxBlock());
+		block_context.reset(new BlockContext());
 
 		SECTION("without set")
 		{
@@ -263,13 +266,13 @@ TEST_CASE("int64 storage write", "[storage]")
 		SECTION("without set some dropped")
 		{
 			auto h1 = make_add_tx(a0, k0, -50);
-			auto h2 = make_add_tx(a0, k0, -60);
+			auto h2 = make_add_tx(a0, k0, -60, false);
 			auto h3 = make_add_tx(a0, k0, 5);
 			auto h4 = make_add_tx(a0, k0, 0);
 
 			finish_block();
 
-			check_invalid(h1);
+			check_valid(h1);
 			check_invalid(h2);
 			check_valid(h3);
 			check_valid(h4);
@@ -278,7 +281,7 @@ TEST_CASE("int64 storage write", "[storage]")
 			auto db_val = state_db.get_committed_value(hk0);
 
 			REQUIRE(!!db_val);
-			REQUIRE(db_val->nonnegative_int64() == 105);
+			REQUIRE(db_val->nonnegative_int64() == 55);
 		}
 	}
 }
@@ -304,8 +307,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 	InvariantKey k0 = hash_xdr<uint64_t>(0);
 
-	std::unique_ptr<ModifiedKeysList> modified_keys_list = std::make_unique<ModifiedKeysList>();
-	std::unique_ptr<TxBlock> tx_block = std::make_unique<TxBlock>();
+	std::unique_ptr<BlockContext> block_context = std::make_unique<BlockContext>();
 
 	struct calldata_0 {
 		InvariantKey key;
@@ -318,7 +320,8 @@ TEST_CASE("raw mem storage write", "[storage]")
 	auto make_transaction = [&] (Address const& sender, TransactionInvocation const& invocation) -> std::pair<Hash, Transaction>
 	{
 		Transaction tx = Transaction(sender, invocation, UINT64_MAX, 1);
-		auto hash = tx_block->insert_tx(tx);
+		auto hash = hash_xdr(tx);
+		//auto hash = tx_block->insert_tx(tx);
 		return {hash, tx};
 	};
 
@@ -326,7 +329,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 		//phase_merge_delta_batches(*delta_batch);
 		//phase_filter_deltas(scs_data_structures, *delta_batch, *tx_block);
 		//phase_compute_state_updates(*delta_batch, *tx_block);
-		phase_finish_block(scs_data_structures, *tx_block,  *modified_keys_list);
+		phase_finish_block(scs_data_structures, *block_context);
 	};
 
 	auto make_key = [] (Address const& addr, InvariantKey const& key) -> AddressAndKey
@@ -341,15 +344,24 @@ TEST_CASE("raw mem storage write", "[storage]")
 	auto exec_success = [&] (const Hash& tx_hash, const Transaction& tx)
 	{
 		REQUIRE(
-			exec_ctx.execute(tx_hash, tx, *tx_block, *modified_keys_list)
+			exec_ctx.execute(tx_hash, tx, *block_context)
 			== TransactionStatus::SUCCESS);
 	};
 
 	auto exec_fail = [&] (const Hash& tx_hash, const Transaction& tx)
 	{
 		REQUIRE(
-			exec_ctx.execute(tx_hash, tx, *tx_block, *modified_keys_list)
+			exec_ctx.execute(tx_hash, tx, *block_context)
 			!= TransactionStatus::SUCCESS);
+	};
+
+	auto require_valid = [&] (const Hash& tx_hash)
+	{
+		REQUIRE(block_context -> tx_set.contains_tx(tx_hash));
+	};
+	auto require_invalid = [&] (const Hash& tx_hash)
+	{
+		REQUIRE(!block_context -> tx_set.contains_tx(tx_hash));
 	};
 
 	SECTION("write to empty slot")
@@ -371,8 +383,9 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 		finish_block();
 
-		REQUIRE(
-			tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
+		require_valid(tx_hash);
+		//REQUIRE(
+		//	tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
 
 		auto hk0 = make_key(h, k0);
 
@@ -382,9 +395,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 		REQUIRE(db_val->raw_memory_storage().data == xdr::opaque_vec<RAW_MEMORY_MAX_LEN>{0x11, 0x00, 0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA});
 
-
-		modified_keys_list.reset(new ModifiedKeysList());
-		tx_block.reset(new TxBlock());
+		block_context.reset(new BlockContext());
 
 		SECTION("read key from prev block")
 		{
@@ -425,8 +436,9 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 			finish_block();
 
-			REQUIRE(
-				tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
+			require_valid(tx_hash);
+			//REQUIRE(
+			//	tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
 
 			auto hk0 = make_key(h, k0);
 
@@ -484,8 +496,9 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 			finish_block();
 
-			REQUIRE(
-				tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
+			require_valid(tx_hash);
+			//REQUIRE(
+			//	tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
 
 			auto hk0 = make_key(h, k0);
 
@@ -531,10 +544,12 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 			finish_block();
 
-			REQUIRE(
-				tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
-			REQUIRE(
-				tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash2));
+			require_valid(tx_hash);
+			require_valid(tx_hash2);
+			//REQUIRE(
+			//	tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
+			//REQUIRE(
+		//		tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash2));
 
 			auto hk0 = make_key(h, k0);
 
@@ -630,18 +645,20 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 		// fails because it tries to call set() on one mem location twice in a tx
 		exec_fail(tx_hash, tx);
-
 		{
 			auto const& logs = exec_ctx.get_logs();
 			REQUIRE(logs.size() == 1);
 			REQUIRE(logs[0] == std::vector<uint8_t>{0x34, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
 		}
-		tx_block -> template invalidate<TransactionFailurePoint::COMPUTE>(tx_hash);
+
+		//tx_block -> template invalidate<TransactionFailurePoint::COMPUTE>(tx_hash);
 
 		finish_block();
 
-		REQUIRE(
-			!tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
+		require_invalid(tx_hash);
+
+		//REQUIRE(
+		//	!tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
 
 		auto hk0 = make_key(h, k0);
 
@@ -674,8 +691,10 @@ TEST_CASE("raw mem storage write", "[storage]")
 
 		finish_block();
 
-		REQUIRE(
-			tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
+		require_valid(tx_hash);
+
+		//REQUIRE(
+		//	tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
 
 		auto hk0 = make_key(h, k0);
 

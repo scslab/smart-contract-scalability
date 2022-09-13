@@ -2,9 +2,12 @@
 
 #include "contract_db/contract_db.h"
 
-#include "tx_block/tx_block.h"
-#include "state_db/delta_batch.h"
 #include "state_db/state_db.h"
+#include "state_db/modified_keys_list.h"
+
+#include "tx_block/tx_set.h"
+
+#include "mtt/utils/non_movable.h"
 
 namespace scs
 {
@@ -22,6 +25,12 @@ struct GlobalContext
 	GlobalContext(const GlobalContext&) = delete;
 	GlobalContext(GlobalContext&&) = delete;
 	GlobalContext& operator=(const GlobalContext&) = delete;
+};
+
+struct BlockContext : public utils::NonCopyable
+{
+	TxSet tx_set;
+	ModifiedKeysList modified_keys_list;
 };
 
 } /* scs */

@@ -13,7 +13,7 @@
 
 namespace scs {
 
-class TxBlock;
+class TxSet;
 
 using xdr::operator==;
 
@@ -48,9 +48,9 @@ public:
 		return uncommitted_contracts;
 	}
 
-	void commit(const TxBlock& tx_block)
+	void commit(const TxSet& tx_set)
 	{
-		uncommitted_contracts.add_valid_contracts(contracts, tx_block);
+		uncommitted_contracts.add_valid_contracts(contracts, tx_set);
 	}
 };
 

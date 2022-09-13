@@ -15,8 +15,7 @@
 namespace scs
 {
 
-class TxBlock;
-class ModifiedKeysList;
+class BlockContext;
 
 class ExecutionContext {
 
@@ -48,7 +47,7 @@ class ExecutionContext {
 public:
 
 	TransactionStatus
-	execute(Hash const& tx_hash, Transaction const& tx, TxBlock& txs, ModifiedKeysList& modified_keys_list);
+	execute(Hash const& tx_hash, Transaction const& tx, BlockContext& block_context);
 
 	void reset();
 
