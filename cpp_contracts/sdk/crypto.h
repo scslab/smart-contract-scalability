@@ -27,7 +27,7 @@ hash(
 Hash hash(uint8_t* data, uint32_t size)
 {
 	Hash out;
-	detail::hash(to_offset(data), size, to_offset(hash.data()));
+	detail::hash(to_offset(data), size, to_offset(out.data()));
 	return out;
 }
 
@@ -35,6 +35,12 @@ template <VectorLike T>
 Hash hash(T const& object)
 {
 	return hash(object.data(), object.size());
+}
+
+template <VectorLike T>
+void hash(T const& object, StorageKey& out)
+{
+	detail::hash(to_offset(object.data()), object.size(), to_offset(out.data()));
 }
 
 } /* sdk */

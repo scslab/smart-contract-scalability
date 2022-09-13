@@ -124,6 +124,7 @@ contracts/built_wasms/%.wasm : $(wildcard contracts/*/src/*.rs) $(wildcard rust_
 	wat2wasm -o $@ $<
 
 CC_WASMS = \
+	cpp_contracts/erc20.cc \
 	cpp_contracts/test_log.cc \
 	cpp_contracts/test_nn_int64.cc \
 	cpp_contracts/test_redirect_call.cc \
