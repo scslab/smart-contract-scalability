@@ -31,4 +31,10 @@ Hash hash(uint8_t* data, uint32_t size)
 	return out;
 }
 
+template <VectorLike T>
+Hash hash(T const& object)
+{
+	return hash(object.data(), object.size());
+}
+
 } /* sdk */

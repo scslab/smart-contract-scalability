@@ -19,4 +19,12 @@ to_offset(const T* addr)
 	return reinterpret_cast<uint32_t>(reinterpret_cast<const void*>(addr));
 }
 
+template<typename T>
+concept VectorLike
+= requires (T object)
+{
+	object.data();
+	object.size();
+};
+
 } /* sdk */
