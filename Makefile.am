@@ -48,7 +48,6 @@ FILTER_SRCS = \
 #	mutator/filter_context.cc
 
 OBJECT_SRCS = \
-	object/comparators.cc \
 	object/delta_type_class.cc \
 	object/make_delta.cc \
 	object/object_defaults.cc \
@@ -61,6 +60,8 @@ STATE_DB_SRCS = \
 	state_db/delta_batch.cc \
 	state_db/delta_batch_value.cc \
 	state_db/delta_vec.cc \
+	state_db/modified_keys_list.cc \
+	state_db/new_key_cache.cc \
 	state_db/serial_delta_batch.cc \
 	state_db/state_db.cc
 

@@ -24,8 +24,7 @@ class RevertableBaseObject
 
     std::optional<ObjectType> required_type;
 
-public:
-
+  public:
     class Rewind : public utils::NonCopyable
     {
         RevertableBaseObject* obj;
@@ -40,19 +39,18 @@ public:
         Rewind(Rewind&& other)
             : obj(other.obj)
             , do_revert(other.do_revert)
-            {
-                other.do_revert = false;
-            }
+        {
+            other.do_revert = false;
+        }
 
         Rewind()
             : obj(nullptr)
             , do_revert(false)
-            {}
+        {}
 
         Rewind& operator=(Rewind&& other)
         {
-            if (do_revert)
-            {
+            if (do_revert) {
                 obj->revert();
             }
 
@@ -66,23 +64,21 @@ public:
 
         ~Rewind();
     };
-private:
 
+  private:
     friend class Rewind;
 
     void revert();
     void commit();
 
   public:
-
     RevertableBaseObject();
     RevertableBaseObject(const StorageObject& obj);
 
     std::optional<Rewind> __attribute__((warn_unused_result))
     try_set(StorageObject const& new_obj);
 
-    std::optional<StorageObject>
-    __attribute__((warn_unused_result))
+    std::optional<StorageObject> __attribute__((warn_unused_result))
     commit_round_and_reset();
 
     ~RevertableBaseObject();
@@ -107,7 +103,6 @@ class RevertableObject
     std::optional<StorageObject> committed_base;
 
   public:
-
     class DeltaRewind : public utils::NonCopyable
     {
         RevertableBaseObject::Rewind rewind_base;
@@ -120,12 +115,10 @@ class RevertableObject
 
         std::optional<StorageObject> committed_base;
 
-    public:
-
-        DeltaRewind(
-            RevertableBaseObject::Rewind&& rewind_base,
-            const StorageDelta& delta,
-            RevertableObject* obj);
+      public:
+        DeltaRewind(RevertableBaseObject::Rewind&& rewind_base,
+                    const StorageDelta& delta,
+                    RevertableObject* obj);
 
         DeltaRewind(DeltaRewind&& other);
         DeltaRewind& operator=(DeltaRewind&& other);
@@ -138,19 +131,18 @@ class RevertableObject
     RevertableObject();
     RevertableObject(const StorageObject& finalized_obj);
 
-    //TODO make && on input
-    std::optional<DeltaRewind>
-    __attribute__((warn_unused_result))
+    // TODO make && on input
+    std::optional<DeltaRewind> __attribute__((warn_unused_result))
     try_add_delta(const StorageDelta& delta);
 
-private:
+  private:
     friend class DeltaRewind;
 
     void commit_delta(const StorageDelta& delta);
     void revert_delta(const StorageDelta& delta);
     void clear_mods();
-public:
 
+  public:
     void commit_round();
 
     std::optional<StorageObject> const& get_committed_object() const
@@ -163,11 +155,10 @@ class RewindVector
 {
     std::vector<RevertableObject::DeltaRewind> objs;
 
-public:
+  public:
     void commit()
     {
-        for (auto& obj : objs)
-        {
+        for (auto& obj : objs) {
             obj.commit();
         }
     }
