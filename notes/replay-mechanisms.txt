@@ -33,14 +33,6 @@ Replay prevention:
 
 Ratchet: bump sequence number to invalidate old signed transaction
 
-# Design 2
-
-Replay prevention is a mechanism for preventing replays across blocks, needs storage of data
-for a potentially long period of time (bounded).
-Semaphores only apply to one block.  Any longer-running semaphore-like objects can be built on-chain, in the exec script.
-
-
-Have a simple reader-writer (shared/exclusive) lock.
 
 In a payment channel/relative timelock/declare-then-close paradigm:
 
@@ -69,3 +61,12 @@ a small number of things that should be encodable in deltas, as well
 as immediate values.
 
 What about oracle feed?  That won't depend on on-chain state.
+
+# Design 2
+
+Replay prevention is a mechanism for preventing replays across blocks, needs storage of data
+for a potentially long period of time (bounded).
+Semaphores only apply to one block.  Any longer-running semaphore-like objects can be built on-chain, in the exec script.
+
+Have a simple reader-writer (shared/exclusive) lock.
+
