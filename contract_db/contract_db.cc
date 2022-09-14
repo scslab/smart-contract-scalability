@@ -2,38 +2,49 @@
 
 #include "xdr/types.h"
 
-namespace scs
-{
+#include "transaction_context/global_context.h"
+
+namespace scs {
+
+ContractDB::ContractDB()
+    : contracts()
+    , uncommitted_contracts()
+{}
 
 const std::vector<uint8_t>*
-ContractDB::get_script(wasm_api::Hash const& addr, const wasm_api::script_context_t& context) const
+ContractDB::get_script(wasm_api::Hash const& addr,
+                       const wasm_api::script_context_t& context) const
 {
 
-	auto const* hash = static_cast<const Hash*>(context);
-	auto uncommitted_res = uncommitted_contracts.get_script(addr, *hash);
-	if (uncommitted_res != nullptr)
-	{
-		return uncommitted_res;
-	}
-	auto it = contracts.find(addr);
-	if (it == contracts.end())
-	{
-		return nullptr;
-	}
-	return it->second.get();
+    auto const* hash = static_cast<const Hash*>(context);
+    auto uncommitted_res = uncommitted_contracts.get_script(addr, *hash);
+    if (uncommitted_res != nullptr) {
+        return uncommitted_res;
+    }
+    auto it = contracts.find(addr);
+    if (it == contracts.end()) {
+        return nullptr;
+    }
+    return it->second.get();
 }
 
-bool 
-ContractDB::register_contract(Address const& addr, std::unique_ptr<const Contract>&& contract)
+bool
+ContractDB::register_contract(Address const& addr,
+                              std::unique_ptr<const Contract>&& contract)
 {
-	auto it = contracts.find(addr);
-	if (it != contracts.end())
-	{
-		return false;
-	}
+    auto it = contracts.find(addr);
+    if (it != contracts.end()) {
+        return false;
+    }
 
-	contracts.emplace(addr, std::move(contract));
-	return true;
+    contracts.emplace(addr, std::move(contract));
+    return true;
 }
 
-} /* scs */
+void
+ContractDB::commit(const BlockContext& block_context)
+{
+    uncommitted_contracts.add_valid_contracts(contracts, block_context.tx_set);
+}
+
+} // namespace scs

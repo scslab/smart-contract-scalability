@@ -21,18 +21,6 @@ class ModifiedKeysList;
 
 class StateDB
 {
-
-    /*static
-    std::vector<uint8_t>
-    serialize(const std::optional<StorageObject>& v)
-    {
-            if (!v)
-            {
-                    return std::vector<uint8_t>();
-            }
-            return xdr::xdr_to_opaque(*v);
-    } */
-
     static std::vector<uint8_t> serialize(const RevertableObject& v)
     {
         auto const& res = v.get_committed_object();
@@ -59,17 +47,13 @@ class StateDB
     using prefix_t = trie::ByteArrayPrefix<sizeof(AddressAndKey)>;
     using metadata_t
         = trie::CombinedMetadata<trie::SizeMixin, trie::DeletableMixin>;
-
     using value_t
-        = value_struct; // trie::SerializeWrapper<StorageObject, &serialize>;
-
+        = value_struct;
     using trie_t = trie::MerkleTrie<prefix_t, value_t, metadata_t>;
-
     using cache_t = utils::ThreadlocalCache<trie_t>;
 
   private:
     trie_t state_db;
-
     NewKeyCache new_key_cache;
 
   public:
@@ -90,6 +74,7 @@ class StateDB
 	void 
 	apply_delta_batch(DeltaBatch const& delta_batch);
 #endif
+   
 };
 
 } // namespace scs

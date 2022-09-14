@@ -2,57 +2,55 @@
 
 #include "xdr/types.h"
 
-#include <map>
-#include <memory>
 #include <atomic>
 #include <cstdint>
+#include <map>
+#include <memory>
 
 #include <wasm_api/wasm_api.h>
 
 #include "contract_db/uncommitted_contracts.h"
 
+#include "mtt/utils/non_movable.h"
+
 namespace scs {
 
-class TxSet;
+class BlockContext;
 
 using xdr::operator==;
 
-class ContractDB : public wasm_api::ScriptDB {
+class ContractDB
+    : public wasm_api::ScriptDB
+    , public utils::NonMovableOrCopyable
+{
 
-	static_assert(sizeof(wasm_api::Hash) == sizeof(Address), "mismatch between addresses in scs and addresses in wasm api");
+    static_assert(
+        sizeof(wasm_api::Hash) == sizeof(Address),
+        "mismatch between addresses in scs and addresses in wasm api");
 
-	using contract_map_t = std::map<wasm_api::Hash, std::unique_ptr<const Contract>>;
+    using contract_map_t
+        = std::map<wasm_api::Hash, std::unique_ptr<const Contract>>;
 
-	contract_map_t contracts;
+    contract_map_t contracts;
 
-	ContractDB(ContractDB&) = delete;
-	ContractDB& operator=(ContractDB&) = delete;
-	ContractDB(ContractDB&&) = delete;
+    UncommittedContracts uncommitted_contracts;
 
-	UncommittedContracts uncommitted_contracts;
+  public:
+    ContractDB();
 
-public:
+    const std::vector<uint8_t>* get_script(
+        wasm_api::Hash const& addr,
+        const wasm_api::script_context_t& context) const override final;
 
-	ContractDB() 
-		: contracts()
-		{}
+    bool register_contract(Address const& addr,
+                           std::unique_ptr<const Contract>&& contract);
 
-	const std::vector<uint8_t>*
-	get_script(wasm_api::Hash const& addr, const wasm_api::script_context_t& context) const override final;
+    UncommittedContracts& get_uncommitted_proxy()
+    {
+        return uncommitted_contracts;
+    }
 
-	bool
-	register_contract(Address const& addr, std::unique_ptr<const Contract>&& contract);
-
-	UncommittedContracts& get_uncommitted_proxy()
-	{
-		return uncommitted_contracts;
-	}
-
-	void commit(const TxSet& tx_set)
-	{
-		uncommitted_contracts.add_valid_contracts(contracts, tx_set);
-	}
+    void commit(const BlockContext& block_context);
 };
 
-
-} /* scs */
+} // namespace scs

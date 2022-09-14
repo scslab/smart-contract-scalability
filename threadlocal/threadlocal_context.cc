@@ -37,8 +37,10 @@ ThreadlocalContextStore::post_block_clear()
     auto& ctxs = cache.get_objects();
     for (auto& ctx : ctxs) {
         if (ctx) {
-            (*ctx).ctx->reset();
-            (*ctx).gc.post_block_clear();
+            auto& c = *ctx;
+            c.ctx->reset();
+            c.gc.post_block_clear();
+            // no need to reset uid, we're not going to overflow 2^48
         }
     }
 }
