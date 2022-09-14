@@ -1,6 +1,5 @@
 #pragma once
 
-#include "object/object_mutator.h"
 #include "state_db/delta_vec.h"
 
 #include "xdr/storage.h"

@@ -44,10 +44,6 @@ FILTER_SRCS = \
 	filter/apply_context.cc \
 	filter/filter_context.cc
 
-#MUTATOR_SRCS = \
-#	mutator/batch_filter.cc \
-#	mutator/filter_context.cc
-
 OBJECT_SRCS = \
 	object/delta_type_class.cc \
 	object/make_delta.cc \
@@ -89,7 +85,6 @@ SRCS = \
 	$(CRYPTO_SRCS) \
 	$(DEBUG_SRCS) \
 	$(FILTER_SRCS) \
-	$(MUTATOR_SRCS) \
 	$(OBJECT_SRCS) \
 	$(PHASE_SRCS) \
 	$(STATE_DB_SRCS) \
