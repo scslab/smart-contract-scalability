@@ -8,34 +8,30 @@
 
 namespace scs {
 
-std::optional<StorageObject> 
+std::optional<StorageObject>
 StateDB::get_committed_value(const AddressAndKey& a) const
 {
-	auto const* res = state_db.get_value_nolocks(a);
-	if (res)
-	{
-		return (*res).v -> get_committed_object();
-	}
-	return std::nullopt;
+    auto const* res = state_db.get_value_nolocks(a);
+    if (res) {
+        return (*res).v->get_committed_object();
+    }
+    return std::nullopt;
 }
 
 std::optional<RevertableObject::DeltaRewind>
 StateDB::try_apply_delta(const AddressAndKey& a, const StorageDelta& delta)
 {
-	auto* res = state_db.get_value_nolocks(a);
-	if (!res)
-	{
-		return new_key_cache.try_reserve_delta(a, delta);
-	} else
-	{
-		return (*res).v -> try_add_delta(delta);
-	}
+    auto* res = state_db.get_value_nolocks(a);
+    if (!res) {
+        return new_key_cache.try_reserve_delta(a, delta);
+    } else {
+        return (*res).v->try_add_delta(delta);
+    }
 }
-
 
 struct UpdateFn
 {
-	NewKeyCache& new_key_cache;
+    NewKeyCache& new_key_cache;
     StateDB::trie_t& main_db;
     StateDB::cache_t& new_kvs;
 
@@ -50,39 +46,33 @@ struct UpdateFn
         auto* main_db_subnode = main_db.get_subnode_ref_nolocks(
             work_root.get_prefix(), work_root.get_prefix_len());
 
+        auto apply_lambda = [this, main_db_subnode](const prefix_t& addrkey,
+                                                    const trie::EmptyValue&) {
+            auto* main_db_value = main_db_subnode->get_value_nolocks(addrkey);
+            if (main_db_value) {
+                main_db_subnode->invalidate_hash_to_key_nolocks(addrkey);
 
-        auto apply_lambda = [this, main_db_subnode]
-        (const prefix_t& addrkey, const trie::EmptyValue&)
-        {
-        	auto* main_db_value = main_db_subnode->get_value_nolocks(addrkey);
-        	if (main_db_value)
-        	{
-        		main_db_subnode->invalidate_hash_to_key_nolocks(addrkey);
+                main_db_value->v->commit_round();
 
-        		main_db_value->v->commit_round();
+                if (!(main_db_value->v->get_committed_object())) {
+                    if (!main_db.mark_for_deletion_nolocks(addrkey)) {
+                        std::printf("failed to delete something\n");
+                        std::fflush(stdout);
+                        throw std::runtime_error("deletion failed");
+                    }
+                }
+            } else {
 
-        		if (!(main_db_value->v -> get_committed_object()))
-        		{
-        			if (!main_db.mark_for_deletion_nolocks(addrkey))
-        			{
-        				std::printf("failed to delete something\n");
-        				std::fflush(stdout);
-        				throw std::runtime_error("deletion failed");
-        			}
-        		}
-        	} else
-        	{
+                AddressAndKey query
+                    = addrkey.template get_bytes_array<AddressAndKey>();
 
-        		AddressAndKey query = addrkey.template get_bytes_array<AddressAndKey>();
+                std::optional<StorageObject> new_obj
+                    = new_key_cache.commit_and_get(query);
 
-        		std::optional<StorageObject> new_obj = new_key_cache.commit_and_get(query);
-            	
-            	if (new_obj)
-            	{
-            		new_kvs.get().insert(addrkey, std::move(*new_obj));
-            	}
-        	}
-
+                if (new_obj) {
+                    new_kvs.get().insert(addrkey, std::move(*new_obj));
+                }
+            }
         };
 
         work_root.apply_to_kvs(apply_lambda);
@@ -90,7 +80,7 @@ struct UpdateFn
     }
 };
 
-void 
+void
 StateDB::commit_modifications(const ModifiedKeysList& list)
 {
     cache_t new_kvs;
@@ -107,7 +97,6 @@ StateDB::commit_modifications(const ModifiedKeysList& list)
 
     new_key_cache.clear_for_next_block();
 }
-
 
 #if 0
 std::optional<StorageObject>
