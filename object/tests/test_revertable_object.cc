@@ -95,7 +95,7 @@ TEST_CASE("revert object from empty", "[object]")
         REQUIRE(object.get_committed_object()->nonnegative_int64() == 150);
     }
 
-    SECTION("conflicting mem after rewind")
+    SECTION("conflicting after rewind")
     {
         auto mem1 = make_raw_memory_write(raw_mem_val(val1));
         auto mem2 = make_raw_memory_write(raw_mem_val(val2));
@@ -112,17 +112,37 @@ TEST_CASE("revert object from empty", "[object]")
             res->commit();
         }
 
+        SECTION("conflict mem")
         {
-            auto res = object.try_add_delta(mem1);
+            {
+                auto res = object.try_add_delta(mem1);
 
-            REQUIRE(!res);
+                REQUIRE(!res);
+            }
+
+            REQUIRE(!object.get_committed_object());
+            object.commit_round();
+            REQUIRE(object.get_committed_object());
+            REQUIRE(object.get_committed_object()->raw_memory_storage().data
+                    == val2);
         }
 
-        REQUIRE(!object.get_committed_object());
-        object.commit_round();
-        REQUIRE(object.get_committed_object());
-        REQUIRE(object.get_committed_object()->raw_memory_storage().data
-                == val2);
+        SECTION("conflict int")
+        {
+            {
+                auto set_add = make_nonnegative_int64_set_add(100, 50);
+
+                auto res = object.try_add_delta(set_add);
+
+                REQUIRE(!res);
+            }
+
+            REQUIRE(!object.get_committed_object());
+            object.commit_round();
+            REQUIRE(object.get_committed_object());
+            REQUIRE(object.get_committed_object()->raw_memory_storage().data
+                    == val2);
+        }
     }
 }
 
