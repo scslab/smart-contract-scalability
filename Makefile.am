@@ -102,7 +102,8 @@ TESTS_CCS = \
 	tests/builtin_fns_invoke_tests.cc \
 	tests/storage_tests.cc \
 	storage_proxy/tests/test_proxy_applicator.cc \
-	object/tests/test_delta_typeclass.cc
+	object/tests/test_delta_typeclass.cc \
+	object/tests/test_revertable_object.cc
 
 MAIN_CCS = \
 	main/filter_perf.cc
