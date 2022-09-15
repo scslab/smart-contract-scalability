@@ -23,7 +23,7 @@ BuiltinFns::scs_create_contract(uint32_t contract_index, uint32_t hash_out
 
     uint32_t num_contracts = tx_ctx.get_num_deployable_contracts();
     if (num_contracts <= contract_index) {
-        throw wasm_api::WasmError("Invalid deployable contract access");
+        throw wasm_api::HostError("Invalid deployable contract access");
     }
 
     std::shared_ptr<const Contract> contract = std::make_shared<const Contract>(
@@ -53,7 +53,7 @@ BuiltinFns::scs_deploy_contract(uint32_t hash_offset, /* hash_len = 32 */
             address_offset);
 
     if (!tx_ctx.contract_db_proxy.deploy_contract(deploy_addr, contract_hash)) {
-        throw wasm_api::WasmError("failed to deploy contract");
+        throw wasm_api::HostError("failed to deploy contract");
     }
 }
 
