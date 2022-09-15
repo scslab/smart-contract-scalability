@@ -119,6 +119,9 @@ ContractDBProxy::push_create_contract(std::shared_ptr<const Contract> contract)
 bool
 ContractDBProxy::push_updates_to_db(TransactionRewind& rewind)
 {
+    assert_not_committed();
+    is_committed = true;
+    
     for (auto const& [addr, hash] : new_deployments) {
         auto res = push_deploy_contract(addr, hash);
         if (res) {
@@ -150,6 +153,15 @@ ContractDBProxy::get_script(const wasm_api::Hash& address) const
         return nullptr;
     }
     return s_it->second.get();
+}
+
+void
+ContractDBProxy::assert_not_committed() const
+{
+    if (is_committed) {
+        throw std::runtime_error(
+            "ContractDBProxy::assert_not_commited() failed");
+    }
 }
 
 } // namespace scs

@@ -6,7 +6,6 @@
 #include <cstdint>
 #include <optional>
 #include <type_traits>
-#include <vector>
 
 #include "mtt/utils/non_movable.h"
 

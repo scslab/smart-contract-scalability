@@ -15,10 +15,6 @@
 
 namespace scs {
 
-class BlockContext;
-
-using xdr::operator==;
-
 class ContractDB
     : public wasm_api::ScriptDB
     , public utils::NonMovableOrCopyable

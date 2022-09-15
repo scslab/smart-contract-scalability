@@ -68,6 +68,9 @@ class ContractDBProxy
     ContractCreateClosure __attribute__((warn_unused_result))
     push_create_contract(std::shared_ptr<const Contract> contract);
 
+    bool is_committed = false;
+    void assert_not_committed() const;
+
   public:
     ContractDBProxy(ContractDB& db)
         : contract_db(db)
