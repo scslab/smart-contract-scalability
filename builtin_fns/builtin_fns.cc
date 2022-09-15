@@ -78,7 +78,14 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 		"scs",
 		"hash");
 
+	/* -- contracts -- */
+	runtime.template link_fn<&BuiltinFns::scs_create_contract>(
+		"scs",
+		"create_contract");
 
+	runtime.template link_fn<&BuiltinFns::scs_deploy_contract>(
+		"scs",
+		"deploy_contract");
 
 }
 

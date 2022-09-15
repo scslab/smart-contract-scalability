@@ -22,6 +22,7 @@ SUFFIXES = .x .h .wat .wasm
 
 BUILTIN_FNS_SRCS = \
 	builtin_fns/builtin_fns.cc \
+	builtin_fns/contract.cc \
 	builtin_fns/crypto.cc \
 	builtin_fns/delete.cc \
 	builtin_fns/env.cc \

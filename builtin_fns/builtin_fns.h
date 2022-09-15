@@ -102,11 +102,25 @@ class BuiltinFns
 
 	/* -- crypto -- */
 	static void
-		scs_hash(
+	scs_hash(
 		uint32_t input_offset,
 		uint32_t input_len,
 		uint32_t output_offset
 		/* output_len = 32 */);
+
+	/* -- contracts -- */
+	static void
+	scs_create_contract(
+		uint32_t contract_index, 
+		uint32_t hash_out
+        /* out_len = 32 */);
+
+	static void
+	scs_deploy_contract(
+		uint32_t hash_offset, 
+		/* hash_len = 32 */
+        uint32_t address_offset 
+        /* addr_len = 32 */);
 
 	BuiltinFns() = delete;
 

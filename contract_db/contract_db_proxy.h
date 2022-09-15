@@ -78,10 +78,11 @@ class ContractDBProxy
         , new_deployments()
     {}
 
-    bool deploy_contract(const Address& deploy_address,
+    bool __attribute__((warn_unused_result))
+    deploy_contract(const Address& deploy_address,
                          const Hash& contract_hash);
 
-    void create_contract(std::shared_ptr<const Contract> contract);
+    Hash create_contract(std::shared_ptr<const Contract> contract);
 
     bool push_updates_to_db(TransactionRewind& rewind);
 

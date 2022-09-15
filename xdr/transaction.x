@@ -36,6 +36,8 @@ struct Transaction
 	TransactionInvocation invocation;
 	uint64 gas_limit;
 	uint64 gas_rate_bid;
+
+	Contract contracts_to_deploy<>;
 };
 	
 } /* scs */

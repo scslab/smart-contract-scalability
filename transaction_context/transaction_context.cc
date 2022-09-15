@@ -5,22 +5,18 @@
 
 namespace scs {
 
-TransactionContext::TransactionContext(uint64_t gas_limit,
-                                       uint64_t gas_rate_bid,
-                                       Hash tx_hash,
-                                       Address const& sender,
+TransactionContext::TransactionContext(Transaction const& tx,
+                                       Hash const& tx_hash,
                                        GlobalContext& global_context,
-                                       ModifiedKeysList& modified_keys_list)
-    : tx_hash(tx_hash)
-    , invocation_stack()
+                                       BlockContext& block_context)
+    : invocation_stack()
     , runtime_stack()
-    , sender(sender)
-    , gas_limit(gas_limit)
-    , gas_rate_bid(gas_rate_bid)
+    , tx(tx)
+    , tx_hash(tx_hash)
     , gas_used(0)
     , return_buf()
-    , logs()
-    , storage_proxy(global_context.state_db, modified_keys_list)
+    , tx_results(new TransactionResults())
+    , storage_proxy(global_context.state_db, block_context.modified_keys_list)
     , contract_db_proxy(global_context.contract_db)
 {}
 
@@ -83,7 +79,7 @@ const Address&
 TransactionContext::get_msg_sender() const
 {
     if (invocation_stack.size() <= 1) {
-        return sender;
+        return tx.sender;
     }
     return invocation_stack[invocation_stack.size() - 2].addr;
 }
@@ -94,6 +90,21 @@ TransactionContext::get_src_tx_hash() const
     return tx_hash;
 }
 
+uint32_t
+TransactionContext::get_num_deployable_contracts() const
+{
+    return tx.contracts_to_deploy.size();
+}
+
+const Contract&
+TransactionContext::get_deployable_contract(uint32_t index) const
+{
+    if (index >= tx.contracts_to_deploy.size()) {
+        throw std::runtime_error("invalid contract access");
+    }
+    return tx.contracts_to_deploy[index];
+}
+
 bool
 TransactionContext::push_storage_deltas()
 {
@@ -102,14 +113,12 @@ TransactionContext::push_storage_deltas()
 
     TransactionRewind rewind;
 
-    if (!storage_proxy.push_deltas_to_statedb(rewind))
-    {
-    	return false;
+    if (!storage_proxy.push_deltas_to_statedb(rewind)) {
+        return false;
     }
 
-    if (!contract_db_proxy.push_updates_to_db(rewind))
-    {
-    	return false;
+    if (!contract_db_proxy.push_updates_to_db(rewind)) {
+        return false;
     }
 
     rewind.commit();

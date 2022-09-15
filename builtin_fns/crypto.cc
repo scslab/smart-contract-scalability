@@ -18,6 +18,7 @@
 
 namespace scs
 {
+	
 void
 BuiltinFns::scs_hash(
 	uint32_t input_offset,

@@ -4,6 +4,8 @@
 #include <vector>
 
 #include "transaction_context/method_invocation.h"
+#include "transaction_context/transaction_results.h"
+
 #include "storage_proxy/storage_proxy.h"
 
 #include "contract_db/contract_db_proxy.h"
@@ -16,16 +18,12 @@
 namespace scs {
 
 class GlobalContext;
-class ModifiedKeysList;
+class BlockContext;
 
-class TransactionContext {
-
-	Hash tx_hash;
-
+class TransactionContext
+{
 	std::vector<MethodInvocation> invocation_stack;
 	std::vector<wasm_api::WasmRuntime*> runtime_stack;
-
-	Address sender;
 
 	bool committed_to_statedb = false;
 
@@ -37,26 +35,30 @@ class TransactionContext {
 		}
 	}
 
-public:
+	const Transaction& tx;
+	const Hash& tx_hash;
 
-	const uint64_t gas_limit;
-	const uint64_t gas_rate_bid;
 	uint64_t gas_used;
+
+public:
 
 	std::vector<uint8_t> return_buf;
 
-	std::vector<std::vector<uint8_t>> logs;
+	std::unique_ptr<TransactionResults> tx_results;
 
 	StorageProxy storage_proxy;
 	ContractDBProxy contract_db_proxy;
 
 	TransactionContext(
-		uint64_t gas_limit, 
-		uint64_t gas_rate_bid, 
-		Hash tx_hash, 
-		Address const& sender, 
+		Transaction const& tx,
+		Hash const& tx_hash, 
 		GlobalContext& scs_data_structures,
-		ModifiedKeysList& modified_keys_list);
+		BlockContext& block_context);
+
+	std::unique_ptr<TransactionResults> extract_results()
+	{
+		return std::unique_ptr<TransactionResults>(tx_results.release());
+	}
 
 	wasm_api::WasmRuntime*
 	get_current_runtime();
@@ -75,6 +77,10 @@ public:
 	{
 		return contract_db_proxy;
 	}
+
+	const Contract& get_deployable_contract(uint32_t index) const;
+	uint32_t get_num_deployable_contracts() const;
+
 
 	AddressAndKey 
 	get_storage_key(InvariantKey const& key) const;

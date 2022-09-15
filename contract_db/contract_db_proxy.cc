@@ -103,11 +103,12 @@ ContractDBProxy::push_deploy_contract(const wasm_api::Hash& deploy_address,
     return ContractDeployClosure(deploy_address, contract_db);
 }
 
-void
+Hash
 ContractDBProxy::create_contract(std::shared_ptr<const Contract> contract)
 {
     Hash h = hash_xdr(*contract);
     new_contracts[h] = contract;
+    return h;
 }
 
 ContractCreateClosure
