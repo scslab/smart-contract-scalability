@@ -13,8 +13,6 @@ namespace scs
 bool 
 ProxyApplicator::try_apply(StorageDelta const& d)
 {
-	std::printf("start try apply with delta type %lu\n", d.type());
-
 	struct resetter
 	{
 		bool do_reset_base = false;

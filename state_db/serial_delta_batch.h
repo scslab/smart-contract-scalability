@@ -32,7 +32,7 @@ class SerialDeltaBatch : public utils::NonMovableOrCopyable
   public:
     SerialDeltaBatch(map_t& serial_trie);
 
-    void add_deltas(const AddressAndKey& key, StorageProxyValue&& v);
+    void add_deltas(const AddressAndKey& key, StorageProxyValue&& v, const Hash& tx_hash);
 };
 
 } // namespace scs

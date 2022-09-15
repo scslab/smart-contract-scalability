@@ -10,6 +10,12 @@ SerialDeltaBatch::SerialDeltaBatch(map_t& serial_trie)
     : deltas(serial_trie)
 {}
 
+struct insert_t
+{
+    StorageProxyValue proxy_value;
+    Hash const& tx_hash;
+};
+
 struct AppendInsertFn
 {
     using base_value_type = DeltaBatchValue;
@@ -20,27 +26,29 @@ struct AppendInsertFn
         return base_value_type();
     }
 
-    static void value_insert(base_value_type& main_value, StorageProxyValue&& v)
+    static void value_insert(base_value_type& main_value, insert_t&& v)
     {
-        main_value.vectors.back().add(std::move(v.vec));
-        main_value.add_tc(v.get_tc());
+        DeltaVector dv;
+        for (auto& d : v.proxy_value.vec)
+        {
+            dv.add_delta(std::move(d), Hash(v.tx_hash));
+        }
+        main_value.vectors.back().add(std::move(dv));
+        main_value.add_tc(v.proxy_value.get_tc());
     }
 };
 
-/** TODO
- * make a "conditional_add_deltas" method(s) that returns false/is a no-op if
- * some deltavec can't accept a value.  Need a reserve/commit style system, I
- * think.
- */
-
 void
-SerialDeltaBatch::add_deltas(const AddressAndKey& key, StorageProxyValue&& v)
+SerialDeltaBatch::add_deltas(const AddressAndKey& key, StorageProxyValue&& v, const Hash& tx_hash)
 {
     if (v.vec.size() == 0) {
         return;
     }
 
-    deltas.template insert<AppendInsertFn>((key), std::move(v));
+    deltas.template insert<AppendInsertFn>((key), insert_t{
+        .proxy_value = std::move(v),
+        .tx_hash = tx_hash
+    });
 }
 
 } // namespace scs

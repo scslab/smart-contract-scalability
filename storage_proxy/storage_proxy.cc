@@ -51,7 +51,9 @@ StorageProxy::raw_memory_write(
 		throw wasm_api::HostError("failed to apply raw_memory_write");
 	}
 
-	v.vec.add_delta(std::move(delta), std::move(id));
+	v.vec.emplace_back(std::move(delta));
+
+	//v.vec.add_delta(std::move(delta), std::move(id));
 }
 
 void
@@ -69,7 +71,9 @@ StorageProxy::nonnegative_int64_set_add(
 		throw wasm_api::HostError("failed to apply nonnegative_int64_set_add");
 	}
 
-	v.vec.add_delta(std::move(delta), std::move(id));
+	v.vec.emplace_back(std::move(delta));
+
+	//v.vec.add_delta(std::move(delta), std::move(id));
 }
 
 
@@ -84,7 +88,8 @@ StorageProxy::delete_object_last(AddressAndKey const& key, delta_identifier_t id
 	{
 		throw wasm_api::HostError("failed to apply delete_last");
 	}
-	v.vec.add_delta(std::move(delta), std::move(id));
+	v.vec.emplace_back(std::move(delta));
+	//v.vec.add_delta(std::move(delta), std::move(id));
 }
 
 
@@ -99,10 +104,10 @@ StorageProxy::push_deltas_to_statedb(TransactionRewind& rewind)
 	for (auto const& [k, v] : cache)
 	{
 		auto const& dv = v.vec;
-		auto const& deltas = dv.get();
-		for (auto const& delta : deltas)
+		//auto const& deltas = dv.get();
+		for (auto const& delta : dv)
 		{
-			auto res = state_db.try_apply_delta(k, delta.first);
+			auto res = state_db.try_apply_delta(k, delta);
 			if (res)
 			{
 				rewind.add(std::move(*res));

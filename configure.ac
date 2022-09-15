@@ -3,7 +3,6 @@ AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_MACRO_DIR([m4])
 
-dnl note to future geoff: -flto seems to break lmdb, so don't use it -- 12/2/2021 this is wrong, seems to have been a result of accidental stack use-after-scope
 OPT_FLAGS="-march=native -O3 -flto"
 DEBUG_FLAGS="-ggdb -O0"
 
