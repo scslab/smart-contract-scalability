@@ -144,6 +144,92 @@ TEST_CASE("revert object from empty", "[object]")
                     == val2);
         }
     }
+
+    SECTION("int64 decrease conflicts")
+    {
+        auto set_add = make_nonnegative_int64_set_add(100, -50);
+
+        {
+            auto res = object.try_add_delta(set_add);
+            REQUIRE(!!res);
+
+            {
+                auto res2 = object.try_add_delta(set_add);
+                REQUIRE(!!res2);
+
+                auto res3 = object.try_add_delta(set_add);
+                REQUIRE(!res3);
+            }
+
+            res->commit();
+
+            auto res3 = object.try_add_delta(set_add);
+            REQUIRE(!!res3);
+            res3->commit();
+        }
+
+        REQUIRE(!object.get_committed_object());
+        object.commit_round();
+        REQUIRE(object.get_committed_object());
+        REQUIRE(object.get_committed_object()->nonnegative_int64() == 0);
+    }
+}
+
+TEST_CASE("revert object from nonempty", "[object]")
+{
+    StorageObject o;
+    o.type(ObjectType::NONNEGATIVE_INT64);
+    o.nonnegative_int64() = 30;
+
+    auto set_add = make_nonnegative_int64_set_add(100, -50);
+
+    RevertableObject object(o);
+
+    SECTION("no deltas")
+    {
+        REQUIRE(object.get_committed_object());
+        REQUIRE(object.get_committed_object()->nonnegative_int64() == 30);
+    }
+
+    SECTION("mem write conflict")
+    {
+        auto mem = make_raw_memory_write(raw_mem_val(val1));
+
+        REQUIRE(!object.try_add_delta(mem));
+    }
+
+    SECTION("set add conflict")
+    {
+        {
+            auto res = object.try_add_delta(set_add);
+            REQUIRE(!!res);
+            res->commit();
+        }
+
+        SECTION("one write goes through")
+        {
+            object.commit_round();
+
+            REQUIRE(object.get_committed_object());
+            REQUIRE(object.get_committed_object()->nonnegative_int64() == 50);
+        }
+        SECTION("three writes no go")
+        {
+            {
+                auto res1 = object.try_add_delta(set_add);
+                REQUIRE(!!res1);
+
+                auto res2 = object.try_add_delta(set_add);
+                REQUIRE(!res2);
+
+                res1->commit();
+            }
+
+            object.commit_round();
+            REQUIRE(object.get_committed_object());
+            REQUIRE(object.get_committed_object()->nonnegative_int64() == 0);
+        }
+    }
 }
 
 } // namespace scs
