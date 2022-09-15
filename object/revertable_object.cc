@@ -105,6 +105,12 @@ RevertableBaseObject::Rewind::~Rewind()
     do_revert = false;
 }
 
+void
+RevertableBaseObject::clear_required_type()
+{
+    required_type = std::nullopt;
+}
+
 std::optional<RevertableBaseObject::Rewind>
 RevertableBaseObject::try_set(StorageObject const& new_obj)
 {
@@ -203,7 +209,7 @@ RevertableBaseObject::revert()
 
         if (tag.compare_exchange_weak(
                 expect, new_tag, std::memory_order_release)) {
-            
+
             if (!has_inflight(new_tag)) {
                 obj.store(nullptr, std::memory_order_release);
                 ThreadlocalContextStore::defer_delete(current);
@@ -423,13 +429,15 @@ RevertableObject::commit_round()
     }
 
     if (!committed_base) {
-        clear_mods();
+        clear_mods(); // clears any inflight_deletes that may have deleted an
+                      // already nexist key
         return;
     }
 
     if (inflight_delete_lasts.load(std::memory_order_relaxed) > 0) {
         clear_mods();
         committed_base = std::nullopt;
+        base_obj.clear_required_type();
         return;
     }
 

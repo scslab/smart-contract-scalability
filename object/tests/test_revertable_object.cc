@@ -230,6 +230,57 @@ TEST_CASE("revert object from nonempty", "[object]")
             REQUIRE(object.get_committed_object()->nonnegative_int64() == 0);
         }
     }
+
+    SECTION("delete")
+    {
+        {
+            auto del = make_delete_last();
+            auto res = object.try_add_delta(del);
+
+            REQUIRE(!!res);
+
+            res->commit();
+        }
+
+        REQUIRE(object.get_committed_object());
+        object.commit_round();
+        REQUIRE(!object.get_committed_object());
+
+        SECTION("try rewriting to mem")
+        {
+            auto mem = make_raw_memory_write(raw_mem_val(val1));
+            {
+                auto res = object.try_add_delta(mem);
+
+                REQUIRE(!!res);
+                res->commit();
+            }
+
+            object.commit_round();
+
+            REQUIRE(object.get_committed_object());
+
+            REQUIRE(object.get_committed_object()->raw_memory_storage().data
+                    == val1);
+        }
+
+        SECTION("try rewriting to int64")
+        {
+            auto set_add = make_nonnegative_int64_set_add(-50, 100);
+            {
+                auto res = object.try_add_delta(set_add);
+
+                REQUIRE(!!res);
+                res->commit();
+            }
+
+            object.commit_round();
+
+            REQUIRE(object.get_committed_object());
+
+            REQUIRE(object.get_committed_object()->nonnegative_int64() == 50);
+        }
+    }
 }
 
 } // namespace scs

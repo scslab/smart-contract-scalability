@@ -80,6 +80,8 @@ class RevertableBaseObject
     std::optional<StorageObject> __attribute__((warn_unused_result))
     commit_round_and_reset();
 
+    void clear_required_type();
+
     ~RevertableBaseObject();
 };
 
