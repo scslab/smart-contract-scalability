@@ -21,9 +21,6 @@ struct StorageProxyValue;
 
 class SerialDeltaBatch : public utils::NonMovableOrCopyable
 {
-    // accumulator for all deltas in a block.
-    // ultimately will have threadlocal cache of these
-
     using value_t = DeltaBatchValue;
     using trie_prefix_t = trie::ByteArrayPrefix<sizeof(AddressAndKey)>;
 

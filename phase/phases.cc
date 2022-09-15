@@ -16,7 +16,7 @@ void phase_finish_block(GlobalContext& global_structures, BlockContext& block_st
 {
 	block_structures.tx_set.finalize();
 	block_structures.modified_keys_list.merge_logs();
-	global_structures.contract_db.commit(block_structures.tx_set);
+	global_structures.contract_db.commit();
 	global_structures.state_db.commit_modifications(block_structures.modified_keys_list);
 	ThreadlocalContextStore::post_block_clear();
 }

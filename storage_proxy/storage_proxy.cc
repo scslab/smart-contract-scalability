@@ -3,6 +3,8 @@
 #include "state_db/state_db.h"
 #include "state_db/modified_keys_list.h"
 
+#include "storage_proxy/transaction_rewind.h"
+
 #include <wasm_api/error.h>
 
 #include "object/make_delta.h"
@@ -87,14 +89,12 @@ StorageProxy::delete_object_last(AddressAndKey const& key, delta_identifier_t id
 
 
 bool 
-StorageProxy::push_deltas_to_statedb()
+StorageProxy::push_deltas_to_statedb(TransactionRewind& rewind)
 {
 	if (committed_local_values)
 	{
 		throw std::runtime_error("double push to batch");
 	}
-
-	RewindVector vec;
 
 	for (auto const& [k, v] : cache)
 	{
@@ -105,7 +105,7 @@ StorageProxy::push_deltas_to_statedb()
 			auto res = state_db.try_apply_delta(k, delta.first);
 			if (res)
 			{
-				vec.add(std::move(*res));
+				rewind.add(std::move(*res));
 			} 
 			else
 			{
@@ -113,16 +113,17 @@ StorageProxy::push_deltas_to_statedb()
 			}
 		}
 	}
+	return true;
+}
 
-	vec.commit();
-
+void StorageProxy::commit()
+{
 	for (auto const& [k, _] : cache)
 	{
 		keys.log_key(k);
 	}
 
 	committed_local_values = true;
-	return true;
 }
 
 /*

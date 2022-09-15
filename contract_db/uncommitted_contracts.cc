@@ -1,15 +1,59 @@
 #include "contract_db/uncommitted_contracts.h"
+#include "contract_db/contract_db.h"
 
-namespace scs
-{
+#include "crypto/hash.h"
 
-void
-UncommittedContracts::add_valid_contracts(std::map<wasm_api::Hash, std::unique_ptr<const Contract>>& existing_contracts, const TxSet& tx_set)
+namespace scs {
+
+bool
+UncommittedContracts::deploy_contract_to_address(
+    wasm_api::Hash const& addr,
+    wasm_api::Hash const& script_hash)
 {
-	for (auto& [addr, mentry] : contracts)
-	{
-		throw std::runtime_error("UncommittedContracts::add_valid_contracts unimpl when nonempty");
-	}
+    std::lock_guard lock(mtx);
+
+    auto [_, insertion_happened] = new_deployments.emplace(addr, script_hash);
+
+    return insertion_happened;
 }
 
-} /* scs */
+void
+UncommittedContracts::undo_deploy_contract_to_address(
+    wasm_api::Hash const& addr)
+{
+    std::lock_guard lock(mtx);
+
+    new_deployments.erase(addr);
+}
+
+void
+UncommittedContracts::add_new_contract(
+    std::shared_ptr<const Contract> new_contract)
+{
+    Hash h = hash_xdr(*new_contract);
+    std::lock_guard lock(mtx);
+
+    new_contracts.emplace(h, new_contract);
+}
+
+void
+UncommittedContracts::clear()
+{
+	new_contracts.clear();
+	new_deployments.clear();
+}
+
+void
+UncommittedContracts::commit(ContractDB& contract_db)
+{
+    for (auto const& [hash, script] : new_contracts) {
+        contract_db.commit_contract_to_db(hash, script);
+    }
+
+    for (auto const& [addr, hash] : new_deployments) {
+        contract_db.commit_registration(addr, hash);
+    }
+    clear();
+}
+
+} // namespace scs

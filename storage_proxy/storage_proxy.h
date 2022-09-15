@@ -13,6 +13,7 @@ namespace scs
 {
 class StateDB;
 class ModifiedKeysList;
+class TransactionRewind;
 
 class StorageProxy
 {
@@ -47,7 +48,9 @@ public:
 
 	bool
 	__attribute__((warn_unused_result))
-	 push_deltas_to_statedb();
+	push_deltas_to_statedb(TransactionRewind& rewind);
+
+	void commit();
 };
 
 } /* scs */

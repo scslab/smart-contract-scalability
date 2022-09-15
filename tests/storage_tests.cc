@@ -7,6 +7,7 @@
 #include "crypto/hash.h"
 #include "test_utils/load_wasm.h"
 #include "test_utils/make_calldata.h"
+#include "test_utils/deploy_and_commit_contractdb.h"
 
 #include "threadlocal/threadlocal_context.h"
 
@@ -26,7 +27,7 @@ TEST_CASE("int64 storage write", "[storage]")
 	
 	auto h = hash_xdr(*c);
 
-	REQUIRE(script_db.register_contract(h, std::move(c)));
+	test::deploy_and_commit_contractdb(script_db, h, std::move(c));
 
 	ThreadlocalContextStore::make_ctx(scs_data_structures);
 	test::DeferredContextClear defer;
@@ -296,7 +297,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 	
 	auto h = hash_xdr(*c);
 
-	REQUIRE(script_db.register_contract(h, std::move(c)));
+	test::deploy_and_commit_contractdb(script_db, h, std::move(c));
 
 	ThreadlocalContextStore::make_ctx(scs_data_structures);
 	test::DeferredContextClear defer;

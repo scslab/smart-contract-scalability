@@ -1,6 +1,8 @@
 #include "transaction_context/transaction_context.h"
 #include "transaction_context/global_context.h"
 
+#include "storage_proxy/transaction_rewind.h"
+
 namespace scs {
 
 TransactionContext::TransactionContext(uint64_t gas_limit,
@@ -19,6 +21,7 @@ TransactionContext::TransactionContext(uint64_t gas_limit,
     , return_buf()
     , logs()
     , storage_proxy(global_context.state_db, modified_keys_list)
+    , contract_db_proxy(global_context.contract_db)
 {}
 
 /*
@@ -97,7 +100,22 @@ TransactionContext::push_storage_deltas()
     assert_not_committed();
     committed_to_statedb = true;
 
-    return storage_proxy.push_deltas_to_statedb();
+    TransactionRewind rewind;
+
+    if (!storage_proxy.push_deltas_to_statedb(rewind))
+    {
+    	return false;
+    }
+
+    if (!contract_db_proxy.push_updates_to_db(rewind))
+    {
+    	return false;
+    }
+
+    rewind.commit();
+    storage_proxy.commit();
+
+    return true;
 }
 
 } // namespace scs

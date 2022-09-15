@@ -5,7 +5,6 @@
 
 #include "xdr/types.h"
 
-#include "transaction_context/threadlocal_types.h"
 #include "object/delta_type_class.h"
 
 #include "state_db/delta_batch_value.h"

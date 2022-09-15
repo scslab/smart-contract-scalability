@@ -4,39 +4,36 @@
 
 #include "xdr/types.h"
 
-namespace scs
+namespace scs {
+
+namespace test {
+
+[[maybe_unused]] std::unique_ptr<Contract> static load_wasm_from_file(
+    const char* filename)
 {
+    FILE* f = std::fopen(filename, "r");
 
-namespace test
-{
+    if (f == nullptr) {
+        throw std::runtime_error("failed to load wasm file");
+    }
 
-[[maybe_unused]]
-std::unique_ptr<Contract>
-static load_wasm_from_file(const char* filename)
-{
-	FILE* f = std::fopen(filename, "r");
+    auto contents = std::make_unique<Contract>();
 
-	if (f == nullptr) {
-		throw std::runtime_error("failed to load wasm file");
-	}
+    const int BUF_SIZE = 65536;
+    char buf[BUF_SIZE];
 
-	auto contents = std::make_unique<Contract>();
+    int count = -1;
+    while (count != 0) {
+        count = std::fread(buf, sizeof(char), BUF_SIZE, f);
+        if (count > 0) {
+            contents->insert(contents->end(), buf, buf + count);
+        }
+    }
+    std::fclose(f);
 
-	const int BUF_SIZE = 65536;
-	char buf[BUF_SIZE];
-
-	int count = -1;
-	while (count != 0) {
-		count = std::fread(buf, sizeof(char), BUF_SIZE, f);
-		if (count > 0) {
-			contents->insert(contents->end(), buf, buf+count);
-		}
-	}
-	std::fclose(f);
-
-	return contents;
+    return contents;
 }
 
-} /* test */
+} // namespace test
 
-} /* scs */
+} // namespace scs

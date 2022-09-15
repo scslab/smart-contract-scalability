@@ -12,6 +12,8 @@
 
 #include "builtin_fns/builtin_fns.h"
 
+#include "storage_proxy/transaction_rewind.h"
+
 namespace scs
 {
 
@@ -23,7 +25,7 @@ ExecutionContext::invoke_subroutine(MethodInvocation const& invocation)
 	{
 		CONTRACT_INFO("creating new runtime for contract at %s", debug::array_to_str(invocation.addr).c_str());
 
-		auto runtime_instance = wasm_context.new_runtime_instance(invocation.addr, static_cast<const void*>(&(tx_context->get_src_tx_hash())));
+		auto runtime_instance = wasm_context.new_runtime_instance(invocation.addr, static_cast<const void*>(&(tx_context->get_contract_db_proxy())));
 		if (!runtime_instance)
 		{
 			throw wasm_api::HostError("cannot find target address");

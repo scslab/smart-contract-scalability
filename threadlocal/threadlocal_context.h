@@ -4,8 +4,6 @@
 
 #include "mtt/utils/threadlocal_cache.h"
 
-#include "transaction_context/threadlocal_types.h"
-
 #include "transaction_context/execution_context.h"
 
 #include "threadlocal/gc.h"

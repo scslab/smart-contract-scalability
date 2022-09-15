@@ -8,6 +8,7 @@
 #include "crypto/hash.h"
 #include "test_utils/load_wasm.h"
 #include "test_utils/make_calldata.h"
+#include "test_utils/deploy_and_commit_contractdb.h"
 
 #include "state_db/modified_keys_list.h"
 
@@ -25,8 +26,11 @@ TEST_CASE("test invoke", "[builtin]")
 	auto c2 = test::load_wasm_from_file("cpp_contracts/test_redirect_call.wasm");
 	auto h2 = hash_xdr(*c2);
 
-	REQUIRE(script_db.register_contract(h1, std::move(c1)));
-	REQUIRE(script_db.register_contract(h2, std::move(c2)));
+	test::deploy_and_commit_contractdb(script_db, h1, std::move(c1));
+	test::deploy_and_commit_contractdb(script_db, h2, std::move(c2));
+
+	//REQUIRE(script_db.register_contract(h1, std::move(c1)));
+	//REQUIRE(script_db.register_contract(h2, std::move(c2)));
 
 	ThreadlocalContextStore::make_ctx(scs_data_structures);
 	test::DeferredContextClear defer;

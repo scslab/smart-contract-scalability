@@ -5,44 +5,42 @@
 #include "xdr/types.h"
 
 #include <cstdint>
-#include <memory>
 #include <map>
+#include <memory>
+#include <mutex>
 #include <vector>
 
 #include <wasm_api/wasm_api.h>
 
-namespace scs
+#include <mtt/utils/non_movable.h>
+
+namespace scs {
+
+class ContractDB;
+
+class UncommittedContracts : public utils::NonMovableOrCopyable
 {
+    // map contract hash to contract
+    std::map<wasm_api::Hash, std::shared_ptr<const Contract>> new_contracts;
 
-class TxSet;
+    // map address to contract hash
+    std::map<wasm_api::Hash, wasm_api::Hash> new_deployments;
 
-class UncommittedContracts
-{
-	struct map_entry_t
-	{
-		DeltaPriority p;
-		Hash src_tx;
-		std::unique_ptr<const Contract> contract;
-	};
+    // temporary bad solution
+    std::mutex mtx;
 
-	std::map<wasm_api::Hash, map_entry_t> contracts;
+    void clear();
 
-public:
+  public:
+    // caller must ensure script_hash exists
+    bool deploy_contract_to_address(wasm_api::Hash const& addr,
+                                    wasm_api::Hash const& script_hash);
 
-	bool
-	register_contract(Address const& addr, std::unique_ptr<const Contract>&& contract, const DeltaPriority& p, const Hash& src_tx, TxSet& tx_block)
-	{
-		throw std::runtime_error("UncommittedContracts::register_contract unimplemented");
-	}
+    void undo_deploy_contract_to_address(wasm_api::Hash const& addr);
 
-	const std::vector<uint8_t>*
-	get_script(wasm_api::Hash const& addr, const Hash& src_tx) const
-	{
-		return nullptr;
-	}
+    void add_new_contract(std::shared_ptr<const Contract> new_contract);
 
-	void
-	add_valid_contracts(std::map<wasm_api::Hash, std::unique_ptr<const Contract>>& existing_contracts, const TxSet& tx_block);
+    void commit(ContractDB& contract_db);
 };
 
-} /* scs */
+} // namespace scs

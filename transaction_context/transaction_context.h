@@ -6,6 +6,8 @@
 #include "transaction_context/method_invocation.h"
 #include "storage_proxy/storage_proxy.h"
 
+#include "contract_db/contract_db_proxy.h"
+
 #include <wasm_api/wasm_api.h>
 
 #include "xdr/transaction.h"
@@ -46,6 +48,7 @@ public:
 	std::vector<std::vector<uint8_t>> logs;
 
 	StorageProxy storage_proxy;
+	ContractDBProxy contract_db_proxy;
 
 	TransactionContext(
 		uint64_t gas_limit, 
@@ -66,6 +69,12 @@ public:
 
 	const Hash&
 	get_src_tx_hash() const;
+
+	const ContractDBProxy&
+	get_contract_db_proxy() const
+	{
+		return contract_db_proxy;
+	}
 
 	AddressAndKey 
 	get_storage_key(InvariantKey const& key) const;

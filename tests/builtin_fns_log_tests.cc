@@ -8,7 +8,8 @@
 #include "crypto/hash.h"
 #include "test_utils/load_wasm.h"
 
-#include "state_db/modified_keys_list.h"
+#include "test_utils/deploy_and_commit_contractdb.h"
+
 
 namespace scs
 {
@@ -21,7 +22,7 @@ TEST_CASE("test log", "[builtin]")
 	auto c = test::load_wasm_from_file("cpp_contracts/test_log.wasm");
 	auto h = hash_xdr(*c);
 
-	REQUIRE(script_db.register_contract(h,std::move(c)));
+	test::deploy_and_commit_contractdb(script_db, h, std::move(c));
 
 	ThreadlocalContextStore::make_ctx(scs_data_structures);
 	test::DeferredContextClear defer;

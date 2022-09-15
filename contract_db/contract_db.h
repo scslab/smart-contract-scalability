@@ -29,28 +29,49 @@ class ContractDB
         "mismatch between addresses in scs and addresses in wasm api");
 
     using contract_map_t
-        = std::map<wasm_api::Hash, std::unique_ptr<const Contract>>;
+        = std::map<wasm_api::Hash, std::shared_ptr<const Contract>>;
 
-    contract_map_t contracts;
+    contract_map_t addresses_to_contracts_map;
+    contract_map_t hashes_to_contracts_map;
 
     UncommittedContracts uncommitted_contracts;
+
+    friend class UncommittedContracts;
+
+    void commit_contract_to_db(wasm_api::Hash const& contract_hash,
+                               std::shared_ptr<const Contract> new_contract);
+
+    void commit_registration(wasm_api::Hash const& new_address,
+                             wasm_api::Hash const& contract_hash);
+
+    friend class ContractCreateClosure;
+    friend class ContractDeployClosure;
+    friend class ContractDBProxy;
+
+    void undo_deploy_contract_to_address(wasm_api::Hash const& addr)
+    {
+        uncommitted_contracts.undo_deploy_contract_to_address(addr);
+    }
+
+    bool __attribute__((warn_unused_result))
+    deploy_contract_to_address(wasm_api::Hash const& addr,
+                               wasm_api::Hash const& script_hash);
+
+    void add_new_uncommitted_contract(
+        std::shared_ptr<const Contract> new_contract);
 
   public:
     ContractDB();
 
     const std::vector<uint8_t>* get_script(
         wasm_api::Hash const& addr,
-        const wasm_api::script_context_t& context) const override final;
+        const wasm_api::script_context_t&) const override final;
 
-    bool register_contract(Address const& addr,
-                           std::unique_ptr<const Contract>&& contract);
+    bool check_address_open_for_deployment(const wasm_api::Hash& addr) const;
 
-    UncommittedContracts& get_uncommitted_proxy()
-    {
-        return uncommitted_contracts;
-    }
+    bool check_committed_contract_exists(const Hash& contract_hash) const;
 
-    void commit(const BlockContext& block_context);
+    void commit();
 };
 
 } // namespace scs

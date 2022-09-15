@@ -32,6 +32,7 @@ BUILTIN_FNS_SRCS = \
 
 CONTRACT_DB_SRCS = \
 	contract_db/contract_db.cc \
+	contract_db/contract_db_proxy.cc \
 	contract_db/uncommitted_contracts.cc
 
 CRYPTO_SRCS = \
@@ -93,6 +94,9 @@ SRCS = \
 	$(TRANSACTION_CONTEXT_SRCS) \
 	$(TX_BLOCK_SRCS)
 
+TEST_UTILS_SRCS = \
+	test_utils/deploy_and_commit_contractdb.cc
+
 TESTS_CCS = \
 	tests/builtin_fns_log_tests.cc \
 	tests/builtin_fns_invoke_tests.cc \
@@ -146,7 +150,7 @@ bin_PROGRAMS = \
 
 main/test.o : $(CC_WASMS:.cc=.wasm)
 
-COMPLETE_SRCS = $(SRCS) $(TESTS_CCS)
+COMPLETE_SRCS = $(SRCS) $(TESTS_CCS) $(TEST_UTILS_SRCS)
 
 #filter_perf_SOURCES = $(SRCS) main/filter_perf.cc
 test_SOURCES = main/test.cc $(COMPLETE_SRCS)
