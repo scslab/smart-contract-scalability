@@ -7,3 +7,6 @@
 [submodule "wasm_api"]
 	path = lib/wasm_api
 	url = git@github.com:gramseyer/wasm_api.git
+[submodule "m4"]
+	path = m4
+	url = git@github.com:gramseyer/m4.git
