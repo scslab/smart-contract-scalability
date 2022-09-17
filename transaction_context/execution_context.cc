@@ -15,6 +15,8 @@
 
 #include "utils/defer.h"
 
+#include <mtt/utils/time.h>
+
 namespace scs {
 
 void
@@ -25,6 +27,8 @@ ExecutionContext::invoke_subroutine(MethodInvocation const& invocation)
         CONTRACT_INFO("creating new runtime for contract at %s",
                       debug::array_to_str(invocation.addr).c_str());
 
+        auto timestamp = utils::init_time_measurement();
+
         auto runtime_instance = wasm_context.new_runtime_instance(
             invocation.addr,
             static_cast<const void*>(&(tx_context->get_contract_db_proxy())));
@@ -32,8 +36,12 @@ ExecutionContext::invoke_subroutine(MethodInvocation const& invocation)
             throw wasm_api::HostError("cannot find target address");
         }
 
+        std::printf("launch time: %lf\n", utils::measure_time(timestamp));
+
         active_runtimes.emplace(invocation.addr, std::move(runtime_instance));
         BuiltinFns::link_fns(*active_runtimes.at(invocation.addr));
+
+        std::printf("link time: %lf\n", utils::measure_time(timestamp));
     }
 
     auto* runtime = active_runtimes.at(invocation.addr).get();

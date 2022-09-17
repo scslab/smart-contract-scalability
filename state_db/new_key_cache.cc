@@ -9,7 +9,7 @@ NewKeyCacheLine::NewKeyCacheLine()
     , mtx()
 {}
 
-std::optional<RevertableObject::DeltaRewind> __attribute__((warn_unused_result))
+std::optional<RevertableObject::DeltaRewind>
 NewKeyCacheLine::try_reserve_delta(const AddressAndKey& key,
                                    const StorageDelta& delta)
 {
@@ -91,12 +91,11 @@ NewKeyCache::get_cache_line(const AddressAndKey& key, const uint8_t* hash_key)
            >> 32;
 }
 
-std::optional<RevertableObject::DeltaRewind> __attribute__((warn_unused_result))
+std::optional<RevertableObject::DeltaRewind>
 NewKeyCache::try_reserve_delta(const AddressAndKey& key,
                                const StorageDelta& delta)
 {
     assert_try_reserve_mode();
-
     uint16_t cache_line = get_cache_line(key, hash_key);
 
     return lines[cache_line].try_reserve_delta(key, delta);
