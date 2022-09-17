@@ -41,7 +41,7 @@ public:
         : addr(std::move(addr))
         {}
 
-    void transferFrom(
+    inline void transferFrom(
         const sdk::Address& from,
         const sdk::Address& to,
         int64_t amount)
@@ -53,10 +53,16 @@ public:
             .amount = amount
         };
 
+        transferFrom(arg);
+    }
+
+    inline void transferFrom(
+        const calldata_transferFrom& arg)
+    {
         sdk::invoke(addr, 0, arg);
     }
 
-    void mint(
+    inline void mint(
         const sdk::Address& recipient,
         int64_t amount)
     {
@@ -66,10 +72,16 @@ public:
             .amount = amount
         };
 
+        mint(arg);
+    }
+
+    inline void mint(
+        const calldata_mint& arg)
+    {
         sdk::invoke(addr, 1, arg);
     }
 
-    void allowanceDelta(
+    inline void allowanceDelta(
         const sdk::Address& account, 
         int64_t amount)
     {
@@ -79,6 +91,12 @@ public:
             .amount = amount
         };
 
+        allowanceDelta(arg);
+    }
+
+    inline void allowanceDelta(
+        const calldata_allowanceDelta& arg)
+    {
         sdk::invoke(addr, 2, arg);
     }
 };
