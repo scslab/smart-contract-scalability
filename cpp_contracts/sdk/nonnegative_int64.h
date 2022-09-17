@@ -67,4 +67,42 @@ int64_get(StorageKey const& key)
 	return res;
 }
 
+class NNInt64
+{
+	StorageKey key;
+
+public:
+
+	const int64_t set_value;
+	int64_t delta;
+
+	NNInt64(StorageKey&& key)
+		: key(key)
+		, set_value(int64_get(key))
+		, delta(0)
+		{}
+
+	NNInt64(StorageKey&& key, int64_t set)
+		: key(key)
+		, set_value(set)
+		, delta(0)
+	{}
+
+	int64_t safe_get_value() const
+	{
+		int64_t out;
+		if (__builtin_add_overflow(set_value, delta, &out))
+		{
+			abort();
+		}
+		return out;
+	}
+
+	~NNInt64()
+	{
+		int64_set_add(key, set_value, delta);
+	}
+
+};
+
 } /* sdk */
