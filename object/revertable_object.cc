@@ -287,7 +287,8 @@ RevertableObject::try_add_delta(const StorageDelta& delta)
             }
             throw std::runtime_error("assert unreachable");
         }
-        case DeltaType::RAW_MEMORY_WRITE: {
+        case DeltaType::RAW_MEMORY_WRITE:
+        {
             StorageDeltaClass obj;
             obj.type(ObjectType::RAW_MEMORY);
             obj.data() = delta.data();
@@ -297,6 +298,22 @@ RevertableObject::try_add_delta(const StorageDelta& delta)
             if (!res) {
                 return std::nullopt;
             }
+
+            return DeltaRewind(std::move(*res), delta, this);
+        }
+        case DeltaType::HASH_SET_INCREASE_LIMIT:
+        {
+            StorageDeltaClass obj;
+            obj.type(ObjectType::HASH_SET);
+
+            auto res = base_obj.try_set(obj);
+
+            if (!res)
+            {
+                return std::nullopt;
+            }
+
+            size_increase.fetch_add(delta.limit_increase(), std::memory_order_relaxed);
 
             return DeltaRewind(std::move(*res), delta, this);
         }
@@ -334,6 +351,11 @@ RevertableObject::revert_delta(const StorageDelta& delta)
         }
         case DeltaType::RAW_MEMORY_WRITE: {
             // no op
+            return;
+        }
+        case DeltaType::HASH_SET_INCREASE_LIMIT:
+        {
+            size_increase.fetch_sub(delta.limit_increase(), std::memory_order_relaxed);
             return;
         }
     }
@@ -460,6 +482,16 @@ RevertableObject::commit_round()
         case ObjectType::RAW_MEMORY:
             // no op
             break;
+        case ObjectType::HASH_SET:
+        {
+            uint64_t new_size = size_increase.load(std::memory_order_relaxed) + committed_base -> body.hash_set().max_size;
+
+            committed_base -> body.hash_set().max_size = std::min(
+                (uint64_t)MAX_HASH_SET_SIZE,
+                new_size);
+
+            throw std::runtime_error("unfinished");
+        }
         default:
             throw std::runtime_error("unimplemented object type in "
                                      "RevertableObject::commit_round()");

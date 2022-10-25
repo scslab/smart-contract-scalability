@@ -82,6 +82,14 @@ object_from_delta_class(StorageDeltaClass const& dc, std::optional<StorageObject
 {
 	StorageObject out;
 	out.body.type(dc.type());
+
+	if (prev_object)
+	{
+		if (prev_object -> body.type() != out.body.type())
+		{
+			throw std::runtime_error("type mismatch in object_from_delta_class");
+		}
+	}
 	switch(out.body.type())
 	{
 		case ObjectType::RAW_MEMORY:
@@ -92,6 +100,17 @@ object_from_delta_class(StorageDeltaClass const& dc, std::optional<StorageObject
 		case ObjectType::NONNEGATIVE_INT64:
 		{
 			out.body.nonnegative_int64() = dc.nonnegative_int64();
+			break;
+		}
+		case ObjectType::HASH_SET:
+		{
+			out.body.hash_set().max_size = START_HASH_SET_SIZE;
+
+			if (prev_object)
+			{
+				out.body.hash_set().max_size = prev_object -> body.hash_set().max_size;
+				out.body.hash_set().hashes = prev_object -> body.hash_set().hashes;
+			}
 			break;
 		}
 		default:

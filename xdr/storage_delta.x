@@ -30,6 +30,8 @@ union StorageDelta switch (DeltaType type)
 	case HASH_SET_INSERT:
 		Hash hash;
 	case HASH_SET_INCREASE_LIMIT:
+		// enforced to be at most uint16_max
+		// (MAX_HASH_SET_SIZE)
 		uint32 limit_increase;
 };
 

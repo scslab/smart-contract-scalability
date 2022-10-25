@@ -23,6 +23,9 @@ struct HashSet
 	uint32 max_size;
 };
 
+const MAX_HASH_SET_SIZE = 65535;
+const START_HASH_SET_SIZE = 64;
+
 struct StorageObject
 {
 	union switch (ObjectType type)

@@ -99,8 +99,13 @@ class RevertableObject
     std::atomic<int64_t> total_subtracted;
     AtomicUint128 total_added;
 
+    // for hash_set
+    std::atomic<uint64_t> size_increase;
+
+    // for delete_last
     std::atomic<uint32_t> inflight_delete_lasts;
 
+    // base object
     std::optional<StorageObject> committed_base;
 
   public:
