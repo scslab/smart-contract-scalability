@@ -52,7 +52,7 @@ TEST_CASE("revert object from empty", "[object]")
         REQUIRE(!object.get_committed_object());
         object.commit_round();
         REQUIRE(object.get_committed_object());
-        REQUIRE(object.get_committed_object()->nonnegative_int64() == 150);
+        REQUIRE(object.get_committed_object()->body.nonnegative_int64() == 150);
     }
 
     SECTION("conflicting writes int64")
@@ -72,7 +72,7 @@ TEST_CASE("revert object from empty", "[object]")
         REQUIRE(!object.get_committed_object());
         object.commit_round();
         REQUIRE(object.get_committed_object());
-        REQUIRE(object.get_committed_object()->nonnegative_int64() == 150);
+        REQUIRE(object.get_committed_object()->body.nonnegative_int64() == 150);
     }
 
     SECTION("conflicting writes type")
@@ -92,7 +92,7 @@ TEST_CASE("revert object from empty", "[object]")
         REQUIRE(!object.get_committed_object());
         object.commit_round();
         REQUIRE(object.get_committed_object());
-        REQUIRE(object.get_committed_object()->nonnegative_int64() == 150);
+        REQUIRE(object.get_committed_object()->body.nonnegative_int64() == 150);
     }
 
     SECTION("conflicting after rewind")
@@ -123,7 +123,7 @@ TEST_CASE("revert object from empty", "[object]")
             REQUIRE(!object.get_committed_object());
             object.commit_round();
             REQUIRE(object.get_committed_object());
-            REQUIRE(object.get_committed_object()->raw_memory_storage().data
+            REQUIRE(object.get_committed_object()->body.raw_memory_storage().data
                     == val2);
         }
 
@@ -140,7 +140,7 @@ TEST_CASE("revert object from empty", "[object]")
             REQUIRE(!object.get_committed_object());
             object.commit_round();
             REQUIRE(object.get_committed_object());
-            REQUIRE(object.get_committed_object()->raw_memory_storage().data
+            REQUIRE(object.get_committed_object()->body.raw_memory_storage().data
                     == val2);
         }
     }
@@ -171,15 +171,15 @@ TEST_CASE("revert object from empty", "[object]")
         REQUIRE(!object.get_committed_object());
         object.commit_round();
         REQUIRE(object.get_committed_object());
-        REQUIRE(object.get_committed_object()->nonnegative_int64() == 0);
+        REQUIRE(object.get_committed_object()->body.nonnegative_int64() == 0);
     }
 }
 
 TEST_CASE("revert object from nonempty", "[object]")
 {
     StorageObject o;
-    o.type(ObjectType::NONNEGATIVE_INT64);
-    o.nonnegative_int64() = 30;
+    o.body.type(ObjectType::NONNEGATIVE_INT64);
+    o.body.nonnegative_int64() = 30;
 
     auto set_add = make_nonnegative_int64_set_add(100, -50);
 
@@ -188,7 +188,7 @@ TEST_CASE("revert object from nonempty", "[object]")
     SECTION("no deltas")
     {
         REQUIRE(object.get_committed_object());
-        REQUIRE(object.get_committed_object()->nonnegative_int64() == 30);
+        REQUIRE(object.get_committed_object()->body.nonnegative_int64() == 30);
     }
 
     SECTION("mem write conflict")
@@ -211,7 +211,7 @@ TEST_CASE("revert object from nonempty", "[object]")
             object.commit_round();
 
             REQUIRE(object.get_committed_object());
-            REQUIRE(object.get_committed_object()->nonnegative_int64() == 50);
+            REQUIRE(object.get_committed_object()->body.nonnegative_int64() == 50);
         }
         SECTION("three writes no go")
         {
@@ -227,7 +227,7 @@ TEST_CASE("revert object from nonempty", "[object]")
 
             object.commit_round();
             REQUIRE(object.get_committed_object());
-            REQUIRE(object.get_committed_object()->nonnegative_int64() == 0);
+            REQUIRE(object.get_committed_object()->body.nonnegative_int64() == 0);
         }
     }
 
@@ -260,7 +260,7 @@ TEST_CASE("revert object from nonempty", "[object]")
 
             REQUIRE(object.get_committed_object());
 
-            REQUIRE(object.get_committed_object()->raw_memory_storage().data
+            REQUIRE(object.get_committed_object()->body.raw_memory_storage().data
                     == val1);
         }
 
@@ -278,7 +278,7 @@ TEST_CASE("revert object from nonempty", "[object]")
 
             REQUIRE(object.get_committed_object());
 
-            REQUIRE(object.get_committed_object()->nonnegative_int64() == 50);
+            REQUIRE(object.get_committed_object()->body.nonnegative_int64() == 50);
         }
     }
 }

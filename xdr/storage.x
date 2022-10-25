@@ -23,14 +23,19 @@ struct HashSet
 	uint32 max_size;
 };
 
-union StorageObject switch (ObjectType type)
+struct StorageObject
 {
+	union switch (ObjectType type)
+	{
 	case RAW_MEMORY:
 		RawMemoryStorage raw_memory_storage;
 	case NONNEGATIVE_INT64:
 		int64 nonnegative_int64;
 	case HASH_SET:
 		HashSet hash_set;
+	} body;
+
+	uint64 escrowed_fee;
 };
 
 // in case of none:

@@ -163,7 +163,7 @@ TEST_CASE("int64 storage write", "[storage]")
             auto db_val = state_db.get_committed_value(hk0);
 
             REQUIRE(!!db_val);
-            REQUIRE(db_val->nonnegative_int64() == 5);
+            REQUIRE(db_val->body.nonnegative_int64() == 5);
         }
 
         SECTION("with set")
@@ -185,7 +185,7 @@ TEST_CASE("int64 storage write", "[storage]")
             auto db_val = state_db.get_committed_value(hk0);
 
             REQUIRE(!!db_val);
-            REQUIRE(db_val->nonnegative_int64() == 12);
+            REQUIRE(db_val->body.nonnegative_int64() == 12);
         }
 
         SECTION("with negative set")
@@ -206,7 +206,7 @@ TEST_CASE("int64 storage write", "[storage]")
             auto db_val = state_db.get_committed_value(hk0);
 
             REQUIRE(!!db_val);
-            REQUIRE(db_val->nonnegative_int64() == -5);
+            REQUIRE(db_val->body.nonnegative_int64() == -5);
         }
     }
     SECTION("with prev value")
@@ -222,7 +222,7 @@ TEST_CASE("int64 storage write", "[storage]")
         auto db_val = state_db.get_committed_value(hk0);
 
         REQUIRE(!!db_val);
-        REQUIRE(db_val->nonnegative_int64() == 100);
+        REQUIRE(db_val->body.nonnegative_int64() == 100);
 
         block_context.reset(new BlockContext());
 
@@ -244,7 +244,7 @@ TEST_CASE("int64 storage write", "[storage]")
             auto db_val = state_db.get_committed_value(hk0);
 
             REQUIRE(!!db_val);
-            REQUIRE(db_val->nonnegative_int64() == 75);
+            REQUIRE(db_val->body.nonnegative_int64() == 75);
         }
 
         SECTION("without set some dropped")
@@ -265,7 +265,7 @@ TEST_CASE("int64 storage write", "[storage]")
             auto db_val = state_db.get_committed_value(hk0);
 
             REQUIRE(!!db_val);
-            REQUIRE(db_val->nonnegative_int64() == 55);
+            REQUIRE(db_val->body.nonnegative_int64() == 55);
         }
     }
 }
@@ -375,7 +375,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
         REQUIRE(!!db_val);
 
-        REQUIRE(db_val->raw_memory_storage().data
+        REQUIRE(db_val->body.raw_memory_storage().data
                 == xdr::opaque_vec<RAW_MEMORY_MAX_LEN>{
                     0x11, 0x00, 0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA });
 
@@ -419,7 +419,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
             REQUIRE(!!db_val);
 
-            REQUIRE(db_val->raw_memory_storage().data
+            REQUIRE(db_val->body.raw_memory_storage().data
                     == xdr::opaque_vec<RAW_MEMORY_MAX_LEN>{
                         0x10, 0x00, 0xF0, 0xE0, 0xD0, 0xC0, 0xB0, 0xA0 });
         }
@@ -615,7 +615,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
         REQUIRE(!!db_val);
 
-        REQUIRE(db_val->raw_memory_storage().data
+        REQUIRE(db_val->body.raw_memory_storage().data
                 == xdr::opaque_vec<RAW_MEMORY_MAX_LEN>{
                     0xBB, 0xAA, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
     }
@@ -648,7 +648,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
         REQUIRE(!!db_val);
 
-        REQUIRE(db_val->raw_memory_storage().data
+        REQUIRE(db_val->body.raw_memory_storage().data
                 == xdr::opaque_vec<RAW_MEMORY_MAX_LEN>{
                     0x34, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
     }

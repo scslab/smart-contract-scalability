@@ -41,6 +41,11 @@ public:
 	get() const;
 
 	std::vector<StorageDelta> get_deltas() const;
+
+	// type specific methods
+	// returns nullopt if type mismatch
+	std::optional<int64_t>
+	get_base_nnint64_set_value() const;
 };
 
 } /* scs */

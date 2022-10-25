@@ -35,6 +35,22 @@ BuiltinFns::scs_nonnegative_int64_set_add(
 	tx_ctx.storage_proxy.nonnegative_int64_set_add(addr_and_key, set_value, delta, tx_ctx.get_src_tx_hash());
 }
 
+void
+BuiltinFns::scs_nonnegative_int64_add(
+	uint32_t key_offset,
+	/* key_len = 32 */
+	int64_t delta)
+{
+	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	auto& runtime = *tx_ctx.get_current_runtime();
+	
+	auto key = runtime.template load_from_memory_to_const_size_buf<InvariantKey>(key_offset);
+
+	auto addr_and_key = tx_ctx.get_storage_key(key);
+
+	tx_ctx.storage_proxy.nonnegative_int64_add(addr_and_key, delta, tx_ctx.get_src_tx_hash());
+}
+
 //return 1 if key exists, 0 else
 uint32_t 
 BuiltinFns::scs_nonnegative_int64_get(
@@ -56,12 +72,12 @@ BuiltinFns::scs_nonnegative_int64_get(
 		return 0;
 	}
 
-	if (res -> type() != ObjectType::NONNEGATIVE_INT64)
+	if (res -> body.type() != ObjectType::NONNEGATIVE_INT64)
 	{
 		throw wasm_api::HostError("type mismatch in raw mem get");
 	}
 
-	runtime.write_to_memory(res -> nonnegative_int64(), output_offset);
+	runtime.write_to_memory(res -> body.nonnegative_int64(), output_offset);
 	return 1;
 }
 

@@ -63,12 +63,12 @@ BuiltinFns::scs_raw_memory_get(
 		return 0;
 	}
 
-	if (res -> type() != ObjectType::RAW_MEMORY)
+	if (res -> body.type() != ObjectType::RAW_MEMORY)
 	{
 		throw wasm_api::HostError("type mismatch in raw mem get");
 	}
 
-	runtime.write_to_memory(res -> raw_memory_storage().data, output_offset, output_max_len);
+	runtime.write_to_memory(res -> body.raw_memory_storage().data, output_offset, output_max_len);
 	return 1;
 }
 
@@ -92,12 +92,12 @@ BuiltinFns::scs_raw_memory_get_len(
 		return UINT32_MAX;
 	}
 
-	if (res -> type() != ObjectType::RAW_MEMORY)
+	if (res -> body.type() != ObjectType::RAW_MEMORY)
 	{
 		throw wasm_api::HostError("type mismatch in raw mem get");
 	}
 
-	return res -> raw_memory_storage().data.size();
+	return res -> body.raw_memory_storage().data.size();
 }
 
 

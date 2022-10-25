@@ -37,7 +37,7 @@ TEST_CASE("raw mem only", "[mutator]")
 	auto val_expect_mem_value = [&] (raw_mem_val v)
 	{
 		REQUIRE(applicator->get());
-		REQUIRE(applicator->get()->raw_memory_storage().data == v);
+		REQUIRE(applicator->get()->body.raw_memory_storage().data == v);
 	};
 
 	auto val_expect_nullopt = [&] ()
@@ -111,8 +111,8 @@ TEST_CASE("raw mem only", "[mutator]")
 	SECTION("populate with something")
 	{
 		StorageObject obj;
-		obj.type(RAW_MEMORY);
-		obj.raw_memory_storage().data = val1;
+		obj.body.type(RAW_MEMORY);
+		obj.body.raw_memory_storage().data = val1;
 
 		applicator = std::make_unique<ProxyApplicator>(obj);
 
@@ -179,7 +179,7 @@ TEST_CASE("nonnegative int64 only", "[mutator]")
 	auto val_expect_int64 = [&] (int64_t v)
 	{
 		REQUIRE(applicator->get());
-		REQUIRE(applicator->get()->nonnegative_int64() == v);
+		REQUIRE(applicator->get()->body.nonnegative_int64() == v);
 	};
 
 	auto val_expect_nullopt = [&] ()

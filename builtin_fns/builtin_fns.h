@@ -93,6 +93,12 @@ class BuiltinFns
 		int64_t set_value,
 		int64_t delta);
 
+	static void
+	scs_nonnegative_int64_add(
+		uint32_t key_offset,
+		/* key_len = 32 */
+		int64_t delta);
+
 	static uint32_t 
 	scs_nonnegative_int64_get(
 		uint32_t key_offset,

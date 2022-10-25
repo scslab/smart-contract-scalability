@@ -227,7 +227,7 @@ RevertableBaseObject::RevertableBaseObject()
 RevertableBaseObject::RevertableBaseObject(const StorageObject& obj)
     : tag(0)
     , obj(nullptr)
-    , required_type(obj.type())
+    , required_type(obj.body.type())
 {}
 
 RevertableBaseObject::~RevertableBaseObject()
@@ -441,19 +441,19 @@ RevertableObject::commit_round()
         return;
     }
 
-    switch (committed_base->type()) {
+    switch (committed_base->body.type()) {
         case ObjectType::NONNEGATIVE_INT64: {
             int64_t sub = total_subtracted.load(std::memory_order_relaxed);
-            committed_base->nonnegative_int64() += sub;
+            committed_base->body.nonnegative_int64() += sub;
 
             uint64_t add = total_added.fetch_cap();
 
-            if (__builtin_add_overflow_p(committed_base->nonnegative_int64(),
+            if (__builtin_add_overflow_p(committed_base->body.nonnegative_int64(),
                                          add,
                                          static_cast<int64_t>(0))) {
-                committed_base->nonnegative_int64() = INT64_MAX;
+                committed_base->body.nonnegative_int64() = INT64_MAX;
             } else {
-                committed_base->nonnegative_int64() += add;
+                committed_base->body.nonnegative_int64() += add;
             }
             break;
         }

@@ -70,12 +70,24 @@ StorageProxy::nonnegative_int64_set_add(
 	{
 		throw wasm_api::HostError("failed to apply nonnegative_int64_set_add");
 	}
-
-	//v.vec.emplace_back(std::move(delta));
-
-	//v.vec.add_delta(std::move(delta), std::move(id));
 }
 
+void 
+StorageProxy::nonnegative_int64_add(AddressAndKey const& key, int64_t delta_value, delta_identifier_t id)
+{
+	auto& v = get_local(key);
+	auto base_value = v.applicator.get_base_nnint64_set_value();
+	if (!base_value.has_value())
+	{
+		throw wasm_api::HostError("type mismatch in nonnegative_int64_add");
+	}
+	auto delta = make_nonnegative_int64_set_add(*base_value, delta_value);
+
+	if (!v.applicator.try_apply(delta))
+	{
+		throw wasm_api::HostError("failed to apply nonnegative_int64_add");
+	}
+}
 
 void
 StorageProxy::delete_object_last(AddressAndKey const& key, delta_identifier_t id)

@@ -43,30 +43,30 @@ make_object_from_delta(StorageDelta const& d)
 	}
 
 	StorageObject out;
-	out.type(type);
+	out.body.type(type);
 	switch(d_type)
 	{
 		case DeltaType::RAW_MEMORY_WRITE:
-			out.raw_memory_storage().data = d.data();
+			out.body.raw_memory_storage().data = d.data();
 			break;
 		case DeltaType::NONNEGATIVE_INT64_SET_ADD:
 		{
-			out.nonnegative_int64() = d.set_add_nonnegative_int64().set_value;
+			out.body.nonnegative_int64() = d.set_add_nonnegative_int64().set_value;
 			int64_t delta = d.set_add_nonnegative_int64().delta;
 
-			if (__builtin_add_overflow_p(delta, out.nonnegative_int64(), static_cast<int64_t>(0)))
+			if (__builtin_add_overflow_p(delta, out.body.nonnegative_int64(), static_cast<int64_t>(0)))
 			{
 				if (delta < 0)
 				{
-					out.nonnegative_int64() = INT64_MIN;
+					out.body.nonnegative_int64() = INT64_MIN;
 				}
 				else
 				{
-					out.nonnegative_int64() = INT64_MAX;
+					out.body.nonnegative_int64() = INT64_MAX;
 				}
 			} else
 			{
-				out.nonnegative_int64() += delta;
+				out.body.nonnegative_int64() += delta;
 			}
 
 			break;
@@ -81,17 +81,17 @@ StorageObject
 object_from_delta_class(StorageDeltaClass const& dc, std::optional<StorageObject> const& prev_object)
 {
 	StorageObject out;
-	out.type(dc.type());
-	switch(out.type())
+	out.body.type(dc.type());
+	switch(out.body.type())
 	{
 		case ObjectType::RAW_MEMORY:
 		{
-			out.raw_memory_storage().data = dc.data();
+			out.body.raw_memory_storage().data = dc.data();
 			break;
 		}
 		case ObjectType::NONNEGATIVE_INT64:
 		{
-			out.nonnegative_int64() = dc.nonnegative_int64();
+			out.body.nonnegative_int64() = dc.nonnegative_int64();
 			break;
 		}
 		default:

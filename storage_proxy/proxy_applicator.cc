@@ -23,11 +23,11 @@ ProxyApplicator::delta_apply_type_guard(StorageDelta const& d) const
 	{
 		case DeltaType::RAW_MEMORY_WRITE:
 		{
-			return current -> type() == ObjectType::RAW_MEMORY;
+			return current -> body.type() == ObjectType::RAW_MEMORY;
 		}
 		case DeltaType::NONNEGATIVE_INT64_SET_ADD:
 		{
-			return current -> type() == ObjectType::NONNEGATIVE_INT64;
+			return current -> body.type() == ObjectType::NONNEGATIVE_INT64;
 		}
 		default:
 			throw std::runtime_error("unknown deltatype");
@@ -349,6 +349,30 @@ ProxyApplicator::get_deltas() const
 	//std::printf("ProxyApplicator::get_deltas: return delete_last\n");
 
 	return { *overall_delta };
+}
+
+std::optional<int64_t> 
+ProxyApplicator::get_base_nnint64_set_value() const
+{
+	if (overall_delta)
+	{
+		if (overall_delta -> type() != DeltaType::NONNEGATIVE_INT64_SET_ADD)
+		{
+			return std::nullopt;
+		}
+
+		return overall_delta -> set_add_nonnegative_int64().set_value;
+	}
+
+	if (current)
+	{
+		if (current -> body.type() != ObjectType::NONNEGATIVE_INT64)
+		{
+			return std::nullopt;
+		}
+		return current -> body.nonnegative_int64();
+	}
+	return 0;
 }
 
 } /* scs */

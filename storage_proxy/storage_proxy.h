@@ -44,6 +44,9 @@ public:
 	nonnegative_int64_set_add(AddressAndKey const& key, int64_t set_value, int64_t delta, delta_identifier_t id);
 
 	void
+	nonnegative_int64_add(AddressAndKey const& key, int64_t delta, delta_identifier_t id);
+
+	void
 	delete_object_last(AddressAndKey const& key, delta_identifier_t id);
 
 	bool
