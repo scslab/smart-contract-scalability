@@ -12,6 +12,8 @@
 
 namespace scs {
 
+// TODO count multiplicity here, also tag every transaction with its results (logs)
+
 class TxSet
 {
     static std::vector<uint8_t> serialize(const Transaction& v)

@@ -20,15 +20,6 @@ TransactionContext::TransactionContext(Transaction const& tx,
     , contract_db_proxy(global_context.contract_db)
 {}
 
-/*
-DeltaPriority
-TransactionContext::get_next_priority(uint32_t priority)
-{
-        current_priority.delta_id_number++;
-        current_priority.custom_priority = priority;
-        return current_priority;
-} */
-
 wasm_api::WasmRuntime*
 TransactionContext::get_current_runtime()
 {

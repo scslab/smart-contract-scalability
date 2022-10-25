@@ -2,6 +2,8 @@
 
 #include "threadlocal/threadlocal_context.h"
 
+#include "object/object_defaults.h"
+
 using xdr::operator==;
 
 namespace scs {
@@ -112,7 +114,7 @@ RevertableBaseObject::clear_required_type()
 }
 
 std::optional<RevertableBaseObject::Rewind>
-RevertableBaseObject::try_set(StorageObject const& new_obj)
+RevertableBaseObject::try_set(StorageDeltaClass const& new_obj)
 {
     if (required_type) {
         if (new_obj.type() != *required_type) {
@@ -123,7 +125,7 @@ RevertableBaseObject::try_set(StorageObject const& new_obj)
     uint64_t new_id = ThreadlocalContextStore::get_uid();
     while (true) {
         const uint64_t t = tag.load(std::memory_order_acquire);
-        StorageObject* current = obj.load(std::memory_order_acquire);
+        StorageDeltaClass* current = obj.load(std::memory_order_acquire);
         uint64_t expect = t;
 
         if (expect_nonnull(t) && (current == nullptr)) {
@@ -135,18 +137,8 @@ RevertableBaseObject::try_set(StorageObject const& new_obj)
             continue;
         }
 
-        if (is_finalized(t)) {
-            // never finalize a nullptr
-            bool matches = ((*current) == new_obj);
-            if (matches) {
-                return { Rewind(*this, false) };
-            } else {
-                return std::nullopt;
-            }
-        }
-
         if (current == nullptr) {
-            StorageObject* new_candidate = new StorageObject(new_obj);
+            StorageDeltaClass* new_candidate = new StorageDeltaClass(new_obj);
 
             uint64_t new_tag = swap_id(t, new_id);
             new_tag = add_inflight(new_tag);
@@ -159,12 +151,19 @@ RevertableBaseObject::try_set(StorageObject const& new_obj)
             delete new_candidate;
             continue;
         }
-
         // current != nullptr
 
         bool matches = ((*current) == new_obj);
-        if (!matches) {
+
+        if (!matches)
+        {
             return std::nullopt;
+        }
+
+        // matches is true
+
+        if (is_finalized(t)) {
+            return { Rewind(*this, false) };
         }
 
         uint64_t new_tag = swap_id(t, new_id);
@@ -189,7 +188,7 @@ RevertableBaseObject::revert()
     uint64_t new_id = ThreadlocalContextStore::get_uid();
     while (true) {
         const uint64_t t = tag.load(std::memory_order_acquire);
-        StorageObject* current = obj.load(std::memory_order_acquire);
+        auto* current = obj.load(std::memory_order_acquire);
         uint64_t expect = t;
 
         if (expect_nonnull(t) && (current == nullptr)) {
@@ -233,7 +232,7 @@ RevertableBaseObject::RevertableBaseObject(const StorageObject& obj)
 
 RevertableBaseObject::~RevertableBaseObject()
 {
-    StorageObject* ptr = obj.load(std::memory_order_acquire);
+    auto* ptr = obj.load(std::memory_order_acquire);
 
     if (ptr != nullptr) {
         delete ptr;
@@ -249,7 +248,7 @@ RevertableObject::try_add_delta(const StorageDelta& delta)
             return DeltaRewind(RevertableBaseObject::Rewind(), delta, this);
         }
         case DeltaType::NONNEGATIVE_INT64_SET_ADD: {
-            StorageObject obj;
+            StorageDeltaClass obj;
             obj.type(ObjectType::NONNEGATIVE_INT64);
             obj.nonnegative_int64()
                 = delta.set_add_nonnegative_int64().set_value;
@@ -289,9 +288,9 @@ RevertableObject::try_add_delta(const StorageDelta& delta)
             throw std::runtime_error("assert unreachable");
         }
         case DeltaType::RAW_MEMORY_WRITE: {
-            StorageObject obj;
+            StorageDeltaClass obj;
             obj.type(ObjectType::RAW_MEMORY);
-            obj.raw_memory_storage().data = delta.data();
+            obj.data() = delta.data();
 
             auto res = base_obj.try_set(obj);
 
@@ -390,20 +389,21 @@ RevertableObject::DeltaRewind::~DeltaRewind()
     do_rewind = false;
 }
 
-std::optional<StorageObject>
+std::optional<StorageDeltaClass>
 RevertableBaseObject::commit_round_and_reset()
 {
-    StorageObject* base_obj_ptr = obj.load(std::memory_order_relaxed);
+    StorageDeltaClass* base_obj_ptr = obj.load(std::memory_order_relaxed);
     tag = 0;
 
     if (base_obj_ptr == nullptr) {
+        // obj is nullptr
         return std::nullopt;
     }
     obj = nullptr;
 
     required_type = base_obj_ptr->type();
 
-    StorageObject out = *base_obj_ptr;
+    StorageDeltaClass out = *base_obj_ptr;
     delete base_obj_ptr;
 
     return out;
@@ -425,7 +425,7 @@ RevertableObject::commit_round()
     auto new_base = base_obj.commit_round_and_reset();
 
     if (new_base) {
-        committed_base = new_base;
+        committed_base = object_from_delta_class(*new_base, committed_base);
     }
 
     if (!committed_base) {

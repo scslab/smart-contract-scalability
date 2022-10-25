@@ -94,7 +94,7 @@ StorageProxy::delete_object_last(AddressAndKey const& key, delta_identifier_t id
 
 
 bool 
-StorageProxy::push_deltas_to_statedb(TransactionRewind& rewind)
+StorageProxy::push_deltas_to_statedb(TransactionRewind& rewind) const
 {
 	if (committed_local_values)
 	{

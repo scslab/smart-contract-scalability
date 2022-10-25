@@ -9,6 +9,8 @@ enum DeltaType
 	DELETE_LAST = 0,
 	RAW_MEMORY_WRITE = 1,
 	NONNEGATIVE_INT64_SET_ADD = 2,
+	HASH_SET_INSERT = 3,
+	HASH_SET_INCREASE_LIMIT = 4,
 };
 
 struct set_add_t
@@ -25,7 +27,40 @@ union StorageDelta switch (DeltaType type)
 		opaque data<RAW_MEMORY_MAX_LEN>;
 	case NONNEGATIVE_INT64_SET_ADD:
 		set_add_t set_add_nonnegative_int64;
+	case HASH_SET_INSERT:
+		Hash hash;
+	case HASH_SET_INCREASE_LIMIT:
+		uint32 limit_increase;
 };
+
+// REFUND DESIGN:
+// imo this is the simplest
+// alternative is tracking excesses per block
+// into "refundable events" and then paying these back
+// afterwards, but that seems like a lot of extra work.
+// 
+// on each StorageObject, track "invested/locked units",
+// then give a "claim_all_extra" action that users can do
+// (once per block, per addrkey) to reclaim any extra
+
+// All StorageDeltas on one object must all
+// modify the same ObjectType
+// and must agree on the information contained within 
+// a StorageDeltaClass
+// TODO: A more careful equivalence relation
+// on this class would allow things like hash set limit set,
+// not just add().  
+union StorageDeltaClass switch (ObjectType type)
+{
+	case RAW_MEMORY:
+		opaque data<RAW_MEMORY_MAX_LEN>;
+	case NONNEGATIVE_INT64:
+		int64 nonnegative_int64;
+	case HASH_SET:
+		void;
+};
+
+/*
 
 struct DeltaPriority
 {
@@ -65,5 +100,7 @@ struct DeltaValence
 
 	uint32 deleted_last; // 0 = false, nonzero = true;
 };
+
+*/
 
 } /* scs */

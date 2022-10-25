@@ -7,6 +7,7 @@ enum ObjectType
 {
 	RAW_MEMORY = 0,
 	NONNEGATIVE_INT64 = 1,
+	HASH_SET = 2,
 };
 
 const RAW_MEMORY_MAX_LEN = 512;
@@ -16,12 +17,20 @@ struct RawMemoryStorage
 	opaque data<RAW_MEMORY_MAX_LEN>;
 };
 
+struct HashSet
+{
+	Hash hashes<>;
+	uint32 max_size;
+};
+
 union StorageObject switch (ObjectType type)
 {
 	case RAW_MEMORY:
 		RawMemoryStorage raw_memory_storage;
 	case NONNEGATIVE_INT64:
 		int64 nonnegative_int64;
+	case HASH_SET:
+		HashSet hash_set;
 };
 
 // in case of none:

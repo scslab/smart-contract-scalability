@@ -9,6 +9,8 @@
 #include "threadlocal/gc.h"
 #include "threadlocal/uid.h"
 
+#include "xdr/storage.h"
+
 namespace scs {
 
 class ExecutionContext;
@@ -19,7 +21,7 @@ class ThreadlocalContextStore
     {
         std::unique_ptr<ExecutionContext> ctx;
 
-        MultitypeGarbageCollector<StorageObject>
+        MultitypeGarbageCollector<StorageDeltaClass>
             gc;
 
         UniqueIdentifier uid;

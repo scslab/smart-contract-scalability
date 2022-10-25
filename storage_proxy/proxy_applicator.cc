@@ -158,39 +158,6 @@ ProxyApplicator::try_apply(StorageDelta const& d)
 				}
 				overall_delta = *res;
 				break;
-				/*
-
-				int64_t d_delta = d.set_add_nonnegative_int64().delta;
-
-				if (d_delta < 0)
-				{
-					if (__builtin_add_overflow_p(d_delta, overall_delta->set_add_nonnegative_int64().delta, static_cast<int64_t>(0)))
-					{
-						return false;
-					}
-					int64_t new_delta = overall_delta -> set_add_nonnegative_int64().delta + d_delta;
-					int64_t set_value = overall_delta -> set_add_nonnegative_int64().set_value;
-
-					if (__builtin_add_overflow_p(set_value, new_delta, static_cast<int64_t>(0)))
-					{
-						return false;
-					}
-					if (set_value + new_delta < 0)
-					{
-						return false;
-					}
-
-					overall_delta -> set_add_nonnegative_int64().delta = new_delta;
-					break;
-				}
-				if (__builtin_add_overflow_p(d_delta, overall_delta -> set_add_nonnegative_int64().delta, static_cast<int64_t>(0)))
-				{
-					overall_delta -> set_add_nonnegative_int64().delta = INT64_MAX;
-					break;
-				}
-
-				overall_delta -> set_add_nonnegative_int64().delta += d_delta;
-				break; */
 			}
 		}
 		default:

@@ -76,6 +76,29 @@ make_object_from_delta(StorageDelta const& d)
 	}
 	return out;
 }
+
+StorageObject
+object_from_delta_class(StorageDeltaClass const& dc, std::optional<StorageObject> const& prev_object)
+{
+	StorageObject out;
+	out.type(dc.type());
+	switch(out.type())
+	{
+		case ObjectType::RAW_MEMORY:
+		{
+			out.raw_memory_storage().data = dc.data();
+			break;
+		}
+		case ObjectType::NONNEGATIVE_INT64:
+		{
+			out.nonnegative_int64() = dc.nonnegative_int64();
+			break;
+		}
+		default:
+			throw std::runtime_error("unimpl sdc object_defaults.cc");
+	}
+	return out;
+}
 /*
 StorageObject
 make_default_object_by_type(ObjectType type)

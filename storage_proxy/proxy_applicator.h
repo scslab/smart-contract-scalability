@@ -2,9 +2,8 @@
 
 #include <optional>
 
-#include "object/delta_type_class.h"
-
 #include "xdr/storage.h"
+#include "xdr/storage_delta.h"
 
 namespace scs
 {

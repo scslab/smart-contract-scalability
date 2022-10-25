@@ -19,7 +19,7 @@ class RevertableBaseObject
 {
     std::atomic<uint64_t> tag;
 
-    std::atomic<StorageObject*> obj;
+    std::atomic<StorageDeltaClass*> obj;
 
     std::optional<ObjectType> required_type;
 
@@ -75,9 +75,9 @@ class RevertableBaseObject
     RevertableBaseObject(const StorageObject& obj);
 
     std::optional<Rewind> __attribute__((warn_unused_result))
-    try_set(StorageObject const& new_obj);
+    try_set(StorageDeltaClass const& new_obj);
 
-    std::optional<StorageObject> __attribute__((warn_unused_result))
+    std::optional<StorageDeltaClass> __attribute__((warn_unused_result))
     commit_round_and_reset();
 
     void clear_required_type();
