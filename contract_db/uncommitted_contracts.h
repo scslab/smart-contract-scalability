@@ -12,7 +12,7 @@
 
 #include <wasm_api/wasm_api.h>
 
-#include <mtt/utils/non_movable.h>
+#include <utils/non_movable.h>
 
 namespace scs {
 

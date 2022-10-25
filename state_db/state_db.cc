@@ -1,5 +1,4 @@
 #include "state_db/state_db.h"
-#include "state_db/delta_batch.h"
 
 #include "debug/debug_macros.h"
 #include "debug/debug_utils.h"

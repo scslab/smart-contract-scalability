@@ -134,8 +134,17 @@ CC_WASMS = \
 
 $(CC_WASMS:.cc=.wasm) : $(wildcard cpp_contracts/sdk/*.h)
 
-AM_CPPFLAGS = $(xdrpp_CFLAGS) $(libsodium_CFLAGS) $(LIBFYAML_CFLAGS) $(tbb_CFLAGS) $(merkle_trie_toolkit_CFLAGS) $(wasm_api_CFLAGS) $(Catch2_CFLAGS)
-LDADD = $(xdrpp_LIBS) $(libsodium_LIBS) $(LIBFYAML_LIBS) $(tbb_LIBS) $(merkle_trie_toolkit_LIBS) $(wasm_api_LIBS) $(Catch2_LIBS)
+AM_CPPFLAGS = \
+	$(xdrpp_CFLAGS) \
+	$(libsodium_CFLAGS) \
+	$(LIBFYAML_CFLAGS) \
+	$(tbb_CFLAGS) \
+	$(utility_CFLAGS) \
+	$(lmdb_CFLAGS) \
+	$(merkle_trie_toolkit_CFLAGS) $(wasm_api_CFLAGS) $(Catch2_CFLAGS)
+LDADD = $(xdrpp_LIBS) \
+	$(libsodium_LIBS) $(LIBFYAML_LIBS) $(tbb_LIBS) $(utility_LIBS) $(lmdb_LIBS) \
+	$(merkle_trie_toolkit_LIBS) $(wasm_api_LIBS) $(Catch2_LIBS)
 
 $(SRCS:.cc=.o) : $(XH_FILES)
 $(TESTS_CCS:.cc=.o) : $(XH_FILES)

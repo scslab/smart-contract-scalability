@@ -2,7 +2,6 @@
 
 #include "threadlocal/threadlocal_context.h"
 
-#include "state_db/delta_batch.h"
 #include "state_db/state_db.h"
 
 #include "contract_db/contract_db.h"

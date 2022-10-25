@@ -11,7 +11,7 @@
 
 #include "contract_db/uncommitted_contracts.h"
 
-#include "mtt/utils/non_movable.h"
+#include <utils/non_movable.h>
 
 namespace scs {
 

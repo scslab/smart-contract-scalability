@@ -6,7 +6,7 @@ AC_CONFIG_MACRO_DIR([m4])
 OPT_FLAGS="-march=native -O3 -flto"
 DEBUG_FLAGS="-ggdb -O0"
 
-CXXFLAGS="-std=gnu++2a -fcoroutines $DEBUG_FLAGS $CXXFLAGS"
+CXXFLAGS="-std=gnu++2a -fcoroutines $OPT_FLAGS $CXXFLAGS"
 CXX="g++"
 
 AC_PROG_CXX
@@ -22,6 +22,7 @@ PKG_PROG_PKG_CONFIG
 PKG_CHECK_MODULES([libsodium], [libsodium])
 PKG_CHECK_MODULES([tbb], [tbb]);
 PKG_CHECK_MODULES([Catch2], [Catch2])
+PKG_CHECK_MODULES([lmdb], [lmdb])
 
 PKG_CHECK_MODULES(LIBFYAML, [ libfyaml ], HAVE_LIBFYAML=1, HAVE_LIBFYAML=0)
 
@@ -37,6 +38,8 @@ AM_CONDITIONAL([HAVE_LIBFYAML], [ test x$HAVE_LIBFYAML = x1 ])
 
 export CXXFLAGS
 
+AX_PKGCONFIG_SUBDIR(lib/utility)
+
 AX_PKGCONFIG_SUBDIR(lib/xdrpp)
 AC_MSG_CHECKING(for xdrc)
 AS_IF([test -n "$XDRC"],,
@@ -49,6 +52,23 @@ fi
 
 AC_MSG_RESULT($XDRC)
 AC_SUBST(XDRC)
+
+ABS_TOP_BUILDDIR=$ac_pwd
+ABS_TOP_SRCDIR=$ac_pwd
+export ABS_TOP_BUILDDIR
+export ABS_TOP_SRCDIR
+
+export xdrpp_INTERNAL
+
+global_XDRC=$XDRC
+export global_XDRC
+
+export xdrpp_CFLAGS
+export xdrpp_LIBS
+
+export utility_INTERNAL
+export utility_LIBS
+export utility_CFLAGS
 
 AX_PKGCONFIG_SUBDIR(lib/merkle_trie_toolkit)
 AX_PKGCONFIG_SUBDIR(lib/wasm_api)

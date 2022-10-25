@@ -1,6 +1,6 @@
 #pragma once
 
-#include <mtt/utils/non_movable.h>
+#include <utils/non_movable.h>
 
 #include "xdr/types.h"
 

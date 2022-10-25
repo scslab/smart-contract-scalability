@@ -3,7 +3,7 @@
 #include <iomanip>
 #include <sstream>
 
-#include "mtt/utils/serialize_endian.h"
+#include <utils/serialize_endian.h>
 
 namespace scs
 {
