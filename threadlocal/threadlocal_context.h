@@ -8,6 +8,7 @@
 
 #include "threadlocal/gc.h"
 #include "threadlocal/uid.h"
+#include "threadlocal/allocator.h"
 
 #include "xdr/storage.h"
 
@@ -29,6 +30,8 @@ class ThreadlocalContextStore
 
     inline static utils::ThreadlocalCache<context_t> cache;
 
+    inline static BlockAllocator<Hash> hash_allocator;
+
     ThreadlocalContextStore() = delete;
 
   public:
@@ -38,6 +41,18 @@ class ThreadlocalContextStore
     static void defer_delete(const delete_t* ptr)
     {
         (cache.get()).gc.template deferred_delete<delete_t>(ptr);
+    }
+
+    static Hash const& 
+    get_hash(uint32_t idx)
+    {
+        return hash_allocator.get(idx);
+    }
+
+    static uint32_t 
+    allocate_hash(Hash&& h)
+    {
+        return hash_allocator.allocate(std::move(h));
     }
 
     static uint64_t get_uid();

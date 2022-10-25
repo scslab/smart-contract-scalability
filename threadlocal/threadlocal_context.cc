@@ -43,12 +43,15 @@ ThreadlocalContextStore::post_block_clear()
             // no need to reset uid, we're not going to overflow 2^48
         }
     }
+
+    hash_allocator.reset();
 }
 
 void
 ThreadlocalContextStore::clear_entire_context()
 {
     cache.clear();
+    hash_allocator.reset();
 }
 
 } // namespace scs

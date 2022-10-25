@@ -46,6 +46,12 @@ FILTER_SRCS = \
 	filter/apply_context.cc \
 	filter/filter_context.cc
 
+HASH_SET_SRCS = \
+	hash_set/atomic_set.cc
+
+HASH_SET_TEST_SRCS = \
+	hash_set/tests/test_atomic_set.cc
+
 OBJECT_SRCS = \
 	object/make_delta.cc \
 	object/object_defaults.cc \
@@ -82,6 +88,7 @@ SRCS = \
 	$(CONTRACT_DB_SRCS) \
 	$(CRYPTO_SRCS) \
 	$(DEBUG_SRCS) \
+	$(HASH_SET_SRCS) \
 	$(OBJECT_SRCS) \
 	$(PHASE_SRCS) \
 	$(STATE_DB_SRCS) \
@@ -98,7 +105,8 @@ TESTS_CCS = \
 	tests/builtin_fns_invoke_tests.cc \
 	tests/storage_tests.cc \
 	storage_proxy/tests/test_proxy_applicator.cc \
-	object/tests/test_revertable_object.cc
+	object/tests/test_revertable_object.cc \
+	$(HASH_SET_TEST_SRCS)
 
 MAIN_CCS = \
 	main/filter_perf.cc
