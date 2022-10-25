@@ -12,10 +12,6 @@ std::optional<ObjectType>
 object_type_from_delta_type(DeltaType d_type);
 
 std::optional<StorageObject>
-make_default_object_by_delta(StorageDelta const& d);
+make_object_from_delta(StorageDelta const& d);
 
-/*
-StorageObject
-make_default_object_by_type(ObjectType type);
-*/
 } /* scs */

@@ -7,9 +7,120 @@
 
 #include "xdr/storage_delta.h"
 
+#include "object/make_delta.h"
+
 namespace scs
 {
 
+bool
+ProxyApplicator::delta_apply_type_guard(StorageDelta const& d) const
+{
+	if (!current)
+	{
+		return true;
+	}
+	switch(d.type())
+	{
+		case DeltaType::RAW_MEMORY_WRITE:
+		{
+			return current -> type() == ObjectType::RAW_MEMORY;
+		}
+		case DeltaType::NONNEGATIVE_INT64_SET_ADD:
+		{
+			return current -> type() == ObjectType::NONNEGATIVE_INT64;
+		}
+		default:
+			throw std::runtime_error("unknown deltatype");
+	}
+}
+
+bool
+ProxyApplicator::try_apply(StorageDelta const& d)
+{
+	if (d.type() == DeltaType::DELETE_LAST)
+	{
+		is_deleted = true;
+		current = std::nullopt;
+		return true;
+	}
+
+	if (is_deleted)
+	{
+		return false;
+	}
+
+	if (!delta_apply_type_guard(d))
+	{
+		return false;
+	}
+
+	switch(d.type())
+	{
+		case DeltaType::RAW_MEMORY_WRITE:
+		{
+			overall_delta = d;
+			break;
+		}
+		case DeltaType::NONNEGATIVE_INT64_SET_ADD:
+		{
+			if (!overall_delta)
+			{
+				overall_delta = d;
+				break;
+			} 
+			else
+			{
+				if (overall_delta->set_add_nonnegative_int64().set_value != d.set_add_nonnegative_int64().set_value)
+				{
+					return false;
+				}
+				int64_t d_delta = d.set_add_nonnegative_int64().delta;
+
+				if (d_delta < 0)
+				{
+					if (__builtin_add_overflow_p(d_delta, overall_delta->set_add_nonnegative_int64().delta, static_cast<int64_t>(0)))
+					{
+						return false;
+					}
+					int64_t new_delta = overall_delta -> set_add_nonnegative_int64().delta + d_delta;
+					int64_t set_value = overall_delta -> set_add_nonnegative_int64().set_value;
+
+					if (__builtin_add_overflow_p(set_value, new_delta, static_cast<int64_t>(0)))
+					{
+						return false;
+					}
+					if (set_value + new_delta < 0)
+					{
+						return false;
+					}
+
+					overall_delta -> set_add_nonnegative_int64().delta = new_delta;
+					break;
+				}
+				if (__builtin_add_overflow_p(d_delta, overall_delta -> set_add_nonnegative_int64().delta, static_cast<int64_t>(0)))
+				{
+					overall_delta -> set_add_nonnegative_int64().delta = INT64_MAX;
+					break;
+				}
+
+				overall_delta -> set_add_nonnegative_int64().delta += d_delta;
+				break;
+			}
+		}
+		default:
+			throw std::runtime_error("unknown deltatype");
+	}
+
+	if (!overall_delta)
+	{
+		throw std::runtime_error("should not reach end of try_apply without an overall_delta");
+	}
+
+	current = make_object_from_delta(*overall_delta);
+	return true;
+}
+
+/*
 bool 
 ProxyApplicator::try_apply(StorageDelta const& d)
 {
@@ -48,8 +159,6 @@ ProxyApplicator::try_apply(StorageDelta const& d)
 		base = make_default_object_by_delta(d);
 	}
 
-	//if (d.type() == DeltaType::DELETE_FIRST
-	//	|| d.type() == DeltaType::DELETE_LAST)
 	if (d.type() == DeltaType::DELETE_LAST)
 	{
 		base = std::nullopt;
@@ -144,6 +253,7 @@ ProxyApplicator::try_apply(StorageDelta const& d)
 	r.clear();
 	return true;
 }
+*/
 
 std::optional<StorageObject> const&
 ProxyApplicator::get() const
@@ -159,30 +269,38 @@ ProxyApplicator::get() const
 		return null_obj;
 	}
 
-	if (!base)
+	if (!current)
 	{
 		return null_obj;
 	}
-/*
-	if (base -> type() == ObjectType::NONNEGATIVE_INT64)
+
+	OBJECT_INFO("returning %s", debug::storage_object_to_str(current).c_str());
+	return current;
+}
+
+std::vector<StorageDelta>
+ProxyApplicator::get_deltas() const
+{
+	if (!overall_delta)
 	{
-		StorageObject out = *base;
-
-		out.nonnegative_int64() = base -> nonnegative_int64() - subtracted_amount;
-
-		if (__builtin_add_overflow_p(out.nonnegative_int64(), mod_context.added_amount, static_cast<int64_t>(0)))
+		if (is_deleted)
 		{
-			out.nonnegative_int64() = INT64_MAX;
-		} else
-		{
-			out.nonnegative_int64() += mod_context.added_amount;
+			//std::printf("ProxyApplicator::get_deltas: return delete_last (no delta)\n");
+			return { make_delete_last() };
 		}
-		OBJECT_INFO("returning %s", debug::storage_object_to_str(out).c_str());
-		return out;
-	}*/
+		//std::printf("ProxyApplicator::get_deltas: return null (no delta)\n");
+		return {};
+	}
 
-	OBJECT_INFO("returning %s", debug::storage_object_to_str(base).c_str());
-	return base;
+	if (is_deleted)
+	{
+		//std::printf("ProxyApplicator::get_deltas: return (delta, delete_last)\n");
+		return { *overall_delta, make_delete_last() };
+	}
+
+	//std::printf("ProxyApplicator::get_deltas: return delete_last\n");
+
+	return { *overall_delta };
 }
 
 } /* scs */

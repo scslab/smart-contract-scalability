@@ -21,7 +21,7 @@ object_type_from_delta_type(DeltaType d_type)
 }
 
 std::optional<StorageObject>
-make_default_object_by_delta(StorageDelta const& d)
+make_object_from_delta(StorageDelta const& d)
 {
 	auto d_type = d.type();
 
@@ -30,7 +30,6 @@ make_default_object_by_delta(StorageDelta const& d)
 		return std::nullopt;
 	}
 
-	std::optional<StorageObject> out = StorageObject();
 	ObjectType type;
 	switch (d_type) {
 		case DeltaType::RAW_MEMORY_WRITE:
@@ -43,18 +42,20 @@ make_default_object_by_delta(StorageDelta const& d)
 			throw std::runtime_error(std::string("invalid type passed to make_default_object: ") + std::to_string(d_type));
 	}
 
-	out->type(type);
+	StorageObject out;
+	out.type(type);
 	switch(d_type)
 	{
 		case DeltaType::RAW_MEMORY_WRITE:
-			return out;
+			out.raw_memory_storage().data = d.data();
+			break;
 		case DeltaType::NONNEGATIVE_INT64_SET_ADD:
-			out -> nonnegative_int64() = d.set_add_nonnegative_int64().set_value;
-			return out;
-		// warning police
+			out.nonnegative_int64() = d.set_add_nonnegative_int64().set_value;
+			break;
 		default:
 			throw std::runtime_error("unknown d_type in make_default_object");
 	}
+	return out;
 }
 /*
 StorageObject

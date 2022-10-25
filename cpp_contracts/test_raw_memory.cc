@@ -32,7 +32,7 @@ set_key()
 }
 
 EXPORT("pub02000000")
-check_double_write_fail()
+check_double_write()
 {
 	auto calldata = sdk::get_calldata<calldata_0>();
 
@@ -80,4 +80,16 @@ delete_key_last()
 	auto calldata = sdk::get_calldata<calldata_0>();
 	auto const& key = calldata.key;
 	sdk::delete_last(key);
+}
+EXPORT("pub06000000")
+write_after_delete()
+{
+	auto calldata = sdk::get_calldata<calldata_0>();
+	auto const& key = calldata.key;
+	sdk::delete_last(key);
+
+	calldata_1 c1 {.key = key, .value = 0x1234};
+
+	auto self = sdk::get_self();
+	sdk::invoke(self, 1, c1);
 }

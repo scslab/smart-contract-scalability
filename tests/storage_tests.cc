@@ -321,6 +321,11 @@ TEST_CASE("raw mem storage write", "[storage]")
         phase_finish_block(scs_data_structures, *block_context);
     };
 
+    auto start_new_block = [&] () 
+    {
+        block_context = std::make_unique<BlockContext>();
+    };
+
     auto make_key
         = [](Address const& addr, InvariantKey const& key) -> AddressAndKey {
         AddressAndKey out;
@@ -580,7 +585,7 @@ TEST_CASE("raw mem storage write", "[storage]")
         exec_fail(tx_hash, tx);
     }
 
-    SECTION("double write fail")
+    SECTION("double write one tx ok")
     {
         calldata_0 data{ .key = k0 };
 
@@ -588,32 +593,31 @@ TEST_CASE("raw mem storage write", "[storage]")
 
         auto [tx_hash, tx] = make_transaction(a0, invocation);
 
-        // fails because it tries to call set() on one mem location twice in a
-        // tx
-        exec_fail(tx_hash, tx);
+        exec_success(tx_hash, tx);
         {
             auto const& logs = exec_ctx.get_logs();
-            REQUIRE(logs.size() == 1);
+            REQUIRE(logs.size() == 2);
             REQUIRE(logs[0]
                     == std::vector<uint8_t>{
                         0x34, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
+            REQUIRE(logs[1]
+                == std::vector<uint8_t>{
+                        0xBB, 0xAA, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
         }
-
-        // tx_block -> template
-        // invalidate<TransactionFailurePoint::COMPUTE>(tx_hash);
 
         finish_block();
 
-        require_invalid(tx_hash);
-
-        // REQUIRE(
-        //	!tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
+        require_valid(tx_hash);
 
         auto hk0 = make_key(h, k0);
 
         auto db_val = state_db.get_committed_value(hk0);
 
-        REQUIRE(!db_val);
+        REQUIRE(!!db_val);
+
+        REQUIRE(db_val->raw_memory_storage().data
+                == xdr::opaque_vec<RAW_MEMORY_MAX_LEN>{
+                    0xBB, 0xAA, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
     }
 
     SECTION("read own writes")
@@ -638,9 +642,6 @@ TEST_CASE("raw mem storage write", "[storage]")
 
         require_valid(tx_hash);
 
-        // REQUIRE(
-        //	tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
-
         auto hk0 = make_key(h, k0);
 
         auto db_val = state_db.get_committed_value(hk0);
@@ -650,5 +651,42 @@ TEST_CASE("raw mem storage write", "[storage]")
         REQUIRE(db_val->raw_memory_storage().data
                 == xdr::opaque_vec<RAW_MEMORY_MAX_LEN>{
                     0x34, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
+    }
+    SECTION("write after delete bad")
+    {
+        auto hk0 = make_key(h, k0);
+        {
+            calldata_1 data{ .key = k0, .value = 0xAABBCCDDEEFF0011 };
+
+            TransactionInvocation invocation(h, 1, test::make_calldata(data));
+
+            auto [tx_hash, tx] = make_transaction(a0, invocation);
+
+            exec_success(tx_hash, tx);
+
+            finish_block();
+
+            require_valid(tx_hash);
+            REQUIRE(!!state_db.get_committed_value(hk0));
+
+            start_new_block();
+        }
+
+
+        calldata_0 data{ .key = k0 };
+
+        TransactionInvocation invocation(h, 6, test::make_calldata(data));
+
+        auto [tx_hash, tx] = make_transaction(a0, invocation);
+
+        exec_fail(tx_hash, tx);
+
+        finish_block();
+
+        require_invalid(tx_hash);
+
+        auto db_val = state_db.get_committed_value(hk0);
+
+        REQUIRE(!!db_val);
     }
 }

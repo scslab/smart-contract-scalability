@@ -47,7 +47,6 @@ FILTER_SRCS = \
 	filter/filter_context.cc
 
 OBJECT_SRCS = \
-	object/delta_type_class.cc \
 	object/make_delta.cc \
 	object/object_defaults.cc \
 	object/revertable_object.cc
@@ -56,12 +55,9 @@ PHASE_SRCS = \
 	phase/phases.cc
 
 STATE_DB_SRCS = \
-	state_db/delta_batch.cc \
-	state_db/delta_batch_value.cc \
 	state_db/delta_vec.cc \
 	state_db/modified_keys_list.cc \
 	state_db/new_key_cache.cc \
-	state_db/serial_delta_batch.cc \
 	state_db/state_db.cc
 
 STORAGE_PROXY_SRCS = \
@@ -86,7 +82,6 @@ SRCS = \
 	$(CONTRACT_DB_SRCS) \
 	$(CRYPTO_SRCS) \
 	$(DEBUG_SRCS) \
-	$(FILTER_SRCS) \
 	$(OBJECT_SRCS) \
 	$(PHASE_SRCS) \
 	$(STATE_DB_SRCS) \
@@ -103,7 +98,6 @@ TESTS_CCS = \
 	tests/builtin_fns_invoke_tests.cc \
 	tests/storage_tests.cc \
 	storage_proxy/tests/test_proxy_applicator.cc \
-	object/tests/test_delta_typeclass.cc \
 	object/tests/test_revertable_object.cc
 
 MAIN_CCS = \

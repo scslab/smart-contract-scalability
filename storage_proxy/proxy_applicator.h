@@ -18,27 +18,19 @@ class ProxyApplicator
 	#else
 		const std::optional<StorageObject> null_obj = std::nullopt;
 	#endif
-	
 
-	std::optional<StorageObject> base;
+	std::optional<StorageObject> current;
 
-	DeltaTypeClass typeclass;
-
+	std::optional<StorageDelta> overall_delta;
 	bool is_deleted = false;
 
-	/* -- mem -- */
-
-	bool mem_set_called = false;
-
-	/* -- nn int64 -- */
-
-	bool nn_int64_set_called = false;
+	bool delta_apply_type_guard(StorageDelta const& d) const;
 
 public:
 
 	ProxyApplicator(std::optional<StorageObject> const& base)
-		: base(base)
-		, typeclass()
+		: current(base)
+		, overall_delta(std::nullopt)
 		{}
 
 	// no-op if result is false, apply if result is true
@@ -49,11 +41,7 @@ public:
 	std::optional<StorageObject> const&
 	get() const;
 
-	const DeltaTypeClass& get_tc() const
-	{
-		return typeclass;
-	}
-
+	std::vector<StorageDelta> get_deltas() const;
 };
 
 } /* scs */

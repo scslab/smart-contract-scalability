@@ -34,21 +34,6 @@ TEST_CASE("raw mem only", "[mutator]")
 		return make_raw_memory_write(std::move(copy));
 	};
 
-	auto expect_valence = [&] (TypeclassValence tcv)
-	{
-		REQUIRE(applicator->get_tc().get_valence().tv.type() == tcv);
-	};
-
-	auto tc_expect_mem_value = [&] (raw_mem_val v)
-	{
-		REQUIRE(applicator->get_tc().get_valence().tv.data() == v);
-	};
-
-	auto tc_expect_deleted_last = [&] ()
-	{
-		REQUIRE(applicator->get_tc().get_valence().deleted_last == 1);
-	};
-
 	auto val_expect_mem_value = [&] (raw_mem_val v)
 	{
 		REQUIRE(applicator->get());
@@ -79,8 +64,7 @@ TEST_CASE("raw mem only", "[mutator]")
 		{
 			check_valid(make_delete_last());
 
-			REQUIRE(applicator->get() == std::nullopt);
-			expect_valence(TypeclassValence::TV_FREE);
+			val_expect_nullopt();
 		}
 
 		/*SECTION("delete first and last")
@@ -107,38 +91,28 @@ TEST_CASE("raw mem only", "[mutator]")
 		{
 			check_valid(make_raw_mem_write(val1));
 
-			expect_valence(TypeclassValence::TV_RAW_MEMORY_WRITE);
-			tc_expect_mem_value(val1);
 			val_expect_mem_value(val1);
 		}
 		SECTION("two write different")
 		{
 			check_valid(make_raw_mem_write(val1));
 
-			expect_valence(TypeclassValence::TV_RAW_MEMORY_WRITE);
-			tc_expect_mem_value(val1);
 			val_expect_mem_value(val1);
 
-			check_invalid(make_raw_mem_write(val2));
+			check_valid(make_raw_mem_write(val2));
 
-			expect_valence(TypeclassValence::TV_RAW_MEMORY_WRITE);
-			tc_expect_mem_value(val1);
-			val_expect_mem_value(val1);
+			val_expect_mem_value(val2);
 		}
 
 		SECTION("two write same")
 		{
 			check_valid(make_raw_mem_write(val1));
 
-			expect_valence(TypeclassValence::TV_RAW_MEMORY_WRITE);
-			tc_expect_mem_value(val1);
 			val_expect_mem_value(val1);
 
 
 			check_valid(make_raw_mem_write(val1));
 
-			expect_valence(TypeclassValence::TV_RAW_MEMORY_WRITE);
-			tc_expect_mem_value(val1);
 			val_expect_mem_value(val1);
 		}
 
@@ -146,11 +120,9 @@ TEST_CASE("raw mem only", "[mutator]")
 		{
 
 			check_valid(make_raw_mem_write(val1));
-			check_valid(make_delete_last());
+			val_expect_mem_value(val1);
 
-			expect_valence(TypeclassValence::TV_RAW_MEMORY_WRITE);
-			tc_expect_deleted_last();
-			tc_expect_mem_value(val1);
+			check_valid(make_delete_last());
 			val_expect_nullopt();
 
 		}
@@ -161,8 +133,6 @@ TEST_CASE("raw mem only", "[mutator]")
 			check_valid(make_delete_last());
 			check_invalid(make_raw_mem_write(val1));
 
-			expect_valence(TypeclassValence::TV_FREE);
-			tc_expect_deleted_last();
 			val_expect_nullopt();
 		}
 	}
@@ -178,9 +148,6 @@ TEST_CASE("raw mem only", "[mutator]")
 		{
 			check_valid(make_raw_mem_write(val1));
 
-			expect_valence(TypeclassValence::TV_RAW_MEMORY_WRITE);
-
-			tc_expect_mem_value(val1);
 			val_expect_mem_value(val1);
 		}
 
@@ -188,48 +155,36 @@ TEST_CASE("raw mem only", "[mutator]")
 		{
 			check_valid(make_raw_mem_write(val2));
 
-			expect_valence(TypeclassValence::TV_RAW_MEMORY_WRITE);
-
-			tc_expect_mem_value(val2);
 			val_expect_mem_value(val2);
 		}
 
 		SECTION("one delete last")
 		{
 			check_valid(make_delete_last());
-
-			expect_valence(TypeclassValence::TV_FREE);
-			tc_expect_deleted_last();
 			val_expect_nullopt();
 		}
-		/*SECTION("one delete first")
+
+		SECTION("write post delete")
 		{
-
-			check_valid(make_delete_first());
-
-			expect_valence(TypeclassValence::TV_DELETE_FIRST);
+			check_valid(make_delete_last());
 			val_expect_nullopt();
-		} */
+
+			check_invalid(make_raw_mem_write(val1));
+			val_expect_nullopt();
+		}
 
 		SECTION("two writes of same (different from init) value")
 		{
 			check_valid(make_raw_mem_write(val2));
 			check_valid(make_raw_mem_write(val2));
 
-			expect_valence(TypeclassValence::TV_RAW_MEMORY_WRITE);
-
-			tc_expect_mem_value(val2);
 			val_expect_mem_value(val2);
 		}
 		SECTION("two writes of diff values")
 		{
 			check_valid(make_raw_mem_write(val2));
-			check_invalid(make_raw_mem_write(val1));
-
-			expect_valence(TypeclassValence::TV_RAW_MEMORY_WRITE);
-
-			tc_expect_mem_value(val2);
-			val_expect_mem_value(val2);
+			check_valid(make_raw_mem_write(val1));
+			val_expect_mem_value(val1);
 		} 
 	} 
 }
