@@ -34,6 +34,67 @@ ProxyApplicator::delta_apply_type_guard(StorageDelta const& d) const
 	}
 }
 
+std::optional<StorageDelta>
+make_nnint64_delta(int64_t base, int64_t old_delta, int64_t new_delta)
+{
+	if (new_delta < 0)
+	{
+		if (__builtin_add_overflow_p(new_delta, old_delta, static_cast<int64_t>(0)))
+		{
+			std::printf("overflow on delta\n");
+			return std::nullopt;
+		}
+
+		new_delta += old_delta;
+
+		if (__builtin_add_overflow_p(base, new_delta, static_cast<int64_t>(0)))
+		{			
+			std::printf("overflow on base + delta\n");
+
+			if (new_delta < 0)
+			{
+				// base + new_delta < INT64_MIN
+				return std::nullopt;
+			} else
+			{
+				// base + new_delta > INT64_MAX
+
+				// reject if and only if base+old_delta < 0
+				// but base + old_delta < 0 only if base < 0
+
+				if (base < 0)
+				{
+					if (old_delta < 0)
+					{
+						throw std::runtime_error("invalid input to make_nnint64_delta");
+					}
+
+					return std::nullopt;
+				}
+
+				return make_nonnegative_int64_set_add(base, new_delta);
+			}
+		}
+		if (base + new_delta < 0)
+		{
+			std::printf("negative result\n");
+			return std::nullopt;
+		}
+
+		return make_nonnegative_int64_set_add(base, new_delta);
+	}
+	//else new_delta >= 0
+	if (__builtin_add_overflow_p(old_delta, new_delta, static_cast<int64_t>(0)))
+	{
+		new_delta = INT64_MAX;
+	} else
+	{
+		new_delta += old_delta;
+	}
+
+	return make_nonnegative_int64_set_add(base, new_delta);
+}
+
 bool
 ProxyApplicator::try_apply(StorageDelta const& d)
 {
@@ -65,15 +126,40 @@ ProxyApplicator::try_apply(StorageDelta const& d)
 		{
 			if (!overall_delta)
 			{
-				overall_delta = d;
-				break;
+				auto res = make_nnint64_delta(d.set_add_nonnegative_int64().set_value, 0, d.set_add_nonnegative_int64().delta);
+				if (res)
+				{
+					overall_delta = res;
+					break;
+				} else
+				{
+					std::printf("no overall_delta return false;\n");
+					return false;
+				}
 			} 
 			else
 			{
 				if (overall_delta->set_add_nonnegative_int64().set_value != d.set_add_nonnegative_int64().set_value)
 				{
+					std::printf("base mismatch return false;\n");
+
 					return false;
 				}
+
+				auto res = make_nnint64_delta(
+					overall_delta -> set_add_nonnegative_int64().set_value,
+					overall_delta -> set_add_nonnegative_int64().delta,
+					d.set_add_nonnegative_int64().delta);
+
+				if (!res)
+				{
+					std::printf("has overall_delta return false;\n");
+					return false;
+				}
+				overall_delta = *res;
+				break;
+				/*
+
 				int64_t d_delta = d.set_add_nonnegative_int64().delta;
 
 				if (d_delta < 0)
@@ -104,7 +190,7 @@ ProxyApplicator::try_apply(StorageDelta const& d)
 				}
 
 				overall_delta -> set_add_nonnegative_int64().delta += d_delta;
-				break;
+				break; */
 			}
 		}
 		default:
@@ -266,11 +352,6 @@ ProxyApplicator::get() const
 	if (is_deleted)
 	{
 		OBJECT_INFO("returning deleted object");
-		return null_obj;
-	}
-
-	if (!current)
-	{
 		return null_obj;
 	}
 

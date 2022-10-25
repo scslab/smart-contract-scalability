@@ -52,40 +52,12 @@ TEST_CASE("raw mem only", "[mutator]")
 	{
 		applicator = std::make_unique<ProxyApplicator>(std::nullopt);
 
-	/*	SECTION("one delete first")
-		{
-			check_valid(make_delete_first());
-
-			REQUIRE(applicator->get() == std::nullopt);
-			expect_valence(TypeclassValence::TV_DELETE_FIRST);
-		} */
-
 		SECTION("one delete last")
 		{
 			check_valid(make_delete_last());
 
 			val_expect_nullopt();
 		}
-
-		/*SECTION("delete first and last")
-		{
-			check_valid(make_delete_first());
-			check_valid(make_delete_last());
-
-			REQUIRE(applicator->get() == std::nullopt);
-			expect_valence(TypeclassValence::TV_DELETE_FIRST);
-			tc_expect_deleted_last();
-		}
-
-		SECTION("delete last and first")
-		{
-			check_valid(make_delete_last());
-			check_valid(make_delete_first());
-
-			REQUIRE(applicator->get() == std::nullopt);
-			expect_valence(TypeclassValence::TV_DELETE_FIRST);
-			tc_expect_deleted_last();
-		} */
 
 		SECTION("one write")
 		{
@@ -188,31 +160,31 @@ TEST_CASE("raw mem only", "[mutator]")
 		} 
 	} 
 }
-/*
+
 TEST_CASE("nonnegative int64 only", "[mutator]")
 {
-	TxBlock txs;
+	
+	std::unique_ptr<ProxyApplicator> applicator;
 
-	// just need different hashes
-	Transaction tx1, tx2, tx3;
-	tx1.gas_limit = 1;
-	tx2.gas_limit = 2;
-	tx3.gas_limit = 3;
-
-	auto h1 = txs.insert_tx(tx1);
-	auto h2 = txs.insert_tx(tx2);
-	auto h3 = txs.insert_tx(tx3);
-
-	REQUIRE(h1 != h2);
-	REQUIRE(h1 != h3);
-	REQUIRE(h2 != h3);
-
-	auto make_priority = [] (Hash const& h, uint64_t p) -> DeltaPriority
+	auto check_valid = [&] (StorageDelta const& d)
 	{
-		DeltaPriority out;
-		out.tx_hash = h;
-		out.custom_priority = p;
-		return out;
+		REQUIRE(applicator -> try_apply(d));
+	};
+
+	auto check_invalid = [&] (StorageDelta const& d)
+	{
+		REQUIRE(!applicator -> try_apply(d));
+	};
+
+	auto val_expect_int64 = [&] (int64_t v)
+	{
+		REQUIRE(applicator->get());
+		REQUIRE(applicator->get()->nonnegative_int64() == v);
+	};
+
+	auto val_expect_nullopt = [&] ()
+	{
+		REQUIRE(!applicator->get());
 	};
 
 	auto make_set_add_delta = [] (int64_t set_value, int64_t delta_value)
@@ -220,157 +192,108 @@ TEST_CASE("nonnegative int64 only", "[mutator]")
 		return make_nonnegative_int64_set_add(set_value, delta_value);
 	};
 
-	auto check_valid = [&] (Hash const& h, TransactionFailurePoint p = TransactionFailurePoint::FINAL)
-	{
-		REQUIRE(txs.is_valid(p, h));
-	};
-
-	auto check_invalid = [&] (Hash const& h, TransactionFailurePoint p = TransactionFailurePoint::FINAL)
-	{
-		REQUIRE(!txs.is_valid(p, h));
-	};
-
-
-	DeltaVector vec;
-	ObjectMutator base;
-
-	auto make_expect = [] (int64_t val)
-	{
-		StorageObject obj;
-		obj.type(ObjectType::NONNEGATIVE_INT64);
-		obj.nonnegative_int64() = val;
-		return obj;
-	};
-
 	SECTION("no base obj")
 	{
+		applicator = std::make_unique<ProxyApplicator>(std::nullopt);
 		SECTION("strict negative")
 		{
-			vec.add_delta(make_set_add_delta(0, -1), make_priority(h1, 1));
-
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
-
-			check_invalid(h1);
-
-			base.apply_valid_deltas(vec, txs);
-
-			REQUIRE(!base.get_object());
+			check_invalid(make_set_add_delta(0, -1));
+			val_expect_nullopt();
 		}
 		SECTION("pos ok")
 		{
-			vec.add_delta(make_set_add_delta(0, 1), make_priority(h1, 1));
-
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
-
-			check_valid(h1);
-
-			base.apply_valid_deltas(vec, txs);
-
-			REQUIRE(!!base.get_object());
-			REQUIRE(*base.get_object() == make_expect(1));
+			check_valid(make_set_add_delta(0, 1));
+			val_expect_int64(1);
 		}
 		SECTION("pos sub with set ok")
 		{
-			vec.add_delta(make_set_add_delta(10, -5), make_priority(h1, 1));
-
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
-
-			check_valid(h1);
-
-			base.apply_valid_deltas(vec, txs);
-
-			REQUIRE(!!base.get_object());
-			REQUIRE(*base.get_object() == make_expect(5));
+			check_valid(make_set_add_delta(10, -5));
+			val_expect_int64(5);
 		}
 		SECTION("neg add with set ok")
 		{
-			vec.add_delta(make_set_add_delta(-10, 5), make_priority(h1, 1));
-
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
-
-			check_valid(h1);
-
-			base.apply_valid_deltas(vec, txs);
-
-			REQUIRE(!!base.get_object());
-			REQUIRE(*base.get_object() == make_expect(-5));
+			check_valid(make_set_add_delta(-10, 5));
+			val_expect_int64(-5);
 		}
 		SECTION("neg add with neg bad")
 		{
-			vec.add_delta(make_set_add_delta(-10, -5), make_priority(h1, 1));
-
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
-
-			check_invalid(h1);
-
-			base.apply_valid_deltas(vec, txs);
-
-			REQUIRE(!base.get_object());
+			check_invalid(make_set_add_delta(-10, -5));
+			val_expect_nullopt();
 		}
 
 		SECTION("conflicting sets bad")
 		{
-			vec.add_delta(make_set_add_delta(10, -5), make_priority(h1, 1));
-			vec.add_delta(make_set_add_delta(15, -5), make_priority(h2, 2));
+			check_valid(make_set_add_delta(10, -5));
+			check_invalid(make_set_add_delta(20, -5));
 
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
+			val_expect_int64(5);
 
-			check_invalid(h1);
-			check_valid(h2);
+			check_invalid(make_set_add_delta(10, -6));
 
-			base.apply_valid_deltas(vec, txs);
-
-			REQUIRE(!!base.get_object());
-			REQUIRE(*base.get_object() == make_expect(10));
+			val_expect_int64(5);
 		}
 
 		SECTION("conflicting subs bad")
 		{
-			vec.add_delta(make_set_add_delta(10, -5), make_priority(h1, 1));
-			vec.add_delta(make_set_add_delta(10, -5), make_priority(h2, 2));
-			vec.add_delta(make_set_add_delta(10, -1), make_priority(h3, 0));
+			check_valid(make_set_add_delta(10, -5));
+			check_invalid(make_set_add_delta(10, -6));
 
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
-
-			check_valid(h1);
-			check_valid(h2);
-			check_invalid(h3);
-
-			base.apply_valid_deltas(vec, txs);
-
-			REQUIRE(!!base.get_object());
-			REQUIRE(*base.get_object() == make_expect(0));
+			val_expect_int64(5);
 		}
 
 		SECTION("invalid single delta")
 		{
-			vec.add_delta(make_set_add_delta(10, -11), make_priority(h1, 1));
+			check_invalid(make_set_add_delta(10, -11));
 
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
-
-			check_invalid(h1);
-
-			base.apply_valid_deltas(vec, txs);
-
-			REQUIRE(!base.get_object());
+			val_expect_nullopt();
 		}
 
 		SECTION("check overflow multi subs")
 		{
-			vec.add_delta(make_set_add_delta(INT64_MAX, INT64_MIN + 10), make_priority(h1, 1));
-			vec.add_delta(make_set_add_delta(INT64_MAX, -10), make_priority(h2, 0));
+			check_valid(make_set_add_delta(INT64_MAX, INT64_MIN + 10));
+			check_invalid(make_set_add_delta(INT64_MAX, INT64_MIN + 10));
 
-			base.template filter_invalid_deltas<TransactionFailurePoint::COMPUTE>(vec, txs);
+			val_expect_int64(9);
+		}
+		SECTION("check pos overflow")
+		{
+			check_valid(make_set_add_delta(INT64_MAX, 1));
+			check_valid(make_set_add_delta(INT64_MAX, INT64_MAX));
+			check_valid(make_set_add_delta(INT64_MAX, INT64_MAX));
 
-			check_valid(h1);
-			check_invalid(h2);
+			val_expect_int64(INT64_MAX);
 
-			base.apply_valid_deltas(vec, txs);
+			check_valid(make_set_add_delta(INT64_MAX, INT64_MIN + 10));
+			// delta is INT64_MAX + 9
 
-			REQUIRE(!!base.get_object());
-			REQUIRE(*base.get_object() == make_expect(9));
+			val_expect_int64(INT64_MAX);
+
+			check_valid(make_set_add_delta(INT64_MAX, -10));
+
+			val_expect_int64(INT64_MAX - 1);
+		}
+		SECTION("check neg overflow")
+		{
+			check_invalid(make_set_add_delta(INT64_MIN, -1));
+			check_valid(make_set_add_delta(INT64_MIN, 1));
+		}
+
+		SECTION("check neg overflow across multiple deltas")
+		{
+			check_valid(make_set_add_delta(INT64_MAX, INT64_MIN + 1));
+			check_invalid(make_set_add_delta(INT64_MAX, INT64_MIN));
+
+			val_expect_int64(0);
+		}
+
+		SECTION("check neg overflow across multiple deltas 2")
+		{
+			check_valid(make_set_add_delta(INT64_MIN, 0));
+			check_invalid(make_set_add_delta(INT64_MIN, -200));
+
+			val_expect_int64(INT64_MIN);
 		}
 	}
-} */
+} 
 
 } /* scs */

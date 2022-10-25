@@ -50,8 +50,27 @@ make_object_from_delta(StorageDelta const& d)
 			out.raw_memory_storage().data = d.data();
 			break;
 		case DeltaType::NONNEGATIVE_INT64_SET_ADD:
+		{
 			out.nonnegative_int64() = d.set_add_nonnegative_int64().set_value;
+			int64_t delta = d.set_add_nonnegative_int64().delta;
+
+			if (__builtin_add_overflow_p(delta, out.nonnegative_int64(), static_cast<int64_t>(0)))
+			{
+				if (delta < 0)
+				{
+					out.nonnegative_int64() = INT64_MIN;
+				}
+				else
+				{
+					out.nonnegative_int64() = INT64_MAX;
+				}
+			} else
+			{
+				out.nonnegative_int64() += delta;
+			}
+
 			break;
+		}
 		default:
 			throw std::runtime_error("unknown d_type in make_default_object");
 	}
