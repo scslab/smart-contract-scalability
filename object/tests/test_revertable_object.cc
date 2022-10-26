@@ -4,7 +4,11 @@
 
 #include "object/revertable_object.h"
 
+#include "threadlocal/threadlocal_context.h"
+
 #include "xdr/storage_delta.h"
+
+#include "crypto/hash.h"
 
 using xdr::operator==;
 
@@ -279,6 +283,133 @@ TEST_CASE("revert object from nonempty", "[object]")
             REQUIRE(object.get_committed_object());
 
             REQUIRE(object.get_committed_object()->body.nonnegative_int64() == 50);
+        }
+    }
+}
+
+TEST_CASE("hashset from empty", "[object]")
+{
+    test::DeferredContextClear defer;
+
+    RevertableObject object;
+
+    auto make_insert = [] (uint64_t i)
+    {
+        return make_hash_set_insert(hash_xdr<uint64_t>(i));
+    };
+
+    auto good_add = [&] (StorageDelta const& d)
+    {
+        auto res = object.try_add_delta(d);
+        REQUIRE(!!res);
+        res -> commit();
+    };
+
+    auto revert_good_add = [&] (StorageDelta const& d)
+    {
+        auto res = object.try_add_delta(d);
+        REQUIRE(!!res);
+    };
+
+    SECTION("insert & revert")
+    {
+        {
+            auto res = object.try_add_delta(make_insert(0));
+            REQUIRE(!!res);
+        }
+
+        object.commit_round();
+        REQUIRE(!object.get_committed_object());
+    }
+
+    SECTION("insert many, keep one")
+    {
+        {
+            auto res = object.try_add_delta(make_insert(0));
+            REQUIRE(!!res);
+            res -> commit();
+        }
+
+        {
+            auto res = object.try_add_delta(make_insert(1));
+            REQUIRE(!!res);
+        }
+
+        {
+            auto res = object.try_add_delta(make_insert(1));
+            REQUIRE(!!res);
+            auto res2 = object.try_add_delta(make_insert(1));
+            REQUIRE(!res2);
+        }
+
+        object.commit_round();
+        REQUIRE(object.get_committed_object());
+        auto const& hashes = object.get_committed_object() -> body.hash_set().hashes;
+
+        REQUIRE(hashes.size() == 1);
+        REQUIRE(hashes[0] == hash_xdr<uint64_t>(0));
+    }
+
+    SECTION("raise limit")
+    {
+        SECTION("overflow")
+        {
+            auto res = object.try_add_delta(make_hash_set_increase_limit(UINT16_MAX));
+            REQUIRE(!!res);
+            res -> commit();
+
+            auto res2 = object.try_add_delta(make_hash_set_increase_limit(UINT16_MAX));
+            REQUIRE(!!res2);
+            res2 -> commit();
+
+            object.commit_round();
+            REQUIRE(object.get_committed_object());
+
+            REQUIRE(object.get_committed_object() -> body.hash_set().hashes.size() == 0);
+            REQUIRE(object.get_committed_object() -> body.hash_set().max_size == MAX_HASH_SET_SIZE);
+        }
+
+        SECTION("no overflow, with a revert")
+        {
+            {
+                auto res = object.try_add_delta(make_hash_set_increase_limit(64));
+                REQUIRE(!!res);
+                res -> commit();
+
+                auto res2 = object.try_add_delta(make_hash_set_increase_limit(UINT16_MAX));
+                REQUIRE(!!res2);
+            }
+
+            object.commit_round();
+
+            REQUIRE(object.get_committed_object());
+
+            REQUIRE(object.get_committed_object() -> body.hash_set().hashes.size() == 0);
+            REQUIRE(object.get_committed_object() -> body.hash_set().max_size == 64 + START_HASH_SET_SIZE);
+        }
+    }
+
+    SECTION("clear")
+    {
+        good_add(make_insert(0));
+        good_add(make_insert(1));
+
+        SECTION("revert clear")
+        {
+            revert_good_add(make_hash_set_clear());
+
+            object.commit_round();
+            REQUIRE(object.get_committed_object());
+            REQUIRE(object.get_committed_object() -> body.hash_set().hashes.size() == 2);
+        }
+
+        SECTION("commit clear")
+        {
+            good_add(make_hash_set_clear());
+
+            object.commit_round();
+            REQUIRE(object.get_committed_object());
+            REQUIRE(object.get_committed_object() -> body.hash_set().hashes.size() == 0);
         }
     }
 }

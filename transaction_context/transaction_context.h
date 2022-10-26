@@ -81,7 +81,6 @@ public:
 	const Contract& get_deployable_contract(uint32_t index) const;
 	uint32_t get_num_deployable_contracts() const;
 
-
 	AddressAndKey 
 	get_storage_key(InvariantKey const& key) const;
 

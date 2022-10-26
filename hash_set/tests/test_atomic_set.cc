@@ -104,7 +104,7 @@ TEST_CASE("insert and delete", "[hashset]")
 
         REQUIRE(res.size() == 3);
         std::sort(res.begin(), res.end());
-        // experimentally determined
+        // experimentally determined ordering
         REQUIRE(res[0] == hash_xdr<uint64_t>(1));
         REQUIRE(res[1] == hash_xdr<uint64_t>(3));
         REQUIRE(res[2] == hash_xdr<uint64_t>(2));
