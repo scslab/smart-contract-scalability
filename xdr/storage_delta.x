@@ -11,6 +11,7 @@ enum DeltaType
 	NONNEGATIVE_INT64_SET_ADD = 2,
 	HASH_SET_INSERT = 3,
 	HASH_SET_INCREASE_LIMIT = 4,
+	HASH_SET_CLEAR = 5,
 };
 
 struct set_add_t
@@ -33,6 +34,8 @@ union StorageDelta switch (DeltaType type)
 		// enforced to be at most uint16_max
 		// (MAX_HASH_SET_SIZE)
 		uint32 limit_increase;
+	case HASH_SET_CLEAR:
+		void;
 };
 
 // REFUND DESIGN:

@@ -354,7 +354,20 @@ RevertableObject::try_add_delta(const StorageDelta& delta)
 
             return DeltaRewind(std::move(*res), delta, this);
         }
+        case DeltaType::HASH_SET_CLEAR:
+        {
+            StorageDeltaClass obj;
+            obj.type(ObjectType::HASH_SET);
+            auto res = base_obj.try_set(obj);
 
+            if (!res) {
+                return std::nullopt;
+            }
+
+            inflight_hashset_clears.fetch_add(1, std::memory_order_relaxed);
+
+            return DeltaRewind(std::move(*res), delta, this);
+        }
         default:
             throw std::runtime_error(
                 "unimplemented deltatype in RevertableObject::try_set");
@@ -399,6 +412,11 @@ RevertableObject::revert_delta(const StorageDelta& delta)
         case DeltaType::HASH_SET_INSERT: {
             num_new_elts.fetch_sub(1, std::memory_order_relaxed);
             new_hashes.erase(delta.hash());
+            return;
+        }
+        case DeltaType::HASH_SET_CLEAR:
+        {
+            inflight_hashset_clears.fetch_sub(1, std::memory_order_relaxed);
             return;
         }
     }
@@ -480,6 +498,11 @@ RevertableObject::clear_mods()
     total_subtracted.store(0, std::memory_order_relaxed);
     total_added.clear();
 
+    size_increase.store(0, std::memory_order_relaxed);
+    new_hashes.clear();
+    num_new_elts.store(0, std::memory_order_relaxed);
+    inflight_hashset_clears.store(0, std::memory_order_relaxed);
+
     inflight_delete_lasts.store(0, std::memory_order_relaxed);
 }
 
@@ -543,6 +566,11 @@ RevertableObject::commit_round()
 
             std::sort(h_list.begin(), h_list.end());
 
+            if (inflight_hashset_clears > 0)
+            {
+                h_list.clear();
+            }
+
             break;
         }
         default:
@@ -559,6 +587,7 @@ RevertableObject::RevertableObject()
     , size_increase(0)
     , new_hashes(START_HASH_SET_SIZE)
     , num_new_elts(0)
+    , inflight_hashset_clears(0)
     , inflight_delete_lasts(0)
     , committed_base(std::nullopt)
 {}
@@ -570,6 +599,7 @@ RevertableObject::RevertableObject(const StorageObject& committed_base_)
     , size_increase(0)
     , new_hashes(0)
     , num_new_elts(0)
+    , inflight_hashset_clears(0)
     , inflight_delete_lasts(0)
     , committed_base(committed_base_)
 {

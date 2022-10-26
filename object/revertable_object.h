@@ -105,6 +105,7 @@ class RevertableObject
     std::atomic<uint64_t> size_increase;
     AtomicSet new_hashes;
     std::atomic<uint32_t> num_new_elts;
+    std::atomic<uint32_t> inflight_hashset_clears;
 
     // for delete_last
     std::atomic<uint32_t> inflight_delete_lasts;
