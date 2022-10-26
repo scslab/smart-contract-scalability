@@ -7,6 +7,8 @@
 #include <optional>
 #include <type_traits>
 
+#include "hash_set/atomic_set.h"
+
 #include <utils/non_movable.h>
 
 #include "utils/atomic_uint128.h"
@@ -101,6 +103,8 @@ class RevertableObject
 
     // for hash_set
     std::atomic<uint64_t> size_increase;
+    AtomicSet new_hashes;
+    std::atomic<uint32_t> num_new_elts;
 
     // for delete_last
     std::atomic<uint32_t> inflight_delete_lasts;
@@ -135,7 +139,7 @@ class RevertableObject
     };
 
     RevertableObject();
-    RevertableObject(const StorageObject& finalized_obj);
+    RevertableObject(const StorageObject& committed_base_);
 
     // TODO make && on input
     std::optional<DeltaRewind> __attribute__((warn_unused_result))

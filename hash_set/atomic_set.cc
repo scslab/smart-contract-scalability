@@ -6,6 +6,13 @@
 
 namespace scs {
 
+AtomicSet::~AtomicSet()
+{
+    if (array != nullptr) {
+        delete[] array;
+    }
+}
+
 void
 AtomicSet::resize(uint16_t new_capacity)
 {
@@ -14,7 +21,9 @@ AtomicSet::resize(uint16_t new_capacity)
         return;
     }
 
-    delete[] array;
+    if (array != nullptr) {
+        delete[] array;
+    }
     capacity = new_alloc_size;
     array = new std::atomic<uint32_t>[capacity] {};
 
@@ -118,6 +127,20 @@ AtomicSet::erase(const Hash& h)
     } while (idx != start_idx);
 
     throw std::runtime_error("deletion failed after complete scan");
+}
+
+std::vector<Hash>
+AtomicSet::get_hashes() const
+{
+    std::vector<Hash> out;
+
+    for (uint16_t i = 0; i < capacity; i++) {
+        uint32_t idx = array[i].load(std::memory_order_relaxed);
+        if (idx != 0 && idx != TOMBSTONE) {
+            out.push_back(ThreadlocalContextStore::get_hash(idx));
+        }
+    }
+    return out;
 }
 
 } // namespace scs

@@ -155,8 +155,7 @@ RevertableBaseObject::try_set(StorageDeltaClass const& new_obj)
 
         bool matches = ((*current) == new_obj);
 
-        if (!matches)
-        {
+        if (!matches) {
             return std::nullopt;
         }
 
@@ -287,8 +286,7 @@ RevertableObject::try_add_delta(const StorageDelta& delta)
             }
             throw std::runtime_error("assert unreachable");
         }
-        case DeltaType::RAW_MEMORY_WRITE:
-        {
+        case DeltaType::RAW_MEMORY_WRITE: {
             StorageDeltaClass obj;
             obj.type(ObjectType::RAW_MEMORY);
             obj.data() = delta.data();
@@ -301,22 +299,62 @@ RevertableObject::try_add_delta(const StorageDelta& delta)
 
             return DeltaRewind(std::move(*res), delta, this);
         }
-        case DeltaType::HASH_SET_INCREASE_LIMIT:
-        {
+        case DeltaType::HASH_SET_INCREASE_LIMIT: {
             StorageDeltaClass obj;
             obj.type(ObjectType::HASH_SET);
 
             auto res = base_obj.try_set(obj);
 
-            if (!res)
-            {
+            if (!res) {
                 return std::nullopt;
             }
 
-            size_increase.fetch_add(delta.limit_increase(), std::memory_order_relaxed);
+            size_increase.fetch_add(delta.limit_increase(),
+                                    std::memory_order_relaxed);
 
             return DeltaRewind(std::move(*res), delta, this);
         }
+        case DeltaType::HASH_SET_INSERT: {
+            StorageDeltaClass obj;
+            obj.type(ObjectType::HASH_SET);
+            auto res = base_obj.try_set(obj);
+
+            if (!res) {
+                return std::nullopt;
+            }
+
+            size_t cur_size = 0;
+            size_t max_size = START_HASH_SET_SIZE;
+
+            if (committed_base) {
+                cur_size = committed_base->body.hash_set().hashes.size();
+                max_size = committed_base->body.hash_set().max_size;
+
+                for (auto const& h : committed_base->body.hash_set().hashes) {
+                    // TODO these will be sorted (unless we pick a homomorphic
+                    // hash fn)? bin search might be faster
+                    if (h == delta.hash()) {
+                        return std::nullopt;
+                    }
+                }
+            }
+
+            cur_size
+                += num_new_elts.fetch_add(1, std::memory_order_relaxed) + 1;
+
+            if (cur_size > max_size) {
+                num_new_elts.fetch_sub(1, std::memory_order_relaxed);
+                return std::nullopt;
+            }
+
+            if (!new_hashes.try_insert(delta.hash())) {
+                num_new_elts.fetch_sub(1, std::memory_order_relaxed);
+                return std::nullopt;
+            }
+
+            return DeltaRewind(std::move(*res), delta, this);
+        }
+
         default:
             throw std::runtime_error(
                 "unimplemented deltatype in RevertableObject::try_set");
@@ -353,9 +391,14 @@ RevertableObject::revert_delta(const StorageDelta& delta)
             // no op
             return;
         }
-        case DeltaType::HASH_SET_INCREASE_LIMIT:
-        {
-            size_increase.fetch_sub(delta.limit_increase(), std::memory_order_relaxed);
+        case DeltaType::HASH_SET_INCREASE_LIMIT: {
+            size_increase.fetch_sub(delta.limit_increase(),
+                                    std::memory_order_relaxed);
+            return;
+        }
+        case DeltaType::HASH_SET_INSERT: {
+            num_new_elts.fetch_sub(1, std::memory_order_relaxed);
+            new_hashes.erase(delta.hash());
             return;
         }
     }
@@ -470,9 +513,10 @@ RevertableObject::commit_round()
 
             uint64_t add = total_added.fetch_cap();
 
-            if (__builtin_add_overflow_p(committed_base->body.nonnegative_int64(),
-                                         add,
-                                         static_cast<int64_t>(0))) {
+            if (__builtin_add_overflow_p(
+                    committed_base->body.nonnegative_int64(),
+                    add,
+                    static_cast<int64_t>(0))) {
                 committed_base->body.nonnegative_int64() = INT64_MAX;
             } else {
                 committed_base->body.nonnegative_int64() += add;
@@ -482,15 +526,24 @@ RevertableObject::commit_round()
         case ObjectType::RAW_MEMORY:
             // no op
             break;
-        case ObjectType::HASH_SET:
-        {
-            uint64_t new_size = size_increase.load(std::memory_order_relaxed) + committed_base -> body.hash_set().max_size;
+        case ObjectType::HASH_SET: {
+            uint64_t new_size = size_increase.load(std::memory_order_relaxed)
+                                + committed_base->body.hash_set().max_size;
 
-            committed_base -> body.hash_set().max_size = std::min(
-                (uint64_t)MAX_HASH_SET_SIZE,
-                new_size);
+            committed_base->body.hash_set().max_size
+                = std::min((uint64_t)MAX_HASH_SET_SIZE, new_size);
 
-            throw std::runtime_error("unfinished");
+            auto new_hashes_list = new_hashes.get_hashes();
+
+            auto& h_list = committed_base->body.hash_set().hashes;
+
+            h_list.insert(h_list.end(),
+                          std::make_move_iterator(new_hashes_list.begin()),
+                          std::make_move_iterator(new_hashes_list.end()));
+
+            std::sort(h_list.begin(), h_list.end());
+
+            break;
         }
         default:
             throw std::runtime_error("unimplemented object type in "
@@ -503,16 +556,26 @@ RevertableObject::RevertableObject()
     : base_obj()
     , total_subtracted(0)
     , total_added()
+    , size_increase(0)
+    , new_hashes(START_HASH_SET_SIZE)
+    , num_new_elts(0)
     , inflight_delete_lasts(0)
     , committed_base(std::nullopt)
 {}
 
-RevertableObject::RevertableObject(const StorageObject& committed_base)
-    : base_obj(committed_base)
+RevertableObject::RevertableObject(const StorageObject& committed_base_)
+    : base_obj(committed_base_)
     , total_subtracted(0)
     , total_added()
+    , size_increase(0)
+    , new_hashes(0)
+    , num_new_elts(0)
     , inflight_delete_lasts(0)
-    , committed_base(committed_base)
-{}
+    , committed_base(committed_base_)
+{
+    if (committed_base->body.type() == ObjectType::HASH_SET) {
+        new_hashes.resize(committed_base->body.hash_set().max_size);
+    }
+}
 
 } // namespace scs

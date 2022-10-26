@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <vector>
 
 #include "xdr/types.h"
 
@@ -22,8 +23,15 @@ class AtomicSet
   public:
     AtomicSet(uint16_t max_capacity)
         : capacity(max_capacity * extra_buffer)
-        , array(new std::atomic<uint32_t>[capacity] {})
-    {}
+        , array(nullptr)
+    {
+        if (capacity > 0)
+        {
+           array = new std::atomic<uint32_t>[capacity] {};
+        }
+    }
+
+    ~AtomicSet();
 
     void resize(uint16_t new_capacity);
 
@@ -33,6 +41,8 @@ class AtomicSet
 
     // throws if nexist
     void erase(const Hash& h);
+
+    std::vector<Hash> get_hashes() const;
 };
 
 } // namespace scs
