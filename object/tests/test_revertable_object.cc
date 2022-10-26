@@ -127,8 +127,9 @@ TEST_CASE("revert object from empty", "[object]")
             REQUIRE(!object.get_committed_object());
             object.commit_round();
             REQUIRE(object.get_committed_object());
-            REQUIRE(object.get_committed_object()->body.raw_memory_storage().data
-                    == val2);
+            REQUIRE(
+                object.get_committed_object()->body.raw_memory_storage().data
+                == val2);
         }
 
         SECTION("conflict int")
@@ -144,8 +145,9 @@ TEST_CASE("revert object from empty", "[object]")
             REQUIRE(!object.get_committed_object());
             object.commit_round();
             REQUIRE(object.get_committed_object());
-            REQUIRE(object.get_committed_object()->body.raw_memory_storage().data
-                    == val2);
+            REQUIRE(
+                object.get_committed_object()->body.raw_memory_storage().data
+                == val2);
         }
     }
 
@@ -215,7 +217,8 @@ TEST_CASE("revert object from nonempty", "[object]")
             object.commit_round();
 
             REQUIRE(object.get_committed_object());
-            REQUIRE(object.get_committed_object()->body.nonnegative_int64() == 50);
+            REQUIRE(object.get_committed_object()->body.nonnegative_int64()
+                    == 50);
         }
         SECTION("three writes no go")
         {
@@ -231,7 +234,8 @@ TEST_CASE("revert object from nonempty", "[object]")
 
             object.commit_round();
             REQUIRE(object.get_committed_object());
-            REQUIRE(object.get_committed_object()->body.nonnegative_int64() == 0);
+            REQUIRE(object.get_committed_object()->body.nonnegative_int64()
+                    == 0);
         }
     }
 
@@ -264,8 +268,9 @@ TEST_CASE("revert object from nonempty", "[object]")
 
             REQUIRE(object.get_committed_object());
 
-            REQUIRE(object.get_committed_object()->body.raw_memory_storage().data
-                    == val1);
+            REQUIRE(
+                object.get_committed_object()->body.raw_memory_storage().data
+                == val1);
         }
 
         SECTION("try rewriting to int64")
@@ -282,7 +287,8 @@ TEST_CASE("revert object from nonempty", "[object]")
 
             REQUIRE(object.get_committed_object());
 
-            REQUIRE(object.get_committed_object()->body.nonnegative_int64() == 50);
+            REQUIRE(object.get_committed_object()->body.nonnegative_int64()
+                    == 50);
         }
     }
 }
@@ -293,20 +299,17 @@ TEST_CASE("hashset from empty", "[object]")
 
     RevertableObject object;
 
-    auto make_insert = [] (uint64_t i)
-    {
+    auto make_insert = [](uint64_t i) {
         return make_hash_set_insert(hash_xdr<uint64_t>(i));
     };
 
-    auto good_add = [&] (StorageDelta const& d)
-    {
+    auto good_add = [&](StorageDelta const& d) {
         auto res = object.try_add_delta(d);
         REQUIRE(!!res);
-        res -> commit();
+        res->commit();
     };
 
-    auto revert_good_add = [&] (StorageDelta const& d)
-    {
+    auto revert_good_add = [&](StorageDelta const& d) {
         auto res = object.try_add_delta(d);
         REQUIRE(!!res);
     };
@@ -327,7 +330,7 @@ TEST_CASE("hashset from empty", "[object]")
         {
             auto res = object.try_add_delta(make_insert(0));
             REQUIRE(!!res);
-            res -> commit();
+            res->commit();
         }
 
         {
@@ -344,7 +347,8 @@ TEST_CASE("hashset from empty", "[object]")
 
         object.commit_round();
         REQUIRE(object.get_committed_object());
-        auto const& hashes = object.get_committed_object() -> body.hash_set().hashes;
+        auto const& hashes
+            = object.get_committed_object()->body.hash_set().hashes;
 
         REQUIRE(hashes.size() == 1);
         REQUIRE(hashes[0] == hash_xdr<uint64_t>(0));
@@ -354,29 +358,35 @@ TEST_CASE("hashset from empty", "[object]")
     {
         SECTION("overflow")
         {
-            auto res = object.try_add_delta(make_hash_set_increase_limit(UINT16_MAX));
+            auto res = object.try_add_delta(
+                make_hash_set_increase_limit(UINT16_MAX));
             REQUIRE(!!res);
-            res -> commit();
+            res->commit();
 
-            auto res2 = object.try_add_delta(make_hash_set_increase_limit(UINT16_MAX));
+            auto res2 = object.try_add_delta(
+                make_hash_set_increase_limit(UINT16_MAX));
             REQUIRE(!!res2);
-            res2 -> commit();
+            res2->commit();
 
             object.commit_round();
             REQUIRE(object.get_committed_object());
 
-            REQUIRE(object.get_committed_object() -> body.hash_set().hashes.size() == 0);
-            REQUIRE(object.get_committed_object() -> body.hash_set().max_size == MAX_HASH_SET_SIZE);
+            REQUIRE(object.get_committed_object()->body.hash_set().hashes.size()
+                    == 0);
+            REQUIRE(object.get_committed_object()->body.hash_set().max_size
+                    == MAX_HASH_SET_SIZE);
         }
 
         SECTION("no overflow, with a revert")
         {
             {
-                auto res = object.try_add_delta(make_hash_set_increase_limit(64));
+                auto res
+                    = object.try_add_delta(make_hash_set_increase_limit(64));
                 REQUIRE(!!res);
-                res -> commit();
+                res->commit();
 
-                auto res2 = object.try_add_delta(make_hash_set_increase_limit(UINT16_MAX));
+                auto res2 = object.try_add_delta(
+                    make_hash_set_increase_limit(UINT16_MAX));
                 REQUIRE(!!res2);
             }
 
@@ -384,8 +394,10 @@ TEST_CASE("hashset from empty", "[object]")
 
             REQUIRE(object.get_committed_object());
 
-            REQUIRE(object.get_committed_object() -> body.hash_set().hashes.size() == 0);
-            REQUIRE(object.get_committed_object() -> body.hash_set().max_size == 64 + START_HASH_SET_SIZE);
+            REQUIRE(object.get_committed_object()->body.hash_set().hashes.size()
+                    == 0);
+            REQUIRE(object.get_committed_object()->body.hash_set().max_size
+                    == 64 + START_HASH_SET_SIZE);
         }
     }
 
@@ -400,7 +412,8 @@ TEST_CASE("hashset from empty", "[object]")
 
             object.commit_round();
             REQUIRE(object.get_committed_object());
-            REQUIRE(object.get_committed_object() -> body.hash_set().hashes.size() == 2);
+            REQUIRE(object.get_committed_object()->body.hash_set().hashes.size()
+                    == 2);
         }
 
         SECTION("commit clear")
@@ -409,8 +422,60 @@ TEST_CASE("hashset from empty", "[object]")
 
             object.commit_round();
             REQUIRE(object.get_committed_object());
-            REQUIRE(object.get_committed_object() -> body.hash_set().hashes.size() == 0);
+            REQUIRE(object.get_committed_object()->body.hash_set().hashes.size()
+                    == 0);
         }
+    }
+}
+
+TEST_CASE("hashset from nonempty", "[object]")
+{
+    test::DeferredContextClear defer;
+
+    StorageObject base_obj;
+    base_obj.body.type(ObjectType::HASH_SET);
+    base_obj.body.hash_set().max_size = 4;
+    base_obj.body.hash_set().hashes.push_back(hash_xdr<uint64_t>(0));
+    base_obj.body.hash_set().hashes.push_back(hash_xdr<uint64_t>(1));
+
+    RevertableObject object(base_obj);
+
+    auto make_insert = [](uint64_t i) {
+        return make_hash_set_insert(hash_xdr<uint64_t>(i));
+    };
+
+    auto good_add = [&](StorageDelta const& d) {
+        auto res = object.try_add_delta(d);
+        REQUIRE(!!res);
+        res->commit();
+    };
+
+    auto bad_add
+        = [&](StorageDelta const& d) { REQUIRE(!object.try_add_delta(d)); };
+
+    SECTION("too many insert")
+    {
+        good_add(make_insert(2));
+        good_add(make_insert(3));
+
+        bad_add(make_insert(4));
+    }
+
+    SECTION("insert already exist")
+    {
+        bad_add(make_insert(1));
+
+        good_add(make_insert(2));
+        bad_add(make_insert(2));
+    }
+    SECTION("clear")
+    {
+        good_add(make_hash_set_clear());
+
+        object.commit_round();
+        REQUIRE(object.get_committed_object());
+        REQUIRE(object.get_committed_object()->body.hash_set().hashes.size()
+                == 0);
     }
 }
 
