@@ -89,7 +89,7 @@ class RevertableBaseObject
 
 // try_add, commit, revert, get_committed need to be threadsafe wrt to each
 // other. none of these should be called concurrently with commit_round.
-class RevertableObject
+class RevertableObject : public utils::NonMovableOrCopyable
 {
     RevertableBaseObject base_obj;
 

@@ -99,6 +99,15 @@ TEST_CASE("insert and delete", "[hashset]")
         bad_insert(1);
         bad_insert(2);
         bad_insert(3);
+
+        auto res = set.get_hashes();
+
+        REQUIRE(res.size() == 3);
+        std::sort(res.begin(), res.end());
+        // experimentally determined
+        REQUIRE(res[0] == hash_xdr<uint64_t>(1));
+        REQUIRE(res[1] == hash_xdr<uint64_t>(3));
+        REQUIRE(res[2] == hash_xdr<uint64_t>(2));
     }
 
     SECTION("completely full")
