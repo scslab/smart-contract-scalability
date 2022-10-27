@@ -123,7 +123,7 @@ class BuiltinFns
 
 	static void
 	scs_hashset_clear(
-		uint32_t key_offset,
+		uint32_t key_offset
 		/* key_len = 32 */);
 
 	/* -- crypto -- */

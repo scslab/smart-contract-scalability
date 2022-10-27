@@ -17,7 +17,7 @@ enum DeltaType
 	UNCONSTRAINED_INT64_SET_XOR = 8,
 };
 
-% static_assert(static_cast<uint64_t>(-1lld) == 0xFFFF'FFFF'FFFF'FFFF, "requires two's complement");
+% static_assert(static_cast<uint64_t>(-1) == 0xFFFF'FFFF'FFFF'FFFF, "requires two's complement");
 
 struct set_add_t
 {
