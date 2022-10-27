@@ -12,12 +12,29 @@ enum DeltaType
 	HASH_SET_INSERT = 3,
 	HASH_SET_INCREASE_LIMIT = 4,
 	HASH_SET_CLEAR = 5,
+	UNCONSTRAINED_INT64_SET_ADD = 6,
+	UNCONSTRAINED_INT64_SET_MAX = 7,
+	UNCONSTRAINED_INT64_SET_XOR = 8,
 };
+
+% static_assert(static_cast<uint64_t>(-1lld) == 0xFFFF'FFFF'FFFF'FFFF, "requires two's complement");
 
 struct set_add_t
 {
 	int64 set_value;
 	int64 delta;
+};
+
+struct set_xor_t
+{
+	int64 set_value;
+	uint64 bitmap;
+};
+
+struct set_max_t
+{
+	int64 set_value;
+	int64_t max;
 };
 
 union StorageDelta switch (DeltaType type)
@@ -36,6 +53,12 @@ union StorageDelta switch (DeltaType type)
 		uint32 limit_increase;
 	case HASH_SET_CLEAR:
 		void;
+	case UNCONSTRAINED_INT64_SET_ADD:
+		set_add_t set_add_unconstrained_int64;
+	case UNCONSTRAINED_INT64_SET_MAX:
+		set_max_t set_max_unconstrained_int64;
+	case UNCONSTRAINED_INT64_SET_XOR:
+		set_xor_t set_xor_unconstrained_int64;
 };
 
 // REFUND DESIGN:
@@ -54,7 +77,14 @@ union StorageDelta switch (DeltaType type)
 // a StorageDeltaClass
 // TODO: A more careful equivalence relation
 // on this class would allow things like hash set limit set,
-// not just add().  
+// not just add().
+
+struct UnconstrainedInt64DeltaClass
+{
+	int64 set_value;
+	DeltaType delta;
+};
+
 union StorageDeltaClass switch (ObjectType type)
 {
 	case RAW_MEMORY:
@@ -63,6 +93,8 @@ union StorageDeltaClass switch (ObjectType type)
 		int64 nonnegative_int64;
 	case HASH_SET:
 		void;
+	case UNCONSTRAINED_INT64:
+		UnconstrainedInt64DeltaClass uncontstrained_modtype;
 };
 
 /*

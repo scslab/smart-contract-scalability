@@ -8,6 +8,7 @@ enum ObjectType
 	RAW_MEMORY = 0,
 	NONNEGATIVE_INT64 = 1,
 	HASH_SET = 2,
+	UNCONSTRAINED_INT64 = 3,
 };
 
 const RAW_MEMORY_MAX_LEN = 512;
@@ -36,6 +37,8 @@ struct StorageObject
 		int64 nonnegative_int64;
 	case HASH_SET:
 		HashSet hash_set;
+	case UNCONSTRAINED_INT64:
+		int64 unconstrained_int64;
 	} body;
 
 	uint64 escrowed_fee;
