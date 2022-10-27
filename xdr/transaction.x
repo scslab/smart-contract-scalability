@@ -39,5 +39,11 @@ struct Transaction
 
 	Contract contracts_to_deploy<>;
 };
+
+struct TxSetEntry
+{
+	Transaction tx;
+	uint32 multiplicity;
+};
 	
 } /* scs */

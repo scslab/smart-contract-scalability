@@ -12,16 +12,19 @@
 
 namespace scs {
 
-// TODO count multiplicity here, also tag every transaction with its results (logs)
+// TODO tag every transaction with its results (logs)
 
 class TxSet
 {
-    static std::vector<uint8_t> serialize(const Transaction& v)
+    static std::vector<uint8_t> serialize(const TxSetEntry& v)
     {
         return xdr::xdr_to_opaque(v);
     }
 
-    using value_t = trie::XdrTypeWrapper<Transaction, &serialize>;
+    friend struct MultiplicityAddInsertFn;
+    friend struct MultiplicityAddMergeFn;
+
+    using value_t = trie::XdrTypeWrapper<TxSetEntry, &serialize>;
 
     using trie_prefix_t = trie::ByteArrayPrefix<sizeof(Hash)>;
 
@@ -55,9 +58,14 @@ class TxSet
 
     // for testing
 
-    bool contains_tx(const Hash& hash) const
+    uint32_t contains_tx(const Hash& hash) const
     {
-        return txs.get_value(hash) != nullptr;
+        auto const* r = txs.get_value(hash);
+        if (r == nullptr)
+        {
+            return 0;
+        }
+        return r -> multiplicity;
     }
 };
 
