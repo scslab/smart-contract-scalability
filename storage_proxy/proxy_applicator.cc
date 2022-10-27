@@ -229,6 +229,21 @@ ProxyApplicator::try_apply(StorageDelta const& d)
         	new_hashes.push_back(d.hash());
         	return true;
         }
+        case DeltaType::HASH_SET_INCREASE_LIMIT:
+        {
+        	make_current(ObjectType::HASH_SET);
+
+        	hs_size_increase += d.limit_increase();
+        	// limit change does not take effect until next block
+        	return true;
+        }
+        case DeltaType::HASH_SET_CLEAR:
+    	{
+    		make_current(ObjectType::HASH_SET);
+    		do_hs_clear = true;
+    		// clear does not take effect until next block;
+    		return true;
+    	}
         default:
             throw std::runtime_error("unknown deltatype");
     }
