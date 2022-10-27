@@ -4,6 +4,8 @@
 
 #include "storage_proxy/proxy_applicator.h"
 
+#include "crypto/hash.h"
+
 #include "xdr/storage_delta.h"
 #include "xdr/transaction.h"
 
@@ -294,6 +296,76 @@ TEST_CASE("nonnegative int64 only", "[mutator]")
 			val_expect_int64(INT64_MIN);
 		}
 	}
-} 
+}
+
+TEST_CASE("hash set only", "[mutator]")
+{
+	std::unique_ptr<ProxyApplicator> applicator;
+
+	auto check_valid = [&] (StorageDelta const& d)
+	{
+		REQUIRE(applicator -> try_apply(d));
+	};
+
+	auto check_invalid = [&] (StorageDelta const& d)
+	{
+		REQUIRE(!applicator -> try_apply(d));
+	};
+
+	auto val_expect_hash = [&] (Hash const& h)
+	{
+		REQUIRE(applicator->get());
+		auto hs = applicator -> get()->body.hash_set();
+
+		auto find_hash = [&] ()
+		{
+			for (auto const& h1 : hs.hashes)
+			{
+				if (h1 == h)
+				{
+					return true;
+				}
+			}
+			return false;
+		};
+
+		REQUIRE(find_hash());
+	};
+
+	auto val_expect_nullopt = [&] ()
+	{
+		REQUIRE(!applicator->get());
+	};
+
+	auto make_hash = [] (uint64_t i)
+	{
+		return hash_xdr<uint64_t>(i);
+	};
+
+
+	SECTION("no base obj")
+	{
+		applicator = std::make_unique<ProxyApplicator>(std::nullopt);
+
+		SECTION("insert one")
+		{
+			check_valid(make_hash_set_insert(make_hash(0)));
+			val_expect_hash(make_hash(0));
+		}
+		SECTION("insert several")
+		{
+			check_valid(make_hash_set_insert(make_hash(0)));
+			check_valid(make_hash_set_insert(make_hash(1)));
+			check_valid(make_hash_set_insert(make_hash(2)));
+			check_valid(make_hash_set_insert(make_hash(3)));
+			check_valid(make_hash_set_insert(make_hash(4)));
+
+			check_invalid(make_hash_set_insert(make_hash(0)));
+			check_invalid(make_hash_set_insert(make_hash(4)));
+
+			val_expect_hash(make_hash(0));
+		}
+	}
+}
 
 } /* scs */

@@ -24,6 +24,12 @@ ProxyApplicator::delta_apply_type_guard(StorageDelta const& d) const
         case DeltaType::NONNEGATIVE_INT64_SET_ADD: {
             return current->body.type() == ObjectType::NONNEGATIVE_INT64;
         }
+        case DeltaType::HASH_SET_INSERT:
+        case DeltaType::HASH_SET_INCREASE_LIMIT:
+        case DeltaType::HASH_SET_CLEAR:
+        {
+        	return current -> body.type() == ObjectType::HASH_SET;
+        }
         default:
             throw std::runtime_error("unknown deltatype");
     }
@@ -105,6 +111,18 @@ ProxyApplicator::make_current(ObjectType obj_type)
     if (!current) {
         current = StorageObject();
         current->body.type(obj_type);
+
+        switch(obj_type)
+        {
+        	case ObjectType::RAW_MEMORY:
+        	case ObjectType::NONNEGATIVE_INT64:
+        		break; // nothing to do
+        	case ObjectType::HASH_SET:
+        		current -> body.hash_set().max_size = START_HASH_SET_SIZE;
+        		break;
+        	default:
+        		throw std::runtime_error("unimplemented object type");
+        }
     }
     if (current->body.type() != obj_type) {
         throw std::runtime_error("type mismatch");
@@ -190,6 +208,26 @@ ProxyApplicator::try_apply(StorageDelta const& d)
                 make_current_nnint64(*nnint64_delta);
                 return true;
             }
+        }
+        case DeltaType::HASH_SET_INSERT:
+        {
+        	make_current(ObjectType::HASH_SET);
+
+        	for (auto const& h : current -> body.hash_set().hashes)
+        	{
+        		if (h == d.hash())
+        		{
+        			return false;
+        		}
+        	}
+
+        	if (current -> body.hash_set().hashes.size() >= current -> body.hash_set().max_size)
+        	{
+        		return false;
+        	}
+        	current -> body.hash_set().hashes.push_back(d.hash());
+        	new_hashes.push_back(d.hash());
+        	return true;
         }
         default:
             throw std::runtime_error("unknown deltatype");
