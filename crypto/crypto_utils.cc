@@ -1,12 +1,14 @@
 #include "crypto/crypto_utils.h"
 
+#include <atomic>
 #include <cstdio>
 #include <sodium.h>
 #include <stdexcept>
 
 namespace scs {
 
-uint8_t* HASH_KEY;
+std::atomic<bool> hash_key_init = false;
+uint8_t* HASH_KEY = nullptr;
 
 void
 initialize_crypto()
@@ -15,7 +17,8 @@ initialize_crypto()
     if (res == -1) {
         throw std::runtime_error("failed to init sodium");
     }
-    if (res == 0) {
+    bool expect = false;
+    if (hash_key_init.compare_exchange_strong(expect, true)) {
         HASH_KEY = new uint8_t[crypto_shorthash_KEYBYTES];
         crypto_shorthash_keygen(HASH_KEY);
     }
