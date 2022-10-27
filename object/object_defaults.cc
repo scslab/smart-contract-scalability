@@ -5,6 +5,7 @@
 namespace scs
 {
 
+/*
 std::optional<ObjectType>
 object_type_from_delta_type(DeltaType d_type)
 {
@@ -18,8 +19,9 @@ object_type_from_delta_type(DeltaType d_type)
 			return ObjectType::NONNEGATIVE_INT64;
 	}
 	throw std::runtime_error("unimplemented object_from_delta_type");
-}
+} */
 
+/*
 std::optional<StorageObject>
 make_object_from_delta(StorageDelta const& d)
 {
@@ -76,6 +78,7 @@ make_object_from_delta(StorageDelta const& d)
 	}
 	return out;
 }
+*/
 
 StorageObject
 object_from_delta_class(StorageDeltaClass const& dc, std::optional<StorageObject> const& prev_object)
