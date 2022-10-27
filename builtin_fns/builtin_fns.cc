@@ -73,6 +73,19 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 		"scs",
 		"nn_int64_get");
 
+	/* -- hashset -- */
+	runtime.template link_fn<&BuiltinFns::scs_hashset_insert>(
+		"scs",
+		"hashset_insert");
+
+	runtime.template link_fn<&BuiltinFns::scs_hashset_increase_limit>(
+		"scs",
+		"hashset_increase_limit");
+
+	runtime.template link_fn<&BuiltinFns::scs_hashset_clear>(
+		"scs",
+		"hashset_clear");
+
 	/* -- crypto -- */
 	runtime.template link_fn<&BuiltinFns::scs_hash>(
 		"scs",

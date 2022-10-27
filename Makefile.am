@@ -27,6 +27,7 @@ BUILTIN_FNS_SRCS = \
 	builtin_fns/delete.cc \
 	builtin_fns/env.cc \
 	builtin_fns/int64.cc \
+	builtin_fns/hashset.cc \
 	builtin_fns/logging.cc \
 	builtin_fns/runtime.cc \
 	builtin_fns/raw_memory.cc

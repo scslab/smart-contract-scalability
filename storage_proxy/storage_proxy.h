@@ -49,6 +49,15 @@ public:
 	void
 	delete_object_last(AddressAndKey const& key, delta_identifier_t id);
 
+	void
+	hashset_insert(AddressAndKey const& key, Hash const& h, delta_identifier_t id);
+
+	void
+	hashset_increase_limit(AddressAndKey const& key, uint32_t limit, delta_identifier_t id);
+
+	void
+	hashset_clear(AddressAndKey const& key, delta_identifier_t id);
+
 	bool
 	__attribute__((warn_unused_result))
 	push_deltas_to_statedb(TransactionRewind& rewind) const;

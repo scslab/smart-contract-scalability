@@ -104,6 +104,52 @@ StorageProxy::delete_object_last(AddressAndKey const& key, delta_identifier_t id
 	//v.vec.add_delta(std::move(delta), std::move(id));
 }
 
+void
+StorageProxy::hashset_insert(AddressAndKey const& key, Hash const& h, delta_identifier_t id)
+{
+	auto& v = get_local(key);
+
+	auto delta = make_hash_set_insert(h);
+
+	if (!v.applicator.try_apply(delta))
+	{
+		throw wasm_api::HostError("failed to apply hashset insert");
+	}
+}
+
+void
+StorageProxy::hashset_increase_limit(AddressAndKey const& key, uint32_t limit, delta_identifier_t id)
+{
+	auto& v = get_local(key);
+
+	static_assert(MAX_HASH_SET_SIZE <= UINT16_MAX, "uint16 overflow otherwise");
+
+	if (limit >= UINT16_MAX)
+	{
+		throw wasm_api::HostError("limit increase too large");
+	}
+
+	auto delta = make_hash_set_increase_limit(limit);
+
+	if (!v.applicator.try_apply(delta))
+	{
+		throw wasm_api::HostError("failed to apply hashset limit increase");
+	}
+}
+
+void
+StorageProxy::hashset_clear(AddressAndKey const& key, delta_identifier_t id)
+{
+	auto& v = get_local(key);
+
+	auto delta = make_hash_set_clear();
+
+	if (!v.applicator.try_apply(delta))
+	{
+		throw wasm_api::HostError("failed to apply hashset clear");
+	}
+}
+
 
 bool 
 StorageProxy::push_deltas_to_statedb(TransactionRewind& rewind) const

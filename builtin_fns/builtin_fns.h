@@ -106,6 +106,26 @@ class BuiltinFns
 		uint32_t output_offset
 		/* output_len = 8 */);
 
+	/* -- hashset -- */
+
+	static void
+	scs_hashset_insert(
+		uint32_t key_offset,
+		/* key_len = 32 */
+		uint32_t hash_offset
+		/* hash_len = 32 */);
+
+	static void
+	scs_hashset_increase_limit(
+		uint32_t key_offset,
+		/* key_len = 32 */
+		uint32_t limit_increase);
+
+	static void
+	scs_hashset_clear(
+		uint32_t key_offset,
+		/* key_len = 32 */);
+
 	/* -- crypto -- */
 	static void
 	scs_hash(
