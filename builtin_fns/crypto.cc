@@ -2,6 +2,8 @@
 
 #include "crypto/hash.h"
 
+#include "debug/debug_utils.h"
+
 #include "threadlocal/threadlocal_context.h"
 
 #include "transaction_context/execution_context.h"

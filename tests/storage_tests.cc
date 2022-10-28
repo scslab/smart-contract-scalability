@@ -9,6 +9,8 @@
 #include "test_utils/load_wasm.h"
 #include "test_utils/make_calldata.h"
 
+#include "debug/debug_utils.h"
+
 #include "threadlocal/threadlocal_context.h"
 
 #include "state_db/modified_keys_list.h"
@@ -16,6 +18,116 @@
 using namespace scs;
 
 using xdr::operator==;
+
+TEST_CASE("hashset insert", "[storage]")
+{
+    GlobalContext scs_data_structures;
+    auto& script_db = scs_data_structures.contract_db;
+    auto& state_db = scs_data_structures.state_db;
+
+    auto c = test::load_wasm_from_file("cpp_contracts/test_hashset.wasm");
+
+    auto h = hash_xdr(*c);
+
+    test::deploy_and_commit_contractdb(script_db, h, std::move(c));
+
+    ThreadlocalContextStore::make_ctx(scs_data_structures);
+    test::DeferredContextClear defer;
+
+    auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
+
+    Address a0 = hash_xdr<uint64_t>(0);
+
+    InvariantKey k0 = hash_xdr<uint64_t>(0);
+
+    std::unique_ptr<BlockContext> block_context
+        = std::make_unique<BlockContext>();
+
+    struct calldata_0
+    {
+        InvariantKey key;
+        uint64_t value;
+    };
+
+    auto make_insert_tx = [&](Address const& sender,
+                           InvariantKey const& key,
+                           uint64_t value,
+                           bool success = true,
+                           uint64_t gas_bid = 1) -> Hash {
+
+        calldata_0 data
+        {
+            .key = key,
+            .value = value
+        };
+
+        TransactionInvocation invocation(h, 0, test::make_calldata(data));
+
+        Transaction tx = Transaction(
+            sender, invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());
+        auto hash = hash_xdr(tx);
+
+        if (success) {
+            REQUIRE(exec_ctx.execute(hash, tx, *block_context)
+                    == TransactionStatus::SUCCESS);
+        } else {
+            REQUIRE(exec_ctx.execute(hash, tx, *block_context)
+                    != TransactionStatus::SUCCESS);
+        }
+
+        return hash;
+    };
+
+    auto check_valid = [&](const Hash& tx_hash) {
+        REQUIRE(block_context->tx_set.contains_tx(tx_hash));
+    };
+
+    auto check_invalid = [&](const Hash& tx_hash) {
+        REQUIRE(!block_context->tx_set.contains_tx(tx_hash));
+    };
+
+    auto finish_block = [&]() {
+        phase_finish_block(scs_data_structures, *block_context);
+    };
+
+    auto make_key
+        = [](Address const& addr, InvariantKey const& key) -> AddressAndKey {
+        AddressAndKey out;
+        std::memcpy(out.data(), addr.data(), sizeof(Address));
+
+        std::memcpy(
+            out.data() + sizeof(Address), key.data(), sizeof(InvariantKey));
+        return out;
+    };
+
+
+    SECTION("start from nexist hashset")
+    {
+        auto h0 = make_insert_tx(a0, k0, 0);
+        auto h1 = make_insert_tx(a0, k0, 1);
+
+        auto h0_1 = make_insert_tx(a0, k0, 0, false, 2);
+
+        REQUIRE(h0 != h0_1);
+
+        finish_block();
+
+        check_valid(h0);
+        check_valid(h1);
+
+        check_invalid(h0_1);
+
+        auto hk0 = make_key(h, k0);
+        auto db_val = state_db.get_committed_value(hk0);
+
+        REQUIRE(!!db_val);
+        auto& hs = db_val -> body.hash_set();
+
+        REQUIRE(hs.hashes.size() == 2);
+
+        REQUIRE(hs.hashes[0] < hs.hashes[1]);
+    }
+}
 
 TEST_CASE("int64 storage write", "[storage]")
 {

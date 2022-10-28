@@ -69,6 +69,10 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 		"scs",
 		"nn_int64_set_add");
 
+	runtime.template link_fn<&BuiltinFns::scs_nonnegative_int64_add>(
+		"scs",
+		"nn_int64_add");
+
 	runtime.template link_fn<&BuiltinFns::scs_nonnegative_int64_get>(
 		"scs",
 		"nn_int64_get");
