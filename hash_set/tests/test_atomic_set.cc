@@ -3,6 +3,10 @@
 #include "crypto/hash.h"
 #include "hash_set/atomic_set.h"
 
+#include "object/comparators.h"
+
+#include "xdr/storage.h"
+
 namespace scs {
 
 TEST_CASE("insert atomic set", "[hashset]")
@@ -10,10 +14,10 @@ TEST_CASE("insert atomic set", "[hashset]")
     AtomicSet set(10);
 
     auto good_insert
-        = [&](uint64_t i) { REQUIRE(set.try_insert(hash_xdr(i))); };
+        = [&](uint64_t i) { REQUIRE(set.try_insert(HashSetEntry(hash_xdr(i), 0))); };
 
     auto bad_insert
-        = [&](uint64_t i) { REQUIRE(!set.try_insert(hash_xdr(i))); };
+        = [&](uint64_t i) { REQUIRE(!set.try_insert(HashSetEntry(hash_xdr(i), 0))); };
 
     SECTION("distinct")
     {
@@ -37,14 +41,14 @@ TEST_CASE("insert too small", "[hashset]")
     AtomicSet set(1);
 
     auto good_insert
-        = [&](uint64_t i) { REQUIRE(set.try_insert(hash_xdr(i))); };
+        = [&](uint64_t i) { REQUIRE(set.try_insert(HashSetEntry(hash_xdr(i), 0))); };
 
     auto bad_insert
-        = [&](uint64_t i) { REQUIRE(!set.try_insert(hash_xdr(i))); };
+        = [&](uint64_t i) { REQUIRE(!set.try_insert(HashSetEntry(hash_xdr(i), 0))); };
 
     auto insert_several = [&](uint64_t start, uint32_t count) -> bool {
         for (auto i = 0u; i < count; i++) {
-            if (!set.try_insert(hash_xdr(start + i))) {
+            if (!set.try_insert(HashSetEntry(hash_xdr(start + i), 0))) {
                 return false;
             }
         }
@@ -75,12 +79,12 @@ TEST_CASE("insert and delete", "[hashset]")
     AtomicSet set(10);
 
     auto good_insert
-        = [&](uint64_t i) { REQUIRE(set.try_insert(hash_xdr(i))); };
+        = [&](uint64_t i) { REQUIRE(set.try_insert(HashSetEntry(hash_xdr(i), 0))); };
 
     auto bad_insert
-        = [&](uint64_t i) { REQUIRE(!set.try_insert(hash_xdr(i))); };
+        = [&](uint64_t i) { REQUIRE(!set.try_insert(HashSetEntry(hash_xdr(i), 0))); };
 
-    auto good_erase = [&](uint64_t i) { set.erase(hash_xdr(i)); };
+    auto good_erase = [&](uint64_t i) { set.erase(HashSetEntry(hash_xdr(i), 0)); };
 
     SECTION("good erase")
     {
@@ -105,20 +109,20 @@ TEST_CASE("insert and delete", "[hashset]")
         REQUIRE(res.size() == 3);
         std::sort(res.begin(), res.end());
         // experimentally determined ordering
-        REQUIRE(res[0] == hash_xdr<uint64_t>(1));
-        REQUIRE(res[1] == hash_xdr<uint64_t>(3));
-        REQUIRE(res[2] == hash_xdr<uint64_t>(2));
+        REQUIRE(res[0].hash == hash_xdr<uint64_t>(1));
+        REQUIRE(res[1].hash == hash_xdr<uint64_t>(3));
+        REQUIRE(res[2].hash == hash_xdr<uint64_t>(2));
     }
 
     SECTION("completely full")
     {
         for (uint64_t i = 0;; i++) {
-            if (!set.try_insert(hash_xdr(i))) {
+            if (!set.try_insert(HashSetEntry(hash_xdr(i), 0))) {
                 break;
             }
         }
 
-        REQUIRE_THROWS(set.erase(hash_xdr<uint64_t>(100)));
+        REQUIRE_THROWS(set.erase(HashSetEntry(hash_xdr<uint64_t>(100), 0)));
     }
 }
 

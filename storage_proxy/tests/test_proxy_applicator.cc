@@ -293,7 +293,7 @@ TEST_CASE("hash set only", "[mutator]")
 
         auto find_hash = [&]() {
             for (auto const& h1 : hs.hashes) {
-                if (h1 == h) {
+                if (h1.hash == h) {
                     return true;
                 }
             }
@@ -309,7 +309,7 @@ TEST_CASE("hash set only", "[mutator]")
 
         auto find_hash = [&]() {
             for (auto const& h1 : hs.hashes) {
-                if (h1 == h) {
+                if (h1.hash == h) {
                     return true;
                 }
             }
@@ -329,19 +329,19 @@ TEST_CASE("hash set only", "[mutator]")
 
         SECTION("insert one")
         {
-            check_valid(make_hash_set_insert(make_hash(0)));
+            check_valid(make_hash_set_insert(make_hash(0), 0));
             val_expect_hash(make_hash(0));
         }
         SECTION("insert several")
         {
-            check_valid(make_hash_set_insert(make_hash(0)));
-            check_valid(make_hash_set_insert(make_hash(1)));
-            check_valid(make_hash_set_insert(make_hash(2)));
-            check_valid(make_hash_set_insert(make_hash(3)));
-            check_valid(make_hash_set_insert(make_hash(4)));
+            check_valid(make_hash_set_insert(make_hash(0), 0));
+            check_valid(make_hash_set_insert(make_hash(1), 0));
+            check_valid(make_hash_set_insert(make_hash(2), 0));
+            check_valid(make_hash_set_insert(make_hash(3), 0));
+            check_valid(make_hash_set_insert(make_hash(4), 0));
 
-            check_invalid(make_hash_set_insert(make_hash(0)));
-            check_invalid(make_hash_set_insert(make_hash(4)));
+            check_invalid(make_hash_set_insert(make_hash(0), 0));
+            check_invalid(make_hash_set_insert(make_hash(4), 0));
 
             val_expect_hash(make_hash(0));
         }
@@ -356,13 +356,13 @@ TEST_CASE("hash set only", "[mutator]")
 
         SECTION("insert one")
         {
-            check_valid(make_hash_set_insert(make_hash(0)));
+            check_valid(make_hash_set_insert(make_hash(0), 0));
             val_expect_hash(make_hash(0));
         }
         SECTION("insert two")
         {
-            check_valid(make_hash_set_insert(make_hash(0)));
-            check_invalid(make_hash_set_insert(make_hash(1)));
+            check_valid(make_hash_set_insert(make_hash(0), 0));
+            check_invalid(make_hash_set_insert(make_hash(1), 0));
             val_expect_hash(make_hash(0));
             val_nexpect_hash(make_hash(1));
         }
@@ -378,16 +378,16 @@ TEST_CASE("hash set only", "[mutator]")
             REQUIRE(res[0].type() == DeltaType::HASH_SET_INCREASE_LIMIT);
             REQUIRE(res[0].limit_increase() == 128);
 
-            check_valid(make_hash_set_insert(make_hash(0)));
-            check_invalid(make_hash_set_insert(make_hash(1)));
+            check_valid(make_hash_set_insert(make_hash(0), 0));
+            check_invalid(make_hash_set_insert(make_hash(1), 0));
         }
 
         SECTION("clear doesn't take effect until post")
         {
-            check_valid(make_hash_set_insert(make_hash(0)));
-            check_valid(make_hash_set_clear());
+            check_valid(make_hash_set_insert(make_hash(0), 0));
+            check_valid(make_hash_set_clear(0));
 
-            check_invalid(make_hash_set_insert(make_hash(0)));
+            check_invalid(make_hash_set_insert(make_hash(0), 0));
 
             val_expect_hash(make_hash(0));
 

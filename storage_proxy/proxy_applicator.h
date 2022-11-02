@@ -30,8 +30,8 @@ class ProxyApplicator
     // hash set
 
     uint64_t hs_size_increase = 0;
-    std::vector<Hash> new_hashes;
-    bool do_hs_clear = false;
+    std::vector<HashSetEntry> new_hashes;
+    std::optional<uint64_t> hs_clear_threshold = std::nullopt;
 
     // std::optional<StorageDelta> overall_delta;
     bool is_deleted = false;
@@ -47,7 +47,7 @@ class ProxyApplicator
         , nnint64_delta(std::nullopt)
         , hs_size_increase(0)
         , new_hashes()
-        , do_hs_clear(false)
+        , hs_clear_threshold(std::nullopt)
         , is_deleted(false)
     {}
 

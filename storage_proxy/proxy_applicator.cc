@@ -9,6 +9,8 @@
 
 #include "object/make_delta.h"
 
+using xdr::operator==;
+
 namespace scs {
 
 bool
@@ -240,7 +242,13 @@ ProxyApplicator::try_apply(StorageDelta const& d)
         case DeltaType::HASH_SET_CLEAR:
     	{
     		make_current(ObjectType::HASH_SET);
-    		do_hs_clear = true;
+            if (!hs_clear_threshold)
+            {
+                hs_clear_threshold = d.threshold();
+            } else
+            {
+                hs_clear_threshold = std::max(d.threshold(), *hs_clear_threshold);
+            }
     		// clear does not take effect until next block;
     		return true;
     	}
@@ -453,8 +461,8 @@ ProxyApplicator::get_deltas() const
         out.push_back(make_hash_set_insert(h));
     }
 
-    if (do_hs_clear) {
-        out.push_back(make_hash_set_clear());
+    if (hs_clear_threshold) {
+        out.push_back(make_hash_set_clear(*hs_clear_threshold));
     }
 
     if (is_deleted) {

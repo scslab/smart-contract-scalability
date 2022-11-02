@@ -29,7 +29,7 @@ storage_object_to_str(scs::StorageObject const& obj)
             out += std::to_string(obj.body.hash_set().max_size);
             for (auto const& h : obj.body.hash_set().hashes)
             {
-                out += " <" + array_to_str(h.data(), h.size()) + ">";
+                out += " <" + array_to_str(h.hash.data(), h.hash.size()) + " " + std::to_string(h.index) + ">";
             }
             return out + "]";
         }

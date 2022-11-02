@@ -30,7 +30,7 @@ class ThreadlocalContextStore
 
     inline static utils::ThreadlocalCache<context_t> cache;
 
-    inline static BlockAllocator<Hash> hash_allocator;
+    inline static BlockAllocator<HashSetEntry> hash_allocator;
 
     ThreadlocalContextStore() = delete;
 
@@ -43,14 +43,14 @@ class ThreadlocalContextStore
         (cache.get()).gc.template deferred_delete<delete_t>(ptr);
     }
 
-    static Hash const& 
+    static HashSetEntry const& 
     get_hash(uint32_t idx)
     {
         return hash_allocator.get(idx);
     }
 
     static uint32_t 
-    allocate_hash(Hash&& h)
+    allocate_hash(HashSetEntry&& h)
     {
         return hash_allocator.allocate(std::move(h));
     }

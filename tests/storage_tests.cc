@@ -15,6 +15,8 @@
 
 #include "state_db/modified_keys_list.h"
 
+#include "object/comparators.h"
+
 using namespace scs;
 
 using xdr::operator==;
@@ -125,7 +127,7 @@ TEST_CASE("hashset insert", "[storage]")
 
         REQUIRE(hs.hashes.size() == 2);
 
-        REQUIRE(hs.hashes[0] < hs.hashes[1]);
+        REQUIRE(hs.hashes[0] > hs.hashes[1]);
     }
 }
 

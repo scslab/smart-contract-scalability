@@ -50,13 +50,13 @@ public:
 	delete_object_last(AddressAndKey const& key, delta_identifier_t id);
 
 	void
-	hashset_insert(AddressAndKey const& key, Hash const& h, delta_identifier_t id);
+	hashset_insert(AddressAndKey const& key, Hash const& h, uint64_t threshold, delta_identifier_t id);
 
 	void
 	hashset_increase_limit(AddressAndKey const& key, uint32_t limit, delta_identifier_t id);
 
 	void
-	hashset_clear(AddressAndKey const& key, delta_identifier_t id);
+	hashset_clear(AddressAndKey const& key, uint64_t threshold, delta_identifier_t id);
 
 	bool
 	__attribute__((warn_unused_result))

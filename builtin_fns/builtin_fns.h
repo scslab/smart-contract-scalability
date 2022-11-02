@@ -113,7 +113,8 @@ class BuiltinFns
 		uint32_t key_offset,
 		/* key_len = 32 */
 		uint32_t hash_offset
-		/* hash_len = 32 */);
+		/* hash_len = 32 */,
+		uint64_t threshold);
 
 	static void
 	scs_hashset_increase_limit(
@@ -124,7 +125,8 @@ class BuiltinFns
 	static void
 	scs_hashset_clear(
 		uint32_t key_offset
-		/* key_len = 32 */);
+		/* key_len = 32 */,
+		uint64_t threshold);
 
 	/* -- crypto -- */
 	static void

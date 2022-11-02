@@ -300,7 +300,7 @@ TEST_CASE("hashset from empty", "[object]")
     RevertableObject object;
 
     auto make_insert = [](uint64_t i) {
-        return make_hash_set_insert(hash_xdr<uint64_t>(i));
+        return make_hash_set_insert(hash_xdr<uint64_t>(i), 0);
     };
 
     auto good_add = [&](StorageDelta const& d) {
@@ -351,7 +351,7 @@ TEST_CASE("hashset from empty", "[object]")
             = object.get_committed_object()->body.hash_set().hashes;
 
         REQUIRE(hashes.size() == 1);
-        REQUIRE(hashes[0] == hash_xdr<uint64_t>(0));
+        REQUIRE(hashes[0].hash == hash_xdr<uint64_t>(0));
     }
 
     SECTION("raise limit")
@@ -408,7 +408,7 @@ TEST_CASE("hashset from empty", "[object]")
 
         SECTION("revert clear")
         {
-            revert_good_add(make_hash_set_clear());
+            revert_good_add(make_hash_set_clear(0));
 
             object.commit_round();
             REQUIRE(object.get_committed_object());
@@ -418,7 +418,7 @@ TEST_CASE("hashset from empty", "[object]")
 
         SECTION("commit clear")
         {
-            good_add(make_hash_set_clear());
+            good_add(make_hash_set_clear(0));
 
             object.commit_round();
             REQUIRE(object.get_committed_object());
@@ -435,13 +435,13 @@ TEST_CASE("hashset from nonempty", "[object]")
     StorageObject base_obj;
     base_obj.body.type(ObjectType::HASH_SET);
     base_obj.body.hash_set().max_size = 4;
-    base_obj.body.hash_set().hashes.push_back(hash_xdr<uint64_t>(0));
-    base_obj.body.hash_set().hashes.push_back(hash_xdr<uint64_t>(1));
+    base_obj.body.hash_set().hashes.push_back(HashSetEntry(hash_xdr<uint64_t>(0), 0));
+    base_obj.body.hash_set().hashes.push_back(HashSetEntry(hash_xdr<uint64_t>(1), 0));
 
     RevertableObject object(base_obj);
 
     auto make_insert = [](uint64_t i) {
-        return make_hash_set_insert(hash_xdr<uint64_t>(i));
+        return make_hash_set_insert(hash_xdr<uint64_t>(i), 0);
     };
 
     auto good_add = [&](StorageDelta const& d) {
@@ -470,7 +470,7 @@ TEST_CASE("hashset from nonempty", "[object]")
     }
     SECTION("clear")
     {
-        good_add(make_hash_set_clear());
+        good_add(make_hash_set_clear(0));
 
         object.commit_round();
         REQUIRE(object.get_committed_object());
@@ -478,5 +478,65 @@ TEST_CASE("hashset from nonempty", "[object]")
                 == 0);
     }
 }
+
+TEST_CASE("hashset from nonempty with thresholds", "[object]")
+{
+
+    StorageObject base_obj;
+    base_obj.body.type(ObjectType::HASH_SET);
+    base_obj.body.hash_set().max_size = 4;
+    base_obj.body.hash_set().hashes.push_back(HashSetEntry(hash_xdr<uint64_t>(0), 10));
+    base_obj.body.hash_set().hashes.push_back(HashSetEntry(hash_xdr<uint64_t>(1), 20));
+
+    RevertableObject object(base_obj);
+
+    auto make_insert = [](uint64_t i, uint64_t threshold) {
+        return make_hash_set_insert(hash_xdr<uint64_t>(i), threshold);
+    };
+
+    auto good_add = [&](StorageDelta const& d) {
+        auto res = object.try_add_delta(d);
+        REQUIRE(!!res);
+        res->commit();
+    };
+
+    SECTION("new entry, repeated hash")
+    {
+        good_add(make_insert(0, 15));
+        good_add(make_insert(2, 25));
+
+        object.commit_round();
+
+        REQUIRE(object.get_committed_object());
+
+        auto const& hs = object.get_committed_object() -> body.hash_set().hashes;
+
+        REQUIRE(hs.size() == 4);
+        REQUIRE(hs[0].hash == hash_xdr<uint64_t>(2));
+        REQUIRE(hs[1].hash == hash_xdr<uint64_t>(1));
+        REQUIRE(hs[2].hash == hash_xdr<uint64_t>(0));
+        REQUIRE(hs[3].hash == hash_xdr<uint64_t>(0));
+    }
+
+    SECTION("clear filtering")
+    {
+        good_add(make_insert(0, 15));
+        good_add(make_insert(2, 25));
+
+        good_add(make_hash_set_clear(15));
+        good_add(make_hash_set_clear(10));
+
+        object.commit_round();
+
+        REQUIRE(object.get_committed_object());
+
+        auto const& hs = object.get_committed_object() -> body.hash_set().hashes;
+
+        REQUIRE(hs.size() == 2);
+        REQUIRE(hs[0].hash == hash_xdr<uint64_t>(2));
+        REQUIRE(hs[1].hash == hash_xdr<uint64_t>(1));
+    }
+}
+
 
 } // namespace scs

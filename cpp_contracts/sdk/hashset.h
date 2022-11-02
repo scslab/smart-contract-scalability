@@ -20,7 +20,9 @@ void
 hashset_insert(
 	uint32_t key_offset,
 	/* key_len = 32 */
-	uint32_t hash_offset);
+	uint32_t hash_offset,
+	/* hash_len = 32 */
+	uint64_t threshold);
 
 BUILTIN("hashset_increase_limit")
 void
@@ -33,17 +35,20 @@ BUILTIN("hashset_clear")
 void
 hashset_clear(
 	uint32_t key_offset
-	/* key_len = 32 */);
+	/* key_len = 32 */,
+	uint64_t threshold);
 
 } /* detail */
 
 void hashset_insert(
 	StorageKey const& key,
-	Hash const& hash)
+	Hash const& hash,
+	uint64_t threshold)
 {
 	detail::hashset_insert(
 		to_offset(&key), 
-		to_offset(&hash));
+		to_offset(&hash),
+		threshold);
 }
 
 void
@@ -58,10 +63,12 @@ hashset_increase_limit(
 
 void
 hashset_clear(
-	StorageKey const& key)
+	StorageKey const& key,
+	uint64_t threshold)
 {
 	detail::hashset_clear(
-		to_offset(&key));
+		to_offset(&key),
+		threshold);
 }
 
 } /* sdk */

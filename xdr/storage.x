@@ -18,9 +18,15 @@ struct RawMemoryStorage
 	opaque data<RAW_MEMORY_MAX_LEN>;
 };
 
+struct HashSetEntry
+{
+	Hash hash;
+	uint64 index;
+};
+
 struct HashSet
 {
-	Hash hashes<>;
+	HashSetEntry hashes<>;
 	uint32 max_size;
 };
 

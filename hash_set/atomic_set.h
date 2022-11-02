@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "xdr/types.h"
+#include "xdr/storage.h"
 
 namespace scs {
 
@@ -37,12 +38,12 @@ class AtomicSet
 
     void clear();
 
-    bool try_insert(const Hash& h);
+    bool try_insert(const HashSetEntry& h);
 
     // throws if nexist
-    void erase(const Hash& h);
+    void erase(const HashSetEntry& h);
 
-    std::vector<Hash> get_hashes() const;
+    std::vector<HashSetEntry> get_hashes() const;
 };
 
 } // namespace scs

@@ -30,11 +30,20 @@ make_nonnegative_int64_set_add(int64_t set, int64_t add)
 }
 
 StorageDelta
-make_hash_set_insert(Hash const& h)
+make_hash_set_insert(Hash const& h, uint64_t threshold)
 {
     StorageDelta d;
     d.type(DeltaType::HASH_SET_INSERT);
-    d.hash() = h;
+    d.hash() = HashSetEntry(h, threshold);
+    return d;
+}
+
+StorageDelta
+make_hash_set_insert(HashSetEntry const& entry)
+{
+    StorageDelta d;
+    d.type(DeltaType::HASH_SET_INSERT);
+    d.hash() = entry;
     return d;
 }
 
@@ -48,10 +57,11 @@ make_hash_set_increase_limit(uint16_t limit)
 }
 
 StorageDelta
-make_hash_set_clear()
+make_hash_set_clear(uint64_t threshold)
 {
     StorageDelta d;
     d.type(DeltaType::HASH_SET_CLEAR);
+    d.threshold() = threshold;
     return d;
 }
 

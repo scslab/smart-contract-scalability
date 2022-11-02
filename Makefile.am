@@ -54,6 +54,7 @@ HASH_SET_TEST_SRCS = \
 	hash_set/tests/test_atomic_set.cc
 
 OBJECT_SRCS = \
+	object/comparators.cc \
 	object/make_delta.cc \
 	object/object_defaults.cc \
 	object/revertable_object.cc

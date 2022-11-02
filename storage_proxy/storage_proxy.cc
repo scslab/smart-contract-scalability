@@ -105,11 +105,11 @@ StorageProxy::delete_object_last(AddressAndKey const& key, delta_identifier_t id
 }
 
 void
-StorageProxy::hashset_insert(AddressAndKey const& key, Hash const& h, delta_identifier_t id)
+StorageProxy::hashset_insert(AddressAndKey const& key, Hash const& h, uint64_t threshold, delta_identifier_t id)
 {
 	auto& v = get_local(key);
 
-	auto delta = make_hash_set_insert(h);
+	auto delta = make_hash_set_insert(h, threshold);
 
 	if (!v.applicator.try_apply(delta))
 	{
@@ -138,11 +138,11 @@ StorageProxy::hashset_increase_limit(AddressAndKey const& key, uint32_t limit, d
 }
 
 void
-StorageProxy::hashset_clear(AddressAndKey const& key, delta_identifier_t id)
+StorageProxy::hashset_clear(AddressAndKey const& key, uint64_t threshold, delta_identifier_t id)
 {
 	auto& v = get_local(key);
 
-	auto delta = make_hash_set_clear();
+	auto delta = make_hash_set_clear(threshold);
 
 	if (!v.applicator.try_apply(delta))
 	{

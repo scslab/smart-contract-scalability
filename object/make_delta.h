@@ -18,12 +18,15 @@ StorageDelta
 make_nonnegative_int64_set_add(int64_t set, int64_t add);
 
 StorageDelta
-make_hash_set_insert(Hash const& h);
+make_hash_set_insert(Hash const& h, uint64_t threshold);
+
+StorageDelta
+make_hash_set_insert(HashSetEntry const& entry);
 
 StorageDelta
 make_hash_set_increase_limit(uint16_t limit);
 
 StorageDelta
-make_hash_set_clear();
+make_hash_set_clear(uint64_t threshold);
 
 } // namespace scs

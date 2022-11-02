@@ -46,13 +46,13 @@ union StorageDelta switch (DeltaType type)
 	case NONNEGATIVE_INT64_SET_ADD:
 		set_add_t set_add_nonnegative_int64;
 	case HASH_SET_INSERT:
-		Hash hash;
+		HashSetEntry hash;
 	case HASH_SET_INCREASE_LIMIT:
 		// enforced to be at most uint16_max
 		// (MAX_HASH_SET_SIZE)
 		uint32 limit_increase;
 	case HASH_SET_CLEAR:
-		void;
+		uint64 threshold;
 	case UNCONSTRAINED_INT64_SET_ADD:
 		set_add_t set_add_unconstrained_int64;
 	case UNCONSTRAINED_INT64_SET_MAX:
@@ -94,7 +94,7 @@ union StorageDeltaClass switch (ObjectType type)
 	case HASH_SET:
 		void;
 	case UNCONSTRAINED_INT64:
-		UnconstrainedInt64DeltaClass uncontstrained_modtype;
+		UnconstrainedInt64DeltaClass unconstrained_int64_modtype;
 };
 
 /*

@@ -105,10 +105,12 @@ class RevertableObject : public utils::NonMovableOrCopyable
     std::atomic<uint64_t> size_increase;
     AtomicSet new_hashes;
     std::atomic<uint32_t> num_new_elts;
-    std::atomic<uint32_t> inflight_hashset_clears;
+
+    std::atomic<bool> hashset_clear_committed;
+    std::atomic<uint64_t> max_committed_clear_threshold;
 
     // for delete_last
-    std::atomic<uint32_t> inflight_delete_lasts;
+    std::atomic<bool> delete_last_committed;
 
     // base object
     std::optional<StorageObject> committed_base;

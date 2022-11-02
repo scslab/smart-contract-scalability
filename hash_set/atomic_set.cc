@@ -4,6 +4,8 @@
 
 #include "threadlocal/threadlocal_context.h"
 
+using xdr::operator==;
+
 namespace scs {
 
 AtomicSet::~AtomicSet()
@@ -40,12 +42,12 @@ AtomicSet::clear()
 }
 
 bool
-AtomicSet::try_insert(const Hash& h)
+AtomicSet::try_insert(const HashSetEntry& h)
 {
-    const uint16_t start_idx = shorthash(h.data(), h.size(), capacity);
+    const uint16_t start_idx = shorthash(h.hash.data(), h.hash.size(), capacity);
     uint16_t idx = start_idx;
 
-    uint32_t alloc = ThreadlocalContextStore::allocate_hash(Hash(h));
+    uint32_t alloc = ThreadlocalContextStore::allocate_hash(HashSetEntry(h));
 
     const uint16_t cur_filled_slots
         = num_filled_slots.load(std::memory_order_relaxed);
@@ -92,9 +94,9 @@ AtomicSet::try_insert(const Hash& h)
 }
 
 void
-AtomicSet::erase(const Hash& h)
+AtomicSet::erase(const HashSetEntry& h)
 {
-    const uint16_t start_idx = shorthash(h.data(), h.size(), capacity);
+    const uint16_t start_idx = shorthash(h.hash.data(), h.hash.size(), capacity);
     uint16_t idx = start_idx;
 
     do {
@@ -129,10 +131,10 @@ AtomicSet::erase(const Hash& h)
     throw std::runtime_error("deletion failed after complete scan");
 }
 
-std::vector<Hash>
+std::vector<HashSetEntry>
 AtomicSet::get_hashes() const
 {
-    std::vector<Hash> out;
+    std::vector<HashSetEntry> out;
 
     for (uint16_t i = 0; i < capacity; i++) {
         uint32_t idx = array[i].load(std::memory_order_relaxed);

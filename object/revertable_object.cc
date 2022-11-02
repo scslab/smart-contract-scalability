@@ -3,6 +3,7 @@
 #include "threadlocal/threadlocal_context.h"
 
 #include "object/object_defaults.h"
+#include "object/comparators.h"
 
 using xdr::operator==;
 
@@ -243,7 +244,7 @@ RevertableObject::try_add_delta(const StorageDelta& delta)
 {
     switch (delta.type()) {
         case DeltaType::DELETE_LAST: {
-            inflight_delete_lasts.fetch_add(1, std::memory_order_relaxed);
+            // no op
             return DeltaRewind(RevertableBaseObject::Rewind(), delta, this);
         }
         case DeltaType::NONNEGATIVE_INT64_SET_ADD: {
@@ -364,8 +365,6 @@ RevertableObject::try_add_delta(const StorageDelta& delta)
                 return std::nullopt;
             }
 
-            inflight_hashset_clears.fetch_add(1, std::memory_order_relaxed);
-
             return DeltaRewind(std::move(*res), delta, this);
         }
         default:
@@ -378,7 +377,51 @@ RevertableObject::try_add_delta(const StorageDelta& delta)
 void
 RevertableObject::commit_delta(const StorageDelta& delta)
 {
-    // no op
+    switch(delta.type())
+    {
+        case DeltaType::DELETE_LAST:
+        {
+            delete_last_committed.store(true, std::memory_order_relaxed);
+            return;
+        }
+        case DeltaType::NONNEGATIVE_INT64_SET_ADD:
+        {
+            // no op
+            return;
+        }
+        case DeltaType::RAW_MEMORY_WRITE:
+        {
+            // no op
+            return;
+        }
+        case DeltaType::HASH_SET_INCREASE_LIMIT: {
+            // no op
+            return;
+        }
+        case DeltaType::HASH_SET_INSERT:
+        {
+            // no op
+            return;
+        }
+        case DeltaType::HASH_SET_CLEAR:
+        {
+            hashset_clear_committed.store(true, std::memory_order_relaxed);
+            while(true)
+            {
+                uint64_t cur_threshold = max_committed_clear_threshold.load(std::memory_order_relaxed);
+                if (cur_threshold >= delta.threshold())
+                {
+                    return;
+                }
+                if (max_committed_clear_threshold.compare_exchange_strong(
+                    cur_threshold, delta.threshold(), std::memory_order_relaxed))
+                {
+                    return;
+                }
+            }
+        }
+    }
+    throw std::runtime_error("unknown deltatype in commit_delta()");
 }
 
 void
@@ -386,7 +429,7 @@ RevertableObject::revert_delta(const StorageDelta& delta)
 {
     switch (delta.type()) {
         case DeltaType::DELETE_LAST: {
-            inflight_delete_lasts.fetch_sub(1, std::memory_order_relaxed);
+            // no op
             return;
         }
         case DeltaType::NONNEGATIVE_INT64_SET_ADD: {
@@ -416,7 +459,7 @@ RevertableObject::revert_delta(const StorageDelta& delta)
         }
         case DeltaType::HASH_SET_CLEAR:
         {
-            inflight_hashset_clears.fetch_sub(1, std::memory_order_relaxed);
+            // no op
             return;
         }
     }
@@ -501,9 +544,11 @@ RevertableObject::clear_mods()
     size_increase.store(0, std::memory_order_relaxed);
     new_hashes.clear();
     num_new_elts.store(0, std::memory_order_relaxed);
-    inflight_hashset_clears.store(0, std::memory_order_relaxed);
 
-    inflight_delete_lasts.store(0, std::memory_order_relaxed);
+    hashset_clear_committed.store(false, std::memory_order_relaxed);
+    max_committed_clear_threshold.store(0, std::memory_order_relaxed);
+
+    delete_last_committed.store(false, std::memory_order_relaxed);
 }
 
 void
@@ -522,7 +567,7 @@ RevertableObject::commit_round()
         return;
     }
 
-    if (inflight_delete_lasts.load(std::memory_order_relaxed) > 0) {
+    if (delete_last_committed.load(std::memory_order_relaxed)) {
         clear_mods();
         committed_base = std::nullopt;
         base_obj.clear_required_type();
@@ -564,11 +609,23 @@ RevertableObject::commit_round()
                           std::make_move_iterator(new_hashes_list.begin()),
                           std::make_move_iterator(new_hashes_list.end()));
 
-            std::sort(h_list.begin(), h_list.end());
+            std::sort(h_list.begin(), h_list.end(), std::greater<HashSetEntry>());
 
-            if (inflight_hashset_clears > 0)
+            if (hashset_clear_committed.load(std::memory_order_relaxed))
             {
-                h_list.clear();
+                uint64_t threshold = max_committed_clear_threshold.load(std::memory_order_relaxed);
+
+                // TODO they're sorted, so we can just truncate the list and avoid the iterator overhead
+                for (auto it = h_list.begin(); it != h_list.end();)
+                {
+                    if (it -> index <= threshold)
+                    {
+                        it = h_list.erase(it);
+                    } else
+                    {
+                        ++it;
+                    }
+                }
             }
 
             break;
@@ -587,8 +644,9 @@ RevertableObject::RevertableObject()
     , size_increase(0)
     , new_hashes(START_HASH_SET_SIZE)
     , num_new_elts(0)
-    , inflight_hashset_clears(0)
-    , inflight_delete_lasts(0)
+    , hashset_clear_committed(false)
+    , max_committed_clear_threshold(0)
+    , delete_last_committed(false)
     , committed_base(std::nullopt)
 {}
 
@@ -599,8 +657,9 @@ RevertableObject::RevertableObject(const StorageObject& committed_base_)
     , size_increase(0)
     , new_hashes(0)
     , num_new_elts(0)
-    , inflight_hashset_clears(0)
-    , inflight_delete_lasts(0)
+    , hashset_clear_committed(false)
+    , max_committed_clear_threshold(0)
+    , delete_last_committed(false)
     , committed_base(committed_base_)
 {
     if (committed_base->body.type() == ObjectType::HASH_SET) {

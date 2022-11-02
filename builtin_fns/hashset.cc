@@ -23,7 +23,8 @@ BuiltinFns::scs_hashset_insert(
 	uint32_t key_offset,
 	/* key_len = 32 */
 	uint32_t hash_offset
-	/* hash_len = 32 */)
+	/* hash_len = 32 */,
+	uint64_t threshold)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
 	auto& runtime = *tx_ctx.get_current_runtime();
@@ -34,7 +35,7 @@ BuiltinFns::scs_hashset_insert(
 
 	auto hash = runtime.template load_from_memory_to_const_size_buf<Hash>(hash_offset);
 
-	tx_ctx.storage_proxy.hashset_insert(addr_and_key, hash, tx_ctx.get_src_tx_hash());
+	tx_ctx.storage_proxy.hashset_insert(addr_and_key, hash, threshold, tx_ctx.get_src_tx_hash());
 }
 
 void
@@ -56,7 +57,8 @@ BuiltinFns::scs_hashset_increase_limit(
 void
 BuiltinFns::scs_hashset_clear(
 	uint32_t key_offset
-	/* key_len = 32 */)
+	/* key_len = 32 */,
+	uint64_t threshold)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
 	auto& runtime = *tx_ctx.get_current_runtime();
@@ -65,7 +67,7 @@ BuiltinFns::scs_hashset_clear(
 
 	auto addr_and_key = tx_ctx.get_storage_key(key);
 
-	tx_ctx.storage_proxy.hashset_clear(addr_and_key, tx_ctx.get_src_tx_hash());
+	tx_ctx.storage_proxy.hashset_clear(addr_and_key, threshold, tx_ctx.get_src_tx_hash());
 }
 
 } // namespace scs
