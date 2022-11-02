@@ -34,6 +34,11 @@ void
 get_self(
 	uint32_t offset);
 
+BUILTIN("get_tx_hash")
+void
+get_tx_hash(
+	uint32_t offset);
+
 } /* detail */
 
 // only works for fixed-size types here
@@ -72,5 +77,17 @@ get_self()
 	detail::get_self(to_offset(&out));
 	return out;
 }
+
+Hash
+get_tx_hash()
+{
+	Hash out;
+	detail::get_tx_hash(to_offset(&out));
+	return out;
+}
+
+BUILTIN("get_block_number")
+uint64_t
+get_block_number();
 
 } /* sdk */

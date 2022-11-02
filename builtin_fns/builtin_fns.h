@@ -62,6 +62,11 @@ class BuiltinFns
 	static uint64_t
 	scs_get_block_number();
 
+	static void
+	scs_get_tx_hash(
+		uint32_t hash_offset
+		/* hash_len = 32 */);
+
 	/* -- raw memory storage fns -- */
 
 	static void

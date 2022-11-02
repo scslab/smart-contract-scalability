@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sdk/types.h"
+#include "sdk/invoke.h"
 
 namespace erc20
 {
@@ -27,18 +28,13 @@ struct calldata_allowanceDelta
 
 class Ierc20
 {
-    const sdk::Address addr;
+    const sdk::Address& addr;
 
 public:
 
     constexpr 
     Ierc20(const sdk::Address& addr)
         : addr(addr)
-        {}
-
-    constexpr
-    Ierc20(sdk::Address&& addr)
-        : addr(std::move(addr))
         {}
 
     inline void transferFrom(

@@ -35,7 +35,7 @@ template<TriviallyCopyable T>
 void set_raw_memory(const StorageKey& key, const T& value)
 {
 	detail::raw_mem_set(
-		to_offset(&key),
+		to_offset(key.data()),
 		to_offset(&value),
 		sizeof(T));
 }
@@ -46,7 +46,7 @@ get_raw_memory_opt(const StorageKey& key)
 {
 	std::optional<T> out = T{};
 	uint32_t res = detail::raw_mem_get(
-		to_offset(&key),
+		to_offset(key.data()),
 		to_offset(&(*out)),
 		sizeof(T));
 
@@ -63,7 +63,7 @@ get_raw_memory(const StorageKey& key)
 {
 	T out;
 	uint32_t res = detail::raw_mem_get(
-		to_offset(&key),
+		to_offset(key.data()),
 		to_offset(&out),
 		sizeof(T));
 

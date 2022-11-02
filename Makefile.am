@@ -106,6 +106,7 @@ TESTS_CCS = \
 	tests/builtin_fns_log_tests.cc \
 	tests/builtin_fns_invoke_tests.cc \
 	tests/storage_tests.cc \
+	tests/sdk_tests.cc \
 	storage_proxy/tests/test_proxy_applicator.cc \
 	object/tests/test_revertable_object.cc \
 	$(HASH_SET_TEST_SRCS)
@@ -134,7 +135,9 @@ CC_WASMS = \
 	cpp_contracts/test_log.cc \
 	cpp_contracts/test_nn_int64.cc \
 	cpp_contracts/test_redirect_call.cc \
-	cpp_contracts/test_raw_memory.cc
+	cpp_contracts/test_raw_memory.cc \
+	cpp_contracts/test_sdk.cc \
+	cpp_contracts/payment_experiment/payment.cc
 
 .cc.wasm:
 	wasi/wasi-sdk/bin/clang -Os -mtune=native -march=native -I./cpp_contracts/ $< -o $@ \

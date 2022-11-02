@@ -52,6 +52,10 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 		"scs",
 		"get_block_number");
 
+	runtime.template link_fn<&BuiltinFns::scs_get_tx_hash>(
+		"scs",
+		"get_tx_hash");
+
 	/* -- storage -- */
 	runtime.template link_fn<&BuiltinFns::scs_raw_memory_set>(
 		"scs",

@@ -6,6 +6,7 @@
 #include "sdk/nonnegative_int64.h"
 #include "sdk/raw_memory.h"
 #include "sdk/types.h"
+#include "sdk/constexpr.h"
 
 #include "erc20.h"
 
@@ -22,12 +23,10 @@ static std::array<uint8_t, 64> allowance_key_buf;
 static StorageKey storage_key_buf;
 
 constexpr static std::array<uint8_t, 32> owner_id_storage_key
-    = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    = sdk::make_static_key(0, 1);
 
 constexpr static std::array<uint8_t, 32> total_supply_storage_key
-    = { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    = sdk::make_static_key(1, 1);
 
 void
 calculate_balance_key(const Address& addr, StorageKey& o_key)
