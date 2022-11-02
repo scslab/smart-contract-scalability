@@ -94,4 +94,11 @@ BuiltinFns::scs_get_self_addr(
 	runtime.write_to_memory(invoke.addr, addr_offset, sizeof(Address));
 }
 
+uint64_t
+BuiltinFns::scs_get_block_number()
+{
+	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	return tx_ctx.get_block_number();
+}
+
 } /* scs */

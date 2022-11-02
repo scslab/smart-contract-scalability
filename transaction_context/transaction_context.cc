@@ -8,15 +8,16 @@ namespace scs {
 TransactionContext::TransactionContext(Transaction const& tx,
                                        Hash const& tx_hash,
                                        GlobalContext& global_context,
-                                       BlockContext& block_context)
+                                       BlockContext& block_context_)
     : invocation_stack()
     , runtime_stack()
     , tx(tx)
     , tx_hash(tx_hash)
     , gas_used(0)
+    , block_context(block_context_)
     , return_buf()
     , tx_results(new TransactionResults())
-    , storage_proxy(global_context.state_db, block_context.modified_keys_list)
+    , storage_proxy(global_context.state_db, block_context_.modified_keys_list)
     , contract_db_proxy(global_context.contract_db)
 {}
 
@@ -85,6 +86,12 @@ uint32_t
 TransactionContext::get_num_deployable_contracts() const
 {
     return tx.contracts_to_deploy.size();
+}
+
+uint64_t 
+TransactionContext::get_block_number() const
+{
+    return block_context.block_number;
 }
 
 const Contract&

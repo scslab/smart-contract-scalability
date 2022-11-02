@@ -40,6 +40,8 @@ class TransactionContext
 
 	uint64_t gas_used;
 
+	BlockContext const& block_context;
+
 public:
 
 	std::vector<uint8_t> return_buf;
@@ -53,7 +55,7 @@ public:
 		Transaction const& tx,
 		Hash const& tx_hash, 
 		GlobalContext& scs_data_structures,
-		BlockContext& block_context);
+		BlockContext& block_context_);
 
 	std::unique_ptr<TransactionResults> extract_results()
 	{
@@ -77,6 +79,8 @@ public:
 	{
 		return contract_db_proxy;
 	}
+
+	uint64_t get_block_number() const;
 
 	const Contract& get_deployable_contract(uint32_t index) const;
 	uint32_t get_num_deployable_contracts() const;

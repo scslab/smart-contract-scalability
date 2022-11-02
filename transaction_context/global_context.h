@@ -31,6 +31,13 @@ struct BlockContext : public utils::NonCopyable
 {
 	TxSet tx_set;
 	ModifiedKeysList modified_keys_list;
+	uint64_t block_number;
+
+	BlockContext(uint64_t block_number)
+		: tx_set()
+		, modified_keys_list()
+		, block_number(block_number)
+		{}
 };
 
 } /* scs */

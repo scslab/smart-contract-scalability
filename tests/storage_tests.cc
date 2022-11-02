@@ -43,7 +43,7 @@ TEST_CASE("hashset insert", "[storage]")
     InvariantKey k0 = hash_xdr<uint64_t>(0);
 
     std::unique_ptr<BlockContext> block_context
-        = std::make_unique<BlockContext>();
+        = std::make_unique<BlockContext>(0);
 
     struct calldata_0
     {
@@ -153,7 +153,7 @@ TEST_CASE("int64 storage write", "[storage]")
     InvariantKey k0 = hash_xdr<uint64_t>(0);
 
     std::unique_ptr<BlockContext> block_context
-        = std::make_unique<BlockContext>();
+        = std::make_unique<BlockContext>(0);
 
     struct calldata_0
     {
@@ -338,7 +338,7 @@ TEST_CASE("int64 storage write", "[storage]")
         REQUIRE(!!db_val);
         REQUIRE(db_val->body.nonnegative_int64() == 100);
 
-        block_context.reset(new BlockContext());
+        block_context.reset(new BlockContext(1));
 
         SECTION("without set")
         {
@@ -406,7 +406,7 @@ TEST_CASE("raw mem storage write", "[storage]")
     InvariantKey k0 = hash_xdr<uint64_t>(0);
 
     std::unique_ptr<BlockContext> block_context
-        = std::make_unique<BlockContext>();
+        = std::make_unique<BlockContext>(0);
 
     struct calldata_0
     {
@@ -435,9 +435,9 @@ TEST_CASE("raw mem storage write", "[storage]")
         phase_finish_block(scs_data_structures, *block_context);
     };
 
-    auto start_new_block = [&] () 
+    auto start_new_block = [&] (uint64_t block_number) 
     {
-        block_context = std::make_unique<BlockContext>();
+        block_context = std::make_unique<BlockContext>(block_number);
     };
 
     auto make_key
@@ -493,7 +493,7 @@ TEST_CASE("raw mem storage write", "[storage]")
                 == xdr::opaque_vec<RAW_MEMORY_MAX_LEN>{
                     0x11, 0x00, 0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA });
 
-        block_context.reset(new BlockContext());
+        block_context.reset(new BlockContext(1));
 
         SECTION("read key from prev block")
         {
@@ -783,7 +783,7 @@ TEST_CASE("raw mem storage write", "[storage]")
             require_valid(tx_hash);
             REQUIRE(!!state_db.get_committed_value(hk0));
 
-            start_new_block();
+            start_new_block(1);
         }
 
 

@@ -28,7 +28,7 @@ TEST_CASE("test log", "[builtin]")
     auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
     Address sender;
-    BlockContext block_context;
+    BlockContext block_context(0);
 
     auto exec_success = [&](const Hash& tx_hash, const Transaction& tx) {
         REQUIRE(exec_ctx.execute(tx_hash, tx, block_context)

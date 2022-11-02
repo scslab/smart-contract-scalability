@@ -59,6 +59,9 @@ class BuiltinFns
 		/* addr_len = 32 */
 		);
 
+	static uint64_t
+	scs_get_block_number();
+
 	/* -- raw memory storage fns -- */
 
 	static void

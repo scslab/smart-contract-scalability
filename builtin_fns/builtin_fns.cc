@@ -48,6 +48,10 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 		"scs",
 		"get_self");
 
+	runtime.template link_fn<&BuiltinFns::scs_get_block_number>(
+		"scs",
+		"get_block_number");
+
 	/* -- storage -- */
 	runtime.template link_fn<&BuiltinFns::scs_raw_memory_set>(
 		"scs",

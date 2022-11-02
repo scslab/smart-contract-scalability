@@ -42,7 +42,7 @@ TEST_CASE("test invoke", "[builtin]")
     Hash h_val = hash_xdr<uint64>(0);
     std::memcpy(sender.data(), h_val.data(), h_val.size());
 
-    BlockContext block_context;
+    BlockContext block_context(0);
 
     auto exec_success = [&](const Hash& tx_hash, const Transaction& tx) {
         REQUIRE(exec_ctx.execute(tx_hash, tx, block_context)
