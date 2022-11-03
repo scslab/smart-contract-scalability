@@ -56,6 +56,10 @@ class StateDB
     trie_t state_db;
     NewKeyCache new_key_cache;
 
+    std::atomic<bool> has_uncommitted_deltas = false;
+
+    void assert_not_uncommitted_deltas() const;
+
   public:
     std::optional<StorageObject> get_committed_value(
         const AddressAndKey& a) const;
@@ -67,6 +71,8 @@ class StateDB
     void commit_modifications(const ModifiedKeysList& list);
 
     void rewind_modifications(const ModifiedKeysList& list);
+
+    Hash hash();
 
 #if 0
 // old

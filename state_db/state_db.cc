@@ -7,6 +7,15 @@
 
 namespace scs {
 
+void 
+StateDB::assert_not_uncommitted_deltas() const
+{
+    if (has_uncommitted_deltas)
+    {
+        throw std::runtime_error("assert not uncommitted deltas fail");
+    }
+}
+
 std::optional<StorageObject>
 StateDB::get_committed_value(const AddressAndKey& a) const
 {
@@ -21,6 +30,8 @@ std::optional<RevertableObject::DeltaRewind>
 StateDB::try_apply_delta(const AddressAndKey& a, const StorageDelta& delta)
 {
     auto* res = state_db.get_value_nolocks(a);
+    has_uncommitted_deltas.store(true, std::memory_order_relaxed);
+
     if (!res) {
         return new_key_cache.try_reserve_delta(a, delta);
     } else {
@@ -95,6 +106,8 @@ StateDB::commit_modifications(const ModifiedKeysList& list)
     state_db.perform_marked_deletions();
 
     new_key_cache.clear_for_next_block();
+
+    has_uncommitted_deltas = false;
 }
 
 struct RewindFn
@@ -133,6 +146,18 @@ StateDB::rewind_modifications(const ModifiedKeysList& list)
     RewindFn rewind(state_db);
 
     list.get_keys().parallel_batch_value_modify(rewind);
+
+    has_uncommitted_deltas = false;
+}
+
+Hash
+StateDB::hash()
+{
+    assert_not_uncommitted_deltas();
+
+    Hash out;
+    state_db.hash(out);
+    return out;
 }
 
 
