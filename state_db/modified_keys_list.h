@@ -40,6 +40,8 @@ class ModifiedKeysList
         assert_logs_merged();
         return keys;
     }
+
+    Hash hash();
 };
 
 } // namespace scs

@@ -33,4 +33,14 @@ ModifiedKeysList::merge_logs()
     logs_merged = true;
 }
 
+Hash
+ModifiedKeysList::hash()
+{
+    assert_logs_merged();
+
+    Hash out;
+    keys.hash(out);
+    return out;
+}
+
 } // namespace scs
