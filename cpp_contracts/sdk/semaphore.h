@@ -4,6 +4,7 @@
 namespace sdk
 {
 
+template<uint32_t count = 1>
 class Semaphore
 {
 	const sdk::StorageKey key;
@@ -16,7 +17,7 @@ public:
 
 	void acquire()
 	{
-		int64_set_add(key, 1, -1);
+		int64_set_add(key, count, -1);
 	}
 };
 
