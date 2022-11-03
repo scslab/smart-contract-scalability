@@ -5,6 +5,7 @@ SUBDIRS = $(PKGCONFIG_SUBDIRS)
 CLEANFILES = *~ .*~
 
 X_FILES = \
+	xdr/block.x \
 	xdr/storage.x \
 	xdr/storage_delta.x \
 	xdr/types.x \

@@ -85,21 +85,31 @@ VirtualMachine::advance_block_number()
         current_block_context->block_number + 1);
 }
 
-bool
+std::optional<BlockHeader>
 VirtualMachine::try_exec_tx_block(std::vector<Transaction> const& txs)
 {
     auto res = validate_tx_block(txs);
 
     if (!res) {
-        phase_finish_block(global_context, *block_context);
-    } else {
-        phase_undo_block(global_context, *block_context);
-    }
+        phase_undo_block(global_context, *current_block_context);
+        advance_block_number();
+        return std::nullopt;
+    } 
+
+    phase_finish_block(global_context, *current_block_context);
 
     // now time for hashing a block header
+    BlockHeader out;
+
+    out.block_number = current_block_context -> block_number;
+    out.prev_header_hash = prev_block_hash;
+    out.tx_set_hash = current_block_context -> tx_set.hash();
+    out.modified_keys_hash = current_block_context -> modified_keys_list.hash();
+    out.state_db_hash = global_context.state_db.hash();
+    out.contract_db_hash = global_context.contract_db.hash();
 
     advance_block_number();
-    return res;
+    return out;
 }
 
 } // namespace scs

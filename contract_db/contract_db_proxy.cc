@@ -6,6 +6,8 @@
 
 #include "storage_proxy/transaction_rewind.h"
 
+#include "debug/debug_utils.h"
+
 namespace scs {
 
 ContractCreateClosure::ContractCreateClosure(
@@ -77,6 +79,11 @@ bool
 ContractDBProxy::deploy_contract(const Address& deploy_address,
                                  const Hash& contract_hash)
 {
+/*
+    std::printf("attempting to deploy contract hash %s to address %s\n",
+        debug::array_to_str(contract_hash).c_str(),
+        debug::array_to_str(deploy_address).c_str());
+*/
     if (!check_contract_exists(contract_hash)) {
         return false;
     }
