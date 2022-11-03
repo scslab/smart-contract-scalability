@@ -70,4 +70,14 @@ TxSet::finalize()
     txs_merged = true;
 }
 
+Hash
+TxSet::hash()
+{
+    assert_txs_merged();
+    Hash out;
+    txs.hash(out);
+
+    return out;
+}
+
 } // namespace scs
