@@ -13,6 +13,8 @@
 
 #include <utils/non_movable.h>
 
+#include <mtt/trie/merkle_trie.h>
+
 namespace scs {
 
 class ContractDB
@@ -24,13 +26,37 @@ class ContractDB
         sizeof(wasm_api::Hash) == sizeof(Address),
         "mismatch between addresses in scs and addresses in wasm api");
 
+    struct value_struct
+    {
+        std::shared_ptr<const Contract> contract;
+
+        void copy_data(std::vector<uint8_t>& buf) const
+        {
+            if (contract)
+            {
+                buf.insert(buf.end(), contract->begin(), contract->end());
+            }
+        }
+    };
+
+    using prefix_t = trie::ByteArrayPrefix<sizeof(wasm_api::Hash)>;
+    using metadata_t
+        = trie::CombinedMetadata<trie::SizeMixin>;
+    using value_t
+        = value_struct;
+
     using contract_map_t
-        = std::map<wasm_api::Hash, std::shared_ptr<const Contract>>;
+        = trie::MerkleTrie<prefix_t, value_t, metadata_t>;
+    //    = std::map<wasm_api::Hash, std::shared_ptr<const Contract>>;
 
     contract_map_t addresses_to_contracts_map;
-    contract_map_t hashes_to_contracts_map;
+    std::map<wasm_api::Hash, std::shared_ptr<const Contract>> hashes_to_contracts_map;
 
     UncommittedContracts uncommitted_contracts;
+
+    std::atomic<bool> has_uncommitted_modifications = false;
+
+    void assert_not_uncommitted_modifications() const;
 
     friend class UncommittedContracts;
 
@@ -68,6 +94,8 @@ class ContractDB
     bool check_committed_contract_exists(const Hash& contract_hash) const;
 
     void commit();
+
+    Hash hash();
 };
 
 } // namespace scs
