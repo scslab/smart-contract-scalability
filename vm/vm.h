@@ -7,25 +7,28 @@
 
 #include "xdr/transaction.h"
 
-namespace scs
-{
+namespace scs {
 
+/**
+ * Block policy:
+ * Header is <hashes of data structures, prev hash, etc>
+ * We reject a block if prev_hash doesn't match our hash,
+ * but if we execute a block and find no errors
+ * but find a hash mismatch at the end,
+ * we say that's ok, and move on (presumably rejecting subsequent
+ * blocks from that proposer).
+ */
 class VirtualMachine
 {
+    GlobalContext global_context;
+    std::unique_ptr<BlockContext> current_block_context;
 
-	GlobalContext global_context;
-	std::unique_ptr<BlockContext> current_block_context;
+    bool validate_tx_block(std::vector<Transaction> const& txs);
 
-	bool
-	validate_tx_block(std::vector<Transaction> const& txs);
+    void advance_block_number();
 
-	void advance_block_number();
-
-public:
-
-	bool
-	try_exec_tx_block(std::vector<Transaction> const& txs);
-
+  public:
+    bool try_exec_tx_block(std::vector<Transaction> const& txs);
 };
 
-}
+} // namespace scs
