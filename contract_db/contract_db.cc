@@ -131,6 +131,13 @@ ContractDB::commit()
     has_uncommitted_modifications.store(false, std::memory_order_relaxed);
 }
 
+void
+ContractDB::rewind()
+{
+    uncommitted_contracts.clear();
+    has_uncommitted_modifications.store(false, std::memory_order_relaxed);
+}
+
 Hash
 ContractDB::hash()
 {

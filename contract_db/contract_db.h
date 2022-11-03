@@ -95,6 +95,8 @@ class ContractDB
 
     void commit();
 
+    void rewind();
+
     Hash hash();
 };
 

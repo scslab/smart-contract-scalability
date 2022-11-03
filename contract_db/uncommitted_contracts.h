@@ -29,8 +29,6 @@ class UncommittedContracts : public utils::NonMovableOrCopyable
     // temporary bad solution
     std::mutex mtx;
 
-    void clear();
-
   public:
     // caller must ensure script_hash exists
     bool deploy_contract_to_address(wasm_api::Hash const& addr,
@@ -41,6 +39,8 @@ class UncommittedContracts : public utils::NonMovableOrCopyable
     void add_new_contract(std::shared_ptr<const Contract> new_contract);
 
     void commit(ContractDB& contract_db);
+
+    void clear();
 };
 
 } // namespace scs
