@@ -20,6 +20,16 @@ void phase_finish_block(GlobalContext& global_structures, BlockContext& block_st
 	ThreadlocalContextStore::post_block_clear();
 }
 
+void phase_undo_block(GlobalContext& global_structures, BlockContext& block_structures)
+{
+	block_structures.modified_keys_list.merge_logs();
+
+	global_structures.contract_db.rewind();
+	global_structures.state_db.rewind_modifications(block_structures.modified_keys_list);
+
+	ThreadlocalContextStore::post_block_clear();
+}
+
 /*
 void
 phase_merge_delta_batches(DeltaBatch& delta_batch)

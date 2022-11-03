@@ -536,6 +536,21 @@ RevertableBaseObject::commit_round_and_reset()
 }
 
 void
+RevertableBaseObject::rewind_round()
+{
+    StorageDeltaClass* base_obj_ptr = obj.load(std::memory_order_relaxed);
+    tag = 0;
+    obj = nullptr;
+
+    // no mod to required_type
+
+    if (base_obj_ptr != nullptr)
+    {
+        delete base_obj_ptr;
+    }
+}
+
+void
 RevertableObject::clear_mods()
 {
     total_subtracted.store(0, std::memory_order_relaxed);
@@ -564,6 +579,7 @@ RevertableObject::commit_round()
     if (!committed_base) {
         clear_mods(); // clears any inflight_deletes that may have deleted an
                       // already nexist key
+                      // (only way we could get here is if we deleted an nexist key)
         return;
     }
 
@@ -634,6 +650,14 @@ RevertableObject::commit_round()
             throw std::runtime_error("unimplemented object type in "
                                      "RevertableObject::commit_round()");
     }
+    clear_mods();
+}
+
+void 
+RevertableObject::rewind_round()
+{
+    base_obj.rewind_round();
+
     clear_mods();
 }
 

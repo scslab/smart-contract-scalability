@@ -13,17 +13,12 @@
 
 #include "threadlocal/threadlocal_context.h"
 
-#include "state_db/modified_keys_list.h"
-
-#include "object/comparators.h"
-
 using namespace scs;
 
 TEST_CASE("replay cache", "[sdk]")
 {
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
-    auto& state_db = scs_data_structures.state_db;
 
     auto c = test::load_wasm_from_file("cpp_contracts/test_sdk.wasm");
 
@@ -75,10 +70,6 @@ TEST_CASE("replay cache", "[sdk]")
 
     auto check_valid = [&](const Hash& tx_hash) {
         REQUIRE(block_context->tx_set.contains_tx(tx_hash));
-    };
-
-    auto check_invalid = [&](const Hash& tx_hash) {
-        REQUIRE(!block_context->tx_set.contains_tx(tx_hash));
     };
 
     auto finish_block = [&]() {
@@ -133,7 +124,6 @@ TEST_CASE("semaphore", "[sdk]")
 {
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
-    auto& state_db = scs_data_structures.state_db;
 
     auto c = test::load_wasm_from_file("cpp_contracts/test_sdk.wasm");
 
@@ -205,14 +195,6 @@ TEST_CASE("semaphore", "[sdk]")
         }
 
         return hash;
-    };
-
-    auto check_valid = [&](const Hash& tx_hash) {
-        REQUIRE(block_context->tx_set.contains_tx(tx_hash));
-    };
-
-    auto check_invalid = [&](const Hash& tx_hash) {
-        REQUIRE(!block_context->tx_set.contains_tx(tx_hash));
     };
 
     auto finish_block = [&]() {

@@ -85,6 +85,9 @@ TX_BLOCK_SRCS = \
 	tx_block/tx_block.cc \
 	tx_block/tx_set.cc
 
+VM_SRCS = \
+	vm/vm.cc
+
 SRCS = \
 	$(BUILTIN_FNS_SRCS) \
 	$(CONTRACT_DB_SRCS) \
@@ -97,7 +100,8 @@ SRCS = \
 	$(STORAGE_PROXY_SRCS) \
 	$(THREADLOCAL_SRCS) \
 	$(TRANSACTION_CONTEXT_SRCS) \
-	$(TX_BLOCK_SRCS)
+	$(TX_BLOCK_SRCS) \
+	$(VM_SRCS)
 
 TEST_UTILS_SRCS = \
 	test_utils/deploy_and_commit_contractdb.cc

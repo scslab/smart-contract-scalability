@@ -81,8 +81,9 @@ class RevertableBaseObject
 
     std::optional<StorageDeltaClass> __attribute__((warn_unused_result))
     commit_round_and_reset();
+    void clear_required_type(); // call when deletion happens in revertableobject after commit
 
-    void clear_required_type();
+    void rewind_round();
 
     ~RevertableBaseObject();
 };
@@ -157,6 +158,8 @@ class RevertableObject : public utils::NonMovableOrCopyable
 
   public:
     void commit_round();
+
+    void rewind_round();
 
     std::optional<StorageObject> const& get_committed_object() const
     {

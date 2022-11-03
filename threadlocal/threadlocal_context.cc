@@ -24,8 +24,11 @@ template<typename... Args>
 void
 ThreadlocalContextStore::make_ctx(Args&... args)
 {
-    (cache.get().ctx)
-        = std::unique_ptr<ExecutionContext>(new ExecutionContext(args...));
+    auto& ctx = cache.get().ctx;
+    if (!ctx)
+    {
+        ctx = std::unique_ptr<ExecutionContext>(new ExecutionContext(args...));
+    }
 }
 
 template void

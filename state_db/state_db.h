@@ -66,6 +66,8 @@ class StateDB
 
     void commit_modifications(const ModifiedKeysList& list);
 
+    void rewind_modifications(const ModifiedKeysList& list);
+
 #if 0
 // old
 	void 

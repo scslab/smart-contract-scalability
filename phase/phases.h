@@ -3,13 +3,11 @@
 namespace scs
 {
 
-class DeltaBatch;
 class GlobalContext;
-class TxBlock;
-class ModifiedKeysList;
 struct BlockContext;
 
 void phase_finish_block(GlobalContext& global_structures, BlockContext& block_structures);
+void phase_undo_block(GlobalContext& global_structures, BlockContext& block_structures);
 
 /*
 void

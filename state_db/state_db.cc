@@ -97,6 +97,45 @@ StateDB::commit_modifications(const ModifiedKeysList& list)
     new_key_cache.clear_for_next_block();
 }
 
+struct RewindFn
+{
+    StateDB::trie_t& main_db;
+
+
+    using prefix_t = StateDB::prefix_t;
+
+    template<typename Applyable>
+    void operator()(const Applyable& work_root)
+    {
+         auto* main_db_subnode = main_db.get_subnode_ref_nolocks(
+            work_root.get_prefix(), work_root.get_prefix_len());
+
+        auto apply_lambda = [this, main_db_subnode](const prefix_t& addrkey,
+                                                    const trie::EmptyValue&) {
+            auto* main_db_value = main_db_subnode->get_value_nolocks(addrkey);
+            if (main_db_value) {
+                // no need to invalidate hashes when rewinding
+                main_db_value -> v -> rewind_round();
+            }
+            // otherwise new key, don't need to do anything
+        };
+
+        work_root.apply_to_kvs(apply_lambda);
+        // we're rewinding, so no need to invalidate any hashes -- we're un-invalidating them here.
+    }
+};
+
+void 
+StateDB::rewind_modifications(const ModifiedKeysList& list)
+{
+    new_key_cache.clear_for_next_block();
+
+    RewindFn rewind(state_db);
+
+    list.get_keys().parallel_batch_value_modify(rewind);
+}
+
+
 #if 0
 std::optional<StorageObject>
 StateDB::get(AddressAndKey const& a) const
