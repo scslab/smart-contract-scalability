@@ -111,6 +111,10 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 		"scs",
 		"hash");
 
+	runtime.template link_fn<&BuiltinFns::scs_check_sig_ed25519>(
+		"scs",
+		"check_sig_ed25519");
+
 	/* -- contracts -- */
 	runtime.template link_fn<&BuiltinFns::scs_create_contract>(
 		"scs",

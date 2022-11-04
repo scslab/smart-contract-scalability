@@ -155,6 +155,15 @@ class BuiltinFns
 		uint32_t output_offset
 		/* output_len = 32 */);
 
+	static uint32_t
+	scs_check_sig_ed25519(
+	uint32_t pk_offset,
+		/* pk len = 32 */
+		uint32_t sig_offset,
+		/* sig_len = 64 */
+		uint32_t msg_offset,
+		uint32_t msg_len);
+
 	/* -- contracts -- */
 	static void
 	scs_create_contract(
@@ -176,7 +185,6 @@ class BuiltinFns
 
     static uint32_t
     scs_get_witness_len(uint64_t wit_idx);
-
 
 	BuiltinFns() = delete;
 

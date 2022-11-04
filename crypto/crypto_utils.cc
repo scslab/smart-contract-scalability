@@ -45,4 +45,13 @@ shorthash(const uint8_t* data, uint32_t data_len, const uint32_t modulus)
            >> 32;
 }
 
+bool
+check_sig_ed25519(PublicKey const& pk, Signature const& sig, std::vector<uint8_t> const& msg)
+{
+    return crypto_sign_verify_detached(
+        sig.data(), msg.data(), msg.size(), pk.data()) == 0;
+
+}
+
+
 } // namespace scs
