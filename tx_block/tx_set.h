@@ -46,7 +46,7 @@ class TxSet
     void assert_txs_not_merged() const;
 
   public:
-    void add_transaction(const Hash& hash, const Transaction& tx);
+    void add_transaction(const Hash& hash, const SignedTransaction& tx);
 
     void finalize();
 

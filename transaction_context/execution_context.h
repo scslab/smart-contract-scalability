@@ -49,7 +49,7 @@ class ExecutionContext
 
   public:
     TransactionStatus execute(Hash const& tx_hash,
-                              Transaction const& tx,
+                              SignedTransaction const& tx,
                               BlockContext& block_context);
 
     std::vector<std::vector<uint8_t>> const& get_logs();

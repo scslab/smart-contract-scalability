@@ -35,7 +35,7 @@ class TransactionContext
 		}
 	}
 
-	const Transaction& tx;
+	const SignedTransaction& tx;
 	const Hash& tx_hash;
 
 	uint64_t gas_used;
@@ -52,7 +52,7 @@ public:
 	ContractDBProxy contract_db_proxy;
 
 	TransactionContext(
-		Transaction const& tx,
+		SignedTransaction const& tx,
 		Hash const& tx_hash, 
 		GlobalContext& scs_data_structures,
 		BlockContext& block_context_);

@@ -15,7 +15,7 @@ struct ValidateReduce
     std::atomic<bool>& found_error;
     GlobalContext& global_context;
     BlockContext& block_context;
-    std::vector<Transaction> const& txs;
+    std::vector<SignedTransaction> const& txs;
 
     void operator()(const tbb::blocked_range<std::size_t> r)
     {
@@ -57,7 +57,7 @@ struct ValidateReduce
     ValidateReduce(std::atomic<bool>& found_error,
                    GlobalContext& global_context,
                    BlockContext& block_context,
-                   std::vector<Transaction> const& txs)
+                   std::vector<SignedTransaction> const& txs)
         : found_error(found_error)
         , global_context(global_context)
         , block_context(block_context)
@@ -66,7 +66,7 @@ struct ValidateReduce
 };
 
 bool
-VirtualMachine::validate_tx_block(std::vector<Transaction> const& txs)
+VirtualMachine::validate_tx_block(std::vector<SignedTransaction> const& txs)
 {
     std::atomic<bool> found_error = false;
 
@@ -86,7 +86,7 @@ VirtualMachine::advance_block_number()
 }
 
 std::optional<BlockHeader>
-VirtualMachine::try_exec_tx_block(std::vector<Transaction> const& txs)
+VirtualMachine::try_exec_tx_block(std::vector<SignedTransaction> const& txs)
 {
     auto res = validate_tx_block(txs);
 

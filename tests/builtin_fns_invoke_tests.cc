@@ -12,6 +12,8 @@
 
 #include "state_db/modified_keys_list.h"
 
+using xdr::operator==;
+
 namespace scs {
 
 TEST_CASE("test invoke", "[builtin]")
@@ -37,35 +39,35 @@ TEST_CASE("test invoke", "[builtin]")
 
     auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
-    Address sender;
-
     Hash h_val = hash_xdr<uint64>(0);
-    std::memcpy(sender.data(), h_val.data(), h_val.size());
+    //std::memcpy(sender.data(), h_val.data(), h_val.size());
 
     BlockContext block_context(0);
 
-    auto exec_success = [&](const Hash& tx_hash, const Transaction& tx) {
+    auto exec_success = [&](const Hash& tx_hash, const SignedTransaction& tx) {
         REQUIRE(exec_ctx.execute(tx_hash, tx, block_context)
                 == TransactionStatus::SUCCESS);
     };
 
-    auto exec_fail = [&](const Hash& tx_hash, const Transaction& tx) {
+    auto exec_fail = [&](const Hash& tx_hash, const SignedTransaction& tx) {
         REQUIRE(exec_ctx.execute(tx_hash, tx, block_context)
                 != TransactionStatus::SUCCESS);
     };
 
     auto make_tx = [&](TransactionInvocation const& invocation)
-        -> std::pair<Hash, Transaction> {
+        -> std::pair<Hash, SignedTransaction> {
         Transaction tx(
-            sender, invocation, UINT64_MAX, 1, xdr::xvector<Contract>());
+            invocation, UINT64_MAX, 1, xdr::xvector<Contract>());
 
-        // auto h = txs.insert_tx(tx);
-        return { hash_xdr(tx), tx };
+        SignedTransaction stx;
+        stx.tx = tx;
+
+        return { hash_xdr(stx), stx };
     };
 
     SECTION("msg sender self")
     {
-        TransactionInvocation invocation(h1, 3, xdr::opaque_vec<>());
+        TransactionInvocation invocation(h1, 4, xdr::opaque_vec<>());
 
         auto [h, tx] = make_tx(invocation);
         exec_success(h, tx);
@@ -76,8 +78,16 @@ TEST_CASE("test invoke", "[builtin]")
 
         if (logs.size() >= 1) {
             REQUIRE(logs[0].size() == 32);
-            REQUIRE(memcmp(logs[0].data(), sender.data(), 32) == 0);
+            REQUIRE(memcmp(logs[0].data(), h1.data(), 32) == 0);
         }
+    }
+
+    SECTION("msg sender self fails on base call")
+    {
+        TransactionInvocation invocation(h1, 3, xdr::opaque_vec<>());
+
+        auto [h, tx] = make_tx(invocation);
+        exec_fail(h, tx);
     }
 
     SECTION("msg sender other")

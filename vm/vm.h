@@ -26,13 +26,13 @@ class VirtualMachine
 
     Hash prev_block_hash;
 
-    bool validate_tx_block(std::vector<Transaction> const& txs);
+    bool validate_tx_block(std::vector<SignedTransaction> const& txs);
 
     void advance_block_number();
 
   public:
     std::optional<BlockHeader>
-    try_exec_tx_block(std::vector<Transaction> const& txs);
+    try_exec_tx_block(std::vector<SignedTransaction> const& txs);
 };
 
 } // namespace scs

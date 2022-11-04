@@ -38,8 +38,6 @@ TEST_CASE("hashset insert", "[storage]")
 
     auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
-    Address a0 = hash_xdr<uint64_t>(0);
-
     InvariantKey k0 = hash_xdr<uint64_t>(0);
 
     std::unique_ptr<BlockContext> block_context
@@ -51,7 +49,7 @@ TEST_CASE("hashset insert", "[storage]")
         uint64_t value;
     };
 
-    auto make_insert_tx = [&](Address const& sender,
+    auto make_insert_tx = [&](
                            InvariantKey const& key,
                            uint64_t value,
                            bool success = true,
@@ -66,14 +64,17 @@ TEST_CASE("hashset insert", "[storage]")
         TransactionInvocation invocation(h, 0, test::make_calldata(data));
 
         Transaction tx = Transaction(
-            sender, invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());
-        auto hash = hash_xdr(tx);
+            invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());
+        SignedTransaction stx;
+        stx.tx = tx;
+
+        auto hash = hash_xdr(stx);
 
         if (success) {
-            REQUIRE(exec_ctx.execute(hash, tx, *block_context)
+            REQUIRE(exec_ctx.execute(hash, stx, *block_context)
                     == TransactionStatus::SUCCESS);
         } else {
-            REQUIRE(exec_ctx.execute(hash, tx, *block_context)
+            REQUIRE(exec_ctx.execute(hash, stx, *block_context)
                     != TransactionStatus::SUCCESS);
         }
 
@@ -105,10 +106,10 @@ TEST_CASE("hashset insert", "[storage]")
 
     SECTION("start from nexist hashset")
     {
-        auto h0 = make_insert_tx(a0, k0, 0);
-        auto h1 = make_insert_tx(a0, k0, 1);
+        auto h0 = make_insert_tx(k0, 0);
+        auto h1 = make_insert_tx(k0, 1);
 
-        auto h0_1 = make_insert_tx(a0, k0, 0, false, 2);
+        auto h0_1 = make_insert_tx(k0, 0, false, 2);
 
         REQUIRE(h0 != h0_1);
 
@@ -139,7 +140,7 @@ TEST_CASE("int64 storage write", "[storage]")
 
     auto c = test::load_wasm_from_file("cpp_contracts/test_nn_int64.wasm");
 
-    auto h = hash_xdr(*c);
+    const auto h = hash_xdr(*c);
 
     test::deploy_and_commit_contractdb(script_db, h, std::move(c));
 
@@ -147,8 +148,6 @@ TEST_CASE("int64 storage write", "[storage]")
     test::DeferredContextClear defer;
 
     auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
-
-    Address a0 = hash_xdr<uint64_t>(0);
 
     InvariantKey k0 = hash_xdr<uint64_t>(0);
 
@@ -165,8 +164,7 @@ TEST_CASE("int64 storage write", "[storage]")
         uint64_t value;
     };
 
-    auto make_set_add_tx = [&](Address const& sender,
-                               InvariantKey const& key,
+    auto make_set_add_tx = [&](InvariantKey const& key,
                                int64_t set,
                                int64_t add,
                                bool success = true) -> Hash {
@@ -182,23 +180,23 @@ TEST_CASE("int64 storage write", "[storage]")
         TransactionInvocation invocation(h, 1, test::make_calldata(data));
 
         Transaction tx = Transaction(
-            sender, invocation, UINT64_MAX, 1, xdr::xvector<Contract>());
-        auto hash = hash_xdr(tx);
-        // auto hash = tx_block->insert_tx(tx);
+            invocation, UINT64_MAX, 1, xdr::xvector<Contract>());
+        SignedTransaction stx;
+        stx.tx = tx;
+        auto hash = hash_xdr(stx);
 
         if (success) {
-            REQUIRE(exec_ctx.execute(hash, tx, *block_context)
+            REQUIRE(exec_ctx.execute(hash, stx, *block_context)
                     == TransactionStatus::SUCCESS);
         } else {
-            REQUIRE(exec_ctx.execute(hash, tx, *block_context)
+            REQUIRE(exec_ctx.execute(hash, stx, *block_context)
                     != TransactionStatus::SUCCESS);
         }
 
         return hash;
     };
 
-    auto make_add_tx = [&](Address const& sender,
-                           InvariantKey const& key,
+    auto make_add_tx = [&](InvariantKey const& key,
                            int64_t add,
                            bool success = true) -> Hash {
         struct calldata_0
@@ -212,15 +210,18 @@ TEST_CASE("int64 storage write", "[storage]")
         TransactionInvocation invocation(h, 0, test::make_calldata(data));
 
         Transaction tx = Transaction(
-            sender, invocation, UINT64_MAX, 1, xdr::xvector<Contract>());
-        auto hash = hash_xdr(tx);
+            invocation, UINT64_MAX, 1, xdr::xvector<Contract>());
+        SignedTransaction stx;
+        stx.tx = tx;
+
+        auto hash = hash_xdr(stx);
         // auto hash = tx_block->insert_tx(tx);
 
         if (success) {
-            REQUIRE(exec_ctx.execute(hash, tx, *block_context)
+            REQUIRE(exec_ctx.execute(hash, stx, *block_context)
                     == TransactionStatus::SUCCESS);
         } else {
-            REQUIRE(exec_ctx.execute(hash, tx, *block_context)
+            REQUIRE(exec_ctx.execute(hash, stx, *block_context)
                     != TransactionStatus::SUCCESS);
         }
 
@@ -261,10 +262,10 @@ TEST_CASE("int64 storage write", "[storage]")
     {
         SECTION("no set")
         {
-            auto h1 = make_add_tx(a0, k0, -1, false);
-            auto h2 = make_add_tx(a0, k0, -2, false);
-            auto h3 = make_add_tx(a0, k0, 5);
-            auto h4 = make_add_tx(a0, k0, 0);
+            auto h1 = make_add_tx(k0, -1, false);
+            auto h2 = make_add_tx(k0, -2, false);
+            auto h3 = make_add_tx(k0, 5);
+            auto h4 = make_add_tx(k0, 0);
 
             finish_block();
 
@@ -283,10 +284,10 @@ TEST_CASE("int64 storage write", "[storage]")
         SECTION("with set")
         {
 
-            auto h1 = make_set_add_tx(a0, k0, 10, -1);
-            auto h2 = make_set_add_tx(a0, k0, 10, -2);
-            auto h3 = make_set_add_tx(a0, k0, 10, 5);
-            auto h4 = make_set_add_tx(a0, k0, 10, 0);
+            auto h1 = make_set_add_tx(k0, 10, -1);
+            auto h2 = make_set_add_tx(k0, 10, -2);
+            auto h3 = make_set_add_tx(k0, 10, 5);
+            auto h4 = make_set_add_tx(k0, 10, 0);
 
             finish_block();
 
@@ -304,10 +305,10 @@ TEST_CASE("int64 storage write", "[storage]")
 
         SECTION("with negative set")
         {
-            auto h1 = make_set_add_tx(a0, k0, -10, -1, false);
-            auto h2 = make_set_add_tx(a0, k0, -10, -2, false);
-            auto h3 = make_set_add_tx(a0, k0, -10, 5);
-            auto h4 = make_set_add_tx(a0, k0, -10, 0);
+            auto h1 = make_set_add_tx(k0, -10, -1, false);
+            auto h2 = make_set_add_tx(k0, -10, -2, false);
+            auto h3 = make_set_add_tx(k0, -10, 5);
+            auto h4 = make_set_add_tx(k0, -10, 0);
 
             finish_block();
 
@@ -326,7 +327,7 @@ TEST_CASE("int64 storage write", "[storage]")
     SECTION("with prev value")
     {
 
-        auto h0 = make_set_add_tx(a0, k0, 100, 0);
+        auto h0 = make_set_add_tx(k0, 100, 0);
 
         finish_block();
 
@@ -342,10 +343,10 @@ TEST_CASE("int64 storage write", "[storage]")
 
         SECTION("without set")
         {
-            auto h1 = make_add_tx(a0, k0, -10);
-            auto h2 = make_add_tx(a0, k0, -20);
-            auto h3 = make_add_tx(a0, k0, 5);
-            auto h4 = make_add_tx(a0, k0, 0);
+            auto h1 = make_add_tx(k0, -10);
+            auto h2 = make_add_tx(k0, -20);
+            auto h3 = make_add_tx(k0, 5);
+            auto h4 = make_add_tx(k0, 0);
 
             finish_block();
 
@@ -363,10 +364,10 @@ TEST_CASE("int64 storage write", "[storage]")
 
         SECTION("without set some dropped")
         {
-            auto h1 = make_add_tx(a0, k0, -50);
-            auto h2 = make_add_tx(a0, k0, -60, false);
-            auto h3 = make_add_tx(a0, k0, 5);
-            auto h4 = make_add_tx(a0, k0, 0);
+            auto h1 = make_add_tx(k0, -50);
+            auto h2 = make_add_tx(k0, -60, false);
+            auto h3 = make_add_tx(k0, 5);
+            auto h4 = make_add_tx(k0, 0);
 
             finish_block();
 
@@ -401,8 +402,6 @@ TEST_CASE("raw mem storage write", "[storage]")
 
     auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
-    Address a0 = hash_xdr<uint64_t>(0);
-
     InvariantKey k0 = hash_xdr<uint64_t>(0);
 
     std::unique_ptr<BlockContext> block_context
@@ -419,13 +418,15 @@ TEST_CASE("raw mem storage write", "[storage]")
     };
 
     auto make_transaction
-        = [&](Address const& sender, TransactionInvocation const& invocation)
-        -> std::pair<Hash, Transaction> {
+        = [&](TransactionInvocation const& invocation)
+        -> std::pair<Hash, SignedTransaction> {
         Transaction tx = Transaction(
-            sender, invocation, UINT64_MAX, 1, xdr::xvector<Contract>());
-        auto hash = hash_xdr(tx);
+            invocation, UINT64_MAX, 1, xdr::xvector<Contract>());
+        SignedTransaction stx;
+        stx.tx = tx;
+        auto hash = hash_xdr(stx);
         // auto hash = tx_block->insert_tx(tx);
-        return { hash, tx };
+        return { hash, stx };
     };
 
     auto finish_block = [&]() {
@@ -450,12 +451,12 @@ TEST_CASE("raw mem storage write", "[storage]")
         return out;
     };
 
-    auto exec_success = [&](const Hash& tx_hash, const Transaction& tx) {
+    auto exec_success = [&](const Hash& tx_hash, const SignedTransaction& tx) {
         REQUIRE(exec_ctx.execute(tx_hash, tx, *block_context)
                 == TransactionStatus::SUCCESS);
     };
 
-    auto exec_fail = [&](const Hash& tx_hash, const Transaction& tx) {
+    auto exec_fail = [&](const Hash& tx_hash, const SignedTransaction& tx) {
         REQUIRE(exec_ctx.execute(tx_hash, tx, *block_context)
                 != TransactionStatus::SUCCESS);
     };
@@ -473,7 +474,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
         TransactionInvocation invocation(h, 1, test::make_calldata(data));
 
-        auto [tx_hash, tx] = make_transaction(a0, invocation);
+        auto [tx_hash, tx] = make_transaction(invocation);
 
         exec_success(tx_hash, tx);
 
@@ -501,7 +502,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
             TransactionInvocation invocation(h, 0, test::make_calldata(data));
 
-            auto [tx_hash, tx] = make_transaction(a0, invocation);
+            auto [tx_hash, tx] = make_transaction(invocation);
 
             exec_success(tx_hash, tx);
 
@@ -517,7 +518,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
             TransactionInvocation invocation(h, 1, test::make_calldata(data));
 
-            auto [tx_hash, tx] = make_transaction(a0, invocation);
+            auto [tx_hash, tx] = make_transaction(invocation);
 
             exec_success(tx_hash, tx);
 
@@ -575,7 +576,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
             TransactionInvocation invocation(h, 5, test::make_calldata(data));
 
-            auto [tx_hash, tx] = make_transaction(a0, invocation);
+            auto [tx_hash, tx] = make_transaction(invocation);
 
             exec_success(tx_hash, tx);
 
@@ -599,7 +600,7 @@ TEST_CASE("raw mem storage write", "[storage]")
             // delete_last on k0
             TransactionInvocation invocation(h, 5, test::make_calldata(data));
 
-            auto [tx_hash, tx] = make_transaction(a0, invocation);
+            auto [tx_hash, tx] = make_transaction(invocation);
 
             exec_success(tx_hash, tx);
 
@@ -608,7 +609,7 @@ TEST_CASE("raw mem storage write", "[storage]")
             // write on k0
             TransactionInvocation invocation2(h, 1, test::make_calldata(data2));
 
-            auto [tx_hash2, tx2] = make_transaction(a0, invocation2);
+            auto [tx_hash2, tx2] = make_transaction(invocation2);
 
             exec_success(tx_hash2, tx2);
 
@@ -694,7 +695,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
         TransactionInvocation invocation(h, 0, test::make_calldata(data));
 
-        auto [tx_hash, tx] = make_transaction(a0, invocation);
+        auto [tx_hash, tx] = make_transaction(invocation);
 
         exec_fail(tx_hash, tx);
     }
@@ -705,7 +706,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
         TransactionInvocation invocation(h, 2, test::make_calldata(data));
 
-        auto [tx_hash, tx] = make_transaction(a0, invocation);
+        auto [tx_hash, tx] = make_transaction(invocation);
 
         exec_success(tx_hash, tx);
         {
@@ -740,7 +741,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
         TransactionInvocation invocation(h, 3, test::make_calldata(data));
 
-        auto [tx_hash, tx] = make_transaction(a0, invocation);
+        auto [tx_hash, tx] = make_transaction(invocation);
 
         exec_success(tx_hash, tx);
 
@@ -774,7 +775,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
             TransactionInvocation invocation(h, 1, test::make_calldata(data));
 
-            auto [tx_hash, tx] = make_transaction(a0, invocation);
+            auto [tx_hash, tx] = make_transaction(invocation);
 
             exec_success(tx_hash, tx);
 
@@ -791,7 +792,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
         TransactionInvocation invocation(h, 6, test::make_calldata(data));
 
-        auto [tx_hash, tx] = make_transaction(a0, invocation);
+        auto [tx_hash, tx] = make_transaction(invocation);
 
         exec_fail(tx_hash, tx);
 

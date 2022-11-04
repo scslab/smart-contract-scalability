@@ -32,7 +32,6 @@ struct TransactionInvocation
 
 struct Transaction
 {
-	Address sender;
 	TransactionInvocation invocation;
 	uint64 gas_limit;
 	uint64 gas_rate_bid;
@@ -40,9 +39,21 @@ struct Transaction
 	Contract contracts_to_deploy<>;
 };
 
-struct TxSetEntry
+struct WitnessEntry
+{
+	uint64 key;
+	Signature value;
+};
+
+struct SignedTransaction
 {
 	Transaction tx;
+	WitnessEntry witnesses<>;
+};
+
+struct TxSetEntry
+{
+	SignedTransaction tx;
 	uint32 multiplicity;
 };
 	

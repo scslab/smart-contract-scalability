@@ -27,25 +27,27 @@ TEST_CASE("test log", "[builtin]")
 
     auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
-    Address sender;
     BlockContext block_context(0);
 
-    auto exec_success = [&](const Hash& tx_hash, const Transaction& tx) {
+    auto exec_success = [&](const Hash& tx_hash, const SignedTransaction& tx) {
         REQUIRE(exec_ctx.execute(tx_hash, tx, block_context)
                 == TransactionStatus::SUCCESS);
     };
 
-    auto exec_fail = [&](const Hash& tx_hash, const Transaction& tx) {
+    auto exec_fail = [&](const Hash& tx_hash, const SignedTransaction& tx) {
         REQUIRE(exec_ctx.execute(tx_hash, tx, block_context)
                 != TransactionStatus::SUCCESS);
     };
 
     auto make_tx = [&](TransactionInvocation const& invocation)
-        -> std::pair<Hash, Transaction> {
+        -> std::pair<Hash, SignedTransaction> {
         Transaction tx(
-            sender, invocation, UINT64_MAX, 1, xdr::xvector<Contract>());
+            invocation, UINT64_MAX, 1, xdr::xvector<Contract>());
 
-        return { hash_xdr(tx), tx };
+        SignedTransaction stx;
+        stx.tx = tx;
+
+        return { hash_xdr(stx), stx };
     };
 
     SECTION("log hardcoded")

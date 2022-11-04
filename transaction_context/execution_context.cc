@@ -56,14 +56,14 @@ ExecutionContext::invoke_subroutine(MethodInvocation const& invocation)
 
 TransactionStatus
 ExecutionContext::execute(Hash const& tx_hash,
-                          Transaction const& tx,
+                          SignedTransaction const& tx,
                           BlockContext& block_context)
 {
     if (tx_context) {
         throw std::runtime_error("one execution at one time");
     }
 
-    MethodInvocation invocation(tx.invocation);
+    MethodInvocation invocation(tx.tx.invocation);
 
     tx_context = std::make_unique<TransactionContext>(
         tx, tx_hash, scs_data_structures, block_context);

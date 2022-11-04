@@ -36,3 +36,9 @@ log_msg_sender()
 	auto addr = sdk::get_msg_sender();
 	sdk::log(addr);
 }
+
+EXPORT("pub04000000")
+log_msg_sender_from_self()
+{
+	sdk::invoke(sdk::get_self(), 3, sdk::EmptyStruct{});
+}

@@ -47,21 +47,22 @@ TEST_CASE("replay cache", "[sdk]")
             .nonce = nonce
         };
 
-        Address sender = hash_xdr<uint64_t>(0);
-
         const uint64_t gas_bid = 1;
 
         TransactionInvocation invocation(h, 0, test::make_calldata(data));
 
         Transaction tx = Transaction(
-            sender, invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());
-        auto hash = hash_xdr(tx);
+            invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());
+        SignedTransaction stx;
+        stx.tx = tx;
+
+        auto hash = hash_xdr(stx);
 
         if (success) {
-            REQUIRE(exec_ctx.execute(hash, tx, *block_context)
+            REQUIRE(exec_ctx.execute(hash, stx, *block_context)
                     == TransactionStatus::SUCCESS);
         } else {
-            REQUIRE(exec_ctx.execute(hash, tx, *block_context)
+            REQUIRE(exec_ctx.execute(hash, stx, *block_context)
                     != TransactionStatus::SUCCESS);
         }
 
@@ -149,21 +150,22 @@ TEST_CASE("semaphore", "[sdk]")
         {
         };
 
-        Address sender = hash_xdr<uint64_t>(0);
-
         const uint64_t gas_bid = 1;
 
         TransactionInvocation invocation(h, 1, test::make_calldata(data));
 
         Transaction tx = Transaction(
-            sender, invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());
-        auto hash = hash_xdr(tx);
+            invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());
+        SignedTransaction stx;
+        stx.tx = tx;
+
+        auto hash = hash_xdr(stx);
 
         if (success) {
-            REQUIRE(exec_ctx.execute(hash, tx, *block_context)
+            REQUIRE(exec_ctx.execute(hash, stx, *block_context)
                     == TransactionStatus::SUCCESS);
         } else {
-            REQUIRE(exec_ctx.execute(hash, tx, *block_context)
+            REQUIRE(exec_ctx.execute(hash, stx, *block_context)
                     != TransactionStatus::SUCCESS);
         }
 
@@ -176,21 +178,24 @@ TEST_CASE("semaphore", "[sdk]")
         {
         };
 
-        Address sender = hash_xdr<uint64_t>(0);
 
         const uint64_t gas_bid = 1;
 
         TransactionInvocation invocation(h, 2, test::make_calldata(data));
 
         Transaction tx = Transaction(
-            sender, invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());
-        auto hash = hash_xdr(tx);
+            invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());
+        
+        SignedTransaction stx;
+        stx.tx = tx;
+        
+        auto hash = hash_xdr(stx);
 
         if (success) {
-            REQUIRE(exec_ctx.execute(hash, tx, *block_context)
+            REQUIRE(exec_ctx.execute(hash, stx, *block_context)
                     == TransactionStatus::SUCCESS);
         } else {
-            REQUIRE(exec_ctx.execute(hash, tx, *block_context)
+            REQUIRE(exec_ctx.execute(hash, stx, *block_context)
                     != TransactionStatus::SUCCESS);
         }
 

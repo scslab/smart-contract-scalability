@@ -5,7 +5,7 @@
 
 namespace scs {
 
-TransactionContext::TransactionContext(Transaction const& tx,
+TransactionContext::TransactionContext(SignedTransaction const& tx,
                                        Hash const& tx_hash,
                                        GlobalContext& global_context,
                                        BlockContext& block_context_)
@@ -71,7 +71,8 @@ const Address&
 TransactionContext::get_msg_sender() const
 {
     if (invocation_stack.size() <= 1) {
-        return tx.sender;
+        throw wasm_api::HostError("no sender on root tx");
+        //return tx.sender;
     }
     return invocation_stack[invocation_stack.size() - 2].addr;
 }
@@ -85,7 +86,7 @@ TransactionContext::get_src_tx_hash() const
 uint32_t
 TransactionContext::get_num_deployable_contracts() const
 {
-    return tx.contracts_to_deploy.size();
+    return tx.tx.contracts_to_deploy.size();
 }
 
 uint64_t 
@@ -97,10 +98,10 @@ TransactionContext::get_block_number() const
 const Contract&
 TransactionContext::get_deployable_contract(uint32_t index) const
 {
-    if (index >= tx.contracts_to_deploy.size()) {
+    if (index >= tx.tx.contracts_to_deploy.size()) {
         throw std::runtime_error("invalid contract access");
     }
-    return tx.contracts_to_deploy[index];
+    return tx.tx.contracts_to_deploy[index];
 }
 
 bool
