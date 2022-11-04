@@ -21,17 +21,34 @@ BuiltinFns::scs_return(uint32_t offset, uint32_t len)
 }
 
 void 
-BuiltinFns::scs_get_calldata(uint32_t offset, uint32_t len)
+BuiltinFns::scs_get_calldata(uint32_t offset, uint32_t calldata_slice_start, uint32_t calldata_slice_end)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
 
 	auto& calldata = tx_ctx.get_current_method_invocation().calldata;
-	if (static_cast<uint32_t>(len) > calldata.size())
+	if (calldata_slice_end > calldata.size())
 	{
 		throw wasm_api::HostError("insufficient calldata");
 	}
 
-	tx_ctx.get_current_runtime() -> write_to_memory(calldata, offset, len);
+	if (calldata_slice_end < calldata_slice_start)
+	{
+		throw wasm_api::HostError("invalid calldata params");
+	}
+
+	tx_ctx.get_current_runtime() -> write_slice_to_memory(
+		calldata,
+		offset,
+		calldata_slice_start,
+		calldata_slice_end);
+}
+
+uint32_t
+BuiltinFns::scs_get_calldata_len()
+{
+	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	auto& calldata = tx_ctx.get_current_method_invocation().calldata;
+	return calldata.size();
 }
 
 uint32_t 

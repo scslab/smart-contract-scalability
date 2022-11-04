@@ -40,6 +40,10 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 		"scs",
 		"get_calldata");
 
+	runtime.template link_fn<&BuiltinFns::scs_get_calldata_len>(
+		"scs",
+		"get_calldata_len");
+
 	runtime.template link_fn<&BuiltinFns::scs_get_msg_sender>(
 		"scs",
 		"get_msg_sender");

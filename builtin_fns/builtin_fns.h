@@ -35,7 +35,13 @@ class BuiltinFns
 	scs_return(uint32_t offset, uint32_t len);
 
 	static void
-	scs_get_calldata(uint32_t offset, uint32_t len);
+	scs_get_calldata(
+		uint32_t output_offset,
+		uint32_t calldata_slice_start,
+		uint32_t calldata_slice_end);
+
+	static uint32_t
+	scs_get_calldata_len();
 
 	//returns realized return_len
 	static uint32_t
