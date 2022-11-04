@@ -7,7 +7,7 @@
 #include "crypto/hash.h"
 #include "test_utils/deploy_and_commit_contractdb.h"
 #include "utils/load_wasm.h"
-#include "test_utils/make_calldata.h"
+#include "utils/make_calldata.h"
 
 #include "debug/debug_utils.h"
 
@@ -49,7 +49,7 @@ TEST_CASE("replay cache", "[sdk]")
 
         const uint64_t gas_bid = 1;
 
-        TransactionInvocation invocation(h, 0, test::make_calldata(data));
+        TransactionInvocation invocation(h, 0, make_calldata(data));
 
         Transaction tx = Transaction(
             invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());
@@ -152,7 +152,7 @@ TEST_CASE("semaphore", "[sdk]")
 
         const uint64_t gas_bid = 1;
 
-        TransactionInvocation invocation(h, 1, test::make_calldata(data));
+        TransactionInvocation invocation(h, 1, make_calldata(data));
 
         Transaction tx = Transaction(
             invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());
@@ -181,7 +181,7 @@ TEST_CASE("semaphore", "[sdk]")
 
         const uint64_t gas_bid = 1;
 
-        TransactionInvocation invocation(h, 2, test::make_calldata(data));
+        TransactionInvocation invocation(h, 2, make_calldata(data));
 
         Transaction tx = Transaction(
             invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());

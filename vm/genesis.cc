@@ -40,7 +40,7 @@ void install_genesis_contracts(ContractDB& contract_db)
 	install_contract(
 		proxy,
 		load_wasm_from_file("cpp_contracts/genesis/deploy.wasm"),
-		make_address(0, 0, 0, 0));
+		DEPLOYER_ADDRESS);
 
 	{
 		TransactionRewind rewind;

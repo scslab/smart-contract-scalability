@@ -7,7 +7,7 @@
 #include "crypto/hash.h"
 #include "test_utils/deploy_and_commit_contractdb.h"
 #include "utils/load_wasm.h"
-#include "test_utils/make_calldata.h"
+#include "utils/make_calldata.h"
 
 #include "debug/debug_utils.h"
 
@@ -61,7 +61,7 @@ TEST_CASE("hashset insert", "[storage]")
             .value = value
         };
 
-        TransactionInvocation invocation(h, 0, test::make_calldata(data));
+        TransactionInvocation invocation(h, 0, make_calldata(data));
 
         Transaction tx = Transaction(
             invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());
@@ -177,7 +177,7 @@ TEST_CASE("int64 storage write", "[storage]")
 
         calldata_1 data{ .key = key, .set = set, .delta = add };
 
-        TransactionInvocation invocation(h, 1, test::make_calldata(data));
+        TransactionInvocation invocation(h, 1, make_calldata(data));
 
         Transaction tx = Transaction(
             invocation, UINT64_MAX, 1, xdr::xvector<Contract>());
@@ -207,7 +207,7 @@ TEST_CASE("int64 storage write", "[storage]")
 
         calldata_0 data{ .key = key, .delta = add };
 
-        TransactionInvocation invocation(h, 0, test::make_calldata(data));
+        TransactionInvocation invocation(h, 0, make_calldata(data));
 
         Transaction tx = Transaction(
             invocation, UINT64_MAX, 1, xdr::xvector<Contract>());
@@ -472,7 +472,7 @@ TEST_CASE("raw mem storage write", "[storage]")
     {
         calldata_1 data{ .key = k0, .value = 0xAABBCCDDEEFF0011 };
 
-        TransactionInvocation invocation(h, 1, test::make_calldata(data));
+        TransactionInvocation invocation(h, 1, make_calldata(data));
 
         auto [tx_hash, tx] = make_transaction(invocation);
 
@@ -500,7 +500,7 @@ TEST_CASE("raw mem storage write", "[storage]")
         {
             calldata_0 data{ .key = k0 };
 
-            TransactionInvocation invocation(h, 0, test::make_calldata(data));
+            TransactionInvocation invocation(h, 0, make_calldata(data));
 
             auto [tx_hash, tx] = make_transaction(invocation);
 
@@ -516,7 +516,7 @@ TEST_CASE("raw mem storage write", "[storage]")
         {
             calldata_1 data{ .key = k0, .value = 0xA0B0C0D0E0F00010 };
 
-            TransactionInvocation invocation(h, 1, test::make_calldata(data));
+            TransactionInvocation invocation(h, 1, make_calldata(data));
 
             auto [tx_hash, tx] = make_transaction(invocation);
 
@@ -574,7 +574,7 @@ TEST_CASE("raw mem storage write", "[storage]")
         {
             calldata_0 data{ .key = k0 };
 
-            TransactionInvocation invocation(h, 5, test::make_calldata(data));
+            TransactionInvocation invocation(h, 5, make_calldata(data));
 
             auto [tx_hash, tx] = make_transaction(invocation);
 
@@ -583,8 +583,6 @@ TEST_CASE("raw mem storage write", "[storage]")
             finish_block();
 
             require_valid(tx_hash);
-            // REQUIRE(
-            //	tx_block->is_valid(TransactionFailurePoint::FINAL, tx_hash));
 
             auto hk0 = make_key(h, k0);
 
@@ -598,7 +596,7 @@ TEST_CASE("raw mem storage write", "[storage]")
             calldata_0 data{ .key = k0 };
 
             // delete_last on k0
-            TransactionInvocation invocation(h, 5, test::make_calldata(data));
+            TransactionInvocation invocation(h, 5, make_calldata(data));
 
             auto [tx_hash, tx] = make_transaction(invocation);
 
@@ -607,7 +605,7 @@ TEST_CASE("raw mem storage write", "[storage]")
             calldata_1 data2{ .key = k0, .value = 0xA0B0C0D0E0F00010 };
 
             // write on k0
-            TransactionInvocation invocation2(h, 1, test::make_calldata(data2));
+            TransactionInvocation invocation2(h, 1, make_calldata(data2));
 
             auto [tx_hash2, tx2] = make_transaction(invocation2);
 
@@ -693,7 +691,7 @@ TEST_CASE("raw mem storage write", "[storage]")
     {
         calldata_0 data{ .key = k0 };
 
-        TransactionInvocation invocation(h, 0, test::make_calldata(data));
+        TransactionInvocation invocation(h, 0, make_calldata(data));
 
         auto [tx_hash, tx] = make_transaction(invocation);
 
@@ -704,7 +702,7 @@ TEST_CASE("raw mem storage write", "[storage]")
     {
         calldata_0 data{ .key = k0 };
 
-        TransactionInvocation invocation(h, 2, test::make_calldata(data));
+        TransactionInvocation invocation(h, 2, make_calldata(data));
 
         auto [tx_hash, tx] = make_transaction(invocation);
 
@@ -739,7 +737,7 @@ TEST_CASE("raw mem storage write", "[storage]")
     {
         calldata_0 data{ .key = k0 };
 
-        TransactionInvocation invocation(h, 3, test::make_calldata(data));
+        TransactionInvocation invocation(h, 3, make_calldata(data));
 
         auto [tx_hash, tx] = make_transaction(invocation);
 
@@ -773,7 +771,7 @@ TEST_CASE("raw mem storage write", "[storage]")
         {
             calldata_1 data{ .key = k0, .value = 0xAABBCCDDEEFF0011 };
 
-            TransactionInvocation invocation(h, 1, test::make_calldata(data));
+            TransactionInvocation invocation(h, 1, make_calldata(data));
 
             auto [tx_hash, tx] = make_transaction(invocation);
 
@@ -790,7 +788,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
         calldata_0 data{ .key = k0 };
 
-        TransactionInvocation invocation(h, 6, test::make_calldata(data));
+        TransactionInvocation invocation(h, 6, make_calldata(data));
 
         auto [tx_hash, tx] = make_transaction(invocation);
 

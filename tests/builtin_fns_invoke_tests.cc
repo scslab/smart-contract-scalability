@@ -8,7 +8,7 @@
 #include "crypto/hash.h"
 #include "test_utils/deploy_and_commit_contractdb.h"
 #include "utils/load_wasm.h"
-#include "test_utils/make_calldata.h"
+#include "utils/make_calldata.h"
 
 #include "state_db/modified_keys_list.h"
 
@@ -38,9 +38,6 @@ TEST_CASE("test invoke", "[builtin]")
     test::DeferredContextClear defer;
 
     auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
-
-    Hash h_val = hash_xdr<uint64>(0);
-    //std::memcpy(sender.data(), h_val.data(), h_val.size());
 
     BlockContext block_context(0);
 
@@ -100,7 +97,7 @@ TEST_CASE("test invoke", "[builtin]")
 
         calldata_t data{ .callee = h1, .method = 3 };
 
-        TransactionInvocation invocation(h2, 0, test::make_calldata(data));
+        TransactionInvocation invocation(h2, 0, make_calldata(data));
 
         auto [h, tx] = make_tx(invocation);
         exec_success(h, tx);
@@ -125,7 +122,7 @@ TEST_CASE("test invoke", "[builtin]")
 
         calldata_t data{ .callee = h2, .method = 1 };
 
-        TransactionInvocation invocation(h2, 0, test::make_calldata(data));
+        TransactionInvocation invocation(h2, 0, make_calldata(data));
 
         auto [h, tx] = make_tx(invocation);
         exec_success(h, tx);
@@ -150,7 +147,7 @@ TEST_CASE("test invoke", "[builtin]")
 
         calldata_t data{ .callee = h2, .method = 2 };
 
-        TransactionInvocation invocation(h2, 0, test::make_calldata(data));
+        TransactionInvocation invocation(h2, 0, make_calldata(data));
 
         auto [h, tx] = make_tx(invocation);
         exec_fail(h, tx);
@@ -166,7 +163,7 @@ TEST_CASE("test invoke", "[builtin]")
 
         calldata_t data{ .callee = h1, .method = 0 };
 
-        TransactionInvocation invocation(h2, 0, test::make_calldata(data));
+        TransactionInvocation invocation(h2, 0, make_calldata(data));
 
         auto [h, tx] = make_tx(invocation);
         exec_success(h, tx);
@@ -196,7 +193,7 @@ TEST_CASE("test invoke", "[builtin]")
 
         calldata_t data{ .callee = empty_addr, .method = 1 };
 
-        TransactionInvocation invocation(h2, 0, test::make_calldata(data));
+        TransactionInvocation invocation(h2, 0, make_calldata(data));
 
         auto [h, tx] = make_tx(invocation);
         exec_fail(h, tx);

@@ -54,4 +54,22 @@ check_sig_ed25519(PublicKey const& pk, Signature const& sig, std::vector<uint8_t
 }
 
 
+std::pair<SecretKey, PublicKey> 
+deterministic_key_gen(uint64_t seed)
+{
+    std::array<uint64_t, 4> seed_bytes; // 32 bytes
+    seed_bytes.fill(0);
+    seed_bytes[0] = seed;
+
+    SecretKey sk;
+    PublicKey pk;
+
+    if (crypto_sign_seed_keypair(pk.data(), sk.data(), reinterpret_cast<unsigned char*>(seed_bytes.data()))) {
+        throw std::runtime_error("sig gen failed!");
+    }
+
+    return std::make_pair(sk, pk);
+}
+
+
 } // namespace scs

@@ -22,6 +22,16 @@ hash(
 	uint32_t input_len,
 	uint32_t output_offset);
 
+BUILTIN("check_sig_ed25519")
+uint32_t
+check_sig_ed25519(
+	uint32_t pk_offset,
+	/* pk len = 32 */
+	uint32_t sig_offset,
+	/* sig_len = 64 */
+	uint32_t msg_offset,
+	uint32_t msg_len);
+
 } /* detail */
 
 Hash hash(uint8_t* data, uint32_t size)
@@ -41,6 +51,18 @@ template <VectorLike T>
 void hash(T const& object, StorageKey& out)
 {
 	detail::hash(to_offset(object.data()), object.size(), to_offset(out.data()));
+}
+
+bool check_sig_ed25519(
+	const PublicKey& pk,
+	const Signature& sig,
+	const Hash& msg_hash)
+{
+	return detail::check_sig_ed25519(
+		to_offset(pk.data()),
+		to_offset(sig.data()),
+		to_offset(msg_hash.data()),
+		sizeof(Hash)) != 0;
 }
 
 } /* sdk */

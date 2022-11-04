@@ -16,9 +16,17 @@ void
 VirtualMachine::init_default_genesis()
 {
     install_genesis_contracts(global_context.contract_db);
+    current_block_context = std::make_unique<BlockContext>(0);
 }
 
-
+void
+VirtualMachine::assert_initialized() const
+{
+    if (!current_block_context)
+    {
+        throw std::runtime_error("uninitialized");
+    }
+}
 
 struct ValidateReduce
 {
@@ -98,6 +106,8 @@ VirtualMachine::advance_block_number()
 std::optional<BlockHeader>
 VirtualMachine::try_exec_tx_block(std::vector<SignedTransaction> const& txs)
 {
+    assert_initialized();
+    
     auto res = validate_tx_block(txs);
 
     if (!res) {

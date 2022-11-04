@@ -20,6 +20,7 @@ make_static_key(uint64_t a, uint64_t b = 0, uint64_t c = 0, uint64_t d = 0)
 /**
  * sdk key registry:
  *  0: replay cache id
+ *  1: singlekey auth pk
  * 
  * contract-specific:
  * 	anything with b > 0 or c > 0 or d > 0

@@ -8,6 +8,8 @@
 #include "xdr/transaction.h"
 #include "xdr/block.h"
 
+#include <utils/non_movable.h>
+
 namespace scs {
 
 /**
@@ -19,12 +21,14 @@ namespace scs {
  * we say that's ok, and move on (presumably rejecting subsequent
  * blocks from that proposer).
  */
-class VirtualMachine
+class VirtualMachine : public utils::NonMovableOrCopyable
 {
     GlobalContext global_context;
     std::unique_ptr<BlockContext> current_block_context;
 
     Hash prev_block_hash;
+
+    void assert_initialized() const;
 
     bool validate_tx_block(std::vector<SignedTransaction> const& txs);
 

@@ -157,7 +157,7 @@ class BuiltinFns
 
 	static uint32_t
 	scs_check_sig_ed25519(
-	uint32_t pk_offset,
+		uint32_t pk_offset,
 		/* pk len = 32 */
 		uint32_t sig_offset,
 		/* sig_len = 64 */

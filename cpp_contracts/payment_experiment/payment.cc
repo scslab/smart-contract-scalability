@@ -6,13 +6,15 @@
 #include "sdk/raw_memory.h"
 #include "sdk/invoke.h"
 #include "sdk/calldata.h"
+#include "sdk/auth_singlekey.h"
 
 namespace payment
 {
 
 struct calldata_init
 {
-    sdk::StorageKey token;
+    sdk::Address token;
+    sdk::PublicKey pk;
 };
 
 constexpr static sdk::StorageKey token_addr = sdk::make_static_key(0, 2);
@@ -31,6 +33,8 @@ init()
 
     sdk::set_raw_memory(token_addr, calldata.token);
 
+    sdk::auth_single_pk_register(calldata.pk);
+
     erc20::Ierc20 token(calldata.token);
 
     token.allowanceDelta(sdk::get_self(), INT64_MAX);
@@ -48,6 +52,7 @@ transfer()
     auto calldata = sdk::get_calldata<calldata_transfer>();
 
     sdk::record_self_replay();
+    sdk::auth_single_pk_check_sig(0);
 
     auto token_key = sdk::get_raw_memory<sdk::Address>(token_addr);
 

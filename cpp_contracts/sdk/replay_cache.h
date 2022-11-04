@@ -16,7 +16,7 @@ constexpr static StorageKey replay_cache_storage_key
 
 void record_self_replay(const bool do_clear = true)
 {
-	Hash hash_buf = get_tx_hash();
+	Hash hash_buf = get_invoked_hash();
 	hashset_insert(detail::replay_cache_storage_key, hash_buf, get_block_number());
 	if (do_clear)
 	{

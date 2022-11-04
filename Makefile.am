@@ -46,6 +46,9 @@ CRYPTO_SRCS = \
 DEBUG_SRCS = \
 	debug/debug_utils.cc
 
+EXPERIMENTS_SRCS = \
+	experiments/payment_experiment.cc
+
 FILTER_SRCS = \
 	filter/apply_context.cc \
 	filter/filter_context.cc
@@ -97,6 +100,7 @@ SRCS = \
 	$(CONTRACT_DB_SRCS) \
 	$(CRYPTO_SRCS) \
 	$(DEBUG_SRCS) \
+	$(EXPERIMENTS_SRCS) \
 	$(HASH_SET_SRCS) \
 	$(OBJECT_SRCS) \
 	$(PHASE_SRCS) \
