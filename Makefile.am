@@ -88,6 +88,7 @@ TX_BLOCK_SRCS = \
 	tx_block/tx_set.cc
 
 VM_SRCS = \
+	vm/genesis.cc \
 	vm/vm.cc
 
 SRCS = \
@@ -143,6 +144,7 @@ CC_WASMS = \
 	cpp_contracts/test_redirect_call.cc \
 	cpp_contracts/test_raw_memory.cc \
 	cpp_contracts/test_sdk.cc \
+	cpp_contracts/genesis/deploy.cc \
 	cpp_contracts/payment_experiment/payment.cc
 
 .cc.wasm:
@@ -161,10 +163,19 @@ AM_CPPFLAGS = \
 	$(tbb_CFLAGS) \
 	$(utility_CFLAGS) \
 	$(lmdb_CFLAGS) \
-	$(merkle_trie_toolkit_CFLAGS) $(wasm_api_CFLAGS) $(Catch2_CFLAGS)
+	$(merkle_trie_toolkit_CFLAGS) \
+	$(wasm_api_CFLAGS) \
+	$(Catch2_CFLAGS)
+
 LDADD = $(xdrpp_LIBS) \
-	$(libsodium_LIBS) $(LIBFYAML_LIBS) $(tbb_LIBS) $(utility_LIBS) $(lmdb_LIBS) \
-	$(merkle_trie_toolkit_LIBS) $(wasm_api_LIBS) $(Catch2_LIBS)
+	$(libsodium_LIBS) \
+	$(LIBFYAML_LIBS) \
+	$(tbb_LIBS) \
+	$(utility_LIBS) \
+	$(lmdb_LIBS) \
+	$(merkle_trie_toolkit_LIBS) \
+	$(wasm_api_LIBS) \
+	$(Catch2_LIBS)
 
 $(SRCS:.cc=.o) : $(XH_FILES)
 $(TESTS_CCS:.cc=.o) : $(XH_FILES)
@@ -173,6 +184,7 @@ $(MAIN_CCS:.cc=.o) : $(XH_FILES)
 bin_PROGRAMS = \
 	test
 
+vm/genesis.o: $(CC_WASMS:.cc=.wasm)
 main/test.o : $(CC_WASMS:.cc=.wasm)
 
 COMPLETE_SRCS = $(SRCS) $(TESTS_CCS) $(TEST_UTILS_SRCS)

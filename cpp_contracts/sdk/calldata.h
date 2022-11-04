@@ -23,6 +23,12 @@ T get_calldata()
 	return out;
 }
 
+void
+get_calldata_slice(uint8_t* out, uint32_t start_offset, uint32_t end_offset)
+{
+	detail::get_calldata(to_offset(out), start_offset, end_offset);
+}
+
 BUILTIN("get_calldata_len")
 uint32_t get_calldata_len();
 

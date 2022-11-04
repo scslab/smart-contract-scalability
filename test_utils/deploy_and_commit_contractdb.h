@@ -13,7 +13,7 @@ namespace test {
 void
 deploy_and_commit_contractdb(ContractDB& contract_db,
                              const Address& addr,
-                             std::unique_ptr<const Contract>&& contract);
+                             std::shared_ptr<const Contract> contract);
 
 }
 } // namespace scs

@@ -62,6 +62,25 @@ ret invoke(Address const& addr, uint32_t methodname, calldata const& data)
 	return out;
 }
 
+template<TriviallyCopyable ret = EmptyStruct>
+ret invoke(Address const& addr, uint32_t methodname, uint8_t const* raw_calldata, uint32_t raw_calldata_len)
+{
+	ret out;
+	uint32_t ret_len = 
+		detail::invoke(
+			to_offset(&addr), 
+			methodname, 
+			to_offset(raw_calldata),
+			raw_calldata_len,
+			to_offset(&out),
+			sizeof(ret));
+	if (ret_len != sizeof(ret))
+	{
+		abort();
+	}
+	return out;
+}
+
 Address
 get_msg_sender()
 {

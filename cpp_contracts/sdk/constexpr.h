@@ -1,5 +1,7 @@
 #pragma once
 
+#include "sdk/shared.h"
+
 #include "sdk/types.h"
 
 #include <array>
@@ -8,32 +10,11 @@
 namespace sdk
 {
 
-namespace detail
-{
-
-constexpr static 
-void write_uint64_t(uint8_t* out, uint64_t value)
-{
-	for (size_t i = 0; i < 8; i++)
-	{
-		out[i] = (value >> (8*i)) & 0xFF;
-	}
-}
-
-}
-
 constexpr static 
 StorageKey
 make_static_key(uint64_t a, uint64_t b = 0, uint64_t c = 0, uint64_t d = 0)
 {
-	StorageKey out = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-	uint8_t* data = out.data();
-	detail::write_uint64_t(data, a);
-	detail::write_uint64_t(data + 8, b);
-	detail::write_uint64_t(data + 16, c);
-	detail::write_uint64_t(data + 24, d);
-	return out;
+	return scs::make_static_32bytes<StorageKey>(a, b, c, d);
 }
 
 /**
@@ -43,5 +24,13 @@ make_static_key(uint64_t a, uint64_t b = 0, uint64_t c = 0, uint64_t d = 0)
  * contract-specific:
  * 	anything with b > 0 or c > 0 or d > 0
  */
+
+constexpr static 
+Address
+make_static_address(uint64_t a, uint64_t b = 0, uint64_t c = 0, uint64_t d = 0)
+{
+	return scs::make_static_32bytes<Address>(a, b, c, d);
+}
+
 
 }

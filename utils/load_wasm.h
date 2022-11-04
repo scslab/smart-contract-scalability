@@ -6,9 +6,7 @@
 
 namespace scs {
 
-namespace test {
-
-[[maybe_unused]] std::unique_ptr<Contract> static load_wasm_from_file(
+[[maybe_unused]] std::shared_ptr<Contract> static load_wasm_from_file(
     const char* filename)
 {
     FILE* f = std::fopen(filename, "r");
@@ -17,7 +15,7 @@ namespace test {
         throw std::runtime_error("failed to load wasm file");
     }
 
-    auto contents = std::make_unique<Contract>();
+    auto contents = std::make_shared<Contract>();
 
     const int BUF_SIZE = 65536;
     char buf[BUF_SIZE];
@@ -33,7 +31,5 @@ namespace test {
 
     return contents;
 }
-
-} // namespace test
 
 } // namespace scs

@@ -16,16 +16,13 @@ namespace test {
 void
 deploy_and_commit_contractdb(ContractDB& contract_db,
                              const Address& addr,
-                             std::unique_ptr<const Contract>&& contract)
+                             std::shared_ptr<const Contract> contract)
 {
     ContractDBProxy proxy(contract_db);
 
     Hash h = hash_xdr(*contract);
 
-    std::shared_ptr<const Contract> ptr
-        = std::shared_ptr<const Contract>(contract.release());
-
-    proxy.create_contract(ptr);
+    proxy.create_contract(contract);
 
     REQUIRE(proxy.deploy_contract(addr, h));
 

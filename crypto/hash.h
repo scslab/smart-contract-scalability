@@ -34,6 +34,7 @@ Hash hash_xdr(const xdr_type& value) {
 	return hash_buf;
 }
 
+//! probably not the right name but ah well TODO rename
 [[maybe_unused]]
 static Hash 
 hash_xdr(std::vector<uint8_t> const& bytes)

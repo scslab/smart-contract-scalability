@@ -6,7 +6,7 @@
 #include "transaction_context/global_context.h"
 
 #include "crypto/hash.h"
-#include "test_utils/load_wasm.h"
+#include "utils/load_wasm.h"
 
 #include "test_utils/deploy_and_commit_contractdb.h"
 
@@ -17,10 +17,10 @@ TEST_CASE("test log", "[builtin]")
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
 
-    auto c = test::load_wasm_from_file("cpp_contracts/test_log.wasm");
+    auto c = load_wasm_from_file("cpp_contracts/test_log.wasm");
     auto h = hash_xdr(*c);
 
-    test::deploy_and_commit_contractdb(script_db, h, std::move(c));
+    test::deploy_and_commit_contractdb(script_db, h, c);
 
     ThreadlocalContextStore::make_ctx(scs_data_structures);
     test::DeferredContextClear defer;
