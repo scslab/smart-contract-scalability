@@ -3,6 +3,10 @@
 
 #include "storage_proxy/transaction_rewind.h"
 
+#include "crypto/hash.h"
+
+#include <wasm_api/error.h>
+
 namespace scs {
 
 TransactionContext::TransactionContext(SignedTransaction const& tx,
@@ -83,6 +87,12 @@ TransactionContext::get_src_tx_hash() const
     return tx_hash;
 }
 
+Hash
+TransactionContext::get_invoked_tx_hash() const
+{
+    return hash_xdr(tx.tx);
+}
+
 uint32_t
 TransactionContext::get_num_deployable_contracts() const
 {
@@ -124,6 +134,19 @@ TransactionContext::push_storage_deltas()
     storage_proxy.commit();
 
     return true;
+}
+
+WitnessEntry const&
+TransactionContext::get_witness(uint64_t wit_idx) const
+{
+    for (auto const& w : tx.witnesses)
+    {
+        if (w.key == wit_idx)
+        {
+            return w;
+        }
+    }
+    throw wasm_api::HostError("witness not found");
 }
 
 } // namespace scs

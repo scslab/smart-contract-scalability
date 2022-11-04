@@ -119,12 +119,25 @@ BuiltinFns::scs_get_block_number()
 }
 
 void
-BuiltinFns::scs_get_tx_hash(uint32_t hash_offset)
+BuiltinFns::scs_get_src_tx_hash(uint32_t hash_offset)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
 	auto& runtime = *tx_ctx.get_current_runtime();
 
 	Hash const& h = tx_ctx.get_src_tx_hash();
+
+	runtime.write_to_memory(h, hash_offset, sizeof(Hash));
+}
+
+
+void
+BuiltinFns::scs_get_invoked_tx_hash(
+	uint32_t hash_offset)
+{
+	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	auto& runtime = *tx_ctx.get_current_runtime();
+
+	Hash const& h = tx_ctx.get_invoked_tx_hash();
 
 	runtime.write_to_memory(h, hash_offset, sizeof(Hash));
 }

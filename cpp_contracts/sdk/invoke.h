@@ -39,6 +39,11 @@ void
 get_tx_hash(
 	uint32_t offset);
 
+BUILTIN("get_invoked_tx_hash")
+void
+get_invoked_hash(
+	uint32_t offset);
+
 } /* detail */
 
 // only works for fixed-size types here
@@ -102,6 +107,14 @@ get_tx_hash()
 {
 	Hash out;
 	detail::get_tx_hash(to_offset(&out));
+	return out;
+}
+
+Hash
+get_invoked_hash()
+{
+	Hash out;
+	detail::get_invoked_hash(to_offset(&out));
 	return out;
 }
 

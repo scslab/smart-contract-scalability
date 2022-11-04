@@ -42,7 +42,7 @@ struct Transaction
 struct WitnessEntry
 {
 	uint64 key;
-	Signature value;
+	opaque value<>;
 };
 
 struct SignedTransaction

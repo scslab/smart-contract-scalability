@@ -80,6 +80,9 @@ public:
 	const Hash&
 	get_src_tx_hash() const;
 
+	Hash
+	get_invoked_tx_hash() const;
+
 	const ContractDBProxy&
 	get_contract_db_proxy() const
 	{
@@ -93,6 +96,9 @@ public:
 
 	AddressAndKey 
 	get_storage_key(InvariantKey const& key) const;
+
+	WitnessEntry const&
+	get_witness(uint64_t wit_idx) const;
 
 	void pop_invocation_stack();
 	void push_invocation_stack(wasm_api::WasmRuntime* runtime, MethodInvocation const& invocation);

@@ -56,9 +56,13 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 		"scs",
 		"get_block_number");
 
-	runtime.template link_fn<&BuiltinFns::scs_get_tx_hash>(
+	runtime.template link_fn<&BuiltinFns::scs_get_src_tx_hash>(
 		"scs",
 		"get_tx_hash");
+
+	runtime.template link_fn<&BuiltinFns::scs_get_invoked_tx_hash>(
+		"scs",
+		"get_invoked_tx_hash");
 
 	/* -- storage -- */
 	runtime.template link_fn<&BuiltinFns::scs_raw_memory_set>(
@@ -116,6 +120,14 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 		"scs",
 		"deploy_contract");
 
+	/* -- witnesses -- */
+	runtime.template link_fn<&BuiltinFns::scs_get_witness>(
+		"scs",
+		"get_witness");
+
+	runtime.template link_fn<&BuiltinFns::scs_get_witness_len>(
+		"scs",
+		"get_witness_len");
 }
 
 } /* scs */

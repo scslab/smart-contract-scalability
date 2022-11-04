@@ -69,7 +69,12 @@ class BuiltinFns
 	scs_get_block_number();
 
 	static void
-	scs_get_tx_hash(
+	scs_get_src_tx_hash(
+		uint32_t hash_offset
+		/* hash_len = 32 */);
+
+	static void
+	scs_get_invoked_tx_hash(
 		uint32_t hash_offset
 		/* hash_len = 32 */);
 
@@ -164,6 +169,13 @@ class BuiltinFns
 		uint64_t nonce,
         uint32_t out_address_offset 
         /* addr_len = 32 */);
+
+    /* -- witnesses -- */
+    static void
+    scs_get_witness(uint64_t wit_idx, uint32_t out_offset, uint32_t max_len);
+
+    static uint32_t
+    scs_get_witness_len(uint64_t wit_idx);
 
 
 	BuiltinFns() = delete;

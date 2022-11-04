@@ -31,7 +31,8 @@ BUILTIN_FNS_SRCS = \
 	builtin_fns/hashset.cc \
 	builtin_fns/logging.cc \
 	builtin_fns/runtime.cc \
-	builtin_fns/raw_memory.cc
+	builtin_fns/raw_memory.cc \
+	builtin_fns/witness.cc
 
 CONTRACT_DB_SRCS = \
 	contract_db/contract_db.cc \
