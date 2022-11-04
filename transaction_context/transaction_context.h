@@ -69,6 +69,12 @@ public:
 	get_current_method_invocation() const;
 
 	const Address&
+	get_self_addr() const
+	{
+		return get_current_method_invocation().addr;
+	}
+
+	const Address&
 	get_msg_sender() const;
 
 	const Hash&

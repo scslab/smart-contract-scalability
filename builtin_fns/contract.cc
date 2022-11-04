@@ -5,6 +5,8 @@
 #include "transaction_context/execution_context.h"
 #include "transaction_context/method_invocation.h"
 
+#include "contract_db/contract_utils.h"
+
 #include "wasm_api/error.h"
 
 #include "xdr/storage.h"
@@ -38,7 +40,8 @@ BuiltinFns::scs_create_contract(uint32_t contract_index, uint32_t hash_out
 
 void
 BuiltinFns::scs_deploy_contract(uint32_t hash_offset, /* hash_len = 32 */
-                                uint32_t address_offset /* addr_len = 32 */)
+                                uint64_t nonce,
+                                uint32_t out_address_offset /* addr_len = 32 */)
 {
     auto& tx_ctx
         = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
@@ -48,13 +51,13 @@ BuiltinFns::scs_deploy_contract(uint32_t hash_offset, /* hash_len = 32 */
         = runtime.template load_from_memory_to_const_size_buf<Hash>(
             hash_offset);
 
-    auto deploy_addr
-        = runtime.template load_from_memory_to_const_size_buf<Address>(
-            address_offset);
+    auto deploy_addr = compute_contract_deploy_address(tx_ctx.get_self_addr(), contract_hash, nonce);
 
     if (!tx_ctx.contract_db_proxy.deploy_contract(deploy_addr, contract_hash)) {
         throw wasm_api::HostError("failed to deploy contract");
     }
+
+    runtime.write_to_memory(deploy_addr, out_address_offset, deploy_addr.size());
 }
 
 } // namespace scs

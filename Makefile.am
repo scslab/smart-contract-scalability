@@ -36,6 +36,7 @@ BUILTIN_FNS_SRCS = \
 CONTRACT_DB_SRCS = \
 	contract_db/contract_db.cc \
 	contract_db/contract_db_proxy.cc \
+	contract_db/contract_utils.cc \
 	contract_db/uncommitted_contracts.cc
 
 CRYPTO_SRCS = \

@@ -161,8 +161,10 @@ class BuiltinFns
 	scs_deploy_contract(
 		uint32_t hash_offset, 
 		/* hash_len = 32 */
-        uint32_t address_offset 
+		uint64_t nonce,
+        uint32_t out_address_offset 
         /* addr_len = 32 */);
+
 
 	BuiltinFns() = delete;
 
