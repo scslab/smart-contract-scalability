@@ -8,7 +8,17 @@
 #include "phase/phases.h"
 #include "threadlocal/threadlocal_context.h"
 
+#include "vm/genesis.h"
+
 namespace scs {
+
+void
+VirtualMachine::init_default_genesis()
+{
+    install_genesis_contracts(global_context.contract_db);
+}
+
+
 
 struct ValidateReduce
 {
@@ -107,6 +117,8 @@ VirtualMachine::try_exec_tx_block(std::vector<SignedTransaction> const& txs)
     out.modified_keys_hash = current_block_context -> modified_keys_list.hash();
     out.state_db_hash = global_context.state_db.hash();
     out.contract_db_hash = global_context.contract_db.hash();
+
+    prev_block_hash = hash_xdr(out);
 
     advance_block_number();
     return out;

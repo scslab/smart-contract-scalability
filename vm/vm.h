@@ -31,6 +31,8 @@ class VirtualMachine
     void advance_block_number();
 
   public:
+    void init_default_genesis();
+
     std::optional<BlockHeader>
     try_exec_tx_block(std::vector<SignedTransaction> const& txs);
 };
