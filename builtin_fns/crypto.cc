@@ -4,6 +4,7 @@
 #include "crypto/crypto_utils.h"
 
 #include "debug/debug_utils.h"
+#include "debug/debug_macros.h"
 
 #include "threadlocal/threadlocal_context.h"
 
@@ -35,6 +36,9 @@ BuiltinFns::scs_hash(
 
 	auto data = runtime.template load_from_memory<xdr::opaque_vec<MAX_HASH_LEN>>(input_offset, input_len);
 
+	auto s = debug::array_to_str(data);
+	EXEC_TRACE("hash input: %s", s.c_str());
+
 	Hash out = hash_xdr(data);
 
 	runtime.write_to_memory(out, output_offset, out.size());
@@ -60,7 +64,12 @@ BuiltinFns::scs_check_sig_ed25519(
 
 	auto msg = runtime.template load_from_memory<std::vector<uint8_t>>(msg_offset, msg_len);
 
-	return check_sig_ed25519(pk, sig, msg);
+	bool res = check_sig_ed25519(pk, sig, msg);
+
+	auto s = debug::array_to_str(msg);
+	EXEC_TRACE("sig check: %lu on msg %s", res, s.c_str());
+
+	return res;
 }
 
 }

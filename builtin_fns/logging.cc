@@ -27,6 +27,19 @@ BuiltinFns::scs_print_debug(uint32_t addr, uint32_t len)
 }
 
 void
+BuiltinFns::scs_print_c_str(uint32_t addr, uint32_t len)
+{
+	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+
+	auto& runtime = *tx_ctx.get_current_runtime();
+
+	auto log = runtime.template load_from_memory<std::vector<uint8_t>>(addr, len);
+	log.push_back('\0');
+
+	std::printf("print: %s\n", log.data());
+}
+
+void
 BuiltinFns::scs_log(
 	uint32_t log_offset,
 	uint32_t log_len)

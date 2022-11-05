@@ -1,6 +1,7 @@
 #include "builtin_fns/builtin_fns.h"
 
 #include "debug/debug_macros.h"
+#include "debug/debug_utils.h"
 
 #include "threadlocal/threadlocal_context.h"
 
@@ -55,6 +56,8 @@ BuiltinFns::scs_raw_memory_get(
 	auto key = runtime.template load_from_memory_to_const_size_buf<InvariantKey>(key_offset);
 
 	auto addr_and_key = tx_ctx.get_storage_key(key);
+
+	EXEC_TRACE("raw_memory get %s", debug::array_to_str(addr_and_key).c_str());
 
 	auto const& res = tx_ctx.storage_proxy.get(addr_and_key);
 

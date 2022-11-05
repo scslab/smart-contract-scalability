@@ -27,6 +27,10 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 		"scs",
 		"print_debug");
 
+	runtime.template link_fn<&BuiltinFns::scs_print_c_str>(
+		"scs",
+		"print_c_str");
+
 	/* -- runtime functions -- */
 	runtime.template link_fn<&BuiltinFns::scs_invoke>(
 		"scs", 

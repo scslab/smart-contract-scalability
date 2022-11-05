@@ -5,6 +5,7 @@
 #include "xdr/types.h"
 
 #include <cstdint>
+#include <random>
 
 namespace scs
 {
@@ -12,6 +13,8 @@ namespace scs
 class PaymentExperiment
 {
 	size_t num_accounts;
+
+	std::minstd_rand gen;
 
 	struct account_entry
 	{
@@ -27,6 +30,11 @@ class PaymentExperiment
 
 	std::vector<SignedTransaction>
 	make_accounts();
+
+	std::vector<SignedTransaction>
+	make_mint_txs();
+
+	SignedTransaction make_random_payment();
 
 public:
 

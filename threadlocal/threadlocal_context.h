@@ -62,7 +62,6 @@ class ThreadlocalContextStore
 
     static void post_block_clear();
 
-    // for testing
     static void clear_entire_context();
 };
 

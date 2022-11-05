@@ -56,10 +56,10 @@ transfer(const Address& from, const Address& to, const int64_t amount)
     }
 
     calculate_balance_key(from, storage_key_buf);
-    sdk::int64_add(storage_key_buf, amount);
+    sdk::int64_add(storage_key_buf, -amount);
 
     calculate_balance_key(to, storage_key_buf);
-    sdk::int64_add(storage_key_buf, -amount);
+    sdk::int64_add(storage_key_buf, amount);
 }
 
 void

@@ -15,6 +15,7 @@ namespace scs
 
 PaymentExperiment::PaymentExperiment(size_t num_accounts)
 	: num_accounts(num_accounts)
+	, gen(0)
 	{}
 
 std::vector<SignedTransaction>
@@ -147,6 +148,94 @@ PaymentExperiment::make_accounts()
 	return out;
 }
 
+SignedTransaction
+make_mint_transaction(Address const& wallet_addr, Address const& token_addr, int64_t amount = UINT32_MAX)
+{
+	struct calldata_mint
+	{
+	    Address recipient;
+	    int64_t mint;
+	};
+
+	calldata_mint data
+	{
+		.recipient = wallet_addr,
+		.mint = amount
+	};
+
+	std::printf("mint amount %lld\n", data.mint);
+
+	auto calldata = make_calldata(data);
+
+	TransactionInvocation invocation(token_addr, 1, calldata);
+
+    SignedTransaction stx;
+    stx.tx.invocation = invocation;
+
+    return stx;
+}
+
+std::vector<SignedTransaction>
+PaymentExperiment::make_mint_txs()
+{
+	Address token_addr = compute_contract_deploy_address(DEPLOYER_ADDRESS, hash_xdr(*load_wasm_from_file("cpp_contracts/erc20.wasm")), UINT64_MAX);
+	std::vector<SignedTransaction> out;
+
+	for (auto const& [_, v] : account_map)
+	{
+		out.push_back(make_mint_transaction(v.wallet_address, token_addr));
+	}
+
+	return out;
+}
+
+SignedTransaction
+PaymentExperiment::make_random_payment()
+{
+	auto gen_account = [&] () {
+		std::uniform_int_distribution<> account_dist(0, account_map.size() - 1);
+
+		uint64_t out = account_dist(gen);
+
+		std::printf("out = %lu\n", out);
+
+		return out;
+	};
+
+	auto const& src = account_map.at(gen_account());
+	auto const& dst = account_map.at(gen_account());
+
+	struct calldata_transfer
+	{
+	    Address to;
+	    int64_t amount;
+	    uint64_t nonce;
+	};
+
+	calldata_transfer calldata
+	{
+		.to = dst.wallet_address,
+		.amount = 100,
+		.nonce = std::uniform_int_distribution<>(0, UINT64_MAX)(gen)
+	};
+
+	TransactionInvocation invocation(src.wallet_address, 1, make_calldata(calldata));
+
+	SignedTransaction stx;
+	stx.tx.invocation = invocation;
+
+	Hash msg = hash_xdr(stx.tx);
+	Signature sig = sign_ed25519(src.sk, msg);
+
+	WitnessEntry wit;
+	wit.key = 0;
+	wit.value.insert(wit.value.end(), sig.begin(), sig.end());
+
+	stx.witnesses.push_back(wit);
+
+	return stx;
+}
+
 std::unique_ptr<VirtualMachine>
 PaymentExperiment::prepare_vm()
 {
@@ -177,7 +266,28 @@ PaymentExperiment::prepare_vm()
 		return nullptr;
 	}
 
+	std::printf("made wallets\n");
+
+	if (!vm -> try_exec_tx_block(make_mint_txs()))
+	{
+		return nullptr;
+	}
+
+	std::printf("funded wallets\n");
+
 	return vm;
+}
+
+std::vector<SignedTransaction>
+PaymentExperiment::gen_transaction_batch(size_t batch_size)
+{
+	std::vector<SignedTransaction> out;
+	for (size_t i = 0; i < batch_size; i++)
+	{
+		out.push_back(make_random_payment());
+	}
+	std::printf("make payment batch\n");
+	return out;
 }
 
 }

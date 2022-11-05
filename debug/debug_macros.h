@@ -4,6 +4,7 @@
 
 #define CONTRACT_DEBUG DEBUG_LEVEL_INFO
 #define OBJECT_DEBUG DEBUG_LEVEL_INFO
+#define EXECUTION_TRACE DEBUG_LEVEL_NONE
 
 #define LOG(s, ...) std::printf((std::string("%-45s") + s + "\n").c_str(), (std::string(__FILE__) + "." + std::to_string(__LINE__) + ":").c_str() __VA_OPT__(,) __VA_ARGS__)
 
@@ -29,5 +30,13 @@
 #else
 #define OBJECT_INFO(s, ...) (void)0
 #define OBJECT_INFO_F(s) (void)0
+#endif
+
+#if EXECUTION_TRACE <= DEBUG_LEVEL_INFO
+#define EXEC_TRACE(s, ...) LOG(s, __VA_ARGS__)
+#define EXEC_TRACE_F(s) s
+#else
+#define EXEC_TRACE(s, ...) (void)0
+#define EXEC_TRACE_F(s) (void)0
 #endif
 

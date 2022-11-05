@@ -80,7 +80,7 @@ make_nnint64_delta(int64_t base, int64_t old_delta, int64_t new_delta)
             }
         }
         if (base + new_delta < 0) {
-            std::printf("negative result\n");
+            std::printf("negative result: base %lld new_delta %lld\n", base, new_delta);
             return std::nullopt;
         }
 
@@ -186,13 +186,11 @@ ProxyApplicator::try_apply(StorageDelta const& d)
                     make_current_nnint64(*nnint64_delta);
                     return true;
                 } else {
-                    std::printf("no overall_delta return false;\n");
                     return false;
                 }
             } else {
                 if (nnint64_delta->set_value
                     != d.set_add_nonnegative_int64().set_value) {
-                    std::printf("base mismatch return false;\n");
 
                     return false;
                 }
@@ -203,7 +201,6 @@ ProxyApplicator::try_apply(StorageDelta const& d)
                                          d.set_add_nonnegative_int64().delta);
 
                 if (!res) {
-                    std::printf("has overall_delta return false;\n");
                     return false;
                 }
                 nnint64_delta = *res;
@@ -475,6 +472,7 @@ ProxyApplicator::get_deltas() const
 std::optional<int64_t>
 ProxyApplicator::get_base_nnint64_set_value() const
 {
+
     if (nnint64_delta)
     {
         return nnint64_delta->set_value;

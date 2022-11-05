@@ -25,7 +25,7 @@ nonnegative_int64_set_add(
 
 BUILTIN("nn_int64_add")
 void
-nonnegative_int64_set_add(
+nonnegative_int64_add(
 	uint32_t key_offset,
 	/* key_len = 32 */
 	int64_t delta);
@@ -43,7 +43,7 @@ nonnegative_int64_get(
 void
 int64_add(StorageKey const& key, int64_t delta)
 {
-	detail::nonnegative_int64_set_add(
+	detail::nonnegative_int64_add(
 		to_offset(&key),
 		delta);
 }

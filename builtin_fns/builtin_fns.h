@@ -29,6 +29,9 @@ class BuiltinFns
 	static void
 	scs_print_debug(uint32_t addr, uint32_t len);
 
+	static void
+	scs_print_c_str(uint32_t addr, uint32_t len);
+
 	/* -- runtime functions -- */
 
 	static void 

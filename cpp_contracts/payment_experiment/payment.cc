@@ -7,6 +7,7 @@
 #include "sdk/invoke.h"
 #include "sdk/calldata.h"
 #include "sdk/auth_singlekey.h"
+#include "sdk/log.h"
 
 namespace payment
 {
@@ -44,14 +45,17 @@ struct calldata_transfer
 {
     sdk::Address to;
     int64_t amount;
+    uint64_t nonce;
 };
 
 EXPORT("pub01000000")
 transfer()
 {
+
     auto calldata = sdk::get_calldata<calldata_transfer>();
 
     sdk::record_self_replay();
+
     sdk::auth_single_pk_check_sig(0);
 
     auto token_key = sdk::get_raw_memory<sdk::Address>(token_addr);
