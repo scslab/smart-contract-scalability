@@ -39,6 +39,8 @@ class VirtualMachine : public utils::NonMovableOrCopyable
 
     std::optional<BlockHeader>
     try_exec_tx_block(std::vector<SignedTransaction> const& txs);
+
+    ~VirtualMachine();
 };
 
 } // namespace scs

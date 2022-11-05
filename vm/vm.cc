@@ -107,7 +107,7 @@ std::optional<BlockHeader>
 VirtualMachine::try_exec_tx_block(std::vector<SignedTransaction> const& txs)
 {
     assert_initialized();
-    
+
     auto res = validate_tx_block(txs);
 
     if (!res) {
@@ -132,6 +132,11 @@ VirtualMachine::try_exec_tx_block(std::vector<SignedTransaction> const& txs)
 
     advance_block_number();
     return out;
+}
+
+VirtualMachine::~VirtualMachine()
+{
+    ThreadlocalContextStore::clear_entire_context();
 }
 
 } // namespace scs
