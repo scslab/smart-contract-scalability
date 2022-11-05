@@ -53,6 +53,23 @@ check_sig_ed25519(PublicKey const& pk, Signature const& sig, std::vector<uint8_t
 
 }
 
+Signature
+sign_ed25519(SecretKey const& sk, uint8_t const* msg, uint32_t msg_len)
+{
+    Signature out;
+    if (crypto_sign_detached(
+        out.data(), //signature
+        nullptr, //optional siglen ptr
+        msg, //msg
+        msg_len, //msg len
+        sk.data())) //sk
+    {
+        throw std::runtime_error("failed to sign msg ed25519");
+    }
+
+    return out;
+}
+
 
 std::pair<SecretKey, PublicKey> 
 deterministic_key_gen(uint64_t seed)
