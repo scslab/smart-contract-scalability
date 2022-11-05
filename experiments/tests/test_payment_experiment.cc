@@ -30,7 +30,7 @@ TEST_CASE("payment experiment hashset", "[experiment][payment]")
 	SECTION("small block ok")
 	{
 		// we don't have expiration times yet in the replay prevention sdk
-		auto batch = e.gen_transaction_batch(1);
+		auto batch = e.gen_transaction_batch(10);
 
 		REQUIRE(vm -> try_exec_tx_block(batch));
 	}
