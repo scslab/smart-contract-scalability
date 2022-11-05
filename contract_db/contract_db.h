@@ -82,6 +82,8 @@ class ContractDB
     void add_new_uncommitted_contract(
         std::shared_ptr<const Contract> new_contract);
 
+    const std::vector<uint8_t>* get_script_by_hash(const wasm_api::Hash& hash) const;
+
   public:
     ContractDB();
 

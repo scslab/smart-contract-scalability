@@ -28,6 +28,8 @@ class StorageProxy
 
 	bool committed_local_values = false;
 
+	void assert_not_committed_local_values() const;
+
 public:
 
 	using delta_identifier_t = Hash; // was DeltaPriority

@@ -49,6 +49,9 @@ DEBUG_SRCS = \
 EXPERIMENTS_SRCS = \
 	experiments/payment_experiment.cc
 
+EXPERIMENTS_TEST_SRCS = \
+	experiments/tests/test_payment_experiment.cc
+
 FILTER_SRCS = \
 	filter/apply_context.cc \
 	filter/filter_context.cc
@@ -121,7 +124,8 @@ TESTS_CCS = \
 	tests/sdk_tests.cc \
 	storage_proxy/tests/test_proxy_applicator.cc \
 	object/tests/test_revertable_object.cc \
-	$(HASH_SET_TEST_SRCS)
+	$(HASH_SET_TEST_SRCS) \
+	$(EXPERIMENTS_TEST_SRCS)
 
 MAIN_CCS = \
 	main/filter_perf.cc
@@ -197,6 +201,6 @@ COMPLETE_SRCS = $(SRCS) $(TESTS_CCS) $(TEST_UTILS_SRCS)
 #filter_perf_SOURCES = $(SRCS) main/filter_perf.cc
 test_SOURCES = main/test.cc $(COMPLETE_SRCS)
 
-
+test_LDFLAGS= -Wl,-force_load $(merkle_trie_toolkit_LIBS)
 
 

@@ -22,10 +22,9 @@ Address make_address(uint64_t a, uint64_t b, uint64_t c, uint64_t d)
 
 void install_contract(ContractDBProxy& db, std::shared_ptr<const Contract> contract, const Address& addr)
 {
-
 	auto h = db.create_contract(contract);
 
-	if (!db.deploy_contract(h, addr))
+	if (!db.deploy_contract(addr, h))
 	{
 		throw std::runtime_error("failed to deploy genesis contract");
 	}
@@ -42,6 +41,8 @@ void install_genesis_contracts(ContractDB& contract_db)
 		load_wasm_from_file("cpp_contracts/genesis/deploy.wasm"),
 		DEPLOYER_ADDRESS);
 
+	std::printf("installed\n");
+
 	{
 		TransactionRewind rewind;
 
@@ -49,6 +50,8 @@ void install_genesis_contracts(ContractDB& contract_db)
 		{
 			throw std::runtime_error("failed to push proxy updates");
 		}
+
+		std::printf("pushed updates\n");
 
 		rewind.commit();
 	}

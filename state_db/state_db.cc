@@ -53,11 +53,15 @@ struct UpdateFn
         // Must guarantee no concurrent modification of commitment_trie (other
         // than values)
 
+    //    std::printf("work root %s %d\n", work_root.get_prefix().to_string(work_root.get_prefix_len()).c_str(),
+    //        work_root.get_prefix_len().len);
+
         auto* main_db_subnode = main_db.get_subnode_ref_nolocks(
             work_root.get_prefix(), work_root.get_prefix_len());
 
         auto apply_lambda = [this, main_db_subnode](const prefix_t& addrkey,
                                                     const trie::EmptyValue&) {
+        //    std::printf("applying to key %s\n", addrkey.to_string(trie::PrefixLenBits(512)).c_str());
             auto* main_db_value = main_db_subnode->get_value_nolocks(addrkey);
             if (main_db_value) {
                 main_db_subnode->invalidate_hash_to_key_nolocks(addrkey);

@@ -9,6 +9,8 @@
 
 #include "object/make_delta.h"
 
+#include "debug/debug_utils.h"
+
 namespace scs
 {
 
@@ -154,14 +156,10 @@ StorageProxy::hashset_clear(AddressAndKey const& key, uint64_t threshold, delta_
 bool 
 StorageProxy::push_deltas_to_statedb(TransactionRewind& rewind) const
 {
-	if (committed_local_values)
-	{
-		throw std::runtime_error("double push to batch");
-	}
+	assert_not_committed_local_values();
 
 	for (auto const& [k, v] : cache)
 	{
-
 		auto deltas = v.applicator.get_deltas();
 		//auto const& dv = v.vec;
 		//auto const& deltas = dv.get();
@@ -183,6 +181,8 @@ StorageProxy::push_deltas_to_statedb(TransactionRewind& rewind) const
 
 void StorageProxy::commit()
 {
+	assert_not_committed_local_values();
+
 	for (auto const& [k, _] : cache)
 	{
 		keys.log_key(k);
@@ -190,6 +190,16 @@ void StorageProxy::commit()
 
 	committed_local_values = true;
 }
+
+void 
+StorageProxy::assert_not_committed_local_values() const
+{
+	if (committed_local_values)
+	{
+		throw std::runtime_error("double commit");
+	}
+}
+
 
 /*
 void 

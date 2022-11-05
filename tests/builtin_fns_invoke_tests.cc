@@ -31,9 +31,6 @@ TEST_CASE("test invoke", "[builtin]")
     test::deploy_and_commit_contractdb(script_db, h1, c1);
     test::deploy_and_commit_contractdb(script_db, h2, c2);
 
-    // REQUIRE(script_db.register_contract(h1, std::move(c1)));
-    // REQUIRE(script_db.register_contract(h2, std::move(c2)));
-
     ThreadlocalContextStore::make_ctx(scs_data_structures);
     test::DeferredContextClear defer;
 

@@ -1,5 +1,7 @@
 #include "state_db/modified_keys_list.h"
 
+#include "debug/debug_utils.h"
+
 namespace scs {
 
 void
@@ -30,6 +32,7 @@ ModifiedKeysList::merge_logs()
 {
     assert_logs_not_merged();
     keys.template batch_merge_in<trie::OverwriteMergeFn>(cache);
+
     logs_merged = true;
 }
 

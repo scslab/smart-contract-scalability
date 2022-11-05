@@ -39,8 +39,26 @@ ContractDB::get_script(wasm_api::Hash const& addr,
             return res;
         }
     }
-    
+
+    auto const* contract = addresses_to_contracts_map.get_value_nolocks(addr);
+    if (contract == nullptr)
+    {
+        return nullptr;
+    }
+
+    return contract -> contract.get();
+    /*
     auto it = hashes_to_contracts_map.find(addr);
+    if (it == hashes_to_contracts_map.end()) {
+        return nullptr;
+    }
+    return it->second.get(); */
+}
+
+const std::vector<uint8_t>* 
+ContractDB::get_script_by_hash(const wasm_api::Hash& hash) const
+{
+    auto it = hashes_to_contracts_map.find(hash);
     if (it == hashes_to_contracts_map.end()) {
         return nullptr;
     }
@@ -51,6 +69,7 @@ void
 ContractDB::commit_contract_to_db(wasm_api::Hash const& contract_hash,
                                   std::shared_ptr<const Contract> new_contract)
 {
+    //std::printf("commit contract to db %s\n", debug::array_to_str(contract_hash).c_str());
     auto res = hashes_to_contracts_map.emplace(contract_hash, new_contract);
 
     if (!res.second) {
@@ -63,7 +82,13 @@ void
 ContractDB::commit_registration(wasm_api::Hash const& new_address,
                                 wasm_api::Hash const& contract_hash)
 {
-    auto ptr = hashes_to_contracts_map.at(new_address);
+    auto ptr = hashes_to_contracts_map.at(contract_hash);
+
+/*
+    std::printf("committing registration of contract %s to address %s\n",
+        debug::array_to_str(contract_hash).c_str(),
+        debug::array_to_str(new_address).c_str());
+*/
 
     /*value_t const* ptr = hashes_to_contracts_map.get_value_nolocks(new_address);
     if (ptr == nullptr)
@@ -77,15 +102,6 @@ ContractDB::commit_registration(wasm_api::Hash const& new_address,
     }
 
     addresses_to_contracts_map.insert(new_address, value_t(ptr));
-
-
-    /*
-    auto res = addresses_to_contracts_map.emplace(new_address, ptr);
-
-    if (!res.second) {
-        throw std::runtime_error("failed to register contract to address "
-                                 "(contract at this addr already existed)");
-    } */
 }
 
 bool

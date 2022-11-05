@@ -151,14 +151,15 @@ ContractDBProxy::get_script(const wasm_api::Hash& address) const
     auto it = new_deployments.find(address);
 
     if (it == new_deployments.end()) {
-        return contract_db.get_script(address, nullptr);
+        return nullptr;
+        //return contract_db.get_script(address, nullptr);
     }
 
     auto const& script_hash = it->second;
-
+    
     auto s_it = new_contracts.find(script_hash);
     if (s_it == new_contracts.end()) {
-        return nullptr;
+        return contract_db.get_script_by_hash(script_hash);
     }
     return s_it->second.get();
 }
