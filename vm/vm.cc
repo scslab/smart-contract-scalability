@@ -136,6 +136,7 @@ VirtualMachine::try_exec_tx_block(std::vector<SignedTransaction> const& txs)
 
 VirtualMachine::~VirtualMachine()
 {
+    // execution context has dangling reference to GlobalContext without this
     ThreadlocalContextStore::clear_entire_context();
 }
 
