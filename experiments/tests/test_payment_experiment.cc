@@ -18,14 +18,11 @@ TEST_CASE("payment experiment init", "[experiment][payment]")
 
 TEST_CASE("payment experiment hashset", "[experiment][payment]")
 {
-	std::printf("start test\n");
 	PaymentExperiment e(2);
 
 	auto vm = e.prepare_vm();
 
 	REQUIRE(!!vm);
-
-	std::printf("start sections\n");
 
 	SECTION("small block ok")
 	{
