@@ -51,7 +51,6 @@ struct calldata_transfer
 EXPORT("pub01000000")
 transfer()
 {
-
     auto calldata = sdk::get_calldata<calldata_transfer>();
 
     sdk::record_self_replay();

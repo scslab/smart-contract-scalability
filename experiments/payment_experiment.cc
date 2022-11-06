@@ -197,13 +197,18 @@ PaymentExperiment::make_random_payment()
 
 		uint64_t out = account_dist(gen);
 
-		std::printf("out = %lu\n", out);
-
 		return out;
 	};
 
-	auto const& src = account_map.at(gen_account());
-	auto const& dst = account_map.at(gen_account());
+	uint64_t src_acct = gen_account();
+	uint64_t dst_acct = gen_account();
+	while(src_acct == dst_acct)
+	{
+		dst_acct = gen_account();
+	}
+
+	auto const& src = account_map.at(src_acct);
+	auto const& dst = account_map.at(dst_acct);
 
 	struct calldata_transfer
 	{
@@ -248,7 +253,7 @@ PaymentExperiment::prepare_vm()
 		return nullptr;
 	}
 
-	std::printf("make create txs\n");
+	std::printf("made create txs\n");
 
 	std::vector<SignedTransaction> deploy_erc20 = { make_deploy_erc20_transaction() };
 
