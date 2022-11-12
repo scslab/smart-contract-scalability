@@ -55,8 +55,8 @@ struct channel_config
 
 constexpr static sdk::StorageKey config_addr = sdk::make_static_key(0, 2);
 static sdk::UniqueFlag alice_claimed(sdk::make_static_key(1, 2));
-static sdk::UniqueFlag bob_claimed(sdk::make_static_key(1, 2));
-static sdk::UniqueFlag initialized(sdk::make_static_key(1, 2));
+static sdk::UniqueFlag bob_claimed(sdk::make_static_key(2, 2));
+static sdk::UniqueFlag initialized(sdk::make_static_key(3, 2));
 
 channel_config
 load_channel_config()
