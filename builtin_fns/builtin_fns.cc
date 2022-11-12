@@ -68,7 +68,12 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 		"scs",
 		"get_invoked_tx_hash");
 
-	/* -- storage -- */
+	/* -- general storage -- */
+	runtime.template link_fn<&BuiltinFns::scs_has_key>(
+		"scs",
+		"has_key");
+
+	/* -- raw memory storage -- */
 	runtime.template link_fn<&BuiltinFns::scs_raw_memory_set>(
 		"scs",
 		"raw_mem_set");

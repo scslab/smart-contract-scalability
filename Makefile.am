@@ -27,11 +27,12 @@ BUILTIN_FNS_SRCS = \
 	builtin_fns/crypto.cc \
 	builtin_fns/delete.cc \
 	builtin_fns/env.cc \
-	builtin_fns/int64.cc \
+	builtin_fns/general_storage.cc \
 	builtin_fns/hashset.cc \
+	builtin_fns/int64.cc \
 	builtin_fns/logging.cc \
-	builtin_fns/runtime.cc \
 	builtin_fns/raw_memory.cc \
+	builtin_fns/runtime.cc \
 	builtin_fns/witness.cc
 
 CONTRACT_DB_SRCS = \
@@ -154,7 +155,8 @@ CC_WASMS = \
 	cpp_contracts/test_raw_memory.cc \
 	cpp_contracts/test_sdk.cc \
 	cpp_contracts/genesis/deploy.cc \
-	cpp_contracts/payment_experiment/payment.cc
+	cpp_contracts/payment_experiment/payment.cc \
+	cpp_contracts/payment_channel.cc
 
 .cc.wasm:
 	wasi/wasi-sdk/bin/clang -Os -mtune=native -march=native -I./cpp_contracts/ $< -o $@ \
