@@ -18,12 +18,10 @@
 namespace scs
 {
 
-void
-BuiltinFns::scs_raw_memory_set(
-	uint32_t key_offset,
-	/* key_len = 32 */
-	uint32_t mem_offset,
-	uint32_t mem_len)
+uint32_t
+BuiltinFns::scs_has_key(
+	uint32_t key_offset
+	/* key_len = 32 */)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
 	auto& runtime = *tx_ctx.get_current_runtime();
