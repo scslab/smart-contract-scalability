@@ -52,7 +52,7 @@ void hash(T const& object, StorageKey& out)
 {
 	detail::hash(to_offset(object.data()), object.size(), to_offset(out.data()));
 }
-
+/*
 bool check_sig_ed25519(
 	const PublicKey& pk,
 	const Signature& sig,
@@ -63,6 +63,20 @@ bool check_sig_ed25519(
 		to_offset(sig.data()),
 		to_offset(msg_hash.data()),
 		sizeof(Hash)) != 0;
+} */
+
+template<TriviallyCopyable msg>
+bool
+check_sig_ed25519(
+	const PublicKey& pk,
+	const Signature& sig,
+	const msg& m)
+{
+	return detail::check_sig_ed25519(
+	to_offset(pk.data()),
+	to_offset(sig.data()),
+	to_offset(&m),
+	sizeof(msg)) != 0;
 }
 
 } /* sdk */
