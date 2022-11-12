@@ -1,5 +1,5 @@
-#include "sdk/raw_memory.h"
 #include "sdk/general_storage.h"
+#include "sdk/nonnegative_int64.h"
 
 namespace sdk
 {

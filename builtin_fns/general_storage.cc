@@ -1,16 +1,9 @@
 #include "builtin_fns/builtin_fns.h"
 
-#include "debug/debug_macros.h"
-#include "debug/debug_utils.h"
-
 #include "threadlocal/threadlocal_context.h"
 
 #include "transaction_context/execution_context.h"
 #include "transaction_context/method_invocation.h"
-
-#include "wasm_api/error.h"
-
-#include "xdr/storage.h"
 
 #include <cstdint>
 #include <vector>

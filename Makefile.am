@@ -155,6 +155,7 @@ CC_WASMS = \
 	cpp_contracts/test_raw_memory.cc \
 	cpp_contracts/test_sdk.cc \
 	cpp_contracts/genesis/deploy.cc \
+	cpp_contracts/atomic_swap.cc \
 	cpp_contracts/payment_experiment/payment.cc \
 	cpp_contracts/payment_channel.cc
 

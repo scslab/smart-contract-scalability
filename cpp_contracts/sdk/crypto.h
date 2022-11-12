@@ -34,7 +34,7 @@ check_sig_ed25519(
 
 } /* detail */
 
-Hash hash(uint8_t* data, uint32_t size)
+Hash hash(uint8_t const* data, uint32_t size)
 {
 	Hash out;
 	detail::hash(to_offset(data), size, to_offset(out.data()));
