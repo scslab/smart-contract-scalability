@@ -61,7 +61,7 @@ int64_set_add(StorageKey const& key, int64_t set_value, int64_t delta)
 int64_t
 int64_get(StorageKey const& key)
 {
-	int64_t res;
+	int64_t res = 0;
 	detail::nonnegative_int64_get(
 		to_offset(&key),
 		to_offset(&res));

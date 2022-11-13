@@ -115,6 +115,22 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 		"scs",
 		"hashset_clear");
 
+	runtime.template link_fn<&BuiltinFns::scs_hashset_get_size>(
+		"scs",
+		"hashset_get_size");
+
+	runtime.template link_fn<&BuiltinFns::scs_hashset_get_max_size>(
+		"scs",
+		"hashset_get_max_size");
+
+	runtime.template link_fn<&BuiltinFns::scs_hashset_get_index_of>(
+		"scs",
+		"hashset_get_index_of");
+	
+	runtime.template link_fn<&BuiltinFns::scs_hashset_get_index>(
+		"scs",
+		"hashset_get_index");
+
 	/* -- crypto -- */
 	runtime.template link_fn<&BuiltinFns::scs_hash>(
 		"scs",

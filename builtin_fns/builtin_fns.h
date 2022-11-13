@@ -151,9 +151,38 @@ class BuiltinFns
 
 	static void
 	scs_hashset_clear(
-		uint32_t key_offset
-		/* key_len = 32 */,
+		uint32_t key_offset,
+		/* key_len = 32 */
 		uint64_t threshold);
+
+	static uint32_t
+	scs_hashset_get_size(
+		uint32_t key_offset
+		/* key_len = 32 */);
+
+	static uint32_t
+	scs_hashset_get_max_size(
+		uint32_t key_offset
+		/* key_len = 32 */);
+
+	/**
+	 *  if two things with same threshold, 
+	 * returns lowest index.
+	 * If none, returns UINT32_MAX
+	 **/
+	static uint32_t
+	scs_hashset_get_index_of(
+		uint32_t key_offset,
+		/* key_len = 32 */
+		uint64_t threshold);
+
+	static void
+	scs_hashset_get_index(
+		uint32_t key_offset,
+		/* key_len = 32 */
+		uint32_t output_offset,
+		/* output_len = 32 */
+		uint32_t index);
 
 	/* -- crypto -- */
 	static void
