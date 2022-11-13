@@ -79,12 +79,10 @@ BuiltinFns::scs_hashset_clear(uint32_t key_offset
         addr_and_key, threshold, tx_ctx.get_src_tx_hash());
 }
 
-const& std::optional<StorageObject>
-get_hashset(uint32_t key_offset)
+std::optional<StorageObject>
+get_hashset(TransactionContext const& tx_ctx, uint32_t key_offset)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
-    auto& runtime = *tx_ctx.get_current_runtime();
+    auto const& runtime = *tx_ctx.get_current_runtime();
 
     auto key
         = runtime.template load_from_memory_to_const_size_buf<InvariantKey>(
@@ -92,7 +90,7 @@ get_hashset(uint32_t key_offset)
 
     auto addr_and_key = tx_ctx.get_storage_key(key);
 
-    auto const& res = tx_ctx.storage_proxy.get(addr_and_key);
+    auto res = tx_ctx.storage_proxy.get(addr_and_key);
 
     if (res.has_value()) {
         if (res->body.type() != ObjectType::HASH_SET) {
@@ -107,7 +105,9 @@ uint32_t
 BuiltinFns::scs_hashset_get_size(uint32_t key_offset
                                  /* key_len = 32 */)
 {
-    auto const& res = get_hashset(key_offset);
+    auto& tx_ctx
+        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto const& res = get_hashset(tx_ctx, key_offset);
 
     if (!res) {
         return 0;
@@ -120,7 +120,9 @@ uint32_t
 BuiltinFns::scs_hashset_get_max_size(uint32_t key_offset
                                      /* key_len = 32 */)
 {
-    auto const& res = get_hashset(key_offset);
+    auto& tx_ctx
+        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto const& res = get_hashset(tx_ctx, key_offset);
 
     if (!res) {
         return 0;
@@ -139,7 +141,9 @@ BuiltinFns::scs_hashset_get_index_of(uint32_t key_offset,
                                      /* key_len = 32 */
                                      uint64_t threshold)
 {
-    auto const& res = get_hashset(key_offset);
+    auto& tx_ctx
+        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto const& res = get_hashset(tx_ctx, key_offset);
 
     if (!res) {
         throw wasm_api::HostError("key nexist (no hashset)");
@@ -161,7 +165,9 @@ BuiltinFns::scs_hashset_get_index(uint32_t key_offset,
                                   /* output_len = 32 */
                                   uint32_t index)
 {
-    auto const& res = get_hashset(key_offset);
+    auto& tx_ctx
+        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto const& res = get_hashset(tx_ctx, key_offset);
 
     if (!res) {
         throw wasm_api::HostError("hashset not found");
@@ -169,16 +175,14 @@ BuiltinFns::scs_hashset_get_index(uint32_t key_offset,
 
     auto const& hs = res->body.hash_set().hashes;
 
-    if (hs.hashes.size() <= index) {
+    if (hs.size() <= index) {
         throw wasm_api::HostError("invalid hashset index");
     }
 
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
     auto& runtime = *tx_ctx.get_current_runtime();
 
     runtime.write_to_memory(
-        hs.hashes[i].hash.data(), output_offset, sizeof(Hash));
+        hs[index].hash, output_offset, sizeof(Hash));
 }
 
 } // namespace scs

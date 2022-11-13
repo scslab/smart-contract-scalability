@@ -21,7 +21,7 @@ StorageProxy::StorageProxy(StateDB& state_db, ModifiedKeysList& keys)
 	{}
 
 StorageProxy::value_t& 
-StorageProxy::get_local(AddressAndKey const& key)
+StorageProxy::get_local(AddressAndKey const& key) const
 {
 	auto it = cache.find(key);
 	if (it == cache.end())
@@ -33,7 +33,7 @@ StorageProxy::get_local(AddressAndKey const& key)
 }
 
 std::optional<StorageObject>
-StorageProxy::get(AddressAndKey const& key)
+StorageProxy::get(AddressAndKey const& key) const
 {
 	return get_local(key).applicator.get();
 }

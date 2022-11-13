@@ -7,6 +7,8 @@
 
 #include "xdr/storage.h"
 
+#include <algorithm>
+
 namespace scs {
 
 TEST_CASE("insert atomic set", "[hashset]")

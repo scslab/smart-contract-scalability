@@ -65,6 +65,12 @@ public:
 	wasm_api::WasmRuntime*
 	get_current_runtime();
 
+	wasm_api::WasmRuntime const*
+	get_current_runtime() const
+	{
+		return const_cast<TransactionContext*>(this)->get_current_runtime();
+	}
+
 	const MethodInvocation& 
 	get_current_method_invocation() const;
 

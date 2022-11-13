@@ -22,9 +22,9 @@ class StorageProxy
 
 	using value_t = StorageProxyValue;
 
-	std::map<AddressAndKey, value_t> cache;
+	mutable std::map<AddressAndKey, value_t> cache;
 
-	value_t& get_local(AddressAndKey const& key);
+	value_t& get_local(AddressAndKey const& key) const;
 
 	bool committed_local_values = false;
 
@@ -37,7 +37,7 @@ public:
 	StorageProxy(StateDB& state_db, ModifiedKeysList& keys);
 
 	std::optional<StorageObject>
-	get(AddressAndKey const& key);
+	get(AddressAndKey const& key) const;
 
 	void
 	raw_memory_write(AddressAndKey const& key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& bytes, delta_identifier_t id);
