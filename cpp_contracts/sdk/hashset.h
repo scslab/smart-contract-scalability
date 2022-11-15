@@ -63,7 +63,7 @@ hashset_get_index_of(
 
 // get the index'th item in the hashset
 BUILTIN("hashset_get_index")
-void
+uint64_t
 hashset_get_index(
 	uint32_t key_offset,
 	/* key_len = 32 */
@@ -134,17 +134,17 @@ hashset_get_index_of(
 		threshold);
 }
 
-Hash
+std::pair<uint64_t, Hash>
 hashset_get_index(
 	StorageKey const& key,
 	uint32_t index)
 {
 	Hash out;
-	detail::hashset_get_index(
+	uint64_t threshold = detail::hashset_get_index(
 		to_offset(&key),
 		to_offset(&out),
 		index);
-	return out;
+	return {threshold, out};
 }
 
 } /* sdk */

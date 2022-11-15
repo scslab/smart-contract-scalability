@@ -19,6 +19,9 @@ class BuiltinFns
 	static uint32_t
 	memcpy(uint32_t dst, uint32_t src, uint32_t sz);
 
+	static uint32_t
+	strnlen(uint32_t str, uint32_t max_len);
+
 	/* -- logging functions -- */
 
 	static void

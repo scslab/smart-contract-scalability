@@ -16,6 +16,8 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 		"memset");
 	runtime.template link_env<&BuiltinFns::memcpy>(
 		"memcpy");
+	runtime.template link_env<&BuiltinFns::strnlen>(
+		"strnlen");
 
 	/* -- logging functions -- */
 

@@ -34,4 +34,12 @@ BuiltinFns::memcpy(uint32_t dst, uint32_t src, uint32_t sz)
 	return runtime.safe_memcpy(dst, src, sz);
 }
 
+uint32_t
+BuiltinFns::strnlen(uint32_t str, uint32_t max_len)
+{
+	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	auto& runtime = *tx_ctx.get_current_runtime();
+	return runtime.safe_strlen(str, max_len);
+}
+
 } /* scs */

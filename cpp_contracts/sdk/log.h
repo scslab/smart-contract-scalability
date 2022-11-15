@@ -4,7 +4,9 @@
 #include "sdk/alloc.h"
 #include "sdk/concepts.h"
 
-#include <string>
+#include <string.h>
+
+#define LOG_MAX_STR_LEN 256
 
 namespace sdk
 {
@@ -14,7 +16,6 @@ namespace detail
 
 BUILTIN("log")
 void log(uint32_t offset, uint32_t len);
-
 
 BUILTIN("print_debug")
 void print_debug(uint32_t offset, uint32_t len);
@@ -41,9 +42,9 @@ void print(const char* str, uint32_t len)
 	detail::print_c_str(sdk::to_offset(str), len);
 }
 
-void print(std::string s)
+void print(const char* str)
 {
-	detail::print_c_str(sdk::to_offset(s.c_str()), s.size());
+	print(str, strnlen(str, LOG_MAX_STR_LEN));
 }
 
 } /* sdk */

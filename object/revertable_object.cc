@@ -634,8 +634,10 @@ RevertableObject::commit_round()
             {
                 uint64_t threshold = max_committed_clear_threshold.load(std::memory_order_relaxed);
 
+                clear_hashset(committed_base -> body.hash_set(), threshold);
+
                 // TODO they're sorted, so we can just truncate the list and avoid the iterator overhead
-                for (auto it = h_list.begin(); it != h_list.end();)
+                /*for (auto it = h_list.begin(); it != h_list.end();)
                 {
                     if (it -> index <= threshold)
                     {
@@ -644,7 +646,7 @@ RevertableObject::commit_round()
                     {
                         ++it;
                     }
-                }
+                } */
             }
 
             break;
