@@ -26,6 +26,6 @@ concept VectorLike
 {
 	object.data();
 	object.size();
-};
+} && !TriviallyCopyable<T>;
 
 } /* sdk */

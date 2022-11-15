@@ -38,6 +38,40 @@ hashset_clear(
 	/* key_len = 32 */,
 	uint64_t threshold);
 
+BUILTIN("hashset_get_size")
+uint32_t hashset_get_size(
+	uint32_t key_offset
+	/* key_len = 32 */);
+
+BUILTIN("hashset_get_max_size")
+uint32_t
+hashset_get_max_size(
+	uint32_t key_offset
+	/* key_len = 32 */);
+
+/**
+ *  if two things with same threshold, 
+ * returns lowest index.
+ * If none, returns UINT32_MAX
+ **/
+BUILTIN("hashset_get_index_of")
+uint32_t
+hashset_get_index_of(
+	uint32_t key_offset,
+	/* key_len = 32 */
+	uint64_t threshold);
+
+// get the index'th item in the hashset
+BUILTIN("hashset_get_index")
+void
+hashset_get_index(
+	uint32_t key_offset,
+	/* key_len = 32 */
+	uint32_t output_offset,
+	/* output_len = 32 */
+	uint32_t index);
+
+
 } /* detail */
 
 void hashset_insert(
@@ -69,6 +103,50 @@ hashset_clear(
 	detail::hashset_clear(
 		to_offset(&key),
 		threshold);
+}
+
+uint32_t
+hashset_get_size(
+	uint32_t key_offset,
+	StorageKey const& key)
+{
+	return detail::hashset_get_size(to_offset(&key));
+}
+
+uint32_t
+hashset_get_max_size(
+	uint32_t key_offset,
+	StorageKey const& key)
+{
+	return detail::hashset_get_max_size(to_offset(&key));
+}
+
+/**
+ *  if two things with same threshold, 
+ * returns lowest index.
+ * If none, returns UINT32_MAX
+ **/
+uint32_t
+hashset_get_index_of(
+	StorageKey const& key,
+	uint64_t threshold)
+{
+	return detail::hashset_get_index_of(
+		to_offset(&key),
+		threshold);
+}
+
+Hash
+hashset_get_index(
+	StorageKey const& key,
+	uint32_t index)
+{
+	Hash out;
+	detail::hashset_get_index(
+		to_offset(&key),
+		to_offset(&out),
+		index);
+	return out;
 }
 
 } /* sdk */

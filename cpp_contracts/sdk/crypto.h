@@ -52,6 +52,21 @@ void hash(T const& object, StorageKey& out)
 {
 	detail::hash(to_offset(object.data()), object.size(), to_offset(out.data()));
 }
+
+template<TriviallyCopyable T>
+Hash hash(T const& obj)
+{
+	Hash out;
+	detail::hash(to_offset(&obj), sizeof(T), to_offset(out.data()));
+	return out;
+}
+
+template<TriviallyCopyable T>
+void hash(T const& obj, StorageKey& out)
+{
+	detail::hash(to_offset(&obj), sizeof(T), to_offset(out.data()));
+}
+
 /*
 bool check_sig_ed25519(
 	const PublicKey& pk,
