@@ -158,7 +158,7 @@ BuiltinFns::scs_hashset_get_index_of(uint32_t key_offset,
     throw wasm_api::HostError("key nexist (not found in hashset)");
 }
 
-void
+uint64_t
 BuiltinFns::scs_hashset_get_index(uint32_t key_offset,
                                   /* key_len = 32 */
                                   uint32_t output_offset,
@@ -183,6 +183,8 @@ BuiltinFns::scs_hashset_get_index(uint32_t key_offset,
 
     runtime.write_to_memory(
         hs[index].hash, output_offset, sizeof(Hash));
+
+    return hs[index].index;
 }
 
 } // namespace scs

@@ -9,6 +9,8 @@
 
 #include "object/make_delta.h"
 
+#include "hash_set/utils.h"
+
 using xdr::operator==;
 
 namespace scs {
@@ -225,6 +227,7 @@ ProxyApplicator::try_apply(StorageDelta const& d)
         		return false;
         	}
         	current -> body.hash_set().hashes.push_back(d.hash());
+            normalize_hashset(current -> body.hash_set());
         	new_hashes.push_back(d.hash());
         	return true;
         }

@@ -5,6 +5,8 @@
 #include "object/object_defaults.h"
 #include "object/comparators.h"
 
+#include "hash_set/utils.h"
+
 using xdr::operator==;
 
 namespace scs {
@@ -625,7 +627,8 @@ RevertableObject::commit_round()
                           std::make_move_iterator(new_hashes_list.begin()),
                           std::make_move_iterator(new_hashes_list.end()));
 
-            std::sort(h_list.begin(), h_list.end(), std::greater<HashSetEntry>());
+            normalize_hashset(committed_base -> body.hash_set());
+            //std::sort(h_list.begin(), h_list.end(), std::greater<HashSetEntry>());
 
             if (hashset_clear_committed.load(std::memory_order_relaxed))
             {

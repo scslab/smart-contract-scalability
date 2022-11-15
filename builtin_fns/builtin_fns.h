@@ -176,7 +176,9 @@ class BuiltinFns
 		/* key_len = 32 */
 		uint64_t threshold);
 
-	static void
+	// returns threshold
+	static 
+	uint64_t
 	scs_hashset_get_index(
 		uint32_t key_offset,
 		/* key_len = 32 */
