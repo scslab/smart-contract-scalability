@@ -107,7 +107,6 @@ hashset_clear(
 
 uint32_t
 hashset_get_size(
-	uint32_t key_offset,
 	StorageKey const& key)
 {
 	return detail::hashset_get_size(to_offset(&key));
@@ -115,7 +114,6 @@ hashset_get_size(
 
 uint32_t
 hashset_get_max_size(
-	uint32_t key_offset,
 	StorageKey const& key)
 {
 	return detail::hashset_get_max_size(to_offset(&key));

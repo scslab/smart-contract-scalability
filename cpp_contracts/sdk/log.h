@@ -4,6 +4,8 @@
 #include "sdk/alloc.h"
 #include "sdk/concepts.h"
 
+#include <string>
+
 namespace sdk
 {
 
@@ -37,6 +39,11 @@ void print_debug(T const& val)
 void print(const char* str, uint32_t len)
 {
 	detail::print_c_str(sdk::to_offset(str), len);
+}
+
+void print(std::string s)
+{
+	detail::print_c_str(sdk::to_offset(s.c_str()), s.size());
 }
 
 } /* sdk */

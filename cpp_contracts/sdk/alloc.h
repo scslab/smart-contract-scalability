@@ -30,6 +30,13 @@ abort()
 
 #pragma GCC diagnostic pop
 
+void assert(bool x)
+{
+  if (!x)
+  {
+    abort();
+  }
+}
 /**
  * Taken from
  * https://github.com/microsoft/mimalloc/blob/master/include/mimalloc-new-delete.h
