@@ -382,14 +382,14 @@ TEST_CASE("hash set only", "[mutator]")
             check_invalid(make_hash_set_insert(make_hash(1), 0));
         }
 
-        SECTION("clear doesn't take effect until post")
+        SECTION("clear immediate effect")
         {
             check_valid(make_hash_set_insert(make_hash(0), 0));
             check_valid(make_hash_set_clear(0));
 
             check_invalid(make_hash_set_insert(make_hash(0), 0));
 
-            val_expect_hash(make_hash(0));
+            val_nexpect_hash(make_hash(0));
 
             auto res = applicator->get_deltas();
 
@@ -403,6 +403,15 @@ TEST_CASE("hash set only", "[mutator]")
             };
             REQUIRE(find_clear());
         }
+
+        SECTION("can't insert after clear")
+        {
+            check_valid(make_hash_set_insert(make_hash(0), 0));
+            check_valid(make_hash_set_clear(10));
+
+            check_invalid(make_hash_set_insert(make_hash(5), 5));
+
+            val_nexpect_hash(make_hash(5));        }
     }
 }
 

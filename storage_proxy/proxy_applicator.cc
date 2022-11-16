@@ -226,6 +226,12 @@ ProxyApplicator::try_apply(StorageDelta const& d)
         	{
         		return false;
         	}
+
+            if (hs_clear_threshold && *hs_clear_threshold >= d.hash().index)
+            {
+                return false;
+            }
+
         	current -> body.hash_set().hashes.push_back(d.hash());
             normalize_hashset(current -> body.hash_set());
         	new_hashes.push_back(d.hash());
@@ -249,7 +255,8 @@ ProxyApplicator::try_apply(StorageDelta const& d)
             {
                 hs_clear_threshold = std::max(d.threshold(), *hs_clear_threshold);
             }
-    		// clear does not take effect until next block;
+
+            clear_hashset(current -> body.hash_set(), *hs_clear_threshold);
     		return true;
     	}
         default:

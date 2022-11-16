@@ -35,7 +35,7 @@ TEST_CASE("hashset manipulation test contract", "[sdk][hashset]")
         = std::make_unique<BlockContext>(0);
 
 
-    auto make_tx = [&](uint32_t round) -> Hash {
+    auto make_tx = [&](uint32_t round, bool success = true) -> Hash {
 
         const uint64_t gas_bid = 1;
 
@@ -48,8 +48,16 @@ TEST_CASE("hashset manipulation test contract", "[sdk][hashset]")
 
         auto hash = hash_xdr(stx);
 
-        REQUIRE(exec_ctx.execute(hash, stx, *block_context)
-                == TransactionStatus::SUCCESS);
+        if (success)
+        {
+            REQUIRE(exec_ctx.execute(hash, stx, *block_context)
+                    == TransactionStatus::SUCCESS);
+        }
+        else
+        {
+            REQUIRE(exec_ctx.execute(hash, stx, *block_context)
+                    != TransactionStatus::SUCCESS);
+        }
 
         return hash;
     };
@@ -67,11 +75,32 @@ TEST_CASE("hashset manipulation test contract", "[sdk][hashset]")
         block_context = std::make_unique<BlockContext>(block_context -> block_number + 1);
     };
 
-    auto tx0 = make_tx(0);
+    SECTION("good manips")
+    {
+        auto tx0 = make_tx(0);
 
-    finish_block();
-    check_valid(tx0);
-    advance_block();
+        finish_block();
+        check_valid(tx0);
+        advance_block();
+
+        auto tx2 = make_tx(2);
+        
+        finish_block();
+        check_valid(tx2);
+        advance_block();
+    }
+
+    SECTION("bad manips")
+    {
+        // prevent the degenerate case of contract calling clear(),
+        // and then inserting something that would be cleared -- by common sense,
+        // the contract should see this write, but then this write will never be materialized after
+        // the block.  This would just be weird.
+        SECTION("insert after clear")
+        {
+            make_tx(1, false);
+        }
+    }
 
 }
 
