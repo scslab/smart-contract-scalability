@@ -25,7 +25,6 @@ impl metered_contract {
 
 #[no_mangle]
 pub extern "C" fn add_metering_ext(data_ptr: *const u8, len: u32) -> metered_contract {
-    println!("start add_metering_ext");
     if data_ptr == std::ptr::null_mut() {
         return metered_contract::null();
     }
@@ -39,18 +38,16 @@ pub extern "C" fn add_metering_ext(data_ptr: *const u8, len: u32) -> metered_con
             return metered_contract::null();
         }
     } {
+        // https://doc.rust-lang.org/std/mem/fn.forget.html
         Some(v) => std::mem::ManuallyDrop::new(v),
         None => {
             return metered_contract::null();
         }
     };
-    println!("did the add metering");
 
     let ptr = vec.as_mut_ptr();
     let len = vec.len();
     let capacity = vec.capacity();
-
-    println!("res len {}", len);
 
     metered_contract {
         data: ptr,
@@ -61,7 +58,6 @@ pub extern "C" fn add_metering_ext(data_ptr: *const u8, len: u32) -> metered_con
 
 #[no_mangle]
 pub extern "C" fn free_metered_contract(contract: metered_contract) {
-    println!("freeing contract");
     if contract.data == std::ptr::null_mut() {
         return;
     }
@@ -76,12 +72,10 @@ pub extern "C" fn free_metered_contract(contract: metered_contract) {
 }
 
 pub fn add_metering(buf: &[u8]) -> Option<Vec<u8>> {
-    println!("start metering");
     let module = match Module::from_bytes(buf) {
         Ok(module) => module,
         Err(_) => return None,
     };
-    println!("parsed module");
 
     let rules = DefaultRules::default();
 
@@ -89,7 +83,6 @@ pub fn add_metering(buf: &[u8]) -> Option<Vec<u8>> {
         Ok(metered_module) => metered_module,
         Err(_) => return None,
     };
-    println!("did metering");
 
     return out_mod.into_bytes().ok();
 }

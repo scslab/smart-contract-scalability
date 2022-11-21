@@ -198,7 +198,7 @@ LDADD = $(xdrpp_LIBS) \
 
 metering/target/release/libinject_metering.a : metering/inject_metering/src/*.rs
 	cd metering && \
-	cargo build --release
+	cargo build --release --package inject_metering
 
 $(SRCS:.cc=.o) : $(XH_FILES)
 $(TESTS_CCS:.cc=.o) : $(XH_FILES)
