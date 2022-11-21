@@ -7,10 +7,11 @@ namespace detail {
 extern "C"
 {
 
-    // does NOT take ownership of data
-    metered_contract add_metering_ext(uint8_t const* data, uint32_t len);
+// does NOT take ownership of data
+metered_contract add_metering_ext(uint8_t const* data, uint32_t len);
 
-    void free_metered_contract(metered_contract contract);
+void free_metered_contract(metered_contract contract);
+
 }
 
 } // namespace detail

@@ -11,7 +11,7 @@ namespace scs {
 
 namespace detail {
 
-// meters metering/inject_metering/src/lib.rs:metered_contract
+// matches metering/inject_metering/src/lib.rs:metered_contract
 struct metered_contract
 {
     uint8_t* data;
