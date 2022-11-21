@@ -217,4 +217,7 @@ test_SOURCES = main/test.cc $(COMPLETE_SRCS)
 
 test_LDFLAGS= -Wl,-force_load $(merkle_trie_toolkit_LIBS)
 
+clean-local:
+	cd metering && \
+	cargo clean
 
