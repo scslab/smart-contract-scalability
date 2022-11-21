@@ -1,0 +1,11 @@
+[package]
+name = "cmd"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+inject_metering = {path = "../inject_metering"}
+
+[[bin]]
+name = "metering_cmd"
+path = "src/main.rs"
