@@ -70,6 +70,10 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 		"scs",
 		"get_invoked_tx_hash");
 
+	runtime.template link_fn<&BuiltinFns::scs_gas>(
+		"scs",
+		"gas");
+
 	/* -- general storage -- */
 	runtime.template link_fn<&BuiltinFns::scs_has_key>(
 		"scs",

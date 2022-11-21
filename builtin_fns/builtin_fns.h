@@ -84,6 +84,9 @@ class BuiltinFns
 		uint32_t hash_offset
 		/* hash_len = 32 */);
 
+	static void
+	scs_gas(uint64_t consumed_gas);
+
 	/* -- general storage -- */
 	static uint32_t
 	scs_has_key(uint32_t key_offset

@@ -44,6 +44,8 @@ class TransactionContext
 
 public:
 
+	void consume_gas(uint64_t gas_to_consume);
+
 	std::vector<uint8_t> return_buf;
 
 	std::unique_ptr<TransactionResults> tx_results;

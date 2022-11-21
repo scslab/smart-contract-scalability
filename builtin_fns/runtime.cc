@@ -142,4 +142,12 @@ BuiltinFns::scs_get_invoked_tx_hash(
 	runtime.write_to_memory(h, hash_offset, sizeof(Hash));
 }
 
+void
+BuiltinFns::scs_gas(
+	uint64_t consumed_gas)
+{
+	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	tx_ctx.consume_gas(consumed_gas);
+}
+
 } /* scs */
