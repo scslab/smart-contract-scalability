@@ -36,7 +36,7 @@ deploy_and_commit_contractdb(ContractDB& contract_db,
 
     contract_db.commit();
 
-    REQUIRE(contract_db.get_script(addr, nullptr));
+    REQUIRE(contract_db.get_script(addr, nullptr).data);
 }
 
 } // namespace test

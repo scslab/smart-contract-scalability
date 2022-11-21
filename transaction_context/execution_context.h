@@ -10,11 +10,10 @@
 
 #include "xdr/transaction.h"
 
-#include "transaction_context/global_context.h"
-
 namespace scs {
 
 class BlockContext;
+class GlobalContext;
 
 class ExecutionContext
 {
@@ -28,13 +27,7 @@ class ExecutionContext
 
     std::unique_ptr<TransactionResults> results_of_last_tx;
 
-    ExecutionContext(GlobalContext& scs_data_structures)
-        : wasm_context(scs_data_structures.contract_db, MAX_STACK_BYTES)
-        , scs_data_structures(scs_data_structures)
-        , active_runtimes()
-        , tx_context(nullptr)
-        , results_of_last_tx(nullptr)
-    {}
+    ExecutionContext(GlobalContext& scs_data_structures);
 
     friend class ThreadlocalContextStore;
     friend class BuiltinFns;

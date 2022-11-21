@@ -28,12 +28,17 @@ UncommittedContracts::undo_deploy_contract_to_address(
 
 void
 UncommittedContracts::add_new_contract(
-    std::shared_ptr<const Contract> new_contract)
+    wasm_api::Hash const& h,
+    std::shared_ptr<const MeteredContract> new_contract)
 {
-    Hash h = hash_xdr(*new_contract);
     std::lock_guard lock(mtx);
 
-    new_contracts.emplace(h, new_contract);
+    auto [_, inserted] = new_contracts.emplace(h, new_contract);
+
+    if (!inserted)
+    {
+        throw std::runtime_error("invalid add_new_contract (already existed)");
+    }
 }
 
 void

@@ -13,11 +13,22 @@
 
 #include "storage_proxy/transaction_rewind.h"
 
+#include "transaction_context/global_context.h"
+
 #include "utils/defer.h"
 
 #include <utils/time.h>
 
 namespace scs {
+
+ExecutionContext::ExecutionContext(GlobalContext& scs_data_structures)
+    : wasm_context(scs_data_structures.contract_db, MAX_STACK_BYTES)
+    , scs_data_structures(scs_data_structures)
+    , active_runtimes()
+    , tx_context(nullptr)
+    , results_of_last_tx(nullptr)
+{}
+
 
 void
 ExecutionContext::invoke_subroutine(MethodInvocation const& invocation)

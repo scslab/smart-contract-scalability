@@ -1,5 +1,7 @@
 #pragma once
 
+#include "metering_ffi/metered_contract.h"
+
 #include "xdr/storage.h"
 #include "xdr/storage_delta.h"
 #include "xdr/types.h"
@@ -20,8 +22,10 @@ class ContractDB;
 
 class UncommittedContracts : public utils::NonMovableOrCopyable
 {
+    using metered_contract_ptr_t = std::shared_ptr<const MeteredContract>;
+
     // map contract hash to contract
-    std::map<wasm_api::Hash, std::shared_ptr<const Contract>> new_contracts;
+    std::map<wasm_api::Hash, metered_contract_ptr_t> new_contracts;
 
     // map address to contract hash
     std::map<wasm_api::Hash, wasm_api::Hash> new_deployments;
@@ -36,7 +40,7 @@ class UncommittedContracts : public utils::NonMovableOrCopyable
 
     void undo_deploy_contract_to_address(wasm_api::Hash const& addr);
 
-    void add_new_contract(std::shared_ptr<const Contract> new_contract);
+    void add_new_contract(wasm_api::Hash const& h, std::shared_ptr<const MeteredContract> new_contract);
 
     void commit(ContractDB& contract_db);
 

@@ -34,6 +34,10 @@ class MeteredContract : public utils::NonMovableOrCopyable
     uint8_t const* data() const { return base.data; }
 
     uint32_t size() const { return base.len; }
+
+    operator bool() const {
+        return base.data != nullptr;
+    }
 };
 
 } // namespace scs

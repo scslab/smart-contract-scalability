@@ -15,6 +15,8 @@
 
 #include <mtt/trie/merkle_trie.h>
 
+#include "metering_ffi/metered_contract.h"
+
 namespace scs {
 
 class ContractDB
@@ -26,15 +28,17 @@ class ContractDB
         sizeof(wasm_api::Hash) == sizeof(Address),
         "mismatch between addresses in scs and addresses in wasm api");
 
+    using metered_contract_ptr_t = std::shared_ptr<const MeteredContract>;
+
     struct value_struct
     {
-        std::shared_ptr<const Contract> contract;
+        metered_contract_ptr_t contract;
 
         void copy_data(std::vector<uint8_t>& buf) const
         {
             if (contract)
             {
-                buf.insert(buf.end(), contract->begin(), contract->end());
+                buf.insert(buf.end(), contract->data(), contract->data() + contract->size());
             }
         }
     };
@@ -50,7 +54,7 @@ class ContractDB
     //    = std::map<wasm_api::Hash, std::shared_ptr<const Contract>>;
 
     contract_map_t addresses_to_contracts_map;
-    std::map<wasm_api::Hash, std::shared_ptr<const Contract>> hashes_to_contracts_map;
+    std::map<wasm_api::Hash, metered_contract_ptr_t> hashes_to_contracts_map;
 
     UncommittedContracts uncommitted_contracts;
 
@@ -61,7 +65,7 @@ class ContractDB
     friend class UncommittedContracts;
 
     void commit_contract_to_db(wasm_api::Hash const& contract_hash,
-                               std::shared_ptr<const Contract> new_contract);
+                               metered_contract_ptr_t new_contract);
 
     void commit_registration(wasm_api::Hash const& new_address,
                              wasm_api::Hash const& contract_hash);
@@ -80,14 +84,15 @@ class ContractDB
                                wasm_api::Hash const& script_hash);
 
     void add_new_uncommitted_contract(
-        std::shared_ptr<const Contract> new_contract);
+        wasm_api::Hash const& h,
+        std::shared_ptr<const MeteredContract> new_contract);
 
-    const std::vector<uint8_t>* get_script_by_hash(const wasm_api::Hash& hash) const;
+    wasm_api::Script get_script_by_hash(const wasm_api::Hash& hash) const;
 
   public:
     ContractDB();
 
-    const std::vector<uint8_t>* get_script(
+    wasm_api::Script get_script(
         wasm_api::Hash const& addr,
         const wasm_api::script_context_t&) const override final;
 

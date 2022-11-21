@@ -11,14 +11,17 @@
 namespace scs {
 
 ContractCreateClosure::ContractCreateClosure(
-    std::shared_ptr<const Contract> contract,
+    wasm_api::Hash h, 
+    std::shared_ptr<const MeteredContract> contract,
     ContractDB& contract_db)
-    : contract(contract)
+    : h(h)
+    , contract(contract)
     , contract_db(contract_db)
 {}
 
 ContractCreateClosure::ContractCreateClosure(ContractCreateClosure&& other)
-    : contract(other.contract)
+    : h(other.h)
+    , contract(other.contract)
     , contract_db(other.contract_db)
     , do_create(other.do_create)
 {
@@ -34,7 +37,7 @@ ContractCreateClosure::commit()
 ContractCreateClosure::~ContractCreateClosure()
 {
     if (do_create) {
-        contract_db.add_new_uncommitted_contract(std::move(contract));
+        contract_db.add_new_uncommitted_contract(h, std::move(contract));
     }
 }
 
@@ -114,14 +117,14 @@ Hash
 ContractDBProxy::create_contract(std::shared_ptr<const Contract> contract)
 {
     Hash h = hash_xdr(*contract);
-    new_contracts[h] = contract;
+    new_contracts[h] = std::make_unique<const MeteredContract>(contract);
     return h;
 }
 
 ContractCreateClosure
-ContractDBProxy::push_create_contract(std::shared_ptr<const Contract> contract)
+ContractDBProxy::push_create_contract(wasm_api::Hash const& h, std::shared_ptr<const MeteredContract> contract)
 {
-    return ContractCreateClosure(contract, contract_db);
+    return ContractCreateClosure(h, contract, contract_db);
 }
 
 bool
@@ -140,18 +143,18 @@ ContractDBProxy::push_updates_to_db(TransactionRewind& rewind)
     }
 
     for (auto const& [hash, script] : new_contracts) {
-        rewind.add(push_create_contract(script));
+        rewind.add(push_create_contract(hash, script));
     }
     return true;
 }
 
-const std::vector<uint8_t>*
+wasm_api::Script
 ContractDBProxy::get_script(const wasm_api::Hash& address) const
 {
     auto it = new_deployments.find(address);
 
     if (it == new_deployments.end()) {
-        return nullptr;
+        return wasm_api::null_script;
     }
 
     auto const& script_hash = it->second;
@@ -160,7 +163,7 @@ ContractDBProxy::get_script(const wasm_api::Hash& address) const
     if (s_it == new_contracts.end()) {
         return contract_db.get_script_by_hash(script_hash);
     }
-    return s_it->second.get();
+    return {s_it->second->data(), s_it -> second-> size() };
 }
 
 void

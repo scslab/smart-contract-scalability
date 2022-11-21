@@ -26,16 +26,16 @@ ContractDB::assert_not_uncommitted_modifications() const
 }
 
 
-const std::vector<uint8_t>*
+wasm_api::Script
 ContractDB::get_script(wasm_api::Hash const& addr,
                        const wasm_api::script_context_t& context) const
 {
     const ContractDBProxy* proxy = static_cast<const ContractDBProxy*>(context);
 
     if (proxy != nullptr) {
-        auto const* res = proxy->get_script(addr);
+        auto res = proxy->get_script(addr);
 
-        if (res) {
+        if (res.data) {
             return res;
         }
     }
@@ -43,10 +43,18 @@ ContractDB::get_script(wasm_api::Hash const& addr,
     auto const* contract = addresses_to_contracts_map.get_value_nolocks(addr);
     if (contract == nullptr)
     {
-        return nullptr;
+        return wasm_api::null_script;
     }
 
-    return contract -> contract.get();
+    auto const* metered_script_out = contract -> contract.get();
+
+    if (metered_script_out == nullptr || metered_script_out -> data() == nullptr)
+    {
+        throw std::runtime_error("invalid script stored within ContractDB!");
+    }
+
+    return { metered_script_out -> data(), metered_script_out -> size()};
+
     /*
     auto it = hashes_to_contracts_map.find(addr);
     if (it == hashes_to_contracts_map.end()) {
@@ -55,19 +63,19 @@ ContractDB::get_script(wasm_api::Hash const& addr,
     return it->second.get(); */
 }
 
-const std::vector<uint8_t>* 
+wasm_api::Script
 ContractDB::get_script_by_hash(const wasm_api::Hash& hash) const
 {
     auto it = hashes_to_contracts_map.find(hash);
     if (it == hashes_to_contracts_map.end()) {
-        return nullptr;
+        return {nullptr, 0};
     }
-    return it->second.get();
+    return { it->second.get()->data(), it -> second.get()->size() };
 }
 
 void
 ContractDB::commit_contract_to_db(wasm_api::Hash const& contract_hash,
-                                  std::shared_ptr<const Contract> new_contract)
+                                  metered_contract_ptr_t new_contract)
 {
     //std::printf("commit contract to db %s\n", debug::array_to_str(contract_hash).c_str());
     auto res = hashes_to_contracts_map.emplace(contract_hash, new_contract);
@@ -126,10 +134,11 @@ ContractDB::check_committed_contract_exists(const Hash& contract_hash) const
 
 void
 ContractDB::add_new_uncommitted_contract(
-    std::shared_ptr<const Contract> new_contract)
+    wasm_api::Hash const& h, 
+    std::shared_ptr<const MeteredContract> new_contract)
 {
     has_uncommitted_modifications.store(true, std::memory_order_relaxed);
-    uncommitted_contracts.add_new_contract(new_contract);
+    uncommitted_contracts.add_new_contract(h, new_contract);
 }
 
 bool
