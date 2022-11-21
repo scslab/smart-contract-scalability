@@ -1,4 +1,3 @@
-
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
@@ -10,8 +9,8 @@ fn main() {
     println!("{:?}", args);
 
     if args.len() != 3 {
-    	println!("invalid arg count");
-    	return;
+        println!("invalid arg count");
+        return;
     }
 
     let wasm_file = &args[1];
@@ -22,14 +21,15 @@ fn main() {
     f.read_to_end(&mut buffer).expect("read to end");
 
     let out_mod = match inject_metering::add_metering(&buffer) {
-    	Some(m) => m,
-    	None => {println!("metering failed"); return; },
+        Some(m) => m,
+        None => {
+            println!("metering failed");
+            return;
+        }
     };
 
     let out_filename = &args[2];
 
     let mut out_f = File::create(out_filename).expect("opened");
     out_f.write_all(&out_mod).ok();
-
-
 }

@@ -8,4 +8,4 @@ wasm-instrument = "0.3.0"
 parity-wasm = "0.45.0"
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["cdylib", "staticlib", "rlib"]

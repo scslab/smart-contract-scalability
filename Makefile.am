@@ -63,6 +63,9 @@ HASH_SET_SRCS = \
 HASH_SET_TEST_SRCS = \
 	hash_set/tests/test_atomic_set.cc
 
+METERING_FFI_SRCS = \
+	metering_ffi/metered_contract.cc
+
 OBJECT_SRCS = \
 	object/comparators.cc \
 	object/make_delta.cc \
@@ -106,6 +109,7 @@ SRCS = \
 	$(DEBUG_SRCS) \
 	$(EXPERIMENTS_SRCS) \
 	$(HASH_SET_SRCS) \
+	$(METERING_FFI_SRCS) \
 	$(OBJECT_SRCS) \
 	$(PHASE_SRCS) \
 	$(STATE_DB_SRCS) \
@@ -189,11 +193,16 @@ LDADD = $(xdrpp_LIBS) \
 	$(lmdb_LIBS) \
 	$(merkle_trie_toolkit_LIBS) \
 	$(wasm_api_LIBS) \
-	$(Catch2_LIBS)
+	$(Catch2_LIBS) \
+	./metering/target/release/libinject_metering.a
+
+metering/target/release/libinject_metering.a : metering/inject_metering/src/*.rs
+	cd metering && \
+	cargo build --release
 
 $(SRCS:.cc=.o) : $(XH_FILES)
 $(TESTS_CCS:.cc=.o) : $(XH_FILES)
-$(MAIN_CCS:.cc=.o) : $(XH_FILES)
+$(MAIN_CCS:.cc=.o) : $(XH_FILES) metering/target/release/libinject_metering.a
 
 bin_PROGRAMS = \
 	test
