@@ -76,8 +76,4 @@ DECL_COST_STATIC(check_sig_ed25519, 10000);
 DECL_COST_LINEAR(create_contract, 10000, 100);
 DECL_COST_STATIC(deploy_contract, 100);
 
-
-
-
-
 }

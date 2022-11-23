@@ -1,5 +1,6 @@
 #include "sdk/types.h"
 #include "sdk/nonnegative_int64.h"
+#include "sdk/delete.h"
 
 namespace sdk
 {
@@ -18,6 +19,30 @@ public:
 	void acquire()
 	{
 		int64_set_add(key, count, -1);
+	}
+};
+
+template<uint32_t count = 1>
+class TransientSemaphore
+{
+	const sdk::StorageKey key;
+	bool acquired = false;
+
+public:
+
+	constexpr TransientSemaphore(sdk::StorageKey k)
+		: key(std::move(k))
+		{}
+
+	void acquire()
+	{
+		int64_set_add(key, count, -1);
+		acquired = true;
+	}
+
+	~TransientSemaphore()
+	{
+		delete_last(key);
 	}
 };
 

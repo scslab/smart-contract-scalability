@@ -154,6 +154,7 @@ contracts/built_wasms/%.wasm : $(wildcard contracts/*/src/*.rs) $(wildcard rust_
 
 CC_WASMS = \
 	cpp_contracts/erc20.cc \
+	cpp_contracts/erc721.cc \
 	cpp_contracts/test_hashset.cc \
 	cpp_contracts/test_hashset_manipulation.cc \
 	cpp_contracts/test_gas_limit.cc \
