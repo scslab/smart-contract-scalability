@@ -9,9 +9,13 @@
 #include "utils/load_wasm.h"
 #include "utils/make_calldata.h"
 
+#include "vm/genesis.h"
+
 #include "debug/debug_utils.h"
 
 #include "threadlocal/threadlocal_context.h"
+
+#include "xdr/types.h"
 
 using namespace scs;
 
@@ -202,6 +206,36 @@ TEST_CASE("semaphore", "[sdk]")
         return hash;
     };
 
+    auto make_transient_semaphore_tx = [&](bool success = true) -> Hash
+    {
+        calldata_0 data
+        {
+        };
+
+
+        const uint64_t gas_bid = 1;
+
+        TransactionInvocation invocation(h, 3, make_calldata(data));
+
+        Transaction tx = Transaction(
+            invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());
+        
+        SignedTransaction stx;
+        stx.tx = tx;
+        
+        auto hash = hash_xdr(stx);
+
+        if (success) {
+            REQUIRE(exec_ctx.execute(hash, stx, *block_context)
+                    == TransactionStatus::SUCCESS);
+        } else {
+            REQUIRE(exec_ctx.execute(hash, stx, *block_context)
+                    != TransactionStatus::SUCCESS);
+        }
+
+        return hash;
+    };
+
     auto finish_block = [&]() {
         phase_finish_block(scs_data_structures, *block_context);
     };
@@ -211,6 +245,17 @@ TEST_CASE("semaphore", "[sdk]")
     	block_context = std::make_unique<BlockContext>(block_context -> block_number + 1);
     };
 
+    auto make_addrkey = [](const Address& a, const InvariantKey& k)
+    {
+        AddressAndKey out;
+        std::memcpy(out.data(), a.data(), a.size());
+        std::memcpy(out.data() + a.size(), k.data(), k.size());
+        return out;
+    };
+
+    auto sem_addr = make_addrkey(h, make_address(0, 1, 0, 0));
+    auto sem2_addr = make_addrkey(h, make_address(1, 1, 0, 0));
+
     SECTION("one ok")
     {
     	make_semaphore_tx();
@@ -219,6 +264,7 @@ TEST_CASE("semaphore", "[sdk]")
     	make_semaphore_tx(false);
 
     	finish_block();
+
     }
     SECTION("next block ok")
     {
@@ -235,11 +281,39 @@ TEST_CASE("semaphore", "[sdk]")
     	make_semaphore_tx();
 
     	finish_block();
+
+        REQUIRE(!!scs_data_structures.state_db.get_committed_value(sem_addr));
+        REQUIRE(scs_data_structures.state_db.get_committed_value(sem_addr) -> body.nonnegative_int64() == 0);
+
     }
-    SECTION("double semaphhore 2 ok")
+    SECTION("double semaphore 2 ok")
     {
     	make_semaphore2_tx();
     	make_semaphore2_tx();
     	make_semaphore2_tx(false);
+        finish_block();
+        
+        REQUIRE(!!scs_data_structures.state_db.get_committed_value(sem2_addr));
+        REQUIRE(scs_data_structures.state_db.get_committed_value(sem2_addr) -> body.nonnegative_int64() == 0);
+    }
+
+    auto transient_addr = make_addrkey(h, make_address(2, 1, 0, 0));
+
+    SECTION("transient semaphore leaves nothing behind")
+    {
+        make_transient_semaphore_tx();
+
+        finish_block();
+
+        REQUIRE(!scs_data_structures.state_db.get_committed_value(transient_addr));
+    }
+    SECTION("transient semaphore conflict")
+    {
+        make_transient_semaphore_tx();
+        make_transient_semaphore_tx(false);
+
+        finish_block();
+
+        REQUIRE(!scs_data_structures.state_db.get_committed_value(transient_addr));
     }
 }

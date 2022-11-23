@@ -23,3 +23,9 @@ semaphore2()
 	s2.acquire();
 }
 
+EXPORT("pub03000000")
+transientSemaphore()
+{
+	sdk::TransientSemaphore (sdk::make_static_key(2, 1)).acquire();
+}
+

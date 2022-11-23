@@ -174,9 +174,16 @@ CC_WASMS = \
 		-std=gnu++2a \
 		-nostdlib \
 		-nostdlib++ \
-		-mbulk-memory \
 		-Wl,--no-entry -fno-exceptions -Wl,--allow-undefined \
 		wasi/wasi-sdk/lib/clang/13.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
+
+#TODO parity-wasm serialization doesn't support bulk memory ops
+# This ruins the metering (it outputs wasm in an invalid section ordering)
+# Could fix if I care
+# https://github.com/WebAssembly/bulk-memory-operations/blob/master/proposals/bulk-memory-operations/Overview.md
+# https://github.com/paritytech/parity-wasm/blob/b760a74d4b533adb01c52fb5a91d59ab87587097/src/elements/module.rs#L635
+# add this flag to compile flags to enable (for wasm)
+#		-mbulk-memory
 
 $(CC_WASMS:.cc=.wasm) : $(wildcard cpp_contracts/sdk/*.h)
 
