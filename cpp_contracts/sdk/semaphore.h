@@ -26,7 +26,6 @@ template<uint32_t count = 1>
 class TransientSemaphore
 {
 	const sdk::StorageKey key;
-	bool acquired = false;
 
 public:
 
@@ -37,7 +36,6 @@ public:
 	void acquire()
 	{
 		int64_set_add(key, count, -1);
-		acquired = true;
 	}
 
 	~TransientSemaphore()

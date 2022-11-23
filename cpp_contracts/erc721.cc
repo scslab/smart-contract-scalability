@@ -46,7 +46,7 @@ get_approval_key(Hash const& nft)
 {
 	StorageKey out;
 	approval_key_buf[0] = 0;
-	std::memcpy(approval_key_buf.data(), nft.data(), nft.size());
+	std::memcpy(approval_key_buf.data() + 1, nft.data(), nft.size());
 	sdk::hash(approval_key_buf, out);
 	return out;
 }
@@ -57,7 +57,7 @@ StorageKey owner_key(Hash const& nft)
 {
 	StorageKey out;
 	owner_key_buf[0] = 1;
-	std::memcpy(owner_key_buf.data(), nft.data(), nft.size());
+	std::memcpy(owner_key_buf.data() + 1, nft.data(), nft.size());
 	sdk::hash(owner_key_buf, out);
 	return out;
 }
@@ -68,7 +68,7 @@ StorageKey get_transfer_semaphore_key(Hash const& nft)
 {
 	StorageKey out;
 	transfer_semaphore_key_buf[0] = 2;
-	std::memcpy(transfer_semaphore_key_buf.data(), nft.data(), nft.size());
+	std::memcpy(transfer_semaphore_key_buf.data() + 1, nft.data(), nft.size());
 	sdk::hash(transfer_semaphore_key_buf, out);
 	return out;
 }
