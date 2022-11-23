@@ -168,7 +168,7 @@ CC_WASMS = \
 	cpp_contracts/payment_experiment/payment.cc \
 	cpp_contracts/payment_channel.cc
 
-.cc.wasm:
+.cc.wasm: Makefile.am
 	wasi/wasi-sdk/bin/clang -Os -mtune=native -march=native -I./cpp_contracts/ $< -o $@ \
 		--sysroot=wasi/wasi-sdk/share/wasi-sysroot \
 		-std=gnu++2a \
