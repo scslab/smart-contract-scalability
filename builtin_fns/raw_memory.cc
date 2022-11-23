@@ -1,4 +1,5 @@
 #include "builtin_fns/builtin_fns.h"
+#include "builtin_fns/gas_costs.h"
 
 #include "debug/debug_macros.h"
 #include "debug/debug_utils.h"
@@ -27,6 +28,8 @@ BuiltinFns::scs_raw_memory_set(
 	uint32_t mem_len)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	tx_ctx.consume_gas(gas_raw_memory_set(mem_len));
+
 	auto& runtime = *tx_ctx.get_current_runtime();
 	
 	auto key = runtime.template load_from_memory_to_const_size_buf<InvariantKey>(key_offset);
@@ -51,6 +54,8 @@ BuiltinFns::scs_raw_memory_get(
 	uint32_t output_max_len)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	tx_ctx.consume_gas(gas_raw_memory_get(output_max_len));
+
 	auto& runtime = *tx_ctx.get_current_runtime();
 	
 	auto key = runtime.template load_from_memory_to_const_size_buf<InvariantKey>(key_offset);
@@ -82,6 +87,8 @@ BuiltinFns::scs_raw_memory_get_len(
 	/* key_len = 32 */)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	tx_ctx.consume_gas(gas_raw_memory_get_len);
+
 	auto& runtime = *tx_ctx.get_current_runtime();
 
 	auto key = runtime.template load_from_memory_to_const_size_buf<InvariantKey>(key_offset);

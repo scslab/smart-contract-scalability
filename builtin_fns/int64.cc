@@ -1,4 +1,5 @@
 #include "builtin_fns/builtin_fns.h"
+#include "builtin_fns/gas_costs.h"
 
 #include "debug/debug_macros.h"
 #include "debug/debug_utils.h"
@@ -27,6 +28,8 @@ BuiltinFns::scs_nonnegative_int64_set_add(
 		int64_t delta)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	tx_ctx.consume_gas(gas_nonnegative_int64_set_add);
+
 	auto& runtime = *tx_ctx.get_current_runtime();
 	
 	auto key = runtime.template load_from_memory_to_const_size_buf<InvariantKey>(key_offset);
@@ -43,6 +46,8 @@ BuiltinFns::scs_nonnegative_int64_add(
 	int64_t delta)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	tx_ctx.consume_gas(gas_nonnegative_int64_add);
+
 	auto& runtime = *tx_ctx.get_current_runtime();
 	
 	auto key = runtime.template load_from_memory_to_const_size_buf<InvariantKey>(key_offset);
@@ -63,6 +68,8 @@ BuiltinFns::scs_nonnegative_int64_get(
 	/* output_len = 8 */)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	tx_ctx.consume_gas(gas_nonnegative_int64_get);
+
 	auto& runtime = *tx_ctx.get_current_runtime();
 	
 	auto key = runtime.template load_from_memory_to_const_size_buf<InvariantKey>(key_offset);

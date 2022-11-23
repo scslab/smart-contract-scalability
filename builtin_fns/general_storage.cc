@@ -1,4 +1,5 @@
 #include "builtin_fns/builtin_fns.h"
+#include "builtin_fns/gas_costs.h"
 
 #include "threadlocal/threadlocal_context.h"
 
@@ -17,6 +18,8 @@ BuiltinFns::scs_has_key(
 	/* key_len = 32 */)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	tx_ctx.consume_gas(gas_has_key);
+
 	auto& runtime = *tx_ctx.get_current_runtime();
 	
 	auto key = runtime.template load_from_memory_to_const_size_buf<InvariantKey>(key_offset);

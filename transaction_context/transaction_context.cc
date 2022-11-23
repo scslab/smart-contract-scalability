@@ -151,7 +151,8 @@ TransactionContext::get_witness(uint64_t wit_idx) const
 
 void
 TransactionContext::consume_gas(uint64_t consumed_gas) 
-{    
+{   
+    //std::printf("consume gas %" PRIu64 " += %" PRIu64 " of %" PRIu64 "\n", gas_used, consumed_gas, tx.tx.gas_limit);
     if (__builtin_add_overflow_p(gas_used, consumed_gas, static_cast<uint64_t>(0)))
     {
         throw wasm_api::HostError("gas consumption overflow");

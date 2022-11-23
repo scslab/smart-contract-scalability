@@ -1,4 +1,5 @@
 #include "builtin_fns/builtin_fns.h"
+#include "builtin_fns/gas_costs.h"
 
 #include "crypto/hash.h"
 #include "crypto/crypto_utils.h"
@@ -32,6 +33,8 @@ BuiltinFns::scs_hash(
 	/* output_len = 32 */)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	tx_ctx.consume_gas(gas_hash);
+
 	auto& runtime = *tx_ctx.get_current_runtime();
 
 	auto data = runtime.template load_from_memory<xdr::opaque_vec<MAX_HASH_LEN>>(input_offset, input_len);
@@ -57,6 +60,8 @@ BuiltinFns::scs_check_sig_ed25519(
 	static_assert(sizeof(Signature) == 64, "expected 64 byte sig");
 
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	tx_ctx.consume_gas(gas_check_sig_ed25519);
+	
 	auto& runtime = *tx_ctx.get_current_runtime();
 
 	auto pk = runtime.template load_from_memory_to_const_size_buf<PublicKey>(pk_offset);

@@ -1,14 +1,9 @@
 #include "builtin_fns/builtin_fns.h"
+#include "builtin_fns/gas_costs.h"
 
 #include "threadlocal/threadlocal_context.h"
 
 #include "transaction_context/execution_context.h"
-#include "transaction_context/method_invocation.h"
-
-#include "wasm_api/error.h"
-
-#include "xdr/storage.h"
-#include "xdr/storage_delta.h"
 
 #include <cstdint>
 #include <vector>
@@ -39,6 +34,8 @@ BuiltinFns::scs_delete_key_last(
 	/* key_len = 32 */)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	tx_ctx.consume_gas(gas_delete_key_last);
+
 	auto& runtime = *tx_ctx.get_current_runtime();
 	
 	auto key = runtime.template load_from_memory_to_const_size_buf<InvariantKey>(key_offset);

@@ -43,7 +43,7 @@ make_create_transactions()
 
 		SignedTransaction stx;
 		stx.tx.invocation = invocation;
-		stx.tx.gas_limit = gas_limit;
+		stx.tx.gas_limit = 1'000'000 + gas_limit;
 
 		stx.tx.contracts_to_deploy.push_back(*contract);
 

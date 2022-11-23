@@ -33,12 +33,51 @@ DECL_COST_LINEAR(log, 50, 1)
 DECL_COST_LINEAR(return, 50, 2)
 DECL_COST_LINEAR(get_calldata, 50, 2)
 DECL_COST_STATIC(get_calldata_len, 10)
-DECL_COST_LINEAR(invoke, 1000, 2)
+
+// TODO invoke cost linear in invoked wasm size?
+DECL_COST_LINEAR(invoke, 10000, 2)
 DECL_COST_STATIC(get_msg_sender, 50)
 DECL_COST_STATIC(get_self_addr, 50)
 DECL_COST_STATIC(get_block_number, 10)
 DECL_COST_STATIC(get_src_tx_hash, 50)
 DECL_COST_STATIC(get_invoked_tx_hash, 50)
+
+/* general storage */
+DECL_COST_STATIC(has_key, 10);
+
+/* raw memory */
+DECL_COST_LINEAR(raw_memory_set, 50, 2)
+DECL_COST_LINEAR(raw_memory_get, 50, 2)
+DECL_COST_STATIC(raw_memory_get_len, 10)
+
+/* delete */
+DECL_COST_STATIC(delete_key_last, 50)
+
+/* nonnegative int64 */
+DECL_COST_STATIC(nonnegative_int64_set_add, 50)
+DECL_COST_STATIC(nonnegative_int64_add, 50)
+DECL_COST_STATIC(nonnegative_int64_get, 10)
+
+/* hashset */
+// TODO: make some of these costs linear in hashset size
+DECL_COST_STATIC(hashset_insert, 100)
+DECL_COST_STATIC(hashset_increase_limit, 50)
+DECL_COST_STATIC(hashset_clear, 100)
+DECL_COST_STATIC(hashset_get_size, 50)
+DECL_COST_STATIC(hashset_get_max_size, 50)
+DECL_COST_STATIC(hashset_get_index_of, 100)
+DECL_COST_STATIC(hashset_get_index, 50)
+
+/* crypto */
+DECL_COST_STATIC(hash, 10000);
+DECL_COST_STATIC(check_sig_ed25519, 10000);
+
+/* contracts */
+DECL_COST_LINEAR(create_contract, 10000, 100);
+DECL_COST_STATIC(deploy_contract, 100);
+
+
+
 
 
 }

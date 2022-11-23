@@ -1,4 +1,5 @@
 #include "builtin_fns/builtin_fns.h"
+#include "builtin_fns/gas_costs.h"
 
 #include "debug/debug_macros.h"
 
@@ -26,6 +27,8 @@ BuiltinFns::scs_hashset_insert(uint32_t key_offset,
 {
     auto& tx_ctx
         = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    tx_ctx.consume_gas(gas_hashset_insert);
+
     auto& runtime = *tx_ctx.get_current_runtime();
 
     auto key
@@ -48,6 +51,8 @@ BuiltinFns::scs_hashset_increase_limit(uint32_t key_offset,
 {
     auto& tx_ctx
         = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    tx_ctx.consume_gas(gas_hashset_increase_limit);
+
     auto& runtime = *tx_ctx.get_current_runtime();
 
     auto key
@@ -58,25 +63,6 @@ BuiltinFns::scs_hashset_increase_limit(uint32_t key_offset,
 
     tx_ctx.storage_proxy.hashset_increase_limit(
         addr_and_key, limit_increase, tx_ctx.get_src_tx_hash());
-}
-
-void
-BuiltinFns::scs_hashset_clear(uint32_t key_offset
-                              /* key_len = 32 */,
-                              uint64_t threshold)
-{
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
-    auto& runtime = *tx_ctx.get_current_runtime();
-
-    auto key
-        = runtime.template load_from_memory_to_const_size_buf<InvariantKey>(
-            key_offset);
-
-    auto addr_and_key = tx_ctx.get_storage_key(key);
-
-    tx_ctx.storage_proxy.hashset_clear(
-        addr_and_key, threshold, tx_ctx.get_src_tx_hash());
 }
 
 std::optional<StorageObject>
@@ -101,12 +87,35 @@ get_hashset(TransactionContext const& tx_ctx, uint32_t key_offset)
     return res;
 }
 
+void
+BuiltinFns::scs_hashset_clear(uint32_t key_offset
+                              /* key_len = 32 */,
+                              uint64_t threshold)
+{
+    auto& tx_ctx
+        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    tx_ctx.consume_gas(gas_hashset_clear);
+
+    auto& runtime = *tx_ctx.get_current_runtime();
+
+    auto key
+        = runtime.template load_from_memory_to_const_size_buf<InvariantKey>(
+            key_offset);
+
+    auto addr_and_key = tx_ctx.get_storage_key(key);
+
+    tx_ctx.storage_proxy.hashset_clear(
+        addr_and_key, threshold, tx_ctx.get_src_tx_hash());
+}
+
 uint32_t
 BuiltinFns::scs_hashset_get_size(uint32_t key_offset
                                  /* key_len = 32 */)
 {
     auto& tx_ctx
         = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    tx_ctx.consume_gas(gas_hashset_get_size);
+
     auto const& res = get_hashset(tx_ctx, key_offset);
 
     if (!res) {
@@ -122,6 +131,8 @@ BuiltinFns::scs_hashset_get_max_size(uint32_t key_offset
 {
     auto& tx_ctx
         = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    tx_ctx.consume_gas(gas_hashset_get_max_size);
+
     auto const& res = get_hashset(tx_ctx, key_offset);
 
     if (!res) {
@@ -143,6 +154,8 @@ BuiltinFns::scs_hashset_get_index_of(uint32_t key_offset,
 {
     auto& tx_ctx
         = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    tx_ctx.consume_gas(gas_hashset_get_index_of);
+
     auto const& res = get_hashset(tx_ctx, key_offset);
 
     if (!res) {
@@ -167,6 +180,8 @@ BuiltinFns::scs_hashset_get_index(uint32_t key_offset,
 {
     auto& tx_ctx
         = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    tx_ctx.consume_gas(gas_hashset_get_index);
+
     auto const& res = get_hashset(tx_ctx, key_offset);
 
     if (!res) {

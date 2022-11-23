@@ -1,9 +1,9 @@
 #include "builtin_fns/builtin_fns.h"
+#include "builtin_fns/gas_costs.h"
 
 #include "threadlocal/threadlocal_context.h"
 
-#include "transaction_context/execution_context.h"
-#include "transaction_context/method_invocation.h"
+#include "transaction_context/transaction_context.h"
 
 #include "contract_db/contract_utils.h"
 
@@ -31,6 +31,8 @@ BuiltinFns::scs_create_contract(uint32_t contract_index, uint32_t hash_out
     std::shared_ptr<const Contract> contract = std::make_shared<const Contract>(
         tx_ctx.get_deployable_contract(contract_index));
 
+    tx_ctx.consume_gas(gas_create_contract(contract -> size()));
+
     Hash h = tx_ctx.contract_db_proxy.create_contract(contract);
 
     auto& runtime = *tx_ctx.get_current_runtime();
@@ -45,6 +47,8 @@ BuiltinFns::scs_deploy_contract(uint32_t hash_offset, /* hash_len = 32 */
 {
     auto& tx_ctx
         = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    tx_ctx.consume_gas(gas_deploy_contract);
+
     auto& runtime = *tx_ctx.get_current_runtime();
 
     auto contract_hash
