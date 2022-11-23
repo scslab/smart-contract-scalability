@@ -5,21 +5,6 @@
 #include "sdk/calldata.h"
 #include "sdk/constexpr.h"
 
-//#define UNIMPLEMENTED(f)                                                       \
-// void __attribute((export_name("f"))) \
-//  void f () {                                                            \
-//    abort();                                                                   \
-//  }
-
-
-//UNIMPLEMENTED(__multi3)
-
-template<typename... T>
-void __attribute((export_name("__multi3")))
-__multi3(T...) {
-	abort();
-}
-
 EXPORT("pub00000000")
 consume_gas()
 {
