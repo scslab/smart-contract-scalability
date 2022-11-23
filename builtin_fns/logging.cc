@@ -1,4 +1,5 @@
 #include "builtin_fns/builtin_fns.h"
+#include "builtin_fns/gas_costs.h"
 
 #include "threadlocal/threadlocal_context.h"
 
@@ -45,6 +46,7 @@ BuiltinFns::scs_log(
 	uint32_t log_len)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	tx_ctx.consume_gas(gas_log(log_len));
 
 	auto& runtime = *tx_ctx.get_current_runtime();
 

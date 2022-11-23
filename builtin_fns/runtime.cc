@@ -1,4 +1,5 @@
 #include "builtin_fns/builtin_fns.h"
+#include "builtin_fns/gas_costs.h"
 
 #include "debug/debug_macros.h"
 #include "debug/debug_utils.h"
@@ -15,6 +16,7 @@ void
 BuiltinFns::scs_return(uint32_t offset, uint32_t len)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	tx_ctx.consume_gas(gas_return(len));
 
 	tx_ctx.return_buf = tx_ctx.get_current_runtime()->template load_from_memory<std::vector<uint8_t>>(offset, len);
 	return;
@@ -36,6 +38,8 @@ BuiltinFns::scs_get_calldata(uint32_t offset, uint32_t calldata_slice_start, uin
 		throw wasm_api::HostError("invalid calldata params");
 	}
 
+	tx_ctx.consume_gas(gas_get_calldata(calldata_slice_end - calldata_slice_start));
+
 	tx_ctx.get_current_runtime() -> write_slice_to_memory(
 		calldata,
 		offset,
@@ -47,6 +51,8 @@ uint32_t
 BuiltinFns::scs_get_calldata_len()
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	tx_ctx.consume_gas(gas_get_calldata_len);
+
 	auto& calldata = tx_ctx.get_current_method_invocation().calldata;
 	return calldata.size();
 }
@@ -61,6 +67,7 @@ BuiltinFns::scs_invoke(
 	uint32_t return_len)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	tx_ctx.consume_gas(gas_invoke(calldata_len + return_len));
 
 	auto& runtime = *tx_ctx.get_current_runtime();
 
@@ -90,6 +97,8 @@ BuiltinFns::scs_get_msg_sender(
 	)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	tx_ctx.consume_gas(gas_get_msg_sender);
+
 	auto& runtime = *tx_ctx.get_current_runtime();
 
 	Address const& sender = tx_ctx.get_msg_sender();
@@ -104,6 +113,8 @@ BuiltinFns::scs_get_self_addr(
 	)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	tx_ctx.consume_gas(gas_get_self_addr);
+
 	auto& runtime = *tx_ctx.get_current_runtime();
 
 	auto const& invoke = tx_ctx.get_current_method_invocation();
@@ -115,6 +126,8 @@ uint64_t
 BuiltinFns::scs_get_block_number()
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	tx_ctx.consume_gas(gas_get_block_number);
+
 	return tx_ctx.get_block_number();
 }
 
@@ -122,6 +135,8 @@ void
 BuiltinFns::scs_get_src_tx_hash(uint32_t hash_offset)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	tx_ctx.consume_gas(gas_get_src_tx_hash);
+
 	auto& runtime = *tx_ctx.get_current_runtime();
 
 	Hash const& h = tx_ctx.get_src_tx_hash();
@@ -135,6 +150,8 @@ BuiltinFns::scs_get_invoked_tx_hash(
 	uint32_t hash_offset)
 {
 	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	tx_ctx.consume_gas(gas_get_invoked_tx_hash);
+
 	auto& runtime = *tx_ctx.get_current_runtime();
 
 	Hash const& h = tx_ctx.get_invoked_tx_hash();
