@@ -23,7 +23,6 @@ struct metered_contract
 
 class MeteredContract : public utils::NonMovableOrCopyable
 {
-
     detail::metered_contract base;
 
   public:

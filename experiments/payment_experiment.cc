@@ -13,6 +13,8 @@
 namespace scs
 {
 
+const uint64_t gas_limit = 100000;
+
 PaymentExperiment::PaymentExperiment(size_t num_accounts)
 	: num_accounts(num_accounts)
 	, gen(0)
@@ -41,6 +43,7 @@ make_create_transactions()
 
 		SignedTransaction stx;
 		stx.tx.invocation = invocation;
+		stx.tx.gas_limit = gas_limit;
 
 		stx.tx.contracts_to_deploy.push_back(*contract);
 
@@ -73,6 +76,8 @@ make_deploy_erc20_transaction()
 
     SignedTransaction stx;
     stx.tx.invocation = invocation;
+    stx.tx.gas_limit = gas_limit;
+
 
     return stx;
 }
@@ -126,6 +131,7 @@ PaymentExperiment::make_deploy_wallet_transaction(size_t idx, Hash const& wallet
 
     SignedTransaction stx;
     stx.tx.invocation = invocation;
+   	stx.tx.gas_limit = gas_limit;
 
     return stx;
 }
@@ -171,6 +177,7 @@ make_mint_transaction(Address const& wallet_addr, Address const& token_addr, int
 
     SignedTransaction stx;
     stx.tx.invocation = invocation;
+	stx.tx.gas_limit = gas_limit;
 
     return stx;
 }
@@ -228,6 +235,7 @@ PaymentExperiment::make_random_payment()
 
 	SignedTransaction stx;
 	stx.tx.invocation = invocation;
+	stx.tx.gas_limit = gas_limit;
 
 	Hash msg = hash_xdr(stx.tx);
 	Signature sig = sign_ed25519(src.sk, msg);

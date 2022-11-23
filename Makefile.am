@@ -125,6 +125,7 @@ TEST_UTILS_SRCS = \
 TESTS_CCS = \
 	tests/builtin_fns_log_tests.cc \
 	tests/builtin_fns_invoke_tests.cc \
+	tests/gas_tests.cc \
 	tests/hashset_tests.cc \
 	tests/storage_tests.cc \
 	tests/sdk_tests.cc \
@@ -155,6 +156,7 @@ CC_WASMS = \
 	cpp_contracts/erc20.cc \
 	cpp_contracts/test_hashset.cc \
 	cpp_contracts/test_hashset_manipulation.cc \
+	cpp_contracts/test_gas_limit.cc \
 	cpp_contracts/test_log.cc \
 	cpp_contracts/test_nn_int64.cc \
 	cpp_contracts/test_redirect_call.cc \
@@ -168,9 +170,12 @@ CC_WASMS = \
 .cc.wasm:
 	wasi/wasi-sdk/bin/clang -Os -mtune=native -march=native -I./cpp_contracts/ $< -o $@ \
 		--sysroot=wasi/wasi-sdk/share/wasi-sysroot \
-		-nostdlib \
 		-std=gnu++2a \
-		-Wl,--no-entry -fno-exceptions -Wl,--allow-undefined
+		-nostdlib \
+		-nostdlib++ \
+		-mbulk-memory \
+		-Wl,--no-entry -fno-exceptions -Wl,--allow-undefined \
+		wasi/wasi-sdk/lib/clang/13.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
 
 $(CC_WASMS:.cc=.wasm) : $(wildcard cpp_contracts/sdk/*.h)
 
@@ -202,7 +207,7 @@ metering/target/release/libinject_metering.a : metering/inject_metering/src/*.rs
 
 $(SRCS:.cc=.o) : $(XH_FILES)
 $(TESTS_CCS:.cc=.o) : $(XH_FILES)
-$(MAIN_CCS:.cc=.o) : $(XH_FILES) metering/target/release/libinject_metering.a
+$(MAIN_CCS:.cc=.o) : $(XH_FILES)
 
 bin_PROGRAMS = \
 	test
