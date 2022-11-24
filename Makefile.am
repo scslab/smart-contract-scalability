@@ -6,6 +6,7 @@ CLEANFILES = *~ .*~
 
 X_FILES = \
 	xdr/block.x \
+	xdr/rpc.x \
 	xdr/storage.x \
 	xdr/storage_delta.x \
 	xdr/types.x \
@@ -32,6 +33,7 @@ BUILTIN_FNS_SRCS = \
 	builtin_fns/int64.cc \
 	builtin_fns/logging.cc \
 	builtin_fns/raw_memory.cc \
+	builtin_fns/rpc.cc \
 	builtin_fns/runtime.cc \
 	builtin_fns/witness.cc
 
@@ -75,6 +77,9 @@ OBJECT_SRCS = \
 PHASE_SRCS = \
 	phase/phases.cc
 
+RPC_SRCS = \
+	rpc/rpc_address_db.cc
+
 STATE_DB_SRCS = \
 	state_db/delta_vec.cc \
 	state_db/modified_keys_list.cc \
@@ -86,13 +91,15 @@ STORAGE_PROXY_SRCS = \
 	storage_proxy/storage_proxy.cc
 
 THREADLOCAL_SRCS = \
-	threadlocal/threadlocal_context.cc
+	threadlocal/threadlocal_context.cc \
+	threadlocal/timeout.cc
 
 TRANSACTION_CONTEXT_SRCS = \
 	transaction_context/execution_context.cc \
 	transaction_context/global_context.cc \
 	transaction_context/method_invocation.cc \
-	transaction_context/transaction_context.cc
+	transaction_context/transaction_context.cc \
+	transaction_context/transaction_results.cc
 
 TX_BLOCK_SRCS = \
 	tx_block/tx_block.cc \
@@ -112,6 +119,7 @@ SRCS = \
 	$(METERING_FFI_SRCS) \
 	$(OBJECT_SRCS) \
 	$(PHASE_SRCS) \
+	$(RPC_SRCS) \
 	$(STATE_DB_SRCS) \
 	$(STORAGE_PROXY_SRCS) \
 	$(THREADLOCAL_SRCS) \
@@ -187,6 +195,8 @@ CC_WASMS = \
 
 $(CC_WASMS:.cc=.wasm) : $(wildcard cpp_contracts/sdk/*.h)
 
+grpc_DEDUP_CFLAGS = $(shell echo $(grpc_CFLAGS) | ./dedup.sh | sort | uniq)
+
 AM_CPPFLAGS = \
 	$(xdrpp_CFLAGS) \
 	$(libsodium_CFLAGS) \
@@ -196,7 +206,8 @@ AM_CPPFLAGS = \
 	$(lmdb_CFLAGS) \
 	$(merkle_trie_toolkit_CFLAGS) \
 	$(wasm_api_CFLAGS) \
-	$(Catch2_CFLAGS)
+	$(Catch2_CFLAGS) \
+	$(grpc_DEDUP_CFLAGS)
 
 LDADD = $(xdrpp_LIBS) \
 	$(libsodium_LIBS) \
@@ -207,7 +218,8 @@ LDADD = $(xdrpp_LIBS) \
 	$(merkle_trie_toolkit_LIBS) \
 	$(wasm_api_LIBS) \
 	$(Catch2_LIBS) \
-	./metering/target/release/libinject_metering.a
+	./metering/target/release/libinject_metering.a \
+	$(grpc_LIBS)
 
 metering/target/release/libinject_metering.a : metering/inject_metering/src/*.rs
 	cd metering && \

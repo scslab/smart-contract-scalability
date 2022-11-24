@@ -128,7 +128,7 @@ ExecutionContext::get_transaction_context()
     return *tx_context;
 }
 
-std::vector<std::vector<uint8_t>> const&
+std::vector<TransactionLog> const&
 ExecutionContext::get_logs()
 {
 
@@ -137,5 +137,16 @@ ExecutionContext::get_logs()
     }
     return results_of_last_tx->logs;
 }
+
+ExecutionContext::~ExecutionContext()
+{
+  if (tx_context)
+  {
+    std::printf("cannot destroy without unwinding inflight tx\n");
+    std::fflush(stdout);
+    std::terminate();
+  }
+}
+
 
 } // namespace scs

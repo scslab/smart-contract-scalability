@@ -23,6 +23,7 @@ public:
 		: id(static_cast<uint64_t>(utils::ThreadlocalIdentifier::get()) << 56)
 		{}
 
+	// never returns 0
 	uint64_t get()
 	{
 		return id += inc;

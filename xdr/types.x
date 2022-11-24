@@ -24,6 +24,8 @@ typedef opaque AddressAndKey[64]; // in global storage: [contract address + inva
 
 typedef opaque Contract<>;
 
+typedef opaque TransactionLog<>;
+
 const MAX_STACK_BYTES = 65536;
 
 // crypto parameters

@@ -17,7 +17,6 @@ class GlobalContext;
 
 class ExecutionContext
 {
-
     wasm_api::WasmContext wasm_context;
     GlobalContext& scs_data_structures;
 
@@ -45,7 +44,9 @@ class ExecutionContext
                               SignedTransaction const& tx,
                               BlockContext& block_context);
 
-    std::vector<std::vector<uint8_t>> const& get_logs();
+    std::vector<TransactionLog> const& get_logs();
+
+    ~ExecutionContext();
 };
 
 } // namespace scs

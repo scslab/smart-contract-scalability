@@ -50,6 +50,19 @@ ThreadlocalContextStore::post_block_clear()
     hash_allocator.reset();
 }
 
+void 
+ThreadlocalContextStore::post_block_timeout()
+{
+    auto& ctxs = cache.get_objects();
+    for (auto& ctx : ctxs) {
+        if (ctx) {
+            auto& c = *ctx;
+            c.timeout.timeout();
+        }
+    }
+}
+
+
 void
 ThreadlocalContextStore::clear_entire_context()
 {

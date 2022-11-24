@@ -9,6 +9,7 @@
 #include "threadlocal/gc.h"
 #include "threadlocal/uid.h"
 #include "threadlocal/allocator.h"
+#include "threadlocal/timeout.h"
 
 #include "xdr/storage.h"
 
@@ -26,6 +27,8 @@ class ThreadlocalContextStore
             gc;
 
         UniqueIdentifier uid;
+
+        Timeout timeout;
     };
 
     inline static utils::ThreadlocalCache<context_t> cache;
@@ -55,12 +58,18 @@ class ThreadlocalContextStore
         return hash_allocator.allocate(std::move(h));
     }
 
+    static Timeout& get_timer() {
+        return cache.get().timeout;
+    }
+
     static uint64_t get_uid();
 
     template<typename... Args>
     static void make_ctx(Args&... args);
 
     static void post_block_clear();
+
+    static void post_block_timeout();
 
     static void clear_entire_context();
 };

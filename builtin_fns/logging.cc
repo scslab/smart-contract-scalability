@@ -54,7 +54,7 @@ BuiltinFns::scs_log(
 
 	auto log = runtime.template load_from_memory<std::vector<uint8_t>>(log_offset, log_len);
 
-	tx_ctx.tx_results -> logs.push_back(log);
+	tx_ctx.tx_results -> add_log(TransactionLog(log.begin(), log.end()));
 }
 
 

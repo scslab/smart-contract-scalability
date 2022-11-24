@@ -48,7 +48,7 @@ public:
 
 	std::vector<uint8_t> return_buf;
 
-	std::unique_ptr<TransactionResults> tx_results;
+	std::unique_ptr<TransactionResultsFrame> tx_results;
 
 	StorageProxy storage_proxy;
 	ContractDBProxy contract_db_proxy;
@@ -57,11 +57,15 @@ public:
 		SignedTransaction const& tx,
 		Hash const& tx_hash, 
 		GlobalContext& scs_data_structures,
-		BlockContext& block_context_);
+		BlockContext& block_context_,
+		std::optional<TransactionResults> const& = std::nullopt);
 
 	std::unique_ptr<TransactionResults> extract_results()
 	{
-		return std::unique_ptr<TransactionResults>(tx_results.release());
+		// TODO some copies to be removed here
+		auto out = std::make_unique<TransactionResults>(tx_results -> get_results());
+		tx_results.reset();
+		return out;
 	}
 
 	wasm_api::WasmRuntime*

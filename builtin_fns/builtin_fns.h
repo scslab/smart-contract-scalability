@@ -231,6 +231,17 @@ class BuiltinFns
     static uint32_t
     scs_get_witness_len(uint64_t wit_idx);
 
+    /* -- rpc -- */
+    // returns rpc result length
+    static void
+    scs_external_call(
+    	uint32_t target_addr,
+    	/* addr_len = 32 */
+    	uint32_t call_data_offset,
+    	uint32_t call_data_len,
+    	uint32_t response_offset,
+    	uint32_t response_max_len);
+
 	BuiltinFns() = delete;
 
 public:

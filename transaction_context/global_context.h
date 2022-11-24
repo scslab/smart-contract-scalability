@@ -2,6 +2,8 @@
 
 #include "contract_db/contract_db.h"
 
+#include "rpc/rpc_address_db.h"
+
 #include "state_db/state_db.h"
 #include "state_db/modified_keys_list.h"
 
@@ -12,22 +14,20 @@
 namespace scs
 {
 
-struct GlobalContext
+struct GlobalContext : public utils::NonMovableOrCopyable
 {
 	ContractDB contract_db;
 	StateDB state_db;
+	RpcAddressDB address_db;
 
 	GlobalContext()
 		: contract_db()
 		, state_db()
+		, address_db()
 		{}
-
-	GlobalContext(const GlobalContext&) = delete;
-	GlobalContext(GlobalContext&&) = delete;
-	GlobalContext& operator=(const GlobalContext&) = delete;
 };
 
-struct BlockContext : public utils::NonCopyable
+struct BlockContext : public utils::NonMovableOrCopyable
 {
 	TxSet tx_set;
 	ModifiedKeysList modified_keys_list;

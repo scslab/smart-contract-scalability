@@ -12,7 +12,8 @@ namespace scs {
 TransactionContext::TransactionContext(SignedTransaction const& tx,
                                        Hash const& tx_hash,
                                        GlobalContext& global_context,
-                                       BlockContext& block_context_)
+                                       BlockContext& block_context_,
+                                       std::optional<TransactionResults> const& results)
     : invocation_stack()
     , runtime_stack()
     , tx(tx)
@@ -20,7 +21,7 @@ TransactionContext::TransactionContext(SignedTransaction const& tx,
     , gas_used(0)
     , block_context(block_context_)
     , return_buf()
-    , tx_results(new TransactionResults())
+    , tx_results(results ? new TransactionResultsFrame(*results) : new TransactionResultsFrame())
     , storage_proxy(global_context.state_db, block_context_.modified_keys_list)
     , contract_db_proxy(global_context.contract_db)
 {}

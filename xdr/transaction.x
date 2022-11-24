@@ -1,6 +1,8 @@
 
 %#include "xdr/types.h"
 
+%#include "xdr/rpc.h"
+
 namespace scs
 {
 
@@ -55,6 +57,12 @@ struct TxSetEntry
 {
 	SignedTransaction tx;
 	uint32 multiplicity;
+};
+
+struct TransactionResults
+{
+	RpcResult results<>;
+	TransactionLog logs<>;
 };
 	
 } /* scs */
