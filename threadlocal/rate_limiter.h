@@ -1,5 +1,10 @@
 #pragma once
 
+#include <atomic>
+#include <cstdint>
+#include <mutex>
+#include <condition_variable>
+
 namespace scs {
 
 class RateLimiter
@@ -34,15 +39,26 @@ class RateLimiter
 
     void notify()
     {
-        if (active_threads < max_active_threads) {
+        if (active_threads.load(std::memory_order_relaxed) < max_active_threads.load(std::memory_order_relaxed)) {
             wake_cond.notify_one();
         }
     }
 
     void free_one_slot()
     {
-        active_threads--;
+        active_threads.fetch_sub(1, std::memory_order_relaxed);
         notify();
+    }
+
+    void fastpath_wait_for_opening()
+    {
+    	if (active_threads.load(std::memory_order_relaxed) <= max_active_threads.load(std::memory_order_relaxed))
+    	{
+    		return;
+    	}
+
+    	free_one_slot();
+    	wait_for_opening();
     }
 
     void shutdown()
