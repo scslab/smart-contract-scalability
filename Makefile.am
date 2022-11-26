@@ -65,6 +65,9 @@ HASH_SET_SRCS = \
 HASH_SET_TEST_SRCS = \
 	hash_set/tests/test_atomic_set.cc
 
+MEMPOOL_SRCS = \
+	mempool/mempool.cc
+
 METERING_FFI_SRCS = \
 	metering_ffi/metered_contract.cc
 
@@ -116,6 +119,7 @@ SRCS = \
 	$(DEBUG_SRCS) \
 	$(EXPERIMENTS_SRCS) \
 	$(HASH_SET_SRCS) \
+	$(MEMPOOL_SRCS) \
 	$(METERING_FFI_SRCS) \
 	$(OBJECT_SRCS) \
 	$(PHASE_SRCS) \
