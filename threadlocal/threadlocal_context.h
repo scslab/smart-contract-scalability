@@ -10,6 +10,7 @@
 #include "threadlocal/uid.h"
 #include "threadlocal/allocator.h"
 #include "threadlocal/timeout.h"
+#include "threadlocal/rate_limiter.h"
 
 #include "xdr/storage.h"
 
@@ -35,6 +36,8 @@ class ThreadlocalContextStore
 
     inline static BlockAllocator<HashSetEntry> hash_allocator;
 
+    inline static RateLimiter rate_limiter;
+
     ThreadlocalContextStore() = delete;
 
   public:
@@ -58,9 +61,21 @@ class ThreadlocalContextStore
         return hash_allocator.allocate(std::move(h));
     }
 
-    static Timeout& get_timer() {
-        return cache.get().timeout;
+    template<typename NotifyT>
+    static void timer_notify(NotifyT const& obj, uint64_t request_id)
+    {
+        cache.get().timeout.notify(obj, request_id);
     }
+
+    static auto timer_await(uint64_t request_id)
+    {
+        rate_limiter.free_one_slot();
+        return cache.get().timeout.await(request_id);
+    }
+
+  //  static Timeout& get_timer() {
+    //    return cache.get().timeout;
+    //}
 
     static uint64_t get_uid();
 
