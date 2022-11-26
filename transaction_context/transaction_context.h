@@ -58,7 +58,7 @@ public:
 		Hash const& tx_hash, 
 		GlobalContext& scs_data_structures,
 		BlockContext& block_context_,
-		std::optional<TransactionResults> const& = std::nullopt);
+		std::optional<NondeterministicResults> const& = std::nullopt);
 
 	std::unique_ptr<TransactionResults> extract_results()
 	{

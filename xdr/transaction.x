@@ -59,9 +59,14 @@ struct TxSetEntry
 	uint32 multiplicity;
 };
 
+struct NondeterministicResults
+{
+	RpcResult rpc_results<>;
+};
+
 struct TransactionResults
 {
-	RpcResult results<>;
+	NondeterministicResults ndeterministic_results;
 	TransactionLog logs<>;
 };
 	

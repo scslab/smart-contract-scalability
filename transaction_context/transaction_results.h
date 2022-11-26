@@ -18,10 +18,12 @@ class TransactionResultsFrame
 
 public:
 
-    TransactionResultsFrame(TransactionResults res)
-        : results(res)
+    TransactionResultsFrame(NondeterministicResults res)
+        : results()
         , validating(true)
-        {}
+        {
+            results.ndeterministic_results = res;
+        }
     TransactionResultsFrame()
         : results()
         , validating(false)
@@ -33,7 +35,7 @@ public:
     }
 
     void add_log(TransactionLog log);
-    
+
     void add_rpc_result(RpcResult result);
     RpcResult get_next_rpc_result();
 

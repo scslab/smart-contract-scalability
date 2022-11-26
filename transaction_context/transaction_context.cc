@@ -13,7 +13,7 @@ TransactionContext::TransactionContext(SignedTransaction const& tx,
                                        Hash const& tx_hash,
                                        GlobalContext& global_context,
                                        BlockContext& block_context_,
-                                       std::optional<TransactionResults> const& results)
+                                       std::optional<NondeterministicResults> const& results)
     : invocation_stack()
     , runtime_stack()
     , tx(tx)
