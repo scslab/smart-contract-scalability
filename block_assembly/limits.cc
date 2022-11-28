@@ -2,7 +2,7 @@
 
 namespace scs {
 
-std::optional<Reservation>
+std::optional<AssemblyLimits::Reservation>
 AssemblyLimits::reserve_tx(SignedTransaction const& tx)
 {
     if (tx.tx.gas_limit > gas_limit_per_tx) {

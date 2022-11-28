@@ -147,7 +147,7 @@ VirtualMachine::try_exec_tx_block(std::vector<SignedTransaction> const& txs)
 std::pair<BlockHeader, Block>
 VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads)
 {
-    constexpr static uint32_t max_worker_threads = 100;
+    constexpr static uint32_t max_worker_threads = 20;
 
     StaticAssemblyWorkerCache::start_assembly_threads(mempool, global_context, *current_block_context, limits, max_worker_threads);
     ThreadlocalContextStore::get_rate_limiter().start_threads(n_threads);
@@ -160,17 +160,22 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
     std::printf("done sleep\n");
 
     ThreadlocalContextStore::get_rate_limiter().join_threads();
+    std::printf("done rate limiter join\n");
     StaticAssemblyWorkerCache::wait_for_stop_assembly_threads();
+    std::printf("done join assembly threads\n");
 
     phase_finish_block(global_context, *current_block_context);
+    std::printf("done finish block\n");
 
     BlockHeader out = make_block_header();
+    std::printf("done make header\n");
 
     prev_block_hash = hash_xdr(out);
 
     auto block_out = current_block_context -> tx_set.serialize_block();
 
     advance_block_number();
+    std::printf("done proposal\n");
     return {out, block_out};
 }
 

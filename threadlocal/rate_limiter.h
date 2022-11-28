@@ -49,7 +49,9 @@ class RateLimiter
 
     void start_threads(uint64_t max_active)
     {
+    	std::lock_guard lock(mtx);
         max_active_threads = max_active;
+        _shutdown = false;
         wake_cond.notify_all();
     }
 

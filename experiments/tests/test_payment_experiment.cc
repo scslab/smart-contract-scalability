@@ -44,16 +44,15 @@ TEST_CASE("payment experiment hashset", "[experiment][payment]")
 	}
 }
 
-TEST_CASE("payment experiment assemble block", "[now][payment]")
+TEST_CASE("payment experiment assemble block", "[experiment][payment]")
 {
-	std::printf("start fn\n");
 	PaymentExperiment e(10);
 
 	auto vm = e.prepare_vm();
 
 	REQUIRE(!!vm);
 
-	//SECTION("prepare one small block")
+	SECTION("prepare one small block")
 	{
 		auto& mp = vm -> get_mempool();
 		REQUIRE(mp.add_txs(e.gen_transaction_batch(10000)) == 10000);
@@ -63,6 +62,20 @@ TEST_CASE("payment experiment assemble block", "[now][payment]")
 		auto [header, blk] = vm -> propose_tx_block(limits, 1000, 10);
 
 		REQUIRE(blk.transactions.size() == 10);
+	}
+
+	SECTION("prepare several small blocks")
+	{
+		auto& mp = vm -> get_mempool();
+		REQUIRE(mp.add_txs(e.gen_transaction_batch(10000)) == 10000);
+
+		for (size_t i = 0; i < 10; i++)
+		{
+			AssemblyLimits limits(10, INT64_MAX);
+			std::printf("============= start block ===============\n");
+			auto [header, blk] = vm -> propose_tx_block(limits, 1000, 10);
+			REQUIRE(blk.transactions.size() == 10);
+		}
 	}
 }
 

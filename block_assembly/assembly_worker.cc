@@ -15,7 +15,7 @@ namespace scs {
 void
 AssemblyWorker::run()
 {
-    std::printf("start AssemblyWorker::run()\n");
+    //std::printf("start AssemblyWorker::run()\n");
     auto& limiter = ThreadlocalContextStore::get_rate_limiter();
 
     bool has_slot = false;
@@ -32,15 +32,13 @@ AssemblyWorker::run()
         }
 
         if (is_shutdown) {
-            std::printf("AssemblyWorker::run() end from is_shutdown\n");
+            //std::printf("AssemblyWorker::run() end from is_shutdown\n");
             return;
         }
 
-        std::printf("start getting txs\n");
-
         auto tx = mempool.get_new_tx();
         if (!tx) {
-            std::printf("end from no txs\n");
+            //std::printf("end from no txs\n");
             if (has_slot)
             {
                 limiter.free_one_slot();
@@ -51,7 +49,7 @@ AssemblyWorker::run()
         auto reservation = limits.reserve_tx(*tx);
         if (!reservation)
         {
-            std::printf("reservation failed\n");
+            //std::printf("reservation failed\n");
             if (has_slot)
             {
                 limiter.free_one_slot();

@@ -7,6 +7,8 @@
 
 #include <utils/non_movable.h>
 
+#include <optional>
+
 namespace scs {
 
 class AssemblyLimits
