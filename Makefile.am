@@ -22,6 +22,10 @@ SUFFIXES = .x .h .wat .wasm
 .x.h:
 	$(XDRC)  -hh -o $@ $<
 
+BLOCK_ASSEMBLY_SRCS = \
+	block_assembly/assembly_worker.cc \
+	block_assembly/limits.cc
+
 BUILTIN_FNS_SRCS = \
 	builtin_fns/builtin_fns.cc \
 	builtin_fns/contract.cc \
@@ -94,6 +98,7 @@ STORAGE_PROXY_SRCS = \
 	storage_proxy/storage_proxy.cc
 
 THREADLOCAL_SRCS = \
+	threadlocal/rate_limiter.cc \
 	threadlocal/threadlocal_context.cc \
 	threadlocal/timeout.cc
 
@@ -113,6 +118,7 @@ VM_SRCS = \
 	vm/vm.cc
 
 SRCS = \
+	$(BLOCK_ASSEMBLY_SRCS) \
 	$(BUILTIN_FNS_SRCS) \
 	$(CONTRACT_DB_SRCS) \
 	$(CRYPTO_SRCS) \

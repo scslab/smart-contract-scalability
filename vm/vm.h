@@ -10,7 +10,11 @@
 
 #include <utils/non_movable.h>
 
+#include "mempool/mempool.h"
+
 namespace scs {
+
+class AssemblyLimits;
 
 /**
  * Block policy:
@@ -25,6 +29,7 @@ class VirtualMachine : public utils::NonMovableOrCopyable
 {
     GlobalContext global_context;
     std::unique_ptr<BlockContext> current_block_context;
+    Mempool mempool;
 
     Hash prev_block_hash;
 
@@ -34,11 +39,20 @@ class VirtualMachine : public utils::NonMovableOrCopyable
 
     void advance_block_number();
 
+    BlockHeader make_block_header();
+
   public:
     void init_default_genesis();
 
     std::optional<BlockHeader>
     try_exec_tx_block(std::vector<SignedTransaction> const& txs);
+
+    Mempool& get_mempool() {
+      return mempool;
+    }
+
+    std::pair<BlockHeader, Block>
+    propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads);
 
     ~VirtualMachine();
 };

@@ -10,6 +10,9 @@
 
 #include "vm/genesis.h"
 
+#include "block_assembly/limits.h"
+#include "block_assembly/assembly_worker.h"
+
 namespace scs {
 
 void
@@ -103,6 +106,20 @@ VirtualMachine::advance_block_number()
         current_block_context->block_number + 1);
 }
 
+BlockHeader
+VirtualMachine::make_block_header() 
+{
+    BlockHeader out;
+
+    out.block_number = current_block_context -> block_number;
+    out.prev_header_hash = prev_block_hash;
+    out.tx_set_hash = current_block_context -> tx_set.hash();
+    out.modified_keys_hash = current_block_context -> modified_keys_list.hash();
+    out.state_db_hash = global_context.state_db.hash();
+    out.contract_db_hash = global_context.contract_db.hash();
+    return out;
+}
+
 std::optional<BlockHeader>
 VirtualMachine::try_exec_tx_block(std::vector<SignedTransaction> const& txs)
 {
@@ -119,19 +136,42 @@ VirtualMachine::try_exec_tx_block(std::vector<SignedTransaction> const& txs)
     phase_finish_block(global_context, *current_block_context);
 
     // now time for hashing a block header
-    BlockHeader out;
-
-    out.block_number = current_block_context -> block_number;
-    out.prev_header_hash = prev_block_hash;
-    out.tx_set_hash = current_block_context -> tx_set.hash();
-    out.modified_keys_hash = current_block_context -> modified_keys_list.hash();
-    out.state_db_hash = global_context.state_db.hash();
-    out.contract_db_hash = global_context.contract_db.hash();
+    BlockHeader out = make_block_header();
 
     prev_block_hash = hash_xdr(out);
 
     advance_block_number();
     return out;
+}
+
+std::pair<BlockHeader, Block>
+VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads)
+{
+    constexpr static uint32_t max_worker_threads = 100;
+
+    StaticAssemblyWorkerCache::start_assembly_threads(mempool, global_context, *current_block_context, limits, max_worker_threads);
+    ThreadlocalContextStore::get_rate_limiter().start_threads(n_threads);
+
+    using namespace std::chrono_literals;
+
+    std::printf("start sleep\n");
+
+    std::this_thread::sleep_for(max_time_ms * 1ms);
+    std::printf("done sleep\n");
+
+    ThreadlocalContextStore::get_rate_limiter().join_threads();
+    StaticAssemblyWorkerCache::wait_for_stop_assembly_threads();
+
+    phase_finish_block(global_context, *current_block_context);
+
+    BlockHeader out = make_block_header();
+
+    prev_block_hash = hash_xdr(out);
+
+    auto block_out = current_block_context -> tx_set.serialize_block();
+
+    advance_block_number();
+    return {out, block_out};
 }
 
 VirtualMachine::~VirtualMachine()

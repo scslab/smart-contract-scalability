@@ -73,9 +73,10 @@ class ThreadlocalContextStore
         return cache.get().timeout.await(request_id);
     }
 
-  //  static Timeout& get_timer() {
-    //    return cache.get().timeout;
-    //}
+    static auto& get_rate_limiter() 
+    {
+        return rate_limiter;
+    }
 
     static uint64_t get_uid();
 
