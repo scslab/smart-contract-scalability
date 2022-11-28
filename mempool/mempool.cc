@@ -5,7 +5,7 @@ namespace scs {
 std::optional<SignedTransaction>
 Mempool::get_new_tx()
 {
-    uint64_t i = indices.load(std::memory_order_acquire);
+    uint64_t i = indices.fetch_add(1, std::memory_order_acquire);
 
     uint32_t consumed_idx = i & 0xFFFF'FFFF;
     uint32_t filled_idx = i >> 32;
@@ -15,11 +15,6 @@ Mempool::get_new_tx()
     }
     std::optional<SignedTransaction> out
         = std::move(ringbuffer[consumed_idx % MAX_MEMPOOL_SIZE]);
-    indices.fetch_add(1, std::memory_order_release);
-
-    if (consumed_idx > 0x7FFF'FFFF) {
-        indices.fetch_sub(0x7FFF'FFFF'7FFF'FFFF, std::memory_order_relaxed);
-    }
 
     return out;
 }
@@ -34,6 +29,11 @@ Mempool::add_txs(std::vector<SignedTransaction>&& txs)
     uint32_t consumed_idx = i & 0xFFFF'FFFF;
     uint32_t filled_idx = i >> 32;
 
+    if (consumed_idx > filled_idx)
+    {
+        consumed_idx = filled_idx;
+    }
+
     // consumed_idx only increases, so this only overestimates space
     uint32_t used_space = filled_idx - consumed_idx;
 
@@ -45,7 +45,10 @@ Mempool::add_txs(std::vector<SignedTransaction>&& txs)
         ringbuffer[(filled_idx + cpy) % MAX_MEMPOOL_SIZE] = std::move(txs[cpy]);
     }
 
-    indices.store((static_cast<uint64_t>(write_now) << 32) + i,
+    filled_idx = (filled_idx + write_now) % MAX_MEMPOOL_SIZE;
+    consumed_idx = consumed_idx % MAX_MEMPOOL_SIZE;
+
+    indices.store((static_cast<uint64_t>(filled_idx) << 32) + consumed_idx,
                       std::memory_order_release);
 
     return write_now;
