@@ -99,7 +99,7 @@ ExecutionContext::execute(Hash const& tx_hash,
         return TransactionStatus::FAILURE;
     }
 
-    block_context.tx_set.add_transaction(tx_hash, tx);
+    block_context.tx_set.add_transaction(tx_hash, tx, tx_context -> tx_results->get_results().ndeterministic_results);
 
     return TransactionStatus::SUCCESS;
 }

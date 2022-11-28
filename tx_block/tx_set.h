@@ -7,6 +7,7 @@
 
 #include "xdr/transaction.h"
 #include "xdr/types.h"
+#include "xdr/block.h"
 
 #include <xdrpp/marshal.h>
 
@@ -21,8 +22,8 @@ class TxSet
         return xdr::xdr_to_opaque(v);
     }
 
-    friend struct MultiplicityAddInsertFn;
-    friend struct MultiplicityAddMergeFn;
+    friend struct ResultListInsertFn;
+    friend struct ResultListMergeFn;
 
     using value_t = trie::XdrTypeWrapper<TxSetEntry, &serialize>;
 
@@ -46,15 +47,11 @@ class TxSet
     void assert_txs_not_merged() const;
 
   public:
-    void add_transaction(const Hash& hash, const SignedTransaction& tx);
+    void add_transaction(const Hash& hash, const SignedTransaction& tx, const NondeterministicResults& nres);
 
     void finalize();
 
-    const map_t& get_txs() const
-    {
-        assert_txs_merged();
-        return txs;
-    }
+    Block serialize_block() const;
 
     Hash hash();
 
@@ -67,7 +64,7 @@ class TxSet
         {
             return 0;
         }
-        return r -> multiplicity;
+        return r -> nondeterministic_results.size();
     }
 };
 

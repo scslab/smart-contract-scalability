@@ -53,15 +53,15 @@ struct SignedTransaction
 	WitnessEntry witnesses<>;
 };
 
-struct TxSetEntry
-{
-	SignedTransaction tx;
-	uint32 multiplicity;
-};
-
 struct NondeterministicResults
 {
 	RpcResult rpc_results<>;
+};
+
+struct TxSetEntry
+{
+	SignedTransaction tx;
+	NondeterministicResults nondeterministic_results<>;
 };
 
 struct TransactionResults

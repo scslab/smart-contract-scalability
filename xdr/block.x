@@ -6,7 +6,7 @@ namespace scs
 
 struct Block
 {
-	Transaction transactions<>;
+	TxSetEntry transactions<>;
 };
 
 struct BlockHeader
