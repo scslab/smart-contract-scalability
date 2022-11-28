@@ -1,9 +1,9 @@
 #pragma once
 
 #include <atomic>
+#include <condition_variable>
 #include <cstdint>
 #include <mutex>
-#include <condition_variable>
 
 namespace scs {
 
@@ -17,10 +17,25 @@ class RateLimiter
     std::condition_variable wake_cond;
     std::mutex mtx;
 
+    std::condition_variable join_cond;
+
     void claim_one_slot() { active_threads++; }
 
+    void shutdown()
+    {
+        _shutdown = true;
+        wake_cond.notify_all();
+    }
+
+    void notify_join()
+    {
+        if (active_threads.load(std::memory_order_relaxed) == 0) {
+            join_cond.notify_one();
+        }
+    }
+
   public:
-    void wait_for_opening()
+    bool wait_for_opening()
     {
         auto done = [&]() {
             return _shutdown.load(std::memory_order_relaxed)
@@ -28,19 +43,31 @@ class RateLimiter
         };
 
         std::unique_lock lock(mtx);
-        if (done()) {
+
+        auto claim_or_shutdown = [&]() -> bool {
+            if (_shutdown.load(std::memory_order_relaxed)) {
+                return true;
+            }
             claim_one_slot();
             notify();
-            return;
+            return false;
+        };
+
+        if (!done()) {
+            wake_cond.wait(lock, done);
         }
-        wake_cond.wait(lock, done);
-        notify();
+        return claim_or_shutdown();
     }
 
     void notify()
     {
-        if (active_threads.load(std::memory_order_relaxed) < max_active_threads.load(std::memory_order_relaxed)) {
+        if (active_threads.load(std::memory_order_relaxed)
+            < max_active_threads.load(std::memory_order_relaxed)) {
             wake_cond.notify_one();
+        } else // always if max_active_threads == 0, not usually in normal case
+               // operation
+        {
+            notify_join();
         }
     }
 
@@ -50,24 +77,26 @@ class RateLimiter
         notify();
     }
 
-    void fastpath_wait_for_opening()
+    bool fastpath_wait_for_opening()
     {
-    	if (active_threads.load(std::memory_order_relaxed) <= max_active_threads.load(std::memory_order_relaxed))
-    	{
-    		return;
-    	}
+        if (active_threads.load(std::memory_order_relaxed)
+            <= max_active_threads.load(std::memory_order_relaxed)) {
+            return false;
+        }
 
-    	free_one_slot();
-    	wait_for_opening();
+        free_one_slot();
+        return wait_for_opening();
     }
 
-    void shutdown()
+    void start_threads(uint64_t max_active)
     {
-        _shutdown = true;
+        max_active_threads = max_active;
         wake_cond.notify_all();
     }
 
-    bool is_shutdown() const { return _shutdown; }
+    void join_threads();
+
+    ~RateLimiter() { join_threads(); }
 };
 
 } // namespace scs
