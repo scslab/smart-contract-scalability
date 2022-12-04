@@ -32,6 +32,7 @@ test
 #mac
 .DS_STORE
 *~
+**/.DS_STORE
 
 #lldb
 *.dSYM/*
