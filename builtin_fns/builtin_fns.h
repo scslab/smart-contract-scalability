@@ -232,7 +232,6 @@ class BuiltinFns
     scs_get_witness_len(uint64_t wit_idx);
 
     /* -- rpc -- */
-    // returns rpc result length
     static void
     scs_external_call(
     	uint32_t target_addr,

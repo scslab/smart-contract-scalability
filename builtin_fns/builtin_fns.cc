@@ -163,6 +163,11 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 	runtime.template link_fn<&BuiltinFns::scs_get_witness_len>(
 		"scs",
 		"get_witness_len");
+
+	/* -- rpc -- */
+	runtime.template link_fn<&BuiltinFns::scs_external_call>(
+		"scs",
+		"external_call");
 }
 
 } /* scs */
