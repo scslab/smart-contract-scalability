@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+
+service ExternalCall {
+  rpc SendCall (GRpcCall) returns (GRpcResult) {};
+}
+
+// The request message containing the user's name.
+message GRpcCall {
+  bytes call = 1;
+}
+
+message GRpcResult {
+  bytes result = 1;
+}
