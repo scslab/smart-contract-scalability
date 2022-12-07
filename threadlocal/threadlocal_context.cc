@@ -6,6 +6,8 @@
 
 #include "transaction_context/global_context.h"
 
+#include "proto/external_call.pb.h"
+
 namespace scs {
 
 ExecutionContext&
@@ -51,15 +53,37 @@ ThreadlocalContextStore::post_block_clear()
 }
 
 void 
-ThreadlocalContextStore::post_block_timeout()
+ThreadlocalContextStore::stop_rpcs()
 {
     auto& ctxs = cache.get_objects();
-    for (auto& ctx : ctxs) {
+    for (auto& ctx : ctxs)
+    {
         if (ctx) {
-            auto& c = *ctx;
-            c.timeout.timeout();
+            ctx -> rpc.cancel_and_set_disallowed();
         }
     }
+}
+
+void 
+ThreadlocalContextStore::enable_rpcs()
+{
+    auto& ctxs = cache.get_objects();
+    for (auto& ctx : ctxs)
+    {
+        if (ctx) {
+            ctx -> rpc.set_allowed();
+        }
+    }
+}
+
+
+std::optional<RpcResult> 
+ThreadlocalContextStore::send_cancellable_rpc(std::unique_ptr<ExternalCall::Stub> const& stub, RpcCall const& call)
+{
+    auto& ctx = cache.get();
+    uint64_t uid = ctx.uid.get();
+
+    return ctx.rpc.send_query(call, uid, stub);
 }
 
 

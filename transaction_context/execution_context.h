@@ -42,7 +42,8 @@ class ExecutionContext
   public:
     TransactionStatus execute(Hash const& tx_hash,
                               SignedTransaction const& tx,
-                              BlockContext& block_context);
+                              BlockContext& block_context,
+                              std::optional<NondeterministicResults> res = std::nullopt);
 
     std::vector<TransactionLog> const& get_logs();
 

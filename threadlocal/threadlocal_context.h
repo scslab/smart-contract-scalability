@@ -11,6 +11,7 @@
 #include "threadlocal/allocator.h"
 #include "threadlocal/timeout.h"
 #include "threadlocal/rate_limiter.h"
+#include "threadlocal/cancellable_rpc.h"
 
 #include "xdr/storage.h"
 
@@ -29,7 +30,17 @@ class ThreadlocalContextStore
 
         UniqueIdentifier uid;
 
-        Timeout timeout;
+        CancellableRPC rpc;
+
+        bool has_limiter_slot = false;
+
+        context_t()
+            : ctx()
+            , gc()
+            , uid()
+            , rpc()
+            , has_limiter_slot(false)
+            {}
     };
 
     inline static utils::ThreadlocalCache<context_t> cache;
@@ -61,19 +72,66 @@ class ThreadlocalContextStore
         return hash_allocator.allocate(std::move(h));
     }
 
-    template<typename NotifyT>
-    static void timer_notify(NotifyT const& obj, uint64_t request_id)
+    static std::optional<RpcResult>
+    send_cancellable_rpc(std::unique_ptr<ExternalCall::Stub> const& stub, RpcCall const& call);
+
+   /* static Notifyable prep_timer_for(uint64_t request_id)
     {
-        cache.get().timeout.notify(obj, request_id);
+        return (cache.get()).timeout.prep_timer_for(request_id);
     }
 
     static auto timer_await(uint64_t request_id)
     {
-        rate_limiter.free_one_slot();
+        rate_limiter_free_slot();
+
         return cache.get().timeout.await(request_id);
+    } */
+
+   // static void rate_limiter_notify_stop()
+   // {
+   //     rate_limiter_free_slot();
+   //     rate_limiter.notify_unslotted_stopped_running();
+   // }
+
+    static void rate_limiter_free_slot()
+    {
+        if (cache.get().has_limiter_slot)
+        {
+            rate_limiter.free_one_slot();
+            cache.get().has_limiter_slot = false;
+        }
+    }
+/*
+    static void rate_limiter_notify_stop_thread_if_unslotted()
+    {
+        if (!cache.get().has_limiter_slot)
+        {
+            rate_limiter.notify_unslotted_stopped_running();
+        }
+    } */
+
+    static 
+    bool rate_limiter_wait_for_opening()
+    {
+        bool is_shutdown;
+
+        if (cache.get().has_limiter_slot)
+        {
+            is_shutdown = rate_limiter.fastpath_wait_for_opening();
+        } 
+        else
+        {
+            is_shutdown = rate_limiter.wait_for_opening();
+        }
+
+        if (!is_shutdown)
+        {
+            cache.get().has_limiter_slot = true;
+        }
+        return is_shutdown;
     }
 
-    static auto& get_rate_limiter() 
+    static auto& get_rate_limiter()
     {
         return rate_limiter;
     }
@@ -83,9 +141,12 @@ class ThreadlocalContextStore
     template<typename... Args>
     static void make_ctx(Args&... args);
 
+    static void enable_rpcs();
+    static void stop_rpcs();
+
     static void post_block_clear();
 
-    static void post_block_timeout();
+   // static void join_all_threads();
 
     static void clear_entire_context();
 };
@@ -94,7 +155,9 @@ namespace test {
 
 struct DeferredContextClear
 {
-    ~DeferredContextClear() { ThreadlocalContextStore::clear_entire_context(); }
+    ~DeferredContextClear() { 
+        ThreadlocalContextStore::clear_entire_context();
+    }
 };
 
 } // namespace test

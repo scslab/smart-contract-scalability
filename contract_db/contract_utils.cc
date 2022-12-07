@@ -16,7 +16,7 @@ compute_contract_deploy_address(
 	bytes.insert(bytes.end(), contract_hash.begin(), contract_hash.end());
 	bytes.insert(bytes.end(), reinterpret_cast<uint8_t*>(&nonce), reinterpret_cast<uint8_t*>(&nonce) + sizeof(uint64_t));
 
-	return hash_xdr(bytes);
+	return hash_vec(bytes);
 }
 
 

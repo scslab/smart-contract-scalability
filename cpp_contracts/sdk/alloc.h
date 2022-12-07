@@ -8,13 +8,6 @@
 static size_t stack_base = 0;
 static uint8_t buf[HEAP_SIZE];
 
-void* alloc(size_t count) noexcept
-{
-  size_t out = stack_base;
-  stack_base += count;
-  return (void*) &buf[out];
-}
-
 // std::abort compiles to `asm ("unreachable")`
 
 #pragma GCC diagnostic push
@@ -29,6 +22,22 @@ abort()
 }
 
 #pragma GCC diagnostic pop
+
+void* alloc(size_t count) noexcept
+{
+  size_t out = stack_base;
+  stack_base += count;
+
+  if (stack_base >= HEAP_SIZE)
+  {
+    abort();
+  }
+  return (void*) &buf[out];
+}
+
+void* malloc(size_t count) {
+  return alloc(count);
+}
 
 void assert(bool x)
 {

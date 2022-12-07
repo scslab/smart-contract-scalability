@@ -22,6 +22,16 @@ SUFFIXES = .x .h .wat .wasm
 .x.h:
 	$(XDRC)  -hh -o $@ $<
 
+proto/external_call.pb.cc proto/external_call.pb.h : proto/external_call.proto
+	$(PROTOC) --cpp_out=. proto/external_call.proto
+
+proto/external_call.grpc.pb.h proto/external_call.grpc.pb.cc : proto/external_call.proto
+	$(PROTOC) --grpc_out=. --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` proto/external_call.proto
+
+PROTO_SRCS = \
+	proto/external_call.pb.cc \
+	proto/external_call.grpc.pb.cc
+
 BLOCK_ASSEMBLY_SRCS = \
 	block_assembly/assembly_worker.cc \
 	block_assembly/limits.cc
@@ -98,6 +108,7 @@ STORAGE_PROXY_SRCS = \
 	storage_proxy/storage_proxy.cc
 
 THREADLOCAL_SRCS = \
+	threadlocal/cancellable_rpc.cc \
 	threadlocal/rate_limiter.cc \
 	threadlocal/threadlocal_context.cc \
 	threadlocal/timeout.cc
@@ -118,6 +129,7 @@ VM_SRCS = \
 	vm/vm.cc
 
 SRCS = \
+	$(PROTO_SRCS) \
 	$(BLOCK_ASSEMBLY_SRCS) \
 	$(BUILTIN_FNS_SRCS) \
 	$(CONTRACT_DB_SRCS) \
@@ -147,6 +159,7 @@ TESTS_CCS = \
 	tests/hashset_tests.cc \
 	tests/storage_tests.cc \
 	tests/sdk_tests.cc \
+	tests/test_rpc.cc \
 	storage_proxy/tests/test_proxy_applicator.cc \
 	object/tests/test_revertable_object.cc \
 	$(HASH_SET_TEST_SRCS) \
@@ -180,6 +193,7 @@ CC_WASMS = \
 	cpp_contracts/test_nn_int64.cc \
 	cpp_contracts/test_redirect_call.cc \
 	cpp_contracts/test_raw_memory.cc \
+	cpp_contracts/test_rpc.cc \
 	cpp_contracts/test_sdk.cc \
 	cpp_contracts/genesis/deploy.cc \
 	cpp_contracts/atomic_swap.cc \
@@ -187,14 +201,19 @@ CC_WASMS = \
 	cpp_contracts/payment_channel.cc \
 	cpp_contracts/public_auction.cc
 
-.cc.wasm: Makefile.am
+.cc.wasm: Makefile.am Makefile
 	wasi/wasi-sdk/bin/clang -Os -mtune=native -march=native -I./cpp_contracts/ $< -o $@ \
 		--sysroot=wasi/wasi-sdk/share/wasi-sysroot \
 		-std=gnu++2a \
-		-nostdlib \
 		-nostdlib++ \
+		-nostdlib \
 		-Wl,--no-entry -fno-exceptions -Wl,--allow-undefined \
+		-I./wasm_libs/libs/gmp/include/ \
+		-Wl,-lgmp,-L./wasm_libs/libs/gmp/lib \
 		wasi/wasi-sdk/lib/clang/13.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
+
+#	-nostdlib 
+#	-nostdlib++ 
 
 #TODO parity-wasm serialization doesn't support bulk memory ops
 # This ruins the metering (it outputs wasm in an invalid section ordering)
@@ -206,7 +225,8 @@ CC_WASMS = \
 
 $(CC_WASMS:.cc=.wasm) : $(wildcard cpp_contracts/sdk/*.h)
 
-grpc_DEDUP_CFLAGS = $(shell echo $(grpc_CFLAGS) | ./dedup.sh | sort | uniq)
+grpc_DEDUP_CFLAGS = $(shell echo $(grpc_CFLAGS) | ./dedup.sh | sort | uniq | grep -v -e "-X.*" | grep -v -e "-march.*")
+grpcpp_DEDUP_CFLAGS = $(shell echo $(grpcpp_CFLAGS) | ./dedup.sh | sort | uniq | grep -v -e "-X.*" | grep -v -e "-march.*")
 
 AM_CPPFLAGS = \
 	$(xdrpp_CFLAGS) \
@@ -218,7 +238,8 @@ AM_CPPFLAGS = \
 	$(merkle_trie_toolkit_CFLAGS) \
 	$(wasm_api_CFLAGS) \
 	$(Catch2_CFLAGS) \
-	$(grpc_DEDUP_CFLAGS)
+	$(grpcpp_DEDUP_CFLAGS) \
+	$(protobuf_CFLAGS)
 
 LDADD = $(xdrpp_LIBS) \
 	$(libsodium_LIBS) \
@@ -230,7 +251,8 @@ LDADD = $(xdrpp_LIBS) \
 	$(wasm_api_LIBS) \
 	$(Catch2_LIBS) \
 	./metering/target/release/libinject_metering.a \
-	$(grpc_LIBS)
+	$(grpcpp_LIBS) \
+	$(protobuf_LIBS)
 
 metering/target/release/libinject_metering.a : metering/inject_metering/src/*.rs
 	cd metering && \

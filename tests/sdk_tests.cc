@@ -21,6 +21,8 @@ using namespace scs;
 
 TEST_CASE("replay cache", "[sdk]")
 {
+    test::DeferredContextClear defer;
+
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
 
@@ -31,7 +33,6 @@ TEST_CASE("replay cache", "[sdk]")
     test::deploy_and_commit_contractdb(script_db, h, c);
 
     ThreadlocalContextStore::make_ctx(scs_data_structures);
-    test::DeferredContextClear defer;
 
     auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
@@ -127,6 +128,8 @@ TEST_CASE("replay cache", "[sdk]")
 
 TEST_CASE("semaphore", "[sdk]")
 {
+    test::DeferredContextClear defer;
+
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
 
@@ -137,7 +140,6 @@ TEST_CASE("semaphore", "[sdk]")
     test::deploy_and_commit_contractdb(script_db, h, c);
 
     ThreadlocalContextStore::make_ctx(scs_data_structures);
-    test::DeferredContextClear defer;
 
     auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 

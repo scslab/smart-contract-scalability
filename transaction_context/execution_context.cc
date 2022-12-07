@@ -68,7 +68,8 @@ ExecutionContext::invoke_subroutine(MethodInvocation const& invocation)
 TransactionStatus
 ExecutionContext::execute(Hash const& tx_hash,
                           SignedTransaction const& tx,
-                          BlockContext& block_context)
+                          BlockContext& block_context,
+                          std::optional<NondeterministicResults> nondeterministic_res)
 {
     if (tx_context) {
         throw std::runtime_error("one execution at one time");
@@ -77,7 +78,7 @@ ExecutionContext::execute(Hash const& tx_hash,
     MethodInvocation invocation(tx.tx.invocation);
 
     tx_context = std::make_unique<TransactionContext>(
-        tx, tx_hash, scs_data_structures, block_context);
+        tx, tx_hash, scs_data_structures, block_context, nondeterministic_res);
 
     defer d{ [this]() {
         extract_results();

@@ -127,6 +127,8 @@ VirtualMachine::try_exec_tx_block(std::vector<SignedTransaction> const& txs)
 
     auto res = validate_tx_block(txs);
 
+    // TBB joins all the threads it uses
+
     if (!res) {
         phase_undo_block(global_context, *current_block_context);
         advance_block_number();
@@ -150,6 +152,7 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
     constexpr static uint32_t max_worker_threads = 20;
 
     StaticAssemblyWorkerCache::start_assembly_threads(mempool, global_context, *current_block_context, limits, max_worker_threads);
+    ThreadlocalContextStore::enable_rpcs();
     ThreadlocalContextStore::get_rate_limiter().start_threads(n_threads);
 
     using namespace std::chrono_literals;
@@ -159,8 +162,11 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
     std::this_thread::sleep_for(max_time_ms * 1ms);
     std::printf("done sleep\n");
 
-    ThreadlocalContextStore::get_rate_limiter().join_threads();
-    std::printf("done rate limiter join\n");
+    ThreadlocalContextStore::get_rate_limiter().stop_threads();
+    ThreadlocalContextStore::stop_rpcs();
+
+    //ThreadlocalContextStore::join_all_threads();
+    std::printf("done stop\n");
     StaticAssemblyWorkerCache::wait_for_stop_assembly_threads();
     std::printf("done join assembly threads\n");
 
@@ -181,6 +187,9 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
 
 VirtualMachine::~VirtualMachine()
 {
+    ThreadlocalContextStore::get_rate_limiter().stop_threads();
+    ThreadlocalContextStore::stop_rpcs();
+    StaticAssemblyWorkerCache::wait_for_stop_assembly_threads();
     // execution context has dangling reference to GlobalContext without this
     ThreadlocalContextStore::clear_entire_context();
 }

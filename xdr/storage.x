@@ -11,7 +11,7 @@ enum ObjectType
 	UNCONSTRAINED_INT64 = 3,
 };
 
-const RAW_MEMORY_MAX_LEN = 512;
+const RAW_MEMORY_MAX_LEN = 4096;
 
 struct RawMemoryStorage
 {

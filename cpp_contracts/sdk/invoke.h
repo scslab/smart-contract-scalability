@@ -44,6 +44,10 @@ void
 get_invoked_hash(
 	uint32_t offset);
 
+BUILTIN("return")
+void
+return_value(uint32_t offset, uint32_t len);
+
 } /* detail */
 
 // only works for fixed-size types here
@@ -116,6 +120,12 @@ get_invoked_hash()
 	Hash out;
 	detail::get_invoked_hash(to_offset(&out));
 	return out;
+}
+
+template<TriviallyCopyable T>
+void return_value(T const& r)
+{
+	detail::return_value(to_offset(&r), sizeof(r));
 }
 
 BUILTIN("get_block_number")

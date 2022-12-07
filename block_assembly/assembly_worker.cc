@@ -16,20 +16,19 @@ void
 AssemblyWorker::run()
 {
     //std::printf("start AssemblyWorker::run()\n");
-    auto& limiter = ThreadlocalContextStore::get_rate_limiter();
-
-    bool has_slot = false;
+    //auto& limiter = ThreadlocalContextStore::get_rate_limiter();
 
     while (true) {
-        bool is_shutdown = false;
-        if (has_slot)
+        bool is_shutdown = ThreadlocalContextStore::rate_limiter_wait_for_opening();
+
+   /*     if (has_slot)
         {
             is_shutdown = limiter.fastpath_wait_for_opening();
         } else
         {
             is_shutdown = limiter.wait_for_opening();
             has_slot = true;
-        }
+        } */
 
         if (is_shutdown) {
             //std::printf("AssemblyWorker::run() end from is_shutdown\n");
@@ -38,22 +37,14 @@ AssemblyWorker::run()
 
         auto tx = mempool.get_new_tx();
         if (!tx) {
-            //std::printf("end from no txs\n");
-            if (has_slot)
-            {
-                limiter.free_one_slot();
-            }
+            ThreadlocalContextStore::rate_limiter_free_slot();
             return;
         }
 
         auto reservation = limits.reserve_tx(*tx);
         if (!reservation)
         {
-            //std::printf("reservation failed\n");
-            if (has_slot)
-            {
-                limiter.free_one_slot();
-            }
+            ThreadlocalContextStore::rate_limiter_free_slot();
             return;
         }
 

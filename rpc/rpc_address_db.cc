@@ -1,42 +1,19 @@
 #include "rpc/rpc_address_db.h"
 
+#include <grpc/grpc.h>
+#include <grpcpp/channel.h>
+#include <grpcpp/client_context.h>
+#include <grpcpp/create_channel.h>
+#include <grpcpp/security/credentials.h>
+
 namespace scs {
 
 RpcAddressDB::RpcAddressDB()
     : address_db()
     , mtx()
-    , ps()
-{
-    std::thread th([this] {
-        while (!start_shutdown) {
-            ps.poll(500);
-        }
-        std::lock_guard lock(mtx);
-        ps_is_shutdown = true;
-        cv.notify_all();
-    });
+{}
 
-    th.detach();
-}
-
-void
-RpcAddressDB::await_ps_shutdown()
-{
-    auto done_lambda = [this]() -> bool { return ps_is_shutdown; };
-
-    std::unique_lock lock(mtx);
-    if (!done_lambda()) {
-        cv.wait(lock, done_lambda);
-    }
-}
-
-RpcAddressDB::~RpcAddressDB()
-{
-    start_shutdown = true;
-    await_ps_shutdown();
-}
-
-std::optional<xdr::rpc_sock>
+std::unique_ptr<ExternalCall::Stub>
 RpcAddressDB::connect(Hash const& h)
 {
     std::shared_lock lock(mtx);
@@ -46,10 +23,11 @@ RpcAddressDB::connect(Hash const& h)
         return {};
     }
 
-    return std::make_optional<xdr::rpc_sock>(
-        ps,
-        xdr::tcp_connect(it->second.addr.c_str(), it->second.port.c_str())
-            .release());
+    // for now, make a new channel on each call
+    return 
+        ExternalCall::NewStub(grpc::CreateChannel(it -> second.addr, grpc::InsecureChannelCredentials()));
+    //return std::make_shared<xdr::unique_sock>(
+    //    xdr::tcp_connect(it->second.addr.c_str(), it->second.port.c_str()));
 }
 
 void

@@ -23,6 +23,12 @@ PKG_CHECK_MODULES([libsodium], [libsodium])
 PKG_CHECK_MODULES([tbb], [tbb]);
 PKG_CHECK_MODULES([Catch2], [Catch2])
 PKG_CHECK_MODULES([lmdb], [lmdb])
+PKG_CHECK_MODULES([gmp], [gmp])
+PKG_CHECK_MODULES([gmpxx], [gmpxx])
+PKG_CHECK_MODULES([grpc], [grpc])
+PKG_CHECK_MODULES([grpcpp], [grpc++])
+PKG_CHECK_MODULES([protobuf], [protobuf])
+AC_CHECK_PROG([PROTOC], [protoc], [protoc])
 
 PKG_CHECK_MODULES(LIBFYAML, [ libfyaml ], HAVE_LIBFYAML=1, HAVE_LIBFYAML=0)
 

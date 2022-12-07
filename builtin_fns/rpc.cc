@@ -10,6 +10,7 @@
 #include "xdr/rpc.h"
 
 #include <xdrpp/arpc.h>
+#include <utils/time.h>
 
 namespace scs {
 
@@ -40,27 +41,74 @@ BuiltinFns::scs_external_call(uint32_t target_addr,
         if (!sock) {
             throw wasm_api::HostError("connection failed");
         }
+        std::printf("got connection\n");
+
+
+        auto rpc_result = ThreadlocalContextStore::send_cancellable_rpc(sock, RpcCall(h, calldata));
+
+        if (!rpc_result)
+        {
+            throw wasm_api::HostError("rpc failed");
+        }
+
+        result = *rpc_result;
+
+
+        /*
 
         auto client = xdr::arpc_client<ContractRPCV1>(*sock);
 
         uint64_t request_id = ThreadlocalContextStore::get_uid();
 
-        client.execute_call(
-            RpcCall(h, calldata), [request_id](xdr::call_result<RpcResult> cb) {
-                if (!cb) {
-                    ThreadlocalContextStore::timer_notify(std::nullopt,
-                                                          request_id);
+        auto ts = utils::init_time_measurement();
+
+        Notifyable notify = ThreadlocalContextStore::prep_timer_for(request_id);
+
+        struct transfer {
+        	std::shared_ptr<xdr::rpc_sock> s;
+        	Notifyable n;
+
+        	void operator()
+        	(xdr::call_result<RpcResult> cb) {
+        		if (!cb) {
+                    n.notify(std::nullopt);
                 } else {
-                    ThreadlocalContextStore::timer_notify(*cb, request_id);
+                    n.notify(*cb);
                 }
+        	}
+        };
+
+
+        client.execute_call(
+            RpcCall(h, calldata), 
+            transfer {
+            	.s = sock,
+            	.n = notify
             });
 
-        auto result_opt = ThreadlocalContextStore::timer_await(request_id);
+            [=](xdr::call_result<RpcResult> cb) mutable {
+            	if (!sock)
+            	{
+            		throw std::runtime_error("impossible!");
+            	}
+            	if (!cb) {
+                    notify.notify(std::nullopt);
+                } else {
+                    notify.notify(*cb);
+                }
+            }); 
+        */
 
-        if (!result_opt) {
-            throw wasm_api::HostError("no rpc response");
-        }
-        result = *result_opt;
+       // std::printf("start await\n");
+       // auto result_opt = ThreadlocalContextStore::timer_await(request_id);
+       // std::printf("await total time was %lf\n", utils::measure_time(ts));
+
+
+
+       // if (!result_opt) {
+       //     throw wasm_api::HostError("no rpc response");
+       // }
+       // result = *result_opt;
     }
 
     runtime.write_to_memory(result.result, response_offset, response_max_len);

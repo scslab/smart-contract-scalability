@@ -15,6 +15,8 @@ using namespace scs;
 
 TEST_CASE("gas metering", "[gas]")
 {
+    test::DeferredContextClear defer;
+
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
 
@@ -25,7 +27,6 @@ TEST_CASE("gas metering", "[gas]")
     test::deploy_and_commit_contractdb(script_db, h, c);
 
     ThreadlocalContextStore::make_ctx(scs_data_structures);
-    test::DeferredContextClear defer;
 
     std::unique_ptr<BlockContext> block_context
         = std::make_unique<BlockContext>(0);
