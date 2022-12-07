@@ -151,6 +151,7 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
 {
     constexpr static uint32_t max_worker_threads = 20;
 
+    ThreadlocalContextStore::get_rate_limiter().prep_for_notify();
     StaticAssemblyWorkerCache::start_assembly_threads(mempool, global_context, *current_block_context, limits, max_worker_threads);
     ThreadlocalContextStore::enable_rpcs();
     ThreadlocalContextStore::get_rate_limiter().start_threads(n_threads);

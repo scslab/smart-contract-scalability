@@ -2,7 +2,9 @@
 
 #include <cstdint>
 
-#include "proto/external_call.pb.h"
+#include "proto/external_call.grpc.pb.h"
+
+#include <grpcpp/grpcpp.h>
 
 namespace scs
 {

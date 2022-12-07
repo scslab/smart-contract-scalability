@@ -35,7 +35,7 @@ BuiltinFns::scs_external_call(uint32_t target_addr,
             target_addr);
         auto calldata = runtime.template load_from_memory<xdr::opaque_vec<>>(
             call_data_offset, call_data_len);
-
+	
         // TODO load balancing, something in background?
         auto sock = exec_ctx.scs_data_structures.address_db.connect(h);
         if (!sock) {

@@ -39,7 +39,7 @@ CancellableRPC::send_query(RpcCall const& request, uint64_t uid, std::unique_ptr
     call.set_call(std::string(input_data_ptr, request.calldata.size()));
 
     std::unique_ptr<grpc::ClientAsyncResponseReader<GRpcResult> > req(
-        stub->AsyncSendCall(&(*context), call, &cq));
+        stub->AsyncSendCall(&(*context), call, cq.get()));
 
     GRpcResult reply; 
 
@@ -54,7 +54,7 @@ CancellableRPC::send_query(RpcCall const& request, uint64_t uid, std::unique_ptr
     // The return value of Next should always be checked. This return value
     // tells us whether there is any kind of event or the cq_ is shutting down.
     while(true) {
-        bool next_result = cq.Next(&got_tag, &ok);
+        bool next_result = cq->Next(&got_tag, &ok);
 
         if (!next_result) {
             throw std::runtime_error("cq shut down prematurely!");

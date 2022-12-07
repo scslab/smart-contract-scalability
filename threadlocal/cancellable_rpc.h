@@ -23,7 +23,7 @@ class CancellableRPC
 
 	std::optional<grpc::ClientContext> context;
 
-	grpc::CompletionQueue cq;
+	std::unique_ptr<grpc::CompletionQueue> cq;
 
 public:
 
@@ -32,7 +32,10 @@ public:
 		, rpcs_allowed(true)
 		, context(std::nullopt)
 		, cq()
-		{}
+		{
+			std::printf("init a cancellable rpc\n");
+			cq = std::make_unique<grpc::CompletionQueue>();
+		}
 
 	// can be called from any thread
 	void set_allowed();

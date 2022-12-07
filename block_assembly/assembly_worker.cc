@@ -15,7 +15,7 @@ namespace scs {
 void
 AssemblyWorker::run()
 {
-    //std::printf("start AssemblyWorker::run()\n");
+    std::printf("start AssemblyWorker::run()\n");
     //auto& limiter = ThreadlocalContextStore::get_rate_limiter();
 
     while (true) {
@@ -69,8 +69,11 @@ AsyncAssemblyWorker::run()
                 cv.wait(lock,
                         [this]() { return done_flag || exists_work_to_do(); });
             }
-            if (done_flag)
-                return;
+	    //std::printf("awoke AsyncAssemblyWorker\n");
+            if (done_flag) {
+            //	std::printf("exiting AsyncAssemblyWorker\n");
+		    return;
+	    }
 
             if (!worker) {
                 throw std::runtime_error("shouldn't have null worker here");

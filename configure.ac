@@ -3,8 +3,8 @@ AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_MACRO_DIR([m4])
 
-OPT_FLAGS="-march=native -O3 -flto"
-DEBUG_FLAGS="-ggdb -O0"
+OPT_FLAGS="-march=native -O3 -flto -fPIE"
+DEBUG_FLAGS="-ggdb -O0 -fPIE"
 
 CXXFLAGS="-std=gnu++2a -fcoroutines $DEBUG_FLAGS $CXXFLAGS"
 CXX="g++"
@@ -21,7 +21,7 @@ CXXFLAGS="$CXXFLAGS $WFLAGS"
 PKG_PROG_PKG_CONFIG
 PKG_CHECK_MODULES([libsodium], [libsodium])
 PKG_CHECK_MODULES([tbb], [tbb]);
-PKG_CHECK_MODULES([Catch2], [Catch2])
+PKG_CHECK_MODULES([Catch2], [catch2])
 PKG_CHECK_MODULES([lmdb], [lmdb])
 PKG_CHECK_MODULES([gmp], [gmp])
 PKG_CHECK_MODULES([gmpxx], [gmpxx])

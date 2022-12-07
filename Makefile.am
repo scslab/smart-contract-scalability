@@ -208,9 +208,7 @@ CC_WASMS = \
 		-nostdlib++ \
 		-nostdlib \
 		-Wl,--no-entry -fno-exceptions -Wl,--allow-undefined \
-		-I./wasm_libs/libs/gmp/include/ \
-		-Wl,-lgmp,-L./wasm_libs/libs/gmp/lib \
-		wasi/wasi-sdk/lib/clang/13.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
+		wasi/wasi-sdk/lib/clang/15.0.6/lib/wasi/libclang_rt.builtins-wasm32.a
 
 #	-nostdlib 
 #	-nostdlib++ 
@@ -254,6 +252,8 @@ LDADD = $(xdrpp_LIBS) \
 	$(grpcpp_LIBS) \
 	$(protobuf_LIBS)
 
+#LDFLAGS += -Wl,--shared
+
 metering/target/release/libinject_metering.a : metering/inject_metering/src/*.rs
 	cd metering && \
 	cargo build --release --package inject_metering
@@ -263,7 +263,8 @@ $(TESTS_CCS:.cc=.o) : $(XH_FILES)
 $(MAIN_CCS:.cc=.o) : $(XH_FILES)
 
 bin_PROGRAMS = \
-	test
+	test \
+	basic
 
 vm/genesis.o: $(CC_WASMS:.cc=.wasm)
 main/test.o : $(CC_WASMS:.cc=.wasm)
@@ -272,10 +273,15 @@ COMPLETE_SRCS = $(SRCS) $(TESTS_CCS) $(TEST_UTILS_SRCS)
 
 #filter_perf_SOURCES = $(SRCS) main/filter_perf.cc
 test_SOURCES = main/test.cc $(COMPLETE_SRCS)
+basic_SOURCES = main/basic.cc $(COMPLETE_SRCS)
 
-test_LDFLAGS= -Wl,-force_load $(merkle_trie_toolkit_LIBS)
+#linu
+test_LDFLAGS= -Wl,--whole-archive,$(merkle_trie_toolkit_LIBS)  -Wl,--no-whole-archive
+#mac
+#test_LDFLAGS= -Wl,--force_load $(merkle_trie_toolkit_LIBS)
 
 clean-local:
 	cd metering && \
 	cargo clean
+	rm -f $(CC_WASMS:.cc=.wasm)
 

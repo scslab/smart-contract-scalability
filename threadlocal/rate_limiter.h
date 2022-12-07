@@ -43,6 +43,11 @@ class RateLimiter
   //  }
 
   public:
+	RateLimiter()
+	{
+		std::printf("init rate limiter\n");
+	}
+
     bool wait_for_opening();
 
     void notify();
@@ -61,8 +66,15 @@ class RateLimiter
         std::printf("starting worker threads\n");
     	std::lock_guard lock(mtx);
         max_active_threads = max_active;
-        _shutdown = false;
+        if (_shutdown) {
+		throw std::runtime_error("potential race condition between starting threads and setting shutdown to false!");
+	}
         wake_cond.notify_all();
+    }
+
+    void prep_for_notify() {
+	    std::lock_guard lock(mtx);
+	    _shutdown = false;
     }
 
     void stop_threads();

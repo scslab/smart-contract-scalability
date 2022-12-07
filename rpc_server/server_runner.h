@@ -32,8 +32,8 @@ class ServerRunner
 	}
 public:
 
-	ServerRunner(std::unique_ptr<ExternalCall::Service> impl, std::string addr)
-		: impl(std::move(impl))
+	ServerRunner(std::unique_ptr<ExternalCall::Service> _impl, std::string addr)
+		: impl(std::move(_impl))
 		, server(nullptr)
 		{
 			grpc::ServerBuilder builder;

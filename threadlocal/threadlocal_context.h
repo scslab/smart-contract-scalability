@@ -15,6 +15,8 @@
 
 #include "xdr/storage.h"
 
+#include "proto/external_call.grpc.pb.h"
+
 namespace scs {
 
 class ExecutionContext;
