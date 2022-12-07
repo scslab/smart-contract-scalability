@@ -137,9 +137,9 @@ TEST_CASE("simulated echo rcp", "[rpc]")
         phase_finish_block(scs_data_structures, *block_context);
     };
 
-    ServerRunner rpc_server;
+    ServerRunner echo_server(std::make_unique<EchoServer>(), "localhost:9000");
 
-    EchoServer echo(rpc_server.get_ps(), "9000");
+   // EchoServer echo(rpc_server.get_ps(), "9000");
 
     scs_data_structures.address_db.add_mapping(rpcAddr, RpcAddress { .addr = "localhost:9000" });
 

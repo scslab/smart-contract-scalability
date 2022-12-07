@@ -5,60 +5,62 @@
 #include <condition_variable>
 #include <mutex>
 
-#include <xdrpp/pollset.h>
+#include "proto/external_call.grpc.pb.h"
+#include <grpc/grpc.h>
+#include <grpcpp/grpcpp.h>
 
 namespace scs
 {
 
 class ServerRunner
 {
-	xdr::pollset ps;
-
-	bool ps_is_shutdown = false;
-	std::atomic<bool> start_shutdown = false;
-
 	std::mutex mtx;
 	std::condition_variable cv;
 
+	bool done = false;
+
+	std::unique_ptr<ExternalCall::Service> impl;
+	std::unique_ptr<grpc::Server> server;
+
+	void run()
+	{
+	   	server -> Wait();
+
+	    std::lock_guard lock(mtx);
+	    done = true;
+	    cv.notify_all();
+	}
 public:
 
-	ServerRunner() {
-		std::thread([this] {
-			while(!start_shutdown)
-			{
-				std::printf("run serverRunner loop\n");
-				ps.run();
-				//while(ps.pending())
-				//{
-				//	ps.poll(1000);
-				//}
-			}
-			std::printf("done server runner thread\n");
-			std::lock_guard lock(mtx);
-			ps_is_shutdown = true;
-			cv.notify_all();
-		}).detach();
-	}
+	ServerRunner(std::unique_ptr<ExternalCall::Service> impl, std::string addr)
+		: impl(std::move(impl))
+		, server(nullptr)
+		{
+			grpc::ServerBuilder builder;
+			builder.AddListeningPort(addr, grpc::InsecureServerCredentials());
+			builder.RegisterService(impl.get());
+			server = builder.BuildAndStart();
 
-	xdr::pollset& get_ps()
-	{
-		return ps;
-	}
+			std::thread([this] () {
+				run();
+			}).detach();
+		}
 
 	~ServerRunner()
 	{
-		std::printf("start shutdown\n");
-		start_shutdown = true;
-		auto done_lambda = [this] () -> bool {
-			return ps_is_shutdown;
+		server->Shutdown();
+		auto done_lambda = [this] () {
+			return !done;
 		};
 
 		std::unique_lock lock(mtx);
-		if (!done_lambda()) {
-			cv.wait(lock, done_lambda);
+		if (done_lambda())
+		{
+			return;
 		}
-		std::printf("done shutdown serverRunner\n");
+		cv.wait(lock, done_lambda);
 	}
+
 };
 
 
