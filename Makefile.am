@@ -110,8 +110,7 @@ STORAGE_PROXY_SRCS = \
 THREADLOCAL_SRCS = \
 	threadlocal/cancellable_rpc.cc \
 	threadlocal/rate_limiter.cc \
-	threadlocal/threadlocal_context.cc \
-	threadlocal/timeout.cc
+	threadlocal/threadlocal_context.cc
 
 TRANSACTION_CONTEXT_SRCS = \
 	transaction_context/execution_context.cc \
