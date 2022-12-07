@@ -9,7 +9,6 @@
 #include "threadlocal/gc.h"
 #include "threadlocal/uid.h"
 #include "threadlocal/allocator.h"
-#include "threadlocal/timeout.h"
 #include "threadlocal/rate_limiter.h"
 #include "threadlocal/cancellable_rpc.h"
 
@@ -77,24 +76,6 @@ class ThreadlocalContextStore
     static std::optional<RpcResult>
     send_cancellable_rpc(std::unique_ptr<ExternalCall::Stub> const& stub, RpcCall const& call);
 
-   /* static Notifyable prep_timer_for(uint64_t request_id)
-    {
-        return (cache.get()).timeout.prep_timer_for(request_id);
-    }
-
-    static auto timer_await(uint64_t request_id)
-    {
-        rate_limiter_free_slot();
-
-        return cache.get().timeout.await(request_id);
-    } */
-
-   // static void rate_limiter_notify_stop()
-   // {
-   //     rate_limiter_free_slot();
-   //     rate_limiter.notify_unslotted_stopped_running();
-   // }
-
     static void rate_limiter_free_slot()
     {
         if (cache.get().has_limiter_slot)
@@ -103,14 +84,6 @@ class ThreadlocalContextStore
             cache.get().has_limiter_slot = false;
         }
     }
-/*
-    static void rate_limiter_notify_stop_thread_if_unslotted()
-    {
-        if (!cache.get().has_limiter_slot)
-        {
-            rate_limiter.notify_unslotted_stopped_running();
-        }
-    } */
 
     static 
     bool rate_limiter_wait_for_opening()
@@ -147,8 +120,6 @@ class ThreadlocalContextStore
     static void stop_rpcs();
 
     static void post_block_clear();
-
-   // static void join_all_threads();
 
     static void clear_entire_context();
 };
