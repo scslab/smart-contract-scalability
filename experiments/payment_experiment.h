@@ -35,7 +35,7 @@ class PaymentExperiment
 	std::vector<SignedTransaction>
 	make_mint_txs();
 
-	SignedTransaction make_random_payment();
+	SignedTransaction make_random_payment(uint64_t expiration_time);
 
 public:
 
@@ -45,7 +45,7 @@ public:
 	prepare_vm();
 
 	std::vector<SignedTransaction>
-	gen_transaction_batch(size_t batch_size);
+	gen_transaction_batch(size_t batch_size, uint64_t expiration_time = UINT64_MAX);
 };
 
 }

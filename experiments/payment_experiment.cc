@@ -200,7 +200,7 @@ PaymentExperiment::make_mint_txs()
 }
 
 SignedTransaction
-PaymentExperiment::make_random_payment()
+PaymentExperiment::make_random_payment(uint64_t expiration_time)
 {
 	auto gen_account = [&] () {
 		std::uniform_int_distribution<> account_dist(0, account_map.size() - 1);
@@ -225,13 +225,15 @@ PaymentExperiment::make_random_payment()
 	    Address to;
 	    int64_t amount;
 	    uint64_t nonce;
+	    uint64_t expiration;
 	};
 
 	calldata_transfer calldata
 	{
 		.to = dst.wallet_address,
 		.amount = 100,
-		.nonce = std::uniform_int_distribution<>(0, UINT64_MAX)(gen)
+		.nonce = std::uniform_int_distribution<uint64_t>(0, UINT64_MAX)(gen),
+		.expiration = expiration_time
 	};
 
 	TransactionInvocation invocation(src.wallet_address, 1, make_calldata(calldata));
@@ -295,12 +297,12 @@ PaymentExperiment::prepare_vm()
 }
 
 std::vector<SignedTransaction>
-PaymentExperiment::gen_transaction_batch(size_t batch_size)
+PaymentExperiment::gen_transaction_batch(size_t batch_size, uint64_t expiration_time)
 {
 	std::vector<SignedTransaction> out;
 	for (size_t i = 0; i < batch_size; i++)
 	{
-		out.push_back(make_random_payment());
+		out.push_back(make_random_payment(expiration_time));
 	}
 	std::printf("make payment batch\n");
 	return out;
