@@ -17,6 +17,10 @@ run_experiment(uint32_t num_accounts, uint32_t batch_size, uint32_t num_blocks)
 
 	auto vm = e.prepare_vm();
 
+	if (!vm) {
+		throw std::runtime_error("failed to initialize virtual machine!");
+	}
+
 	auto& mp = vm -> get_mempool();
 
 	constexpr static uint32_t tx_batch_buffer = 5;
