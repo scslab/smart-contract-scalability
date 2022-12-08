@@ -27,6 +27,7 @@ class Mempool
     }
 
     std::optional<SignedTransaction> get_new_tx();
+    uint32_t available_size();
 
     uint32_t add_txs(std::vector<SignedTransaction>&& txs);
 };

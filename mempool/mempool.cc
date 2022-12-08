@@ -20,6 +20,21 @@ Mempool::get_new_tx()
 }
 
 uint32_t
+Mempool::available_size()
+{
+    uint64_t i = indices.load(std::memory_order_relaxed);
+
+    uint32_t consumed_idx = i & 0xFFFF'FFFF;
+    uint32_t filled_idx = i >> 32;
+
+    if (consumed_idx > filled_idx)
+    {
+        return 0;
+    }
+    return (filled_idx - consumed_idx);
+}
+
+uint32_t
 Mempool::add_txs(std::vector<SignedTransaction>&& txs)
 {
     std::lock_guard lock(mtx);

@@ -47,7 +47,7 @@ run_experiment(uint32_t num_accounts, uint32_t batch_size, uint32_t num_blocks)
 		uint64_t blk_size = blk.transactions.size();
 		double duration = utils::measure_time(ts);
 
-		std::printf("duration: %lf size %lu rate %lf\n", duration, blk_size, blk_size/duration);
+		std::printf("duration: %lf size %lu rate %lf remaining_mempool %lu \n", duration, blk_size, blk_size/duration, mp.available_size());
 		out.push_back(blk_size / duration);
 
 		if (blk_size != batch_size)

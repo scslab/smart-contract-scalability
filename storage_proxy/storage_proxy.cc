@@ -102,8 +102,6 @@ StorageProxy::delete_object_last(AddressAndKey const& key, delta_identifier_t id
 	{
 		throw wasm_api::HostError("failed to apply delete_last");
 	}
-	//v.vec.emplace_back(std::move(delta));
-	//v.vec.add_delta(std::move(delta), std::move(id));
 }
 
 void
