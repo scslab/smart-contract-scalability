@@ -1,0 +1,20 @@
+---
+- name: aws init
+  hosts: all
+  tasks:
+          - name: update
+            shell: "sudo apt-get update"
+          - name: install packages
+            shell: "sudo apt-get install -y autoconf cython3 sysstat make bison flex pip libgsl-dev liblmdb-dev git libltdl-dev libsodium-dev cxxtest pkg-config libtool libtbb-dev libglpk-dev cmake"
+          - name: install cc
+            shell: "sudo apt-get install -y g++-12 && sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 12 && sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 12"
+          - name: install libfyaml
+            shell: "git clone https://github.com/pantoniou/libfyaml.git && cd libfyaml && ./bootstrap.sh && ./configure && make -j && sudo make install"
+          - name: install catch2
+            shell: "git clone https://github.com/catchorg/Catch2.git && cd Catch2 && cmake -Bbuild -H. -DBUILD_TESTING=OFF -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc && sudo cmake --build build/ --target install"
+          - name: install grpc
+            shell: "sudo apt-get install -y libgrpc++-dev libgrpc-dev protobuf-compiler protobuf-compiler-grpc"
+          - name: install rust
+            shell: "curl https://sh.rustup.rs -sSf | sh -s -- -y"            
+          - name: ldconfig
+            shell: "sudo ldconfig"
