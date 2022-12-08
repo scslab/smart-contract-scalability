@@ -14,14 +14,17 @@ constexpr static StorageKey replay_cache_storage_key
 
 } // detail
 
-void record_self_replay(const bool do_clear = true)
+void record_self_replay(const uint64_t expiration_time)
 {
 	Hash hash_buf = get_invoked_hash();
-	hashset_insert(detail::replay_cache_storage_key, hash_buf, get_block_number());
-	if (do_clear)
-	{
-		hashset_clear(detail::replay_cache_storage_key, get_block_number());
-	}
+	hashset_insert(detail::replay_cache_storage_key, hash_buf, expiration_time);
+
+	hashset_clear(detail::replay_cache_storage_key, get_block_number());	
+}
+
+void replay_cache_size_increase(uint16_t amount)
+{
+	hashset_increase_limit(detail::replay_cache_storage_key, amount);
 }
 
 }

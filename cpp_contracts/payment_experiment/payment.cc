@@ -16,6 +16,7 @@ struct calldata_init
 {
     sdk::Address token;
     sdk::PublicKey pk;
+    uint16_t size_increase;
 };
 
 constexpr static sdk::StorageKey token_addr = sdk::make_static_key(0, 2);
@@ -39,6 +40,8 @@ init()
     erc20::Ierc20 token(calldata.token);
 
     token.allowanceDelta(sdk::get_self(), INT64_MAX);
+
+    sdk::replay_cache_size_increase(calldata.size_increase);
 }
 
 struct calldata_transfer
@@ -46,6 +49,7 @@ struct calldata_transfer
     sdk::Address to;
     int64_t amount;
     uint64_t nonce;
+    uint64_t expiration_time;
 };
 
 EXPORT("pub01000000")
@@ -53,7 +57,7 @@ transfer()
 {
     auto calldata = sdk::get_calldata<calldata_transfer>();
 
-    sdk::record_self_replay();
+    sdk::record_self_replay(calldata.expiration_time);
 
     sdk::auth_single_pk_check_sig(0);
 

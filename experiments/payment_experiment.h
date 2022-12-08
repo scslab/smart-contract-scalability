@@ -13,6 +13,7 @@ namespace scs
 class PaymentExperiment
 {
 	size_t num_accounts;
+	uint16_t hs_size_inc;
 
 	std::minstd_rand gen;
 
@@ -26,7 +27,7 @@ class PaymentExperiment
 	std::map<uint64_t, account_entry> account_map;
 
 	SignedTransaction
-	make_deploy_wallet_transaction(size_t idx, Hash const& wallet_contract_hash, Address const& token_addr);
+	make_deploy_wallet_transaction(size_t idx, Hash const& wallet_contract_hash, Address const& token_addr, uint16_t size_inc);
 
 	std::vector<SignedTransaction>
 	make_accounts();
@@ -38,7 +39,7 @@ class PaymentExperiment
 
 public:
 
-	PaymentExperiment(size_t num_accounts);
+	PaymentExperiment(size_t num_accounts, uint16_t hs_size_inc = 0);
 
 	std::unique_ptr<VirtualMachine>
 	prepare_vm();

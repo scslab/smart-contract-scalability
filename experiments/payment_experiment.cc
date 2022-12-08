@@ -15,8 +15,9 @@ namespace scs
 
 const uint64_t gas_limit = 100000;
 
-PaymentExperiment::PaymentExperiment(size_t num_accounts)
+PaymentExperiment::PaymentExperiment(size_t num_accounts, uint16_t hs_size_inc)
 	: num_accounts(num_accounts)
+	, hs_size_inc(hs_size_inc)
 	, gen(0)
 	{}
 
@@ -83,7 +84,7 @@ make_deploy_erc20_transaction()
 }
 
 SignedTransaction
-PaymentExperiment::make_deploy_wallet_transaction(size_t idx, Hash const& wallet_contract_hash, Address const& token_addr)
+PaymentExperiment::make_deploy_wallet_transaction(size_t idx, Hash const& wallet_contract_hash, Address const& token_addr, uint16_t size_inc)
 {
 	auto [sk, pk] = deterministic_key_gen(idx);
 
@@ -100,6 +101,7 @@ PaymentExperiment::make_deploy_wallet_transaction(size_t idx, Hash const& wallet
 	{
 	    Address token;
 	   	PublicKey pk;
+	   	uint16_t size_increase;
 	};
 
 
@@ -122,7 +124,8 @@ PaymentExperiment::make_deploy_wallet_transaction(size_t idx, Hash const& wallet
 	calldata_init ctor_data
 	{
 		.token = token_addr,
-		.pk = pk
+		.pk = pk,
+		.size_increase = size_inc
 	};
 
 	auto calldata = make_calldata(data, ctor_data);
@@ -148,7 +151,7 @@ PaymentExperiment::make_accounts()
 
 	for (size_t i = 0; i < num_accounts; i++)
 	{
-		out.push_back(make_deploy_wallet_transaction(i, wallet_contract_hash, token_addr));
+		out.push_back(make_deploy_wallet_transaction(i, wallet_contract_hash, token_addr, hs_size_inc));
 	}
 
 	return out;

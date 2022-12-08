@@ -5,7 +5,7 @@
 EXPORT("pub00000000")
 replay()
 {
-	sdk::record_self_replay();
+	sdk::record_self_replay(UINT64_MAX);
 }
 
 static sdk::Semaphore s(sdk::make_static_key(0, 1));
