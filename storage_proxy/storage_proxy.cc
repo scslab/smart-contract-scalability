@@ -126,7 +126,7 @@ StorageProxy::hashset_increase_limit(AddressAndKey const& key, uint32_t limit, d
 
 	static_assert(MAX_HASH_SET_SIZE <= UINT16_MAX, "uint16 overflow otherwise");
 
-	if (limit >= UINT16_MAX)
+	if (limit > UINT16_MAX)
 	{
 		throw wasm_api::HostError("limit increase too large");
 	}
