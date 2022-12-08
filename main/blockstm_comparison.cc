@@ -11,7 +11,7 @@
 using namespace scs;
 
 std::vector<double>
-run_experiment(uint32_t num_accounts, uint32_t batch_size, uint32_t num_blocks)
+run_experiment(uint32_t num_accounts, uint32_t batch_size, uint32_t num_threads, uint32_t num_blocks)
 {
 	PaymentExperiment e(num_accounts, UINT16_MAX);
 
@@ -39,10 +39,9 @@ run_experiment(uint32_t num_accounts, uint32_t batch_size, uint32_t num_blocks)
 
 	for (size_t i = 0; i < num_blocks; i++)
 	{
+		AssemblyLimits limits(batch_size, INT64_MAX);
 
-		AssemblyLimits limits(10, INT64_MAX);
-
-		auto [header, blk] = vm -> propose_tx_block(limits, 1000, 10);
+		auto [header, blk] = vm -> propose_tx_block(limits, 100'000, num_threads);
 
 		uint64_t blk_size = blk.transactions.size();
 		double duration = utils::measure_time(ts);
@@ -62,21 +61,52 @@ int main(int argc, const char** argv)
 {
 	std::vector<uint32_t> accts = {2, 10, 100};
 	std::vector<uint32_t> batches = {10, 100, 1000, 10'000};
+	std::vector<uint32_t> nthreads = {1,2,4,8,16,32,64,96};
+
+	struct exp_res {
+		uint32_t acct;
+		uint32_t batch;
+		uint32_t nthread;
+		double avg;
+
+		void print()
+		{
+			std::printf("result: acct %lu batch %lu nthread %lu avg %lf\n", acct, batch, nthread, avg);
+		}
+	};
+
+	std::vector<exp_res> results;
 
 	for (auto acct : accts)
 	{
 		for (auto batch : batches)
 		{
-			uint32_t trials = 10;
-			auto results = run_experiment(acct, batch, trials);
-			double res = 0;
-			for (auto r : results)
+			for (auto nthread : nthreads)
 			{
-				res += r;
-			}
-			double avg = res / trials;
+				std::printf("start %lu %lu %lu\n", acct, batch, nthread);
+				uint32_t trials = 10;
+				auto results = run_experiment(acct, batch, nthread, trials);
+				double res = 0;
+				for (auto r : results)
+				{
+					res += r;
+				}
+				double avg = res / trials;
 
-			std::printf("result: acct %lu batch %lu avg %lf\n", acct, batch, avg);
+				exp_res r {
+					.acct = acct,
+					.batch = batch;
+					.nthread = nthread;
+					.avg = avg
+				};
+				results.push_back(r);
+				r.print();
+			}
 		}
+	}
+	std::printf("results summary:\n");
+	for (auto r : results)
+	{
+		r.print();
 	}
 }

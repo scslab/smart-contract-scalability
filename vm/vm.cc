@@ -151,11 +151,9 @@ VirtualMachine::try_exec_tx_block(std::vector<SignedTransaction> const& txs)
 std::pair<BlockHeader, Block>
 VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads)
 {
-    constexpr static uint32_t max_worker_threads = 20;
-
     ThreadlocalContextStore::get_rate_limiter().prep_for_notify();
     ThreadlocalContextStore::enable_rpcs();
-    StaticAssemblyWorkerCache::start_assembly_threads(mempool, global_context, *current_block_context, limits, max_worker_threads);
+    StaticAssemblyWorkerCache::start_assembly_threads(mempool, global_context, *current_block_context, limits, n_threads);
     ThreadlocalContextStore::get_rate_limiter().start_threads(n_threads);
 
     using namespace std::chrono_literals;
@@ -164,28 +162,27 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
 
     limits.wait_for(max_time_ms * 1ms);
 
-    std::printf("wait time: %lf\n", utils::measure_time(ts));
+   // std::printf("wait time: %lf\n", utils::measure_time(ts));
 
     ThreadlocalContextStore::get_rate_limiter().stop_threads();
     ThreadlocalContextStore::stop_rpcs();
 
-    //ThreadlocalContextStore::join_all_threads();
-    std::printf("done stop\n");
+   // std::printf("done stop\n");
     StaticAssemblyWorkerCache::wait_for_stop_assembly_threads();
-    std::printf("done join assembly threads\n");
+  //  std::printf("done join assembly threads\n");
 
     phase_finish_block(global_context, *current_block_context);
-    std::printf("done finish block\n");
+  //  std::printf("done finish block\n");
 
     BlockHeader out = make_block_header();
-    std::printf("done make header\n");
+  //  std::printf("done make header\n");
 
     prev_block_hash = hash_xdr(out);
 
     auto block_out = current_block_context -> tx_set.serialize_block();
 
     advance_block_number();
-    std::printf("done proposal\n");
+   // std::printf("done proposal\n");
     return {out, block_out};
 }
 
