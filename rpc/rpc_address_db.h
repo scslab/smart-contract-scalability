@@ -8,9 +8,7 @@
 #include <memory>
 #include <shared_mutex>
 
-#include <xdrpp/msgsock.h>
-#include <xdrpp/pollset.h>
-#include <xdrpp/socket.h>
+#include "config.h"
 
 #if USE_RPC
 #include "proto/external_call.grpc.pb.h"
