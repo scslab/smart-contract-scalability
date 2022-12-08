@@ -158,10 +158,7 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
 
     using namespace std::chrono_literals;
 
-    std::printf("start sleep\n");
-
-    std::this_thread::sleep_for(max_time_ms * 1ms);
-    std::printf("done sleep\n");
+    limits.wait_for(max_time_ms * 1ms);
 
     ThreadlocalContextStore::get_rate_limiter().stop_threads();
     ThreadlocalContextStore::stop_rpcs();

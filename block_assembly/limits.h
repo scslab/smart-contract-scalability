@@ -3,6 +3,10 @@
 #include <atomic>
 #include <cstdint>
 
+#include <chrono>
+#include <condition_variable>
+#include <mutex>
+
 #include "xdr/transaction.h"
 
 #include <utils/non_movable.h>
@@ -22,6 +26,12 @@ class AssemblyLimits
         max_txs.fetch_add(1, std::memory_order_relaxed);
         overall_gas_limit.fetch_add(gas, std::memory_order_relaxed);
     }
+
+    bool shutdown = false;
+    std::mutex mtx;
+    std::condition_variable cv;
+
+    void notify_done();
 
   public:
     AssemblyLimits(int64_t max_txs, int64_t overall_gas_limit)
@@ -51,6 +61,8 @@ class AssemblyLimits
     };
 
     std::optional<Reservation> reserve_tx(SignedTransaction const& tx);
+
+    void wait_for(std::chrono::milliseconds timeout);
 };
 
 } // namespace scs
