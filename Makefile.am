@@ -172,7 +172,8 @@ TESTS_CCS = \
 	$(EXPERIMENTS_TEST_SRCS)
 
 MAIN_CCS = \
-	main/filter_perf.cc
+	main/blockstm_comparison.cc \
+	main/test.cc
 
 TEST_WATS = \
 	$(wildcard */tests/wat/*.wat)
@@ -270,7 +271,8 @@ $(MAIN_CCS:.cc=.o) : $(XH_FILES)
 
 bin_PROGRAMS = \
 	test \
-	basic
+	basic \
+	blockstm_comparison
 
 vm/genesis.o: $(CC_WASMS:.cc=.wasm)
 main/test.o : $(CC_WASMS:.cc=.wasm)
@@ -280,6 +282,7 @@ COMPLETE_SRCS = $(SRCS) $(TESTS_CCS) $(TEST_UTILS_SRCS)
 #filter_perf_SOURCES = $(SRCS) main/filter_perf.cc
 test_SOURCES = main/test.cc $(COMPLETE_SRCS)
 basic_SOURCES = main/basic.cc $(COMPLETE_SRCS)
+blockstm_comparison_SOURCES = main/blockstm_comparison.cc $(COMPLETE_SRCS)
 
 #linux
 #test_LDFLAGS= -Wl,--whole-archive,$(merkle_trie_toolkit_LIBS)  -Wl,--no-whole-archive
