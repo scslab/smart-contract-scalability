@@ -75,7 +75,7 @@ int main(int argc, const char** argv)
 		}
 	};
 
-	std::vector<exp_res> results;
+	std::vector<exp_res> overall_results;
 
 	for (auto acct : accts)
 	{
@@ -99,13 +99,13 @@ int main(int argc, const char** argv)
 					.nthread = nthread,
 					.avg = avg
 				};
-				results.push_back(r);
+				overall_results.push_back(r);
 				r.print();
 			}
 		}
 	}
 	std::printf("results summary:\n");
-	for (auto r : results)
+	for (auto r : overall_results)
 	{
 		r.print();
 	}
