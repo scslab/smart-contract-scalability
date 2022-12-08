@@ -1,11 +1,17 @@
 #include "sdk/replay_cache.h"
 #include "sdk/semaphore.h"
 #include "sdk/constexpr.h"
+#include "sdk/calldata.h"
+
+struct replay_calldata {
+	uint64_t expiry_time;
+};
 
 EXPORT("pub00000000")
 replay()
 {
-	sdk::record_self_replay(UINT64_MAX);
+	auto calldata = sdk::get_calldata<replay_calldata>();
+	sdk::record_self_replay(calldata.expiry_time);
 }
 
 static sdk::Semaphore s(sdk::make_static_key(0, 1));

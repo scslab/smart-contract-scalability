@@ -15,36 +15,24 @@ namespace scs {
 void
 AssemblyWorker::run()
 {
-    std::printf("start AssemblyWorker::run()\n");
-    //auto& limiter = ThreadlocalContextStore::get_rate_limiter();
+    auto& limiter = ThreadlocalContextStore::get_rate_limiter();
 
     while (true) {
-        bool is_shutdown = ThreadlocalContextStore::rate_limiter_wait_for_opening();
+        bool is_shutdown = limiter.wait_for_opening();
 
-   /*     if (has_slot)
-        {
-            is_shutdown = limiter.fastpath_wait_for_opening();
-        } else
-        {
-            is_shutdown = limiter.wait_for_opening();
-            has_slot = true;
-        } */
 
         if (is_shutdown) {
-            //std::printf("AssemblyWorker::run() end from is_shutdown\n");
             return;
         }
 
         auto tx = mempool.get_new_tx();
         if (!tx) {
-            ThreadlocalContextStore::rate_limiter_free_slot();
             return;
         }
 
         auto reservation = limits.reserve_tx(*tx);
         if (!reservation)
         {
-            ThreadlocalContextStore::rate_limiter_free_slot();
             return;
         }
 
@@ -69,17 +57,16 @@ AsyncAssemblyWorker::run()
                 cv.wait(lock,
                         [this]() { return done_flag || exists_work_to_do(); });
             }
-	    //std::printf("awoke AsyncAssemblyWorker\n");
             if (done_flag) {
-            //	std::printf("exiting AsyncAssemblyWorker\n");
-		    return;
-	    }
+    		    return;
+    	    }
 
             if (!worker) {
                 throw std::runtime_error("shouldn't have null worker here");
             }
 
             worker->run();
+            ThreadlocalContextStore::get_rate_limiter().free_one_slot();
 
             worker = std::nullopt;
         }

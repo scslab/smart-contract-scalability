@@ -13,6 +13,8 @@
 #include "block_assembly/limits.h"
 #include "block_assembly/assembly_worker.h"
 
+#include <utils/time.h>
+
 namespace scs {
 
 void
@@ -152,13 +154,17 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
     constexpr static uint32_t max_worker_threads = 20;
 
     ThreadlocalContextStore::get_rate_limiter().prep_for_notify();
-    StaticAssemblyWorkerCache::start_assembly_threads(mempool, global_context, *current_block_context, limits, max_worker_threads);
     ThreadlocalContextStore::enable_rpcs();
+    StaticAssemblyWorkerCache::start_assembly_threads(mempool, global_context, *current_block_context, limits, max_worker_threads);
     ThreadlocalContextStore::get_rate_limiter().start_threads(n_threads);
 
     using namespace std::chrono_literals;
 
+    auto ts = utils::init_time_measurement();
+
     limits.wait_for(max_time_ms * 1ms);
+
+    std::printf("wait time: %lf\n", utils::measure_time(ts));
 
     ThreadlocalContextStore::get_rate_limiter().stop_threads();
     ThreadlocalContextStore::stop_rpcs();

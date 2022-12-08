@@ -28,9 +28,12 @@ proto/external_call.pb.cc proto/external_call.pb.h : proto/external_call.proto
 proto/external_call.grpc.pb.h proto/external_call.grpc.pb.cc : proto/external_call.proto
 	$(PROTOC) --grpc_out=. --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` proto/external_call.proto
 
+if USE_RPC_AM
 PROTO_SRCS = \
 	proto/external_call.pb.cc \
 	proto/external_call.grpc.pb.cc
+endif
+
 
 BLOCK_ASSEMBLY_SRCS = \
 	block_assembly/assembly_worker.cc \
@@ -97,6 +100,9 @@ PHASE_SRCS = \
 RPC_SRCS = \
 	rpc/rpc_address_db.cc
 
+RPC_SERVER_SRCS = \
+	rpc_server/server_runner.cc
+
 STATE_DB_SRCS = \
 	state_db/delta_vec.cc \
 	state_db/modified_keys_list.cc \
@@ -141,6 +147,7 @@ SRCS = \
 	$(OBJECT_SRCS) \
 	$(PHASE_SRCS) \
 	$(RPC_SRCS) \
+	$(RPC_SERVER_SRCS) \
 	$(STATE_DB_SRCS) \
 	$(STORAGE_PROXY_SRCS) \
 	$(THREADLOCAL_SRCS) \
@@ -274,10 +281,10 @@ COMPLETE_SRCS = $(SRCS) $(TESTS_CCS) $(TEST_UTILS_SRCS)
 test_SOURCES = main/test.cc $(COMPLETE_SRCS)
 basic_SOURCES = main/basic.cc $(COMPLETE_SRCS)
 
-#linu
-test_LDFLAGS= -Wl,--whole-archive,$(merkle_trie_toolkit_LIBS)  -Wl,--no-whole-archive
+#linux
+#test_LDFLAGS= -Wl,--whole-archive,$(merkle_trie_toolkit_LIBS)  -Wl,--no-whole-archive
 #mac
-#test_LDFLAGS= -Wl,--force_load $(merkle_trie_toolkit_LIBS)
+test_LDFLAGS= -Wl,-force_load $(merkle_trie_toolkit_LIBS)
 
 clean-local:
 	cd metering && \

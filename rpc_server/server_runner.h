@@ -5,9 +5,15 @@
 #include <condition_variable>
 #include <mutex>
 
+#include "config.h"
+
+#if USE_RPC
 #include "proto/external_call.grpc.pb.h"
 #include <grpc/grpc.h>
 #include <grpcpp/grpcpp.h>
+#else
+#include "rpc_server/mock_external_call.h"
+#endif
 
 namespace scs
 {
@@ -19,48 +25,17 @@ class ServerRunner
 
 	bool done = false;
 
+	#if USE_RPC
 	std::unique_ptr<ExternalCall::Service> impl;
 	std::unique_ptr<grpc::Server> server;
+	#endif
 
-	void run()
-	{
-	   	server -> Wait();
-
-	    std::lock_guard lock(mtx);
-	    done = true;
-	    cv.notify_all();
-	}
+	void run();
 public:
 
-	ServerRunner(std::unique_ptr<ExternalCall::Service> _impl, std::string addr)
-		: impl(std::move(_impl))
-		, server(nullptr)
-		{
-			grpc::ServerBuilder builder;
-			builder.AddListeningPort(addr, grpc::InsecureServerCredentials());
-			builder.RegisterService(impl.get());
-			server = builder.BuildAndStart();
+	ServerRunner(std::unique_ptr<ExternalCall::Service> _impl, std::string addr);
 
-			std::thread([this] () {
-				run();
-			}).detach();
-		}
-
-	~ServerRunner()
-	{
-		server->Shutdown();
-		auto done_lambda = [this] () {
-			return !done;
-		};
-
-		std::unique_lock lock(mtx);
-		if (done_lambda())
-		{
-			return;
-		}
-		cv.wait(lock, done_lambda);
-	}
-
+	~ServerRunner();
 };
 
 

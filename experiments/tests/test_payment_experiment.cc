@@ -44,7 +44,7 @@ TEST_CASE("payment experiment hashset", "[experiment][payment]")
 	}
 }
 
-TEST_CASE("payment experiment assemble block", "[experiment][payment]")
+TEST_CASE("payment experiment assemble block", "[experiment][payments]")
 {
 	PaymentExperiment e(10);
 
@@ -52,7 +52,7 @@ TEST_CASE("payment experiment assemble block", "[experiment][payment]")
 
 	REQUIRE(!!vm);
 
-	SECTION("prepare one small block")
+	/*SECTION("prepare one small block")
 	{
 		auto& mp = vm -> get_mempool();
 		REQUIRE(mp.add_txs(e.gen_transaction_batch(10000)) == 10000);
@@ -62,9 +62,9 @@ TEST_CASE("payment experiment assemble block", "[experiment][payment]")
 		auto [header, blk] = vm -> propose_tx_block(limits, 1000, 10);
 
 		REQUIRE(blk.transactions.size() == 10);
-	}
+	} */
 
-	SECTION("prepare several small blocks")
+	//SECTION("prepare several small blocks")
 	{
 		auto& mp = vm -> get_mempool();
 		REQUIRE(mp.add_txs(e.gen_transaction_batch(10000)) == 10000);

@@ -12,7 +12,9 @@
 #include <xdrpp/pollset.h>
 #include <xdrpp/socket.h>
 
+#if USE_RPC
 #include "proto/external_call.grpc.pb.h"
+#endif
 
 namespace scs {
 
@@ -30,7 +32,9 @@ class RpcAddressDB
   public:
     RpcAddressDB();
 
+    #if USE_RPC
     std::unique_ptr<ExternalCall::Stub> connect(Hash const& h);
+    #endif
 
     void add_mapping(Hash const& h, RpcAddress addr);
 };

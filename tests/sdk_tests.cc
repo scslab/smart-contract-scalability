@@ -41,14 +41,17 @@ TEST_CASE("replay cache", "[sdk]")
 
     struct calldata_0
     {
+        uint64_t expiry_time;
         uint64_t nonce; // ignored in the contract
     };
 
     auto make_replay_tx = [&](uint64_t nonce,
+                        uint64_t expiry_time,
                            bool success = true) -> Hash {
 
         calldata_0 data
         {
+            .expiry_time = expiry_time,
             .nonce = nonce
         };
 
@@ -89,11 +92,11 @@ TEST_CASE("replay cache", "[sdk]")
 
     SECTION("one block")
     {
-    	auto h0 = make_replay_tx(0);
-    	auto h1 = make_replay_tx(1);
+    	auto h0 = make_replay_tx(0, UINT64_MAX);
+    	auto h1 = make_replay_tx(1, UINT64_MAX);
 
-    	make_replay_tx(0, false);
-    	make_replay_tx(1, false);
+    	make_replay_tx(0, UINT64_MAX, false);
+    	make_replay_tx(1, UINT64_MAX, false);
 
     	finish_block();
 
@@ -105,12 +108,12 @@ TEST_CASE("replay cache", "[sdk]")
     {
     	for (size_t i = 0; i < 64; i++)
     	{
-    		make_replay_tx(i);
-    		make_replay_tx(i, false);
+    		make_replay_tx(i, 0);
+    		make_replay_tx(i, 0, false);
     	}
 
     	// fill up replay cache
-    	make_replay_tx(500, false);
+    	make_replay_tx(500, 0, false);
 
     	finish_block();
 
@@ -119,9 +122,10 @@ TEST_CASE("replay cache", "[sdk]")
     		advance_block();
     		for (size_t i = 0; i < 64; i++)
 	    	{
-	    		make_replay_tx(i);
-	    		make_replay_tx(i, false);
+	    		make_replay_tx(i, 1);
+	    		make_replay_tx(i, 1, false);
 	    	}
+            make_replay_tx(500, 1, false);
     	}
     }
 }

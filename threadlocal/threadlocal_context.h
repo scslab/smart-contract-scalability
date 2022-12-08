@@ -14,7 +14,11 @@
 
 #include "xdr/storage.h"
 
-#include "proto/external_call.grpc.pb.h"
+#include "config.h"
+
+#if USE_RPC
+    #include "proto/external_call.grpc.pb.h"
+#endif
 
 namespace scs {
 
@@ -33,14 +37,11 @@ class ThreadlocalContextStore
 
         CancellableRPC rpc;
 
-        bool has_limiter_slot = false;
-
         context_t()
             : ctx()
             , gc()
             , uid()
             , rpc()
-            , has_limiter_slot(false)
             {}
     };
 
@@ -73,38 +74,10 @@ class ThreadlocalContextStore
         return hash_allocator.allocate(std::move(h));
     }
 
+    #if USE_RPC
     static std::optional<RpcResult>
     send_cancellable_rpc(std::unique_ptr<ExternalCall::Stub> const& stub, RpcCall const& call);
-
-    static void rate_limiter_free_slot()
-    {
-        if (cache.get().has_limiter_slot)
-        {
-            rate_limiter.free_one_slot();
-            cache.get().has_limiter_slot = false;
-        }
-    }
-
-    static 
-    bool rate_limiter_wait_for_opening()
-    {
-        bool is_shutdown;
-
-        if (cache.get().has_limiter_slot)
-        {
-            is_shutdown = rate_limiter.fastpath_wait_for_opening();
-        } 
-        else
-        {
-            is_shutdown = rate_limiter.wait_for_opening();
-        }
-
-        if (!is_shutdown)
-        {
-            cache.get().has_limiter_slot = true;
-        }
-        return is_shutdown;
-    }
+    #endif
 
     static auto& get_rate_limiter()
     {

@@ -31,6 +31,7 @@ AssemblyLimits::reserve_tx(SignedTransaction const& tx)
 void
 AssemblyLimits::notify_done()
 {
+    std::printf("notify done\n");
     std::lock_guard lock(mtx);
     shutdown = true;
     cv.notify_one();
@@ -44,10 +45,12 @@ AssemblyLimits::wait_for(std::chrono::milliseconds timeout)
     auto done = [this]() { return shutdown; };
 
     if (done()) {
+        std::printf("shortcircuit\n");
         return;
     }
 
     cv.wait_for(lock, timeout, done);
+    std::printf("ending wait_for: max_txs = %lu gas_limit = %lu\n", max_txs.load(), overall_gas_limit.load());
 }
 
 } // namespace scs

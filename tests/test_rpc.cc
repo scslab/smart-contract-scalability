@@ -18,11 +18,13 @@
 #include "rpc_server/echo_server.h"
 #include "rpc_server/server_runner.h"
 
+#include "config.h"
+
 using namespace scs;
 
 using xdr::operator==;
 
-TEST_CASE("simulated echo rcp", "[rpc]")
+TEST_CASE("simulated echo rpc", "[rpc]")
 {
 	test::DeferredContextClear defer;
 
@@ -139,11 +141,8 @@ TEST_CASE("simulated echo rcp", "[rpc]")
 
     ServerRunner echo_server(std::make_unique<EchoServer>(), "localhost:9000");
 
-   // EchoServer echo(rpc_server.get_ps(), "9000");
-
     scs_data_structures.address_db.add_mapping(rpcAddr, RpcAddress { .addr = "localhost:9000" });
 
-/*
     SECTION("one good response")
     {
     	auto tx1 = make_tx_withres(100, 100);
@@ -156,12 +155,14 @@ TEST_CASE("simulated echo rcp", "[rpc]")
     	auto tx1 = make_tx_withres(100, 101, false);
     	finish_block();
         check_invalid(tx1);
-    } */
+    } 
 
+    #if USE_RPC
     SECTION("one call")
     {
     	auto tx1 = make_tx_nores(100);
     	finish_block();
     	check_valid(tx1);
     }
+    #endif
 }

@@ -6,8 +6,6 @@
 
 #include "transaction_context/global_context.h"
 
-//#include "proto/external_call.pb.h"
-
 namespace scs {
 
 ExecutionContext&
@@ -75,7 +73,7 @@ ThreadlocalContextStore::enable_rpcs()
     }
 }
 
-
+#if USE_RPC
 std::optional<RpcResult>
 ThreadlocalContextStore::send_cancellable_rpc(std::unique_ptr<ExternalCall::Stub>
 const& stub, RpcCall const& call)
@@ -85,6 +83,7 @@ const& stub, RpcCall const& call)
 
     return ctx.rpc.send_query(call, uid, stub);
 }
+#endif
 
 void
 ThreadlocalContextStore::clear_entire_context()

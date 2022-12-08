@@ -10,7 +10,7 @@ namespace scs {
 class RateLimiter
 {
     // threads overall running, possibly not with slots
-  //  std::atomic<uint32_t> running_threads = 0;
+    //  std::atomic<uint32_t> running_threads = 0;
 
     // threads with slots
     std::atomic<uint32_t> active_threads = 0;
@@ -21,12 +21,11 @@ class RateLimiter
     std::condition_variable wake_cond;
     std::mutex mtx;
 
- //   std::condition_variable join_cond;
+    inline static thread_local bool has_slot = false;
 
-    void claim_one_slot() {
-     //   running_threads.fetch_add(1, std::memory_order_relaxed); 
-        active_threads.fetch_add(1, std::memory_order_relaxed);
-    }
+    //   std::condition_variable join_cond;
+
+    void claim_one_slot();
 
     void shutdown()
     {
@@ -34,19 +33,21 @@ class RateLimiter
         wake_cond.notify_all();
     }
 
-  //  void notify_join()
-  //  {
-  //      if (active_threads.load(std::memory_order_relaxed) == 0) {
-  //          std::lock_guard lock(mtx);
-  //          join_cond.notify_one();
-  //      }
-  //  }
+    //  void notify_join()
+    //  {
+    //      if (active_threads.load(std::memory_order_relaxed) == 0) {
+    //          std::lock_guard lock(mtx);
+    //          join_cond.notify_one();
+    //      }
+    //  }
+
+    bool fastpath_wait_for_opening();
+    bool slowpath_wait_for_opening();
+
+    inline static std::atomic<bool> unique_init = false;
 
   public:
-	RateLimiter()
-	{
-		std::printf("init rate limiter\n");
-	}
+    RateLimiter();
 
     bool wait_for_opening();
 
@@ -54,34 +55,15 @@ class RateLimiter
 
     void free_one_slot();
 
-//    void notify_unslotted_stopped_running() {
-//        running_threads.fetch_sub(1, std::memory_order_relaxed);
-//        notify_join();
-//    }
+    void start_threads(uint64_t max_active);
 
-    bool fastpath_wait_for_opening();
-
-    void start_threads(uint64_t max_active)
-    {
-        std::printf("starting worker threads\n");
-    	std::lock_guard lock(mtx);
-        max_active_threads = max_active;
-        if (_shutdown) {
-		throw std::runtime_error("potential race condition between starting threads and setting shutdown to false!");
-	}
-        wake_cond.notify_all();
-    }
-
-    void prep_for_notify() {
-	    std::lock_guard lock(mtx);
-	    _shutdown = false;
-    }
+    void prep_for_notify();
 
     void stop_threads();
 
-  //  void join_threads();
+    //  void join_threads();
 
-//    ~RateLimiter() { join_threads(); }
+    //    ~RateLimiter() { join_threads(); }
 };
 
 } // namespace scs

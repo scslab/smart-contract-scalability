@@ -2,12 +2,21 @@
 
 namespace scs {
 
-bool
-RateLimiter::wait_for_opening()
+RateLimiter::RateLimiter()
 {
-    auto done = [&]() {
-        return _shutdown.load(std::memory_order_relaxed)
-               || (active_threads < max_active_threads);
+    bool prev = false;
+    if (!unique_init.compare_exchange_strong(prev, true)) {
+        throw std::runtime_error("double init of rate_limiter");
+    }
+};
+
+bool
+RateLimiter::slowpath_wait_for_opening()
+{
+    auto done = [&]() -> bool {
+        bool res = _shutdown.load(std::memory_order_relaxed)
+                   || (active_threads < max_active_threads);
+        return res;
     };
 
     std::unique_lock lock(mtx);
@@ -36,7 +45,36 @@ RateLimiter::fastpath_wait_for_opening()
     }
 
     free_one_slot();
-    return wait_for_opening();
+    return slowpath_wait_for_opening();
+}
+
+bool
+RateLimiter::wait_for_opening()
+{
+    if (has_slot) {
+        return fastpath_wait_for_opening();
+    } else {
+        return slowpath_wait_for_opening();
+    }
+}
+
+void
+RateLimiter::start_threads(uint64_t max_active)
+{
+    std::lock_guard lock(mtx);
+    max_active_threads = max_active;
+    if (_shutdown) {
+        throw std::runtime_error("potential race condition between starting "
+                                 "threads and setting shutdown to false!");
+    }
+    wake_cond.notify_all();
+}
+
+void
+RateLimiter::prep_for_notify()
+{
+    std::lock_guard lock(mtx);
+    _shutdown = false;
 }
 
 void
@@ -45,17 +83,31 @@ RateLimiter::notify()
     if (active_threads.load(std::memory_order_relaxed)
         < max_active_threads.load(std::memory_order_relaxed)) {
         wake_cond.notify_one();
-    } 
+    }
 }
 
 void
 RateLimiter::free_one_slot()
 {
-    auto res = active_threads.fetch_sub(1, std::memory_order_relaxed);
+    if (has_slot) {
+        auto res = active_threads.fetch_sub(1, std::memory_order_relaxed);
+    }
+    has_slot = false;
     notify();
 }
 
-void RateLimiter::stop_threads()
+void
+RateLimiter::claim_one_slot()
+{
+    if (has_slot) {
+        throw std::runtime_error("double claim slot");
+    }
+    has_slot = true;
+    active_threads.fetch_add(1, std::memory_order_relaxed);
+}
+
+void
+RateLimiter::stop_threads()
 {
     shutdown();
     max_active_threads = 0;
