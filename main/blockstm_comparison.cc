@@ -95,8 +95,8 @@ int main(int argc, const char** argv)
 
 				exp_res r {
 					.acct = acct,
-					.batch = batch;
-					.nthread = nthread;
+					.batch = batch,
+					.nthread = nthread,
 					.avg = avg
 				};
 				results.push_back(r);
