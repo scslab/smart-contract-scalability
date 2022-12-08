@@ -2,8 +2,8 @@
 
 #include "mtt/trie/debug_levels.h"
 
-#define CONTRACT_DEBUG DEBUG_LEVEL_INFO
-#define OBJECT_DEBUG DEBUG_LEVEL_INFO
+#define CONTRACT_DEBUG DEBUG_LEVEL_NONE
+#define OBJECT_DEBUG DEBUG_LEVEL_NONE
 #define EXECUTION_TRACE DEBUG_LEVEL_NONE
 
 #define LOG(s, ...) std::printf((std::string("%-45s") + s + "\n").c_str(), (std::string(__FILE__) + "." + std::to_string(__LINE__) + ":").c_str() __VA_OPT__(,) __VA_ARGS__)

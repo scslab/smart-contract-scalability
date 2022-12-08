@@ -47,12 +47,12 @@ ExecutionContext::invoke_subroutine(MethodInvocation const& invocation)
             throw wasm_api::HostError("cannot find target address");
         }
 
-        std::printf("launch time: %lf\n", utils::measure_time(timestamp));
+        //std::printf("launch time: %lf\n", utils::measure_time(timestamp));
 
         active_runtimes.emplace(invocation.addr, std::move(runtime_instance));
         BuiltinFns::link_fns(*active_runtimes.at(invocation.addr));
 
-        std::printf("link time: %lf\n", utils::measure_time(timestamp));
+        //std::printf("link time: %lf\n", utils::measure_time(timestamp));
     }
 
     auto* runtime = active_runtimes.at(invocation.addr).get();
