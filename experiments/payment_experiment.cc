@@ -18,7 +18,6 @@ const uint64_t gas_limit = 100000;
 PaymentExperiment::PaymentExperiment(size_t num_accounts, uint16_t hs_size_inc)
 	: num_accounts(num_accounts)
 	, hs_size_inc(hs_size_inc)
-	, gen(0)
 	{}
 
 std::vector<SignedTransaction>
@@ -200,7 +199,7 @@ PaymentExperiment::make_mint_txs()
 }
 
 SignedTransaction
-PaymentExperiment::make_random_payment(uint64_t expiration_time)
+PaymentExperiment::make_random_payment(uint64_t expiration_time, std::minstd_rand& gen)
 {
 	auto gen_account = [&] () {
 		std::uniform_int_distribution<> account_dist(0, account_map.size() - 1);
@@ -304,9 +303,10 @@ PaymentExperiment::gen_transaction_batch(size_t batch_size, uint64_t expiration_
 
 	tbb::parallel_for(tbb::blocked_range<size_t>(0, out.size()),
 		[&] (auto r) {
+			std::minstd_rand gen(r.begin());
 			for (auto i = r.begin(); i < r.end(); i++)
 			{
-				out[i] = make_random_payment(expiration_time);
+				out[i] = make_random_payment(expiration_time, gen);
 			}
 		});
 

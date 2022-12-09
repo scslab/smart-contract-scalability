@@ -15,8 +15,6 @@ class PaymentExperiment
 	size_t num_accounts;
 	uint16_t hs_size_inc;
 
-	std::minstd_rand gen;
-
 	struct account_entry
 	{
 		PublicKey pk;
@@ -35,7 +33,7 @@ class PaymentExperiment
 	std::vector<SignedTransaction>
 	make_mint_txs();
 
-	SignedTransaction make_random_payment(uint64_t expiration_time);
+	SignedTransaction make_random_payment(uint64_t expiration_time, std::minstd_rand& gen);
 
 public:
 
