@@ -30,7 +30,8 @@ public:
 		, global_context(global_context)
 		, block_context(block_context)
 		, limits(limits)
-		{}
+		{
+		}
 
 	void run();
 };

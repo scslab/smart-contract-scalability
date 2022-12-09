@@ -19,6 +19,8 @@ class AssemblyLimits
 {
     std::atomic<int64_t> max_txs;
     std::atomic<int64_t> overall_gas_limit;
+    //std::atomic<int64_t> active_threads;
+
     const uint64_t gas_limit_per_tx = 1'000'000;
 
     void undo_tx_reservation(uint64_t gas)
@@ -27,11 +29,9 @@ class AssemblyLimits
         overall_gas_limit.fetch_add(gas, std::memory_order_relaxed);
     }
 
-    bool shutdown = false;
     std::mutex mtx;
     std::condition_variable cv;
-
-    void notify_done();
+    bool shutdown = false;
 
   public:
     AssemblyLimits(int64_t max_txs, int64_t overall_gas_limit)
@@ -59,6 +59,21 @@ class AssemblyLimits
             }
         }
     };
+
+    void notify_done();
+
+  /*  void notify_activate_thread()
+    {
+        active_threads++;
+    }
+    void notify_deactivate_thread()
+    {
+        int64_t remaining = active_threads.fetch_sub(1, std::memory_order_relaxed);
+        if (remaining == 1) {
+            // self is last remaining thread
+        }
+        notify_done();
+    } */
 
     std::optional<Reservation> reserve_tx(SignedTransaction const& tx);
 

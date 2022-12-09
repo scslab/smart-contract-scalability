@@ -54,6 +54,9 @@ BUILTIN_FNS_SRCS = \
 	builtin_fns/runtime.cc \
 	builtin_fns/witness.cc
 
+CONFIG_SRCS = \
+	config/print_configs.cc
+
 CONTRACT_DB_SRCS = \
 	contract_db/contract_db.cc \
 	contract_db/contract_db_proxy.cc \
@@ -137,6 +140,7 @@ SRCS = \
 	$(PROTO_SRCS) \
 	$(BLOCK_ASSEMBLY_SRCS) \
 	$(BUILTIN_FNS_SRCS) \
+	$(CONFIG_SRCS) \
 	$(CONTRACT_DB_SRCS) \
 	$(CRYPTO_SRCS) \
 	$(DEBUG_SRCS) \
