@@ -38,6 +38,13 @@ struct BlockContext : public utils::NonMovableOrCopyable
 		, modified_keys_list()
 		, block_number(block_number)
 		{}
+
+	void reset_context(uint64_t new_block_number)
+	{
+		block_number = new_block_number;
+		tx_set.clear();
+		modified_keys_list.clear();
+	}
 };
 
 } /* scs */
