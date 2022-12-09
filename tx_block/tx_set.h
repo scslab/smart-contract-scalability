@@ -51,7 +51,7 @@ class TxSet
 
     void finalize();
 
-    Block serialize_block() const;
+    void serialize_block(Block& out) const;
 
     Hash hash();
 

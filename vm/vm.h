@@ -51,8 +51,7 @@ class VirtualMachine : public utils::NonMovableOrCopyable
       return mempool;
     }
 
-    std::pair<BlockHeader, Block>
-    propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads);
+    BlockHeader propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& out);
 
     ~VirtualMachine();
 };

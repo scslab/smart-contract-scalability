@@ -11,7 +11,7 @@ namespace scs {
 
 class Mempool
 {
-    constexpr static uint64_t MAX_MEMPOOL_SIZE = 1'048'576;
+    constexpr static uint64_t MAX_MEMPOOL_SIZE = 4'194'308;
 
     std::vector<SignedTransaction> ringbuffer;
     std::atomic<uint64_t> indices;

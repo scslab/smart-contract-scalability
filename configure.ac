@@ -3,10 +3,10 @@ AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_MACRO_DIR([m4])
 
-OPT_FLAGS="-march=native -O3 -flto"
+OPT_FLAGS="-march=native -O3 -flto=auto"
 DEBUG_FLAGS="-ggdb -O0"
 
-CXXFLAGS="-std=gnu++2a -fsanitize=address $DEBUG_FLAGS $CXXFLAGS"
+CXXFLAGS="-std=gnu++2a $OPT_FLAGS $CXXFLAGS"
 CXX="g++"
 dnl clang --sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
 

@@ -114,12 +114,21 @@ VirtualMachine::make_block_header()
 {
     BlockHeader out;
 
+    tbb::task_group g1, g2;
+
     out.block_number = current_block_context -> block_number;
     out.prev_header_hash = prev_block_hash;
-    out.tx_set_hash = current_block_context -> tx_set.hash();
-    out.modified_keys_hash = current_block_context -> modified_keys_list.hash();
+    g1.run([&] () {
+   	 out.tx_set_hash = current_block_context -> tx_set.hash();
+	 });
+    
+    g2.run([&] () {
+		    out.modified_keys_hash = current_block_context -> modified_keys_list.hash();
+		    });
     out.state_db_hash = global_context.state_db.hash();
     out.contract_db_hash = global_context.contract_db.hash();
+    g1.wait();
+    g2.wait();
     return out;
 }
 
@@ -149,17 +158,19 @@ VirtualMachine::try_exec_tx_block(std::vector<SignedTransaction> const& txs)
     return out;
 }
 
-std::pair<BlockHeader, Block>
-VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads)
+BlockHeader
+VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& block_out)
 {
+	auto ts = utils::init_time_measurement();
     ThreadlocalContextStore::get_rate_limiter().prep_for_notify();
     ThreadlocalContextStore::enable_rpcs();
     StaticAssemblyWorkerCache::start_assembly_threads(mempool, global_context, *current_block_context, limits, n_threads);
+    std::printf("start assembly threads time %lf\n", utils::measure_time(ts));
     ThreadlocalContextStore::get_rate_limiter().start_threads(n_threads);
 
     using namespace std::chrono_literals;
-
-    auto ts = utils::init_time_measurement();
+	
+    std::printf("rate limiter start threads time %lf\n", utils::measure_time(ts));
 
     limits.wait_for(max_time_ms * 1ms);
 
@@ -172,19 +183,51 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
     StaticAssemblyWorkerCache::wait_for_stop_assembly_threads();
     std::printf("done join assembly threads %lf\n", utils::measure_time(ts));
 
-    phase_finish_block(global_context, *current_block_context);
-    std::printf("done finish block %lf\n", utils::measure_time(ts));
+    //phase_finish_block(global_context, *current_block_context);
+    //std::printf("done finish block %lf\n", utils::measure_time(ts))
+    BlockHeader out;
+    //auto block_out = std::make_unique<Block>();
 
-    BlockHeader out = make_block_header();
-    std::printf("done make header %lf\n", utils::measure_time(ts));
+    tbb::task_group txset;
+    txset.run([&] () {
+	current_block_context -> tx_set.finalize();
+	out.tx_set_hash = current_block_context -> tx_set.hash();
+	current_block_context -> tx_set.serialize_block(block_out);
+	});
+		    
+//	block_structures->tx_set.finalize();
+	current_block_context->modified_keys_list.merge_logs();
+    
+	std::printf("keys merge logs time %lf\n", utils::measure_time(ts));
+	tbb::task_group rest_of_hash;
+    rest_of_hash.run([&] ()
+		    {
+			out.block_number = current_block_context -> block_number;
+   			 out.prev_header_hash = prev_block_hash;
+    			out.modified_keys_hash = current_block_context -> modified_keys_list.hash();
+		    });
 
-    prev_block_hash = hash_xdr(out);
+	global_context.contract_db.commit();
+	global_context.state_db.commit_modifications(current_block_context->modified_keys_list);
+	ThreadlocalContextStore::post_block_clear();
 
-    auto block_out = current_block_context -> tx_set.serialize_block();
-	std::printf("done serialize %lf\n", utils::measure_time(ts));
+	out.state_db_hash = global_context.state_db.hash();
+	out.contract_db_hash = global_context.contract_db.hash();
+    
+    //BlockHeader out = make_block_header();
+    //std::printf("done make header %lf\n", utils::measure_time(ts));
+
+    //prev_block_hash = hash_xdr(out);
+
+    //auto block_out = current_block_context -> tx_set.serialize_block();
+	std::printf("done statedb hash %lf\n", utils::measure_time(ts));
+    txset.wait();
+    rest_of_hash.wait();
+    std::printf("final wait time %lf\n", utils::measure_time(ts));
     advance_block_number();
     std::printf("done proposal %lf\n", utils::measure_time(ts));
-    return {out, block_out};
+    return out;
+    //return std::make_pair<BlockHeader, std::unique_ptr<Block>>(std::move(out), std::move(block_out));
 }
 
 VirtualMachine::~VirtualMachine()
