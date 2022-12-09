@@ -23,11 +23,11 @@ run_experiment(uint32_t num_accounts, uint32_t batch_size, uint32_t num_threads,
 
 	auto& mp = vm -> get_mempool();
 
-	constexpr static uint32_t tx_batch_buffer = 5;
+	constexpr static uint32_t tx_batch_buffer = 100;
 
 	for (size_t i = 0; i < num_blocks + tx_batch_buffer; i++)
 	{
-		if (mp.add_txs(e.gen_transaction_batch(batch_size)) != batch_size)
+		if (mp.add_txs(e.gen_transaction_batch(batch_size, i)) != batch_size)
 		{
 			throw std::runtime_error("failed to add txs to batch!");
 		}
