@@ -16,9 +16,9 @@ AtomicSet::~AtomicSet()
 }
 
 void
-AtomicSet::resize(uint16_t new_capacity)
+AtomicSet::resize(uint32_t new_capacity)
 {
-    uint16_t new_alloc_size = new_capacity * extra_buffer;
+    uint32_t new_alloc_size = new_capacity * extra_buffer;
     if (new_alloc_size < capacity) {
         return;
     }
@@ -44,16 +44,16 @@ AtomicSet::clear()
 bool
 AtomicSet::try_insert(const HashSetEntry& h)
 {
-    const uint16_t start_idx = shorthash(h.hash.data(), h.hash.size(), capacity);
-    uint16_t idx = start_idx;
+    const uint32_t start_idx = shorthash(h.hash.data(), h.hash.size(), capacity);
+    uint32_t idx = start_idx;
 
     uint32_t alloc = ThreadlocalContextStore::allocate_hash(HashSetEntry(h));
 
-    const uint16_t cur_filled_slots
+    const uint32_t cur_filled_slots
         = num_filled_slots.load(std::memory_order_relaxed);
 
     if (cur_filled_slots >= capacity) {
-        return false;
+    	    return false;
     }
 
     do {
@@ -74,7 +74,7 @@ AtomicSet::try_insert(const HashSetEntry& h)
 
             if (local != TOMBSTONE) {
                 if (ThreadlocalContextStore::get_hash(local) == h) {
-                    return false;
+			return false;
                 } else {
                     break;
                 }
@@ -89,15 +89,14 @@ AtomicSet::try_insert(const HashSetEntry& h)
         }
 
     } while (idx != start_idx);
-
     return false;
 }
 
 void
 AtomicSet::erase(const HashSetEntry& h)
 {
-    const uint16_t start_idx = shorthash(h.hash.data(), h.hash.size(), capacity);
-    uint16_t idx = start_idx;
+    const uint32_t start_idx = shorthash(h.hash.data(), h.hash.size(), capacity);
+    uint32_t idx = start_idx;
 
     do {
         while (true) {
@@ -136,7 +135,7 @@ AtomicSet::get_hashes() const
 {
     std::vector<HashSetEntry> out;
 
-    for (uint16_t i = 0; i < capacity; i++) {
+    for (uint32_t i = 0; i < capacity; i++) {
         uint32_t idx = array[i].load(std::memory_order_relaxed);
         if (idx != 0 && idx != TOMBSTONE) {
             out.push_back(ThreadlocalContextStore::get_hash(idx));
