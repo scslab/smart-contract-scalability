@@ -8,6 +8,8 @@
 
 #include "block_assembly/limits.h"
 
+#include <tbb/global_control.h>
+
 using namespace scs;
 
 std::vector<double>
@@ -23,7 +25,7 @@ run_experiment(uint32_t num_accounts, uint32_t batch_size, uint32_t num_threads,
 
 	auto& mp = vm -> get_mempool();
 
-	constexpr static uint32_t tx_batch_buffer = 100;
+	const uint32_t tx_batch_buffer = 10 +  (num_blocks) * (num_threads) / (batch_size);
 
 	for (size_t i = 0; i < num_blocks + tx_batch_buffer; i++)
 	{
@@ -33,17 +35,24 @@ run_experiment(uint32_t num_accounts, uint32_t batch_size, uint32_t num_threads,
 		}
 	}
 
+	tbb::global_control(tbb::global_control::max_allowed_parallelism, num_threads);
+
 	std::vector<double> out;
 
 	auto ts = utils::init_time_measurement();
+	
+	Block block_buffer;
+	//std::vector<std::unique_ptr<Block>> gc;
 
 	for (size_t i = 0; i < num_blocks; i++)
 	{
 		AssemblyLimits limits(batch_size, INT64_MAX);
 
-		auto [header, blk] = vm -> propose_tx_block(limits, 100'000, num_threads);
-
-		uint64_t blk_size = blk.transactions.size();
+		auto ts_local = utils::init_time_measurement();
+		auto header = vm -> propose_tx_block(limits, 100'000, num_threads, block_buffer);
+		std::printf("local measurement %lf\n", utils::measure_time(ts_local));
+			
+		uint64_t blk_size = block_buffer.transactions.size();
 		double duration = utils::measure_time(ts);
 
 		std::printf("duration: %lf size %lu rate %lf remaining_mempool %lu \n", duration, blk_size, blk_size/duration, mp.available_size());
@@ -53,15 +62,16 @@ run_experiment(uint32_t num_accounts, uint32_t batch_size, uint32_t num_threads,
 		{
 			throw std::runtime_error("batch size mismatch!");
 		}
+//		gc.emplace_back(std::move(blk));
 	}
 	return out;
 }
 
 int main(int argc, const char** argv)
 {
-	std::vector<uint32_t> accts = {2, 10, 100};
-	std::vector<uint32_t> batches = {10, 100, 1000, 10'000};
-	std::vector<uint32_t> nthreads = {1,2,4,8,16,32,64,96};
+	std::vector<uint32_t> accts = {10'000 };//2, 10, 100};
+	std::vector<uint32_t> batches = {100'000};
+	std::vector<uint32_t> nthreads = {16,32,64,96};
 
 	struct exp_res {
 		uint32_t acct;
@@ -84,14 +94,15 @@ int main(int argc, const char** argv)
 			for (auto nthread : nthreads)
 			{
 				std::printf("start %lu %lu %lu\n", acct, batch, nthread);
-				uint32_t trials = 10;
+				uint32_t trials = 15;
+				// 10 trials, 5 warmup
 				auto results = run_experiment(acct, batch, nthread, trials);
 				double res = 0;
-				for (auto r : results)
+				for (size_t i = 5; i < trials; i++)
 				{
-					res += r;
+					res += results[i];
 				}
-				double avg = res / trials;
+				double avg = res / (trials - 5);
 
 				exp_res r {
 					.acct = acct,
