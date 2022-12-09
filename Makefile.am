@@ -80,7 +80,8 @@ HASH_SET_SRCS = \
 	hash_set/atomic_set.cc
 
 HASH_SET_TEST_SRCS = \
-	hash_set/tests/test_atomic_set.cc
+	hash_set/tests/test_atomic_set.cc \
+	hash_set/tests/test_hs_utils.cc
 
 MEMPOOL_SRCS = \
 	mempool/mempool.cc
