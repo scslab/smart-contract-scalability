@@ -27,12 +27,14 @@ AssemblyWorker::run()
 
         auto tx = mempool.get_new_tx();
         if (!tx) {
+            limits.notify_done();
             return;
         }
 
         auto reservation = limits.reserve_tx(*tx);
         if (!reservation)
         {
+            limits.notify_done();
             return;
         }
 

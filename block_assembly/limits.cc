@@ -12,7 +12,6 @@ AssemblyLimits::reserve_tx(SignedTransaction const& tx)
     int64_t res = max_txs.fetch_sub(1, std::memory_order_relaxed);
     if (res <= 0) {
         max_txs.fetch_add(1, std::memory_order_relaxed);
-        notify_done();
         return std::nullopt;
     }
 
@@ -21,7 +20,6 @@ AssemblyLimits::reserve_tx(SignedTransaction const& tx)
                                       std::memory_order_relaxed);
     if (res <= 0) {
         overall_gas_limit.fetch_add(tx.tx.gas_limit, std::memory_order_relaxed);
-        notify_done();
         return std::nullopt;
     }
 
@@ -31,7 +29,6 @@ AssemblyLimits::reserve_tx(SignedTransaction const& tx)
 void
 AssemblyLimits::notify_done()
 {
-    std::printf("notify done\n");
     std::lock_guard lock(mtx);
     shutdown = true;
     cv.notify_one();
