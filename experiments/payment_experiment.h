@@ -33,7 +33,7 @@ class PaymentExperiment
 	std::vector<SignedTransaction>
 	make_mint_txs();
 
-	SignedTransaction make_random_payment(uint64_t expiration_time, std::minstd_rand& gen);
+	SignedTransaction make_random_payment(uint64_t expiration_time, uint64_t nonce, std::minstd_rand& gen);
 
 public:
 
