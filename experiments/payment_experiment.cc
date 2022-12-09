@@ -300,11 +300,16 @@ std::vector<SignedTransaction>
 PaymentExperiment::gen_transaction_batch(size_t batch_size, uint64_t expiration_time)
 {
 	std::vector<SignedTransaction> out;
-	for (size_t i = 0; i < batch_size; i++)
-	{
-		out.push_back(make_random_payment(expiration_time));
-	}
-	std::printf("make payment batch\n");
+	out.resize(batch_size);
+
+	tbb::parallel_for(tbb::blocked_range<size_t>(0, out.size()),
+		[&] (auto r) {
+			for (auto i = r.begin(); i < r.end(); i++)
+			{
+				out[i] = make_random_payment(expiration_time);
+			}
+		});
+
 	return out;
 }
 
