@@ -1,5 +1,12 @@
 #pragma once
 
+#include "config/static_constants.h"
+#include <cstdint>
+#include <memory>
+#include <array>
+
+#include <utils/threadlocal_cache.h>
+
 namespace scs
 {
 
@@ -47,7 +54,7 @@ struct ThreadlocalBlockAllocator
 template<typename T>
 struct BlockAllocator
 {
-	utils::ThreadlocalCache<ThreadlocalBlockAllocator<T>, 256> cache;
+	utils::ThreadlocalCache<ThreadlocalBlockAllocator<T>, TLCACHE_SIZE> cache;
 
 	constexpr static uint32_t buffer_mask = 0x00FF'FFFF;
 

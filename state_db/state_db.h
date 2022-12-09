@@ -13,6 +13,7 @@
 #include "object/revertable_object.h"
 
 #include "state_db/new_key_cache.h"
+#include "config/static_constants.h"
 
 namespace scs {
 
@@ -50,7 +51,7 @@ class StateDB
     using value_t
         = value_struct;
     using trie_t = trie::MerkleTrie<prefix_t, value_t, metadata_t>;
-    using cache_t = utils::ThreadlocalCache<trie_t>;
+    using cache_t = utils::ThreadlocalCache<trie_t, TLCACHE_SIZE>;
 
   private:
     trie_t state_db;

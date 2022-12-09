@@ -105,7 +105,7 @@ StateDB::commit_modifications(const ModifiedKeysList& list)
 
     list.get_keys().parallel_batch_value_modify(update);
 
-    state_db.template batch_merge_in<trie::NoDuplicateKeysMergeFn>(new_kvs);
+    state_db.template batch_merge_in<TLCACHE_SIZE, trie::NoDuplicateKeysMergeFn>(new_kvs);
 
     state_db.perform_marked_deletions();
 

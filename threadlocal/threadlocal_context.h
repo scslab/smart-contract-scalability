@@ -20,6 +20,8 @@
     #include "proto/external_call.grpc.pb.h"
 #endif
 
+#include "config/static_constants.h"
+
 namespace scs {
 
 class ExecutionContext;
@@ -45,7 +47,7 @@ class ThreadlocalContextStore
             {}
     };
 
-    inline static utils::ThreadlocalCache<context_t> cache;
+    inline static utils::ThreadlocalCache<context_t, TLCACHE_SIZE> cache;
 
     inline static BlockAllocator<HashSetEntry> hash_allocator;
 

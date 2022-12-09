@@ -11,9 +11,9 @@
 
 #include <xdrpp/marshal.h>
 
-namespace scs {
+#include "config/static_constants.h"
 
-// TODO tag every transaction with its results (logs)
+namespace scs {
 
 class TxSet
 {
@@ -37,7 +37,7 @@ class TxSet
 
     using serial_trie_t = map_t::serial_trie_t;
 
-    using cache_t = utils::ThreadlocalCache<serial_trie_t>;
+    using cache_t = utils::ThreadlocalCache<serial_trie_t, TLCACHE_SIZE>;
 
     cache_t cache;
 

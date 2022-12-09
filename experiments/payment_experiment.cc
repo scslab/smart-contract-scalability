@@ -171,8 +171,6 @@ make_mint_transaction(Address const& wallet_addr, Address const& token_addr, int
 		.mint = amount
 	};
 
-	std::printf("mint amount %lld\n", data.mint);
-
 	auto calldata = make_calldata(data);
 
 	TransactionInvocation invocation(token_addr, 1, calldata);

@@ -53,7 +53,7 @@ void
 AsyncAssemblyWorker::run()
 {
     while (true) {
-        {
+        
             std::unique_lock lock(mtx);
             if ((!done_flag) && (!exists_work_to_do())) {
                 cv.wait(lock,
@@ -71,8 +71,8 @@ AsyncAssemblyWorker::run()
             ThreadlocalContextStore::get_rate_limiter().free_one_slot();
 
             worker = std::nullopt;
-        }
-        cv.notify_all();
+	    cv.notify_all();
+        
     }
 }
 
