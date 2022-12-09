@@ -28,12 +28,9 @@ proto/external_call.pb.cc proto/external_call.pb.h : proto/external_call.proto
 proto/external_call.grpc.pb.h proto/external_call.grpc.pb.cc : proto/external_call.proto
 	$(PROTOC) --grpc_out=. --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` proto/external_call.proto
 
-if USE_RPC_AM
 PROTO_SRCS = \
 	proto/external_call.pb.cc \
 	proto/external_call.grpc.pb.cc
-endif
-
 
 BLOCK_ASSEMBLY_SRCS = \
 	block_assembly/assembly_worker.cc \
@@ -285,9 +282,9 @@ basic_SOURCES = main/basic.cc $(COMPLETE_SRCS)
 blockstm_comparison_SOURCES = main/blockstm_comparison.cc $(COMPLETE_SRCS)
 
 #linux
-#test_LDFLAGS= -Wl,--whole-archive,$(merkle_trie_toolkit_LIBS)  -Wl,--no-whole-archive
+test_LDFLAGS= -Wl,--whole-archive,$(merkle_trie_toolkit_LIBS)  -Wl,--no-whole-archive
 #mac
-test_LDFLAGS= -Wl,-force_load $(merkle_trie_toolkit_LIBS)
+#test_LDFLAGS= -Wl,-force_load $(merkle_trie_toolkit_LIBS)
 
 clean-local:
 	cd metering && \
