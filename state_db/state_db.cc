@@ -103,7 +103,7 @@ StateDB::commit_modifications(const ModifiedKeysList& list)
 
     UpdateFn update(new_key_cache, state_db, new_kvs);
 
-    list.get_keys().parallel_batch_value_modify(update);
+    list.get_keys().parallel_batch_value_modify<UpdateFn, 1>(update);
 
     state_db.template batch_merge_in<TLCACHE_SIZE, trie::NoDuplicateKeysMergeFn>(new_kvs);
 
@@ -149,7 +149,7 @@ StateDB::rewind_modifications(const ModifiedKeysList& list)
 
     RewindFn rewind(state_db);
 
-    list.get_keys().parallel_batch_value_modify(rewind);
+    list.get_keys().parallel_batch_value_modify<RewindFn, 1>(rewind);
 
     has_uncommitted_deltas = false;
 }
