@@ -199,7 +199,7 @@ PaymentExperiment::make_mint_txs()
 }
 
 SignedTransaction
-PaymentExperiment::make_random_payment(uint64_t expiration_time, std::minstd_rand& gen)
+PaymentExperiment::make_random_payment(uint64_t expiration_time, uint64_t nonce, std::minstd_rand& gen)
 {
 	auto gen_account = [&] () {
 		std::uniform_int_distribution<> account_dist(0, account_map.size() - 1);
@@ -231,7 +231,7 @@ PaymentExperiment::make_random_payment(uint64_t expiration_time, std::minstd_ran
 	{
 		.to = dst.wallet_address,
 		.amount = 100,
-		.nonce = std::uniform_int_distribution<uint64_t>(0, UINT64_MAX)(gen),
+		.nonce = nonce,
 		.expiration = expiration_time
 	};
 
@@ -306,7 +306,7 @@ PaymentExperiment::gen_transaction_batch(size_t batch_size, uint64_t expiration_
 			std::minstd_rand gen(r.begin());
 			for (auto i = r.begin(); i < r.end(); i++)
 			{
-				out[i] = make_random_payment(expiration_time, gen);
+				out[i] = make_random_payment(expiration_time, i, gen);
 			}
 		});
 
