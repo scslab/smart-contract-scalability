@@ -162,27 +162,27 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
 
     limits.wait_for(max_time_ms * 1ms);
 
-   // std::printf("wait time: %lf\n", utils::measure_time(ts));
+    std::printf("wait time: %lf\n", utils::measure_time(ts));
 
     ThreadlocalContextStore::get_rate_limiter().stop_threads();
     ThreadlocalContextStore::stop_rpcs();
 
-   // std::printf("done stop\n");
+    std::printf("stop time %lf\n", utils::measure_time(ts));
     StaticAssemblyWorkerCache::wait_for_stop_assembly_threads();
-  //  std::printf("done join assembly threads\n");
+    std::printf("done join assembly threads %lf\n", utils::measure_time(ts));
 
     phase_finish_block(global_context, *current_block_context);
-  //  std::printf("done finish block\n");
+    std::printf("done finish block %lf\n", utils::measure_time(ts));
 
     BlockHeader out = make_block_header();
-  //  std::printf("done make header\n");
+    std::printf("done make header %lf\n", utils::measure_time(ts));
 
     prev_block_hash = hash_xdr(out);
 
     auto block_out = current_block_context -> tx_set.serialize_block();
-
+	std::printf("done serialize %lf\n", utils::measure_time(ts));
     advance_block_number();
-   // std::printf("done proposal\n");
+    std::printf("done proposal %lf\n", utils::measure_time(ts));
     return {out, block_out};
 }
 
