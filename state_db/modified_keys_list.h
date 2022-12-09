@@ -41,6 +41,8 @@ class ModifiedKeysList
         return keys;
     }
 
+    void clear();
+
     Hash hash();
 };
 

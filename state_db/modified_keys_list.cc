@@ -46,4 +46,12 @@ ModifiedKeysList::hash()
     return out;
 }
 
+void 
+ModifiedKeysList::clear()
+{
+    cache.clear();
+    keys.clear();
+    logs_merged = false;
+}
+
 } // namespace scs

@@ -55,6 +55,8 @@ class TxSet
 
     Hash hash();
 
+    void clear();
+
     // for testing
 
     uint32_t contains_tx(const Hash& hash) const

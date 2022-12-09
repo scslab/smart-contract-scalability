@@ -22,6 +22,14 @@ TxSet::assert_txs_not_merged() const
     }
 }
 
+void
+TxSet::clear()
+{
+    cache.clear();
+    txs.clear();
+    txs_merged = false;
+}
+
 /*
 
 struct MultiplicityAddInsertFn : public trie::GenericInsertFn<TxSet::value_t>

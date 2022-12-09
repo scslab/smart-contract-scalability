@@ -101,11 +101,12 @@ VirtualMachine::validate_tx_block(std::vector<SignedTransaction> const& txs)
     return !found_error;
 }
 
+
 void
 VirtualMachine::advance_block_number()
 {
-    current_block_context = std::make_unique<BlockContext>(
-        current_block_context->block_number + 1);
+    current_block_context -> reset_context(
+        current_block_context -> block_number + 1);
 }
 
 BlockHeader
