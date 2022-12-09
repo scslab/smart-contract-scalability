@@ -9,6 +9,7 @@
 #include "transaction_context/global_context.h"
 
 #include <utils/time.h>
+#include <tbb/task_group.h>
 
 namespace scs
 {
@@ -16,14 +17,19 @@ namespace scs
 void phase_finish_block(GlobalContext& global_structures, BlockContext& block_structures)
 {
 	auto ts = utils::init_time_measurement();
-	block_structures.tx_set.finalize();
-	std::printf("txset finalize %lf\n", utils::measure_time(ts));
+	tbb::task_group g;
+	g.run([&] () {
+		block_structures.tx_set.finalize();
+	});
+	//block_structures.tx_set.finalize();
 	block_structures.modified_keys_list.merge_logs();
 	std::printf("keylist merge %lf\n", utils::measure_time(ts));
 	global_structures.contract_db.commit();
 	std::printf("contract db commit %lf\n", utils::measure_time(ts));
 	global_structures.state_db.commit_modifications(block_structures.modified_keys_list);
 	std::printf("commit statedb %lf\n", utils::measure_time(ts));
+	g.wait();
+	std::printf("task group wait %lf\n", utils::measure_time(ts));
 	ThreadlocalContextStore::post_block_clear();
 	std::printf("post block tlcs clear %lf\n", utils::measure_time(ts));
 }
