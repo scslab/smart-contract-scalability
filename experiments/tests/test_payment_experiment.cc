@@ -52,28 +52,32 @@ TEST_CASE("payment experiment assemble block", "[experiment][payments]")
 
 	REQUIRE(!!vm);
 
-	/*SECTION("prepare one small block")
+	SECTION("prepare one small block")
 	{
 		auto& mp = vm -> get_mempool();
 		REQUIRE(mp.add_txs(e.gen_transaction_batch(10000)) == 10000);
 
 		AssemblyLimits limits(10, INT64_MAX);
 
-		auto [header, blk] = vm -> propose_tx_block(limits, 1000, 10);
+		Block blk;
+
+		auto header = vm -> propose_tx_block(limits, 1000, 10, blk);
 
 		REQUIRE(blk.transactions.size() == 10);
-	} */
+	}
 
-	//SECTION("prepare several small blocks")
+	SECTION("prepare several small blocks")
 	{
 		auto& mp = vm -> get_mempool();
 		REQUIRE(mp.add_txs(e.gen_transaction_batch(10000)) == 10000);
+
+		Block blk;
 
 		for (size_t i = 0; i < 10; i++)
 		{
 			AssemblyLimits limits(10, INT64_MAX);
 			std::printf("============= start block ===============\n");
-			auto [header, blk] = vm -> propose_tx_block(limits, 1000, 10);
+			auto header = vm -> propose_tx_block(limits, 1000, 10, blk);
 			REQUIRE(blk.transactions.size() == 10);
 		}
 	}
