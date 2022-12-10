@@ -628,25 +628,12 @@ RevertableObject::commit_round()
                           std::make_move_iterator(new_hashes_list.end()));
 
             normalize_hashset(committed_base -> body.hash_set());
-            //std::sort(h_list.begin(), h_list.end(), std::greater<HashSetEntry>());
 
             if (hashset_clear_committed.load(std::memory_order_relaxed))
             {
                 uint64_t threshold = max_committed_clear_threshold.load(std::memory_order_relaxed);
 
                 clear_hashset(committed_base -> body.hash_set(), threshold);
-
-                // TODO they're sorted, so we can just truncate the list and avoid the iterator overhead
-                /*for (auto it = h_list.begin(); it != h_list.end();)
-                {
-                    if (it -> index <= threshold)
-                    {
-                        it = h_list.erase(it);
-                    } else
-                    {
-                        ++it;
-                    }
-                } */
             }
 
             break;
