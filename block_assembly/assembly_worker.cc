@@ -20,7 +20,6 @@ AssemblyWorker::run()
     while (true) {
         bool is_shutdown = limiter.wait_for_opening();
 
-
         if (is_shutdown) {
             return;
         }
@@ -32,8 +31,7 @@ AssemblyWorker::run()
         }
 
         auto reservation = limits.reserve_tx(*tx);
-        if (!reservation)
-        {
+        if (!reservation) {
             limits.notify_done();
             return;
         }
@@ -42,8 +40,7 @@ AssemblyWorker::run()
         auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
         auto result = exec_ctx.execute(hash_xdr(*tx), *tx, block_context);
-        if (result == TransactionStatus::SUCCESS)
-        {
+        if (result == TransactionStatus::SUCCESS) {
             reservation->commit();
         }
     }
@@ -53,26 +50,24 @@ void
 AsyncAssemblyWorker::run()
 {
     while (true) {
-        
-            std::unique_lock lock(mtx);
-            if ((!done_flag) && (!exists_work_to_do())) {
-                cv.wait(lock,
-                        [this]() { return done_flag || exists_work_to_do(); });
-            }
-            if (done_flag) {
-    		    return;
-    	    }
+        std::unique_lock lock(mtx);
+        if ((!done_flag) && (!exists_work_to_do())) {
+            cv.wait(lock,
+                    [this]() { return done_flag || exists_work_to_do(); });
+        }
+        if (done_flag) {
+            return;
+        }
 
-            if (!worker) {
-                throw std::runtime_error("shouldn't have null worker here");
-            }
+        if (!worker) {
+            throw std::runtime_error("shouldn't have null worker here");
+        }
 
-            worker->run();
-            ThreadlocalContextStore::get_rate_limiter().free_one_slot();
+        worker->run();
+        ThreadlocalContextStore::get_rate_limiter().free_one_slot();
 
-            worker = std::nullopt;
-	    cv.notify_all();
-        
+        worker = std::nullopt;
+        cv.notify_all();
     }
 }
 
