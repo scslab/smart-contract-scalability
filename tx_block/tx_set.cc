@@ -123,15 +123,12 @@ TxSet::finalize()
     txs_merged = true;
 }
 
-Block 
-TxSet::serialize_block() const
+void 
+TxSet::serialize_block(Block& out) const
 {
-    Block out;
     assert_txs_merged();
 
-    txs.accumulate_values_parallel(out.transactions);
-
-    return out;
+    txs.accumulate_values_parallel<decltype(out.transactions), trie::DefaultAccumulateValuesFn, 10>(out.transactions);
 }
 
 Hash

@@ -284,7 +284,7 @@ COMPLETE_SRCS = $(SRCS) $(TESTS_CCS) $(TEST_UTILS_SRCS)
 #filter_perf_SOURCES = $(SRCS) main/filter_perf.cc
 test_SOURCES = main/test.cc $(COMPLETE_SRCS)
 basic_SOURCES = main/basic.cc $(COMPLETE_SRCS)
-blockstm_comparison_SOURCES = main/blockstm_comparison.cc $(COMPLETE_SRCS)
+blockstm_comparison_SOURCES = main/blockstm_comparison.cc $(SRCS)
 
 #linux
 test_LDFLAGS= -Wl,--whole-archive,$(merkle_trie_toolkit_LIBS)  -Wl,--no-whole-archive

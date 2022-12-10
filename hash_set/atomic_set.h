@@ -7,22 +7,24 @@
 #include "xdr/types.h"
 #include "xdr/storage.h"
 
+#include <utils/non_movable.h>
+
 namespace scs {
 
-class AtomicSet
+class AtomicSet : public utils::NonMovableOrCopyable
 {
     constexpr static float extra_buffer = 1.2;
 
-    uint16_t capacity = 0;
+    uint32_t capacity = 0;
 
     std::atomic<uint32_t>* array = nullptr;
 
-    std::atomic<uint16_t> num_filled_slots = 0;
+    std::atomic<uint32_t> num_filled_slots = 0;
 
     constexpr static uint32_t TOMBSTONE = 0xFFFF'FFFF;
 
   public:
-    AtomicSet(uint16_t max_capacity)
+    AtomicSet(uint32_t max_capacity)
         : capacity(max_capacity * extra_buffer)
         , array(nullptr)
     {
@@ -34,7 +36,7 @@ class AtomicSet
 
     ~AtomicSet();
 
-    void resize(uint16_t new_capacity);
+    void resize(uint32_t new_capacity);
 
     void clear();
 
