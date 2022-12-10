@@ -44,7 +44,8 @@ AtomicSet::clear()
 bool
 AtomicSet::try_insert(const HashSetEntry& h)
 {
-    const uint32_t start_idx = shorthash(h.hash.data(), h.hash.size(), capacity);
+    const uint32_t start_idx
+        = shorthash(h.hash.data(), h.hash.size(), capacity);
     uint32_t idx = start_idx;
 
     uint32_t alloc = ThreadlocalContextStore::allocate_hash(HashSetEntry(h));
@@ -53,7 +54,7 @@ AtomicSet::try_insert(const HashSetEntry& h)
         = num_filled_slots.load(std::memory_order_relaxed);
 
     if (cur_filled_slots >= capacity) {
-    	    return false;
+        return false;
     }
 
     do {
@@ -75,7 +76,7 @@ AtomicSet::try_insert(const HashSetEntry& h)
 
             if (local != TOMBSTONE) {
                 if (ThreadlocalContextStore::get_hash(local) == h) {
-			return false;
+                    return false;
                 } else {
                     break;
                 }
@@ -96,7 +97,8 @@ AtomicSet::try_insert(const HashSetEntry& h)
 void
 AtomicSet::erase(const HashSetEntry& h)
 {
-    const uint32_t start_idx = shorthash(h.hash.data(), h.hash.size(), capacity);
+    const uint32_t start_idx
+        = shorthash(h.hash.data(), h.hash.size(), capacity);
     uint32_t idx = start_idx;
 
     do {
@@ -108,6 +110,7 @@ AtomicSet::erase(const HashSetEntry& h)
 
                     if (array[idx].compare_exchange_strong(
                             local, TOMBSTONE, std::memory_order_relaxed)) {
+                        num_filled_slots.fetch_sub(1, std::memory_order_relaxed);
                         return;
                     } else {
                         continue;
