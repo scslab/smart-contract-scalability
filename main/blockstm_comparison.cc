@@ -69,9 +69,9 @@ run_experiment(uint32_t num_accounts, uint32_t batch_size, uint32_t num_threads,
 
 int main(int argc, const char** argv)
 {
-	std::vector<uint32_t> accts = {10'000 };//2, 10, 100};
-	std::vector<uint32_t> batches = {100'000};
-	std::vector<uint32_t> nthreads = {16,32,64,96};
+	std::vector<uint32_t> accts = {2, 10, 100, 1000, 10'000 }
+	std::vector<uint32_t> batches = {10, 100, 1000, 10'000, 100'000};
+	std::vector<uint32_t> nthreads = {1, 2, 4, 8, 16,32,64,96};
 
 	struct exp_res {
 		uint32_t acct;
