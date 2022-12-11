@@ -211,7 +211,8 @@ CC_WASMS = \
 	cpp_contracts/payment_experiment/payment.cc \
 	cpp_contracts/payment_channel.cc \
 	cpp_contracts/public_auction.cc \
-	cpp_contracts/0x.cc
+	cpp_contracts/0x.cc \
+	cpp_contracts/cfmm.cc
 
 .cc.wasm: Makefile.am Makefile
 	wasi/wasi-sdk/bin/clang -Os -mtune=native -march=native -I./cpp_contracts/ $< -o $@ \
