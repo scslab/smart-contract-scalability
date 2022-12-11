@@ -46,7 +46,7 @@ TEST_CASE("payment experiment hashset", "[experiment][payment]")
 
 TEST_CASE("payment experiment assemble block", "[experiment][payments]")
 {
-	PaymentExperiment e(10);
+	PaymentExperiment e(10, 1000);
 
 	auto vm = e.prepare_vm();
 
