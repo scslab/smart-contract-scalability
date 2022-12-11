@@ -4,6 +4,7 @@
 #include <string>
 
 #include "xdr/storage.h"
+#include "xdr/storage_delta.h"
 
 namespace debug {
 
@@ -12,6 +13,9 @@ storage_object_to_str(std::optional<scs::StorageObject> const& obj);
 
 std::string
 storage_object_to_str(scs::StorageObject const& obj);
+
+std::string
+storage_delta_to_str(scs::StorageDelta const& delta);
 
 //! Convert a byte array to a hex string.
 std::string

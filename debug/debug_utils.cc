@@ -38,6 +38,26 @@ storage_object_to_str(scs::StorageObject const& obj)
 }
 
 std::string
+storage_delta_to_str(scs::StorageDelta const& delta)
+{
+    switch(delta.type())
+    {
+        case scs::DeltaType::DELETE_LAST:
+            return "[delete_last]";
+        case scs::DeltaType::RAW_MEMORY_WRITE:
+            return "[raw memory write: " + debug::array_to_str(delta.data()) + "]";
+        case scs::DeltaType::NONNEGATIVE_INT64_SET_ADD:
+            return "[nn_int64: set " + std::to_string(delta.set_add_nonnegative_int64().set_value) +
+                " " + std::to_string(delta.set_add_nonnegative_int64().delta) + "]";
+        case scs::DeltaType::HASH_SET_INSERT:
+            return "[hs insert: " + debug::array_to_str(delta.hash().hash) + " tag " + std::to_string(delta.hash().index) + "]";
+        default:
+            return "[unimplemented]";
+    }
+}
+
+
+std::string
 array_to_str(const unsigned char* array, const int len)
 {
     std::stringstream s;
