@@ -22,6 +22,7 @@ SUFFIXES = .x .h .wat .wasm
 .x.h:
 	$(XDRC)  -hh -o $@ $<
 
+if USE_RPC_AM
 proto/external_call.pb.cc proto/external_call.pb.h : proto/external_call.proto
 	$(PROTOC) --cpp_out=. proto/external_call.proto
 
@@ -31,6 +32,7 @@ proto/external_call.grpc.pb.h proto/external_call.grpc.pb.cc : proto/external_ca
 PROTO_SRCS = \
 	proto/external_call.pb.cc \
 	proto/external_call.grpc.pb.cc
+endif
 
 BLOCK_ASSEMBLY_SRCS = \
 	block_assembly/assembly_worker.cc \
@@ -208,7 +210,8 @@ CC_WASMS = \
 	cpp_contracts/atomic_swap.cc \
 	cpp_contracts/payment_experiment/payment.cc \
 	cpp_contracts/payment_channel.cc \
-	cpp_contracts/public_auction.cc
+	cpp_contracts/public_auction.cc \
+	cpp_contracts/0x.cc
 
 .cc.wasm: Makefile.am Makefile
 	wasi/wasi-sdk/bin/clang -Os -mtune=native -march=native -I./cpp_contracts/ $< -o $@ \
@@ -287,7 +290,7 @@ basic_SOURCES = main/basic.cc $(COMPLETE_SRCS)
 blockstm_comparison_SOURCES = main/blockstm_comparison.cc $(SRCS)
 
 #linux
-test_LDFLAGS= -Wl,--whole-archive,$(merkle_trie_toolkit_LIBS)  -Wl,--no-whole-archive
+#test_LDFLAGS= -Wl,--whole-archive,$(merkle_trie_toolkit_LIBS)  -Wl,--no-whole-archive
 #mac
 #test_LDFLAGS= -Wl,-force_load $(merkle_trie_toolkit_LIBS)
 
