@@ -299,7 +299,7 @@ PaymentExperiment::prepare_vm()
 	auto [wallet_txs, mint_txs] = make_accounts_and_mints();
 
 	const size_t batch_exec_size = 100'000;
-	for (size_t i = 0; i < wallet_txs.size() / batch_exec_size; i++)
+	for (size_t i = 0; i < (wallet_txs.size() / batch_exec_size) + 1; i++)
 	{
 		std::fprintf(stderr, "wallet exec batch %lu\n", i);
 		std::vector<SignedTransaction> txs;
@@ -315,7 +315,7 @@ PaymentExperiment::prepare_vm()
 
 	std::printf("made wallets\n");
 
-	for (size_t i = 0; i < mint_txs.size() / batch_exec_size; i++)
+	for (size_t i = 0; i < (mint_txs.size() / batch_exec_size) + 1; i++)
 	{
 		std::fprintf(stderr, "mint exec batch %lu\n", i);
 		std::vector<SignedTransaction> txs;
