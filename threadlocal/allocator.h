@@ -21,7 +21,7 @@ struct ThreadlocalBlockAllocator
 	// at link time (with -O3 -flto)
 	std::unique_ptr<std::array<T, alloc_size>> buffer;
 
-	const uint32_t buffer_idx = (utils::ThreadlocalIdentifier::get()) << 24;
+	const uint32_t buffer_idx = (utils::ThreadlocalIdentifier::get()) << (32 - TLCACHE_BITS_REQUIRED);
 
 	ThreadlocalBlockAllocator()
 		: offset(0)
@@ -31,13 +31,15 @@ struct ThreadlocalBlockAllocator
 	uint32_t 
 	allocate(T&& h)
 	{
-		offset++;
-		(*buffer)[offset - 1] = std::move(h);
-		uint32_t out = offset;
-		if (offset - 1 >= alloc_size)
+		if (offset >= alloc_size)
 		{
 			throw std::runtime_error("alloc max reached");
 		}
+		
+		offset++;
+		(*buffer)[offset - 1] = std::move(h);
+		uint32_t out = offset;
+	
 		return out + buffer_idx;
 	}
 
@@ -56,7 +58,8 @@ struct BlockAllocator
 {
 	utils::ThreadlocalCache<ThreadlocalBlockAllocator<T>, TLCACHE_SIZE> cache;
 
-	constexpr static uint32_t buffer_mask = 0x00FF'FFFF;
+	constexpr static uint32_t buffer_mask = (0xFFFF'FFFF >> TLCACHE_BITS_REQUIRED);
+	constexpr static uint32_t BUFFER_BITS = 32 - TLCACHE_BITS_REQUIRED;
 
 	uint32_t
 	allocate(T&& h)
@@ -68,7 +71,7 @@ struct BlockAllocator
 	T const&
 	get(uint32_t idx) const
 	{
-		uint32_t buffer_idx = idx >> 24;
+		uint32_t buffer_idx = idx >> BUFFER_BITS;
 		auto const& allocators = cache.get_objects();
 
 		if (!allocators[buffer_idx])
