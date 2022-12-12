@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <random>
+#include <mutex>
 
 namespace scs
 {
@@ -22,16 +23,15 @@ class PaymentExperiment
 		Address wallet_address;
 	};
 
+	std::mutex mtx;
+
 	std::map<uint64_t, account_entry> account_map;
 
 	SignedTransaction
 	make_deploy_wallet_transaction(size_t idx, Hash const& wallet_contract_hash, Address const& token_addr, uint16_t size_inc);
 
-	std::vector<SignedTransaction>
-	make_accounts();
-
-	std::vector<SignedTransaction>
-	make_mint_txs();
+	std::pair<std::vector<SignedTransaction>, std::vector<SignedTransaction>>
+	make_accounts_and_mints();
 
 	SignedTransaction make_random_payment(uint64_t expiration_time, uint64_t nonce, std::minstd_rand& gen);
 

@@ -230,6 +230,13 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
     //return std::make_pair<BlockHeader, std::unique_ptr<Block>>(std::move(out), std::move(block_out));
 }
 
+uint64_t 
+VirtualMachine::get_current_block_number() const
+{
+    return current_block_context -> block_number;
+}
+
+
 VirtualMachine::~VirtualMachine()
 {
     ThreadlocalContextStore::get_rate_limiter().stop_threads();
