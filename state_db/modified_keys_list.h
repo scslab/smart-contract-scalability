@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mtt/trie/recycling_impl/trie.h"
+#include "mtt/trie/recycling_impl/atomic_trie.h"
 
 #include <utils/threadlocal_cache.h>
 
@@ -15,13 +16,16 @@ class ModifiedKeysList
     using value_t = trie::EmptyValue;
     using trie_prefix_t = trie::ByteArrayPrefix<sizeof(AddressAndKey)>;
 
-    using metadata_t = void;
+   // using metadata_t = void;
 
-    using map_t = trie::RecyclingTrie<value_t, trie_prefix_t, metadata_t>;
+    using map_t = trie::AtomicTrie<value_t, trie_prefix_t>;
+
+    //using map_t = trie::RecyclingTrie<value_t, trie_prefix_t, metadata_t>;
 
     map_t keys;
+    using serial_trie_t = trie::AtomicTrieReference<value_t, trie_prefix_t>;
 
-    using serial_trie_t = map_t::serial_trie_t;
+    //using serial_trie_t = map_t::serial_trie_t;
 
     using cache_t = utils::ThreadlocalCache<serial_trie_t, TLCACHE_SIZE>;
 

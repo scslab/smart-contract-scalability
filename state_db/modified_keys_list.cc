@@ -24,14 +24,14 @@ ModifiedKeysList::log_key(const AddressAndKey& key)
 {
     assert_logs_not_merged();
     auto& local_trie = cache.get(keys);
-    local_trie.insert(key, trie::EmptyValue{});
+    local_trie.insert(key);
 }
 
 void
 ModifiedKeysList::merge_logs()
 {
     assert_logs_not_merged();
-    keys.template batch_merge_in<trie::OverwriteMergeFn>(cache);
+   // keys.template batch_merge_in<trie::OverwriteMergeFn>(cache);
 
     logs_merged = true;
 }
@@ -40,9 +40,10 @@ Hash
 ModifiedKeysList::hash()
 {
     assert_logs_merged();
-
     Hash out;
-    keys.hash(out);
+    auto h = keys.hash();
+    std::memcpy(out.data(), h.data(), h.size());
+
     return out;
 }
 
