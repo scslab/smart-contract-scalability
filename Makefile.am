@@ -129,7 +129,6 @@ TRANSACTION_CONTEXT_SRCS = \
 	transaction_context/transaction_results.cc
 
 TX_BLOCK_SRCS = \
-	tx_block/tx_block.cc \
 	tx_block/tx_set.cc
 
 VM_SRCS = \
