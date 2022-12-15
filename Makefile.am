@@ -22,7 +22,6 @@ SUFFIXES = .x .h .wat .wasm
 .x.h:
 	$(XDRC)  -hh -o $@ $<
 
-if USE_RPC_AM
 proto/external_call.pb.cc proto/external_call.pb.h : proto/external_call.proto
 	$(PROTOC) --cpp_out=. proto/external_call.proto
 
@@ -32,7 +31,6 @@ proto/external_call.grpc.pb.h proto/external_call.grpc.pb.cc : proto/external_ca
 PROTO_SRCS = \
 	proto/external_call.pb.cc \
 	proto/external_call.grpc.pb.cc
-endif
 
 BLOCK_ASSEMBLY_SRCS = \
 	block_assembly/assembly_worker.cc \

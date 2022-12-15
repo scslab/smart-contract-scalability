@@ -88,7 +88,8 @@ ExecutionContext::execute(Hash const& tx_hash,
     try {
         invoke_subroutine(invocation);
     } catch (wasm_api::HostError& e) {
-        CONTRACT_INFO("Execution error: %s", e.what());
+	    std::printf("tx failed %s\n", e.what());
+	    CONTRACT_INFO("Execution error: %s", e.what());
         // txs.template invalidate<TransactionFailurePoint::COMPUTE>(tx_hash);
         return TransactionStatus::FAILURE;
     } catch (...) {

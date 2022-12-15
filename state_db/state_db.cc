@@ -5,6 +5,8 @@
 
 #include "state_db/modified_keys_list.h"
 
+#include <utils/time.h>
+
 namespace scs {
 
 void 
@@ -91,19 +93,31 @@ struct UpdateFn
 
         work_root.apply_to_kvs(apply_lambda);
         main_db.invalidate_hash_to_node_nolocks(main_db_subnode);
+
+	if (main_db_subnode)
+	{
+//		std::printf("main subnode %p\n", main_db_subnode);
+		std::vector<uint8_t> digest_bytes;
+		std::optional<trie::HashLog<prefix_t>> log = std::nullopt;
+		main_db_subnode -> compute_hash(digest_bytes, log);
+	}
     }
 };
 
 void
 StateDB::commit_modifications(const ModifiedKeysList& list)
 {
+    auto ts = utils::init_time_measurement();
     cache_t new_kvs;
 
     new_key_cache.finalize_modifications();
 
     UpdateFn update(new_key_cache, state_db, new_kvs);
 
+    std::printf("parallel modify before %lf\n", utils::measure_time(ts));
     list.get_keys().parallel_batch_value_modify<UpdateFn, 1>(update);
+
+    std::printf("parallel modify after %lf\n", utils::measure_time(ts));
 
     state_db.template batch_merge_in<TLCACHE_SIZE, trie::NoDuplicateKeysMergeFn>(new_kvs);
 
@@ -112,6 +126,7 @@ StateDB::commit_modifications(const ModifiedKeysList& list)
     new_key_cache.clear_for_next_block();
 
     has_uncommitted_deltas = false;
+    std::printf("finish %lf\n", utils::measure_time(ts));
 }
 
 struct RewindFn
