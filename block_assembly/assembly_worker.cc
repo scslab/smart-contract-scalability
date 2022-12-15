@@ -43,6 +43,9 @@ AssemblyWorker::run()
         if (result == TransactionStatus::SUCCESS) {
             reservation->commit();
         }
+	else {
+		std::printf("tx failed\n");
+	}
     }
 }
 
