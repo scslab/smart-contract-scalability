@@ -8,10 +8,12 @@
 
 #include "block_assembly/limits.h"
 
+#include <tbb/global_control.h>
+
 namespace scs
 {
 
-TEST_CASE("payment experiment init", "[experiment][payment]")
+TEST_CASE("payment experiment init", "[experiment][paymentz]")
 {
 	PaymentExperiment e(2);
 
@@ -30,7 +32,6 @@ TEST_CASE("payment experiment hashset", "[experiment][payment]")
 
 	SECTION("small block ok")
 	{
-		// we don't have expiration times yet in the replay prevention sdk
 		auto batch = e.gen_transaction_batch(10);
 
 		REQUIRE(vm -> try_exec_tx_block(batch));
@@ -46,6 +47,8 @@ TEST_CASE("payment experiment hashset", "[experiment][payment]")
 
 TEST_CASE("payment experiment assemble block", "[experiment][payments]")
 {
+
+	//tbb::global_control g(tbb::global_control::max_allowed_parallelism, 1);
 	PaymentExperiment e(10, 1000);
 
 	auto vm = e.prepare_vm();
@@ -75,12 +78,12 @@ TEST_CASE("payment experiment assemble block", "[experiment][payments]")
 
 		for (size_t i = 0; i < 10; i++)
 		{
-			AssemblyLimits limits(10, INT64_MAX);
+			AssemblyLimits limits(100, INT64_MAX);
 			std::printf("============= start block ===============\n");
 			auto header = vm -> propose_tx_block(limits, 1000, 10, blk);
-			REQUIRE(blk.transactions.size() == 10);
+			REQUIRE(blk.transactions.size() == 100);
 		}
-	}
+	} 
 }
 
 }
