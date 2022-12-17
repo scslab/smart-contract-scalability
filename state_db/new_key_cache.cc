@@ -59,14 +59,14 @@ void
 NewKeyCache::assert_try_reserve_mode() const
 {
     if (!in_try_reserve_mode) {
-        throw std::runtime_error("bad access on new key cache");
+        throw std::runtime_error("bad access on new key cache (try reserve mode)");
     }
 }
 void
 NewKeyCache::assert_get_mode() const
 {
     if (in_try_reserve_mode) {
-        throw std::runtime_error("bad access on new key cache");
+        throw std::runtime_error("bad access on new key cache (get mode)");
     }
 }
 
