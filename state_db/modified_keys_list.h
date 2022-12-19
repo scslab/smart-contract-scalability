@@ -47,6 +47,10 @@ class ModifiedKeysList
         return keys;
     }
 
+    size_t size() const {
+        return keys.size();
+    }
+
     void clear();
 
     Hash hash();

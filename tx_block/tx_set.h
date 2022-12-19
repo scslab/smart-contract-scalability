@@ -1,7 +1,7 @@
 #pragma once
 
 #include "mtt/trie/prefix.h"
-#include "mtt/trie/recycling_impl/trie.h"
+#include "mtt/trie/recycling_impl/atomic_trie.h"
 
 #include <utils/threadlocal_cache.h>
 
@@ -11,33 +11,76 @@
 
 #include <xdrpp/marshal.h>
 
+#include <mutex>
+
 #include "config/static_constants.h"
 
 namespace scs {
 
-class TxSet
+class LockableTxSetEntry
 {
-    static std::vector<uint8_t> serialize(const TxSetEntry& v)
+    std::mutex mtx;
+    TxSetEntry entry;
+
+public:
+
+    LockableTxSetEntry()
+        : mtx()
+        , entry()
+        {}
+
+    LockableTxSetEntry& operator=(TxSetEntry&& other)
     {
-        return xdr::xdr_to_opaque(v);
+        std::lock_guard lock(mtx);
+        entry = std::move(other);
+        return *this;
     }
 
+    std::lock_guard<std::mutex>
+    lock() {
+        return {mtx, std::adopt_lock};
+    }
+
+    TxSetEntry& get()
+    {
+        return entry;
+    }
+
+    const TxSetEntry& get() const
+    {
+        return entry;
+    }
+
+    void copy_data(std::vector<uint8_t>& buf) const {
+        auto serialization = xdr::xdr_to_opaque(entry);
+        buf.insert(buf.end(), serialization.begin(), serialization.end());
+    }
+};
+
+class TxSet
+{
+ //   static std::vector<uint8_t> serialize(const TxSetEntry& v)
+ //   {
+ //       return xdr::xdr_to_opaque(v);
+ //   }
+
     friend struct ResultListInsertFn;
-    friend struct ResultListMergeFn;
 
-    using value_t = trie::XdrTypeWrapper<TxSetEntry, &serialize>;
+    using value_t = LockableTxSetEntry;  //trie::XdrTypeWrapper<TxSetEntry, &serialize>;
 
-    using trie_prefix_t = trie::ByteArrayPrefix<sizeof(Hash)>;
+    using prefix_t = trie::ByteArrayPrefix<sizeof(Hash)>;
 
-    using metadata_t = void;
+    //using metadata_t = void;
 
-    using map_t = trie::RecyclingTrie<value_t, trie_prefix_t, metadata_t>;
+    //using map_t = trie::RecyclingTrie<value_t, trie_prefix_t, metadata_t>;
+
+    using map_t = trie::AtomicTrie<value_t, prefix_t>;
 
     map_t txs;
 
-    using serial_trie_t = map_t::serial_trie_t;
+    //using serial_trie_t = map_t::serial_trie_t;
 
-    using cache_t = utils::ThreadlocalCache<serial_trie_t, TLCACHE_SIZE>;
+    using cache_t = utils::ThreadlocalCache<trie::AtomicTrieReference<value_t, prefix_t>, TLCACHE_SIZE>;
 
     cache_t cache;
 
@@ -66,7 +109,7 @@ class TxSet
         {
             return 0;
         }
-        return r -> nondeterministic_results.size();
+        return r -> get().nondeterministic_results.size();
     }
 };
 
