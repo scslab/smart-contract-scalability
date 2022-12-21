@@ -105,10 +105,11 @@ struct UpdateFn
                 }
             }
         };
+        std::vector<uint8_t> digest_bytes;
 
             work_root.apply_to_kvs(apply_lambda);
        //     main_db_subnode -> log(std::string("thread ") + utils::ThreadlocalIdentifier::get_string() + " pre: ");
-            main_db_subnode -> compute_hash_and_normalize(main_db.get_gc());
+            main_db_subnode -> compute_hash_and_normalize(main_db.get_gc(), digest_bytes);
         //    main_db_subnode -> log(std::string("thread ") + utils::ThreadlocalIdentifier::get_string() + " post:");
 
     /*    }
