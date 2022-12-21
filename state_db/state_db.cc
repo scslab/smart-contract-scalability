@@ -122,6 +122,15 @@ struct UpdateFn
     } 
 };
 
+struct JustHashFn
+{
+    StateDB::trie_t& main_db;
+    using prefix_t = StateDB::prefix_t;
+
+
+
+};
+
 /*
 struct UpdateFn
 {

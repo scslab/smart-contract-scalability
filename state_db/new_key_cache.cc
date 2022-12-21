@@ -16,7 +16,16 @@ NewKeyCacheLine::try_reserve_delta(const AddressAndKey& key,
     std::lock_guard lock(mtx);
     auto it = map.find(key);
     if (it == map.end()) {
-        it = map.emplace(key, std::make_unique<RevertableObject>()).first;
+        auto* ptr = allocator.allocate();
+        
+        if (ptr == nullptr)
+        {
+            backup_allocator.emplace_back(std::make_unique<RevertableObject>());
+            ptr = backup_allocator.back().get();
+        }
+        it = map.emplace(key, ptr).first;
+
+        //it = map.emplace(key, std::make_unique<RevertableObject>()).first;
     }
 
     return it->second->try_add_delta(delta);
@@ -39,6 +48,8 @@ void
 NewKeyCacheLine::clear()
 {
     map.clear();
+    backup_allocator.clear();
+    allocator.clear_and_reset();
 }
 
 NewKeyCache::NewKeyCache()

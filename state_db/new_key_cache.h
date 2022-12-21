@@ -11,9 +11,12 @@
 
 #include <sodium.h>
 
+#include "utils/recycling_allocator.h"
+
 namespace scs {
 
 class StorageDelta;
+
 
 /**
  * IMPORTANT:
@@ -29,9 +32,12 @@ class NewKeyCacheLine
     const std::optional<StorageObject> null_obj = std::nullopt;
 #endif
 
-    using value_t = std::unique_ptr<RevertableObject>;
+    using allocator_t = RecyclingAllocatorLine<RevertableObject, 100'000>;
 
-    std::map<AddressAndKey, value_t> map;
+    allocator_t allocator;
+    std::vector<std::unique_ptr<RevertableObject>> backup_allocator;
+
+    std::map<AddressAndKey, RevertableObject*> map;
 
     std::mutex mtx;
 
