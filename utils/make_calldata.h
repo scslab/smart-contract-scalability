@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <xdrpp/types.h>
+#include <type_traits>
 
 namespace scs {
 
@@ -16,9 +17,12 @@ template<typename calldata, typename... calldatas>
 xdr::opaque_vec<> static make_calldata(calldata const& data, calldatas const& ...additional)
 {
     const uint8_t* addr = reinterpret_cast<const uint8_t*>(&data);
-
     xdr::opaque_vec<> out;
-    out.insert(out.end(), addr, addr + sizeof(calldata));
+
+    if constexpr (!std::is_empty<calldata>::value)
+    {
+        out.insert(out.end(), addr, addr + sizeof(calldata));
+    }
 
     auto rest = make_calldata(additional...);
 
