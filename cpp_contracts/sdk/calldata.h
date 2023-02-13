@@ -4,6 +4,8 @@
 #include "sdk/alloc.h"
 #include "sdk/concepts.h"
 
+#include <type_traits>
+
 namespace sdk
 {
 
@@ -18,6 +20,11 @@ void get_calldata(uint32_t offset, uint32_t start_offset, uint32_t end_offset);
 template<TriviallyCopyable T>
 T get_calldata()
 {
+	if constexpr (std::is_empty<T>::value)
+	{
+		return T{};
+	}
+	
 	T out;
 	detail::get_calldata(to_offset(&out), 0, sizeof(T));
 	return out;
