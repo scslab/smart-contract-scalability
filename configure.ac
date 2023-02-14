@@ -1,3 +1,19 @@
+#
+# Copyright 2023 Geoffrey Ramseyer
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 AC_INIT([smart-contract-scalability], [0])
 AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_SRCDIR([configure.ac])
@@ -6,7 +22,7 @@ AC_CONFIG_MACRO_DIR([m4])
 OPT_FLAGS="-march=native -O3 -flto=auto"
 DEBUG_FLAGS="-ggdb -O0"
 
-CXXFLAGS="-std=gnu++2a $OPT_FLAGS $CXXFLAGS"
+CXXFLAGS="-std=gnu++2b $OPT_FLAGS $CXXFLAGS"
 CXX="g++"
 dnl clang --sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
 
