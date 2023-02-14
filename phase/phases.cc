@@ -1,3 +1,19 @@
+/**
+ * Copyright 2023 Geoffrey Ramseyer
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "phase/phases.h"
 
 #include "threadlocal/threadlocal_context.h"
@@ -21,7 +37,6 @@ void phase_finish_block(GlobalContext& global_structures, BlockContext& block_st
 	g.run([&] () {
 		block_structures.tx_set.finalize();
 	});
-	//block_structures.tx_set.finalize();
 	block_structures.modified_keys_list.merge_logs();
 	std::printf("keylist merge %lf\n", utils::measure_time(ts));
 	global_structures.contract_db.commit();
@@ -43,36 +58,5 @@ void phase_undo_block(GlobalContext& global_structures, BlockContext& block_stru
 
 	ThreadlocalContextStore::post_block_clear();
 }
-
-/*
-void
-phase_merge_delta_batches(DeltaBatch& delta_batch)
-{
-	delta_batch.merge_in_serial_batches();
-}
-
-void
-phase_filter_deltas(GlobalContext const& global_structures, DeltaBatch& delta_batch, TxBlock& tx_block)
-{
-	global_structures.state_db.populate_delta_batch(delta_batch);
-
-	delta_batch.filter_invalid_deltas(tx_block);
-}
-
-void
-phase_compute_state_updates(DeltaBatch& delta_batch, const TxBlock& tx_block)
-{
-	delta_batch.apply_valid_deltas(tx_block);
-}
-
-void 
-phase_finish_block(GlobalContext& global_structures, const DeltaBatch& delta_batch, const TxBlock& tx_block)
-{
-	global_structures.contract_db.commit(tx_block);
-	global_structures.state_db.apply_delta_batch(delta_batch);
-	ThreadlocalContextStore::post_block_clear();
-}
-*/
-
 
 } /* scs */

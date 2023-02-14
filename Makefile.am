@@ -1,3 +1,19 @@
+#
+# Copyright 2023 Geoffrey Ramseyer
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 CLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = $(PKGCONFIG_SUBDIRS)
@@ -72,10 +88,6 @@ EXPERIMENTS_SRCS = \
 EXPERIMENTS_TEST_SRCS = \
 	experiments/tests/test_payment_experiment.cc
 
-FILTER_SRCS = \
-	filter/apply_context.cc \
-	filter/filter_context.cc
-
 HASH_SET_SRCS = \
 	hash_set/atomic_set.cc
 
@@ -105,7 +117,6 @@ RPC_SERVER_SRCS = \
 	rpc_server/server_runner.cc
 
 STATE_DB_SRCS = \
-	state_db/delta_vec.cc \
 	state_db/modified_keys_list.cc \
 	state_db/new_key_cache.cc \
 	state_db/state_db.cc
@@ -121,7 +132,6 @@ THREADLOCAL_SRCS = \
 
 TRANSACTION_CONTEXT_SRCS = \
 	transaction_context/execution_context.cc \
-	transaction_context/global_context.cc \
 	transaction_context/method_invocation.cc \
 	transaction_context/transaction_context.cc \
 	transaction_context/transaction_results.cc
