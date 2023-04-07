@@ -42,6 +42,11 @@ struct calldata_allowanceDelta
     int64_t amount;
 };
 
+struct calldata_balanceOf
+{
+    sdk::Address account;
+};
+
 class Ierc20
 {
     const sdk::Address& addr;
@@ -110,6 +115,22 @@ public:
         const calldata_allowanceDelta& arg)
     {
         sdk::invoke(addr, 2, arg);
+    }
+
+    inline int64_t balanceOf(
+        const sdk::Address& account)
+    {
+        calldata_balanceOf arg
+        {
+            .account = account
+        };
+        return balanceOf(arg);
+    }
+
+    inline int64_t balanceOf(
+        const calldata_balanceOf& arg)
+    {
+        return sdk::invoke<calldata_balanceOf, int64_t>(addr, 3, arg);
     }
 };
 

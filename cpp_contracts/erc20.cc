@@ -97,6 +97,14 @@ mint(const Address& to, const int64_t amount)
     sdk::int64_add(total_supply_storage_key, amount);
 }
 
+int64_t
+balance_of(const Address& addr)
+{
+    calculate_balance_key(addr, storage_key_buf);
+
+    return sdk::int64_get(storage_key_buf);
+}
+
 } // namespace internal
 
 EXPORT("pub00000000")
@@ -123,6 +131,13 @@ allowanceDelta()
     Address sender = sdk::get_msg_sender();
 
     internal::allowance_delta(sender, calldata.account, calldata.amount);
+}
+
+EXPORT("pub03000000")
+balanceOf()
+{
+    auto calldata = sdk::get_calldata<calldata_balanceOf>();
+    sdk::return_value(internal::balance_of(calldata.account));
 }
 
 // TODO initialize with guard on owner
