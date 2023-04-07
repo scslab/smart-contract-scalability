@@ -33,7 +33,7 @@ struct asset_config
 	uint8_t liquidity_frac;
 };
 
-constexpr static uint8_t INDEX_OFFSET = 8;
+constexpr static uint8_t INDEX_OFFSET = 48;
 constexpr static uint64_t INITIAL_INDEX = static_cast<uint64_t>(1)<<INDEX_OFFSET;
 
 struct compound_config
@@ -56,12 +56,24 @@ int128_t present_value_borrow(int64_t principal, const compound_config& config)
 	return (static_cast<int128_t>(principal) * config.base_borrow_index) >> INDEX_OFFSET;
 }
 
+int64_t principal_value_supply(int64_t present, const compound_config& config)
+{
+	return (static_cast<int128_t>(present) << INDEX_OFFSET) / config.base_supply_index;
+}
+
+int64_t principal_value_borrow(int64_t present, const compound_config& config)
+{
+	return (static_cast<int128_t>(present) << INDEX_OFFSET) / config.base_borrow_index;
+}
+
 struct user_config
 {
 
 };
 
 constexpr static sdk::StorageKey config_addr = sdk::make_static_key(0, 2);
+constexpr static sdk::StorageKey base_supply_addr = sdk::make_static_key(1, 2);
+constexpr static sdk::StorageKey base_borrow_addr = sdk::make_static_key(2, 2);
 
 sdk::StorageKey user_config_addr(const sdk::Address& addr)
 {
@@ -263,19 +275,20 @@ void transfer_base(const sdk::Address& from, const sdk::Address& to, int64_t amo
 
 	auto to_supply_key = user_base_asset_supply_addr(to);
 
-	sdk::int64_add(from_borrow_key, principal_value_borrow(-amount_from_borrow));
-	sdk::int64_add(from_supply_key, principal_value_borrow(-amount_from_supply));
+	sdk::int64_add(from_borrow_key, principal_value_borrow(-amount_from_borrow, config));
+	sdk::int64_add(from_supply_key, principal_value_borrow(-amount_from_supply, config));
 
-	sdk::int64_add(to_supply_key, principal_value_supply(amount_from_borrow + amount_from_supply));
+	sdk::int64_add(to_supply_key, principal_value_supply(amount_from_borrow + amount_from_supply, config));
 }
 
-void normalize_account(const sdk::Address& address, int64_t amount)
+void normalize_account(const sdk::Address& address, int64_t amount, const compound_config& config)
 {
+	// does not affect borrow constraint (except maybe a rounding error), so we ignore that here
 	auto borrow_key = user_base_asset_borrow_addr(address);
 	auto supply_key = user_base_asset_supply_addr(address);
 	
-	sdk::int64_add(borrow_key, principal_value_borrow(-amount));
-	sdk::int64_add(supply_key, principal_value_borrow(amount));
+	sdk::int64_add(borrow_key, principal_value_borrow(-amount, config));
+	sdk::int64_add(supply_key, principal_value_borrow(amount, config));
 }
 
 void withdraw_base(const sdk::Address& from, const sdk::Address& to, int64_t borrow_amount, int64_t supply_amount, const compound_config& config)
@@ -291,8 +304,11 @@ void withdraw_base(const sdk::Address& from, const sdk::Address& to, int64_t bor
 	auto borrow_key = user_base_asset_borrow_addr(from);
 	auto supply_key = user_base_asset_supply_addr(from);
 
-	sdk::int64_add(from_borrow_key, principal_value_borrow(-borrow_amount));
-	sdk::int64_add(from_supply_key, principal_value_borrow(-supply_amount));
+	sdk::int64_add(borrow_key, principal_value_borrow(-borrow_amount, config));
+	sdk::int64_add(supply_key, principal_value_borrow(-supply_amount, config));
+
+	sdk::int64_add(base_borrow_addr, -borrow_amount);
+	sdk::int64_add(base_supply_addr, -supply_amount);
 
 	erc20::Ierc20 base_token(config.base_token_addr);
 
@@ -332,8 +348,11 @@ void supply_base(const sdk::Address& from, const sdk::Address& to, int64_t borro
 	auto borrow_key = user_base_asset_borrow_addr(from);
 	auto supply_key = user_base_asset_supply_addr(from);
 
-	sdk::int64_add(from_borrow_key, principal_value_borrow(borrow_amount));
-	sdk::int64_add(from_supply_key, principal_value_borrow(supply_amount));
+	sdk::int64_add(borrow_key, principal_value_borrow(borrow_amount, config));
+	sdk::int64_add(supply_key, principal_value_borrow(supply_amount, config));
+
+	sdk::int64_add(base_borrow_addr, borrow_amount);
+	sdk::int64_add(base_supply_addr, supply_amount);
 
 	erc20::Ierc20 base_token(config.base_token_addr);
 
