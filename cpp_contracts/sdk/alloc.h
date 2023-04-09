@@ -37,6 +37,12 @@ abort()
   asm ("unreachable");
 }
 
+void __attribute__((__noreturn__))
+unimplemented()
+{
+  abort();
+}
+
 #pragma GCC diagnostic pop
 
 void* alloc(size_t count) noexcept
