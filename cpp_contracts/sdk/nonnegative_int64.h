@@ -73,6 +73,15 @@ int64_set_add(StorageKey const& key, int64_t set_value, int64_t delta)
 		delta);
 }
 
+void 
+int64_set(StorageKey const& key, int64_t set_value)
+{
+	detail::nonnegative_int64_set_add(
+		to_offset(&key),
+		set_value,
+		0);
+}
+
 // returns 0 in default case where it does not exist
 int64_t
 int64_get(StorageKey const& key)
