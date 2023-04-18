@@ -672,6 +672,11 @@ initialize()
 	sdk::Semaphore s(semaphore_key);
 	s.acquire();
 
+	if (sdk::has_key(config_addr))
+	{
+		abort();
+	}
+
 	auto calldata = sdk::get_calldata<calldata_ctor>();
 
 	compound_config config;
@@ -873,8 +878,3 @@ buy_collateral()
 }
 
 } // namespace compound
-
-
-
-
-
