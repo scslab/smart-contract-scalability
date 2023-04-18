@@ -43,6 +43,14 @@ struct rfq_response
 	int64_t amount_B;
 };
 
+struct calldata_swap
+{
+	sdk::Address tokenA;
+	sdk::Address tokenB;
+	int64_t amt_A;
+	int64_t min_amt_B_recv;
+};
+
 
 
 constexpr static sdk::StorageKey config_addr = sdk::make_static_key(0, 2);
@@ -97,11 +105,7 @@ void make_swap(sdk::Address tokenA, sdk::Address tokenB, int64_t amt_A, int64_t 
 
 	tok_A.transferFrom(sdk::get_msg_sender(), config.wallet_addr, amt_A);
 	tok_B.transferFrom(config.wallet_addr, sdk::get_msg_sender(), response.amount_B);
-
-
 } 
-
-
 
 
 EXPORT("pub00000000")
@@ -113,6 +117,14 @@ initialize()
 	}
 	auto calldata = sdk::get_calldata<rfq_config>();
 	write_config(calldata);
+}
+
+EXPORT("pub01000000")
+make_swap()
+{
+	auto calldata = sdk::get_calldata<calldata_swap>();
+
+	make_swap(calldata.tokenA, calldata.tokenB, calldata.amt_A, calldata.min_amt_B_recv);
 }
 
 
