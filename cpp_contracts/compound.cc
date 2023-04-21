@@ -37,7 +37,8 @@ struct asset_config
 	sdk::Address addr;
 	uint32_t price;
 	uint8_t borrowing_frac; // out of 2^8
-	uint8_t liquidity_frac;
+	uint8_t liquidity_sell_frac;
+	uint8_t liquidity_collateral_frac;
 };
 
 constexpr static uint8_t INDEX_OFFSET = 48;
@@ -430,7 +431,7 @@ bool is_liquidatable(const sdk::Address& user, const compound_config& config, co
 	for (uint8_t i = 0; i < MAX_ASSETS; i++)
 	{
 		asset = user_asset_addr(user, i);
-		int128_t balance = (sdk::int64_get(asset)) * config.assets[i].liquidity_frac;
+		int128_t balance = (sdk::int64_get(asset)) * config.assets[i].liquidity_collateral_frac;
 		base += (balance * static_cast<int128_t>(config.assets[i].price)) >> 8; // for the borrowing frac
 	}
 
@@ -462,7 +463,7 @@ void absorb_account(const sdk::Address& account, const compound_config& config, 
 		asset = asset_for_sale_supply_addr(i);
 		sdk::int64_add(asset, seized);
 
-		int64_t payment = ((static_cast<int128_t>(seized) * config.assets[i].price) * config.assets[i].liquidity_frac) >> (8+8);
+		int64_t payment = ((static_cast<int128_t>(seized) * config.assets[i].price) * config.assets[i].liquidity_sell_frac) >> (8+8);
 		balance_add += payment;
 
 		sdk::int64_add(asset_supply_cap_addr(i), -seized);
@@ -487,7 +488,7 @@ quote_collateral(uint64_t base_amount, uint8_t asset, const compound_config& con
 	// leftshifted by 16
 	uint64_t discount = 
 		(static_cast<uint64_t>(1) << 16) 
-		- (config.storefront_discount * ((static_cast<uint64_t>(1)<<8) - config.assets[asset].liquidity_frac));
+		- (config.storefront_discount * ((static_cast<uint64_t>(1)<<8) - config.assets[asset].liquidity_sell_frac));
 
 	uint128_t sell_price = (static_cast<uint128_t>(config.assets[asset].price) * static_cast<uint128_t>(discount)) >> 16;
 
@@ -725,7 +726,8 @@ list_asset()
 
 	asset.addr = calldata.addr;
 	asset.borrowing_frac = 0;
-	asset.liquidity_frac = 0;
+	asset.liquidity_sell_frac = 0;
+	asset.liquidity_collateral_frac = 0;
 	asset.price = 0;
 
 	write_config(config);
@@ -746,7 +748,8 @@ update_asset_params()
 	}
 
 	config.assets[calldata.asset].borrowing_frac = calldata.borrow_frac;
-	config.assets[calldata.asset].liquidity_frac = calldata.liquidity_frac;
+	config.assets[calldata.asset].liquidity_sell_frac = calldata.liquidity_sell_frac;
+	config.assets[calldata.asset].liquidity_collateral_frac = calldata.liquidity_collateral_frac;
 
 	write_config(config);
 }
