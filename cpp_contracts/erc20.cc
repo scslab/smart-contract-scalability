@@ -43,6 +43,29 @@ constexpr static std::array<uint8_t, 32> owner_id_storage_key
 
 constexpr static std::array<uint8_t, 32> total_supply_storage_key
     = sdk::make_static_key(1, 1);
+constexpr static std::array<uint8_t, 32> metadata_key
+    = sdk::make_static_key(2, 1);
+
+
+metadata
+get_metadata()
+{
+    return sdk::get_raw_memory<metadata>(metadata_key);
+}
+
+void
+set_metadata(const metadata& m)
+{
+    sdk::set_raw_memory(metadata_key, m);
+}
+
+void owner_guard()
+{
+    if (sdk::get_msg_sender() != sdk::get_raw_memory<sdk::Address>(owner_id_storage_key))
+    {
+        abort();
+    }
+}
 
 void
 calculate_balance_key(const Address& addr, StorageKey& o_key)
@@ -108,6 +131,14 @@ balance_of(const Address& addr)
 } // namespace internal
 
 EXPORT("pub00000000")
+initialize()
+{
+    auto calldata = sdk::get_calldata<calldata_ctor>();
+
+    sdk::set_raw_memory(internal::owner_id_storage_key, calldata.owner);
+}
+
+EXPORT("pub01000000")
 transferFrom()
 {
     auto calldata = sdk::get_calldata<calldata_transferFrom>();
@@ -117,14 +148,14 @@ transferFrom()
     internal::transfer(calldata.from, calldata.to, calldata.amount);
 }
 
-EXPORT("pub01000000")
+EXPORT("pub02000000")
 mint()
 {
     auto calldata = sdk::get_calldata<calldata_mint>();
     internal::mint(calldata.recipient, calldata.amount);
 }
 
-EXPORT("pub02000000")
+EXPORT("pub03000000")
 allowanceDelta()
 {
     auto calldata = sdk::get_calldata<calldata_allowanceDelta>();
@@ -133,11 +164,27 @@ allowanceDelta()
     internal::allowance_delta(sender, calldata.account, calldata.amount);
 }
 
-EXPORT("pub03000000")
+EXPORT("pub04000000")
 balanceOf()
 {
     auto calldata = sdk::get_calldata<calldata_balanceOf>();
     sdk::return_value(internal::balance_of(calldata.account));
+}
+
+EXPORT("pub05000000")
+get_metadata()
+{
+    auto calldata = sdk::get_calldata<calldata_get_metadata>();
+    sdk::return_value(internal::get_metadata());
+}
+
+EXPORT("pub06000000")
+set_metadata()
+{
+    auto calldata = sdk::get_calldata<metadata>();
+
+    internal::owner_guard();
+    internal::set_metadata(calldata);
 }
 
 // TODO initialize with guard on owner

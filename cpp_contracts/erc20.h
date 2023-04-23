@@ -22,6 +22,22 @@
 namespace erc20
 {
 
+struct metadata
+{
+    std::array<uint8_t, 20> name;
+    uint8_t decimals;
+};
+
+struct calldata_ctor
+{
+    sdk::Address owner;
+};
+
+struct calldata_get_metadata
+{
+
+};
+
 struct calldata_transferFrom
 {
     sdk::Address from;
@@ -76,7 +92,7 @@ public:
     inline void transferFrom(
         const calldata_transferFrom& arg)
     {
-        sdk::invoke(addr, 0, arg);
+        sdk::invoke(addr, 1, arg);
     }
 
     inline void mint(
@@ -95,7 +111,7 @@ public:
     inline void mint(
         const calldata_mint& arg)
     {
-        sdk::invoke(addr, 1, arg);
+        sdk::invoke(addr, 2, arg);
     }
 
     inline void allowanceDelta(
@@ -114,7 +130,7 @@ public:
     inline void allowanceDelta(
         const calldata_allowanceDelta& arg)
     {
-        sdk::invoke(addr, 2, arg);
+        sdk::invoke(addr, 3, arg);
     }
 
     inline int64_t balanceOf(
@@ -130,7 +146,13 @@ public:
     inline int64_t balanceOf(
         const calldata_balanceOf& arg)
     {
-        return sdk::invoke<calldata_balanceOf, int64_t>(addr, 3, arg);
+        return sdk::invoke<calldata_balanceOf, int64_t>(addr, 4, arg);
+    }
+
+    inline metadata get_metadata()
+    {
+        calldata_get_metadata arg;
+        return sdk::invoke<calldata_get_metadata, metadata>(addr, 5, arg);
     }
 };
 
