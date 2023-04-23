@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "mtt/trie/debug_levels.h"
+#include "mtt/common/debug_levels.h"
 
 #define CONTRACT_DEBUG DEBUG_LEVEL_NONE
 #define OBJECT_DEBUG DEBUG_LEVEL_NONE

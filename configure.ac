@@ -29,7 +29,6 @@ dnl clang --sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
 AC_PROG_CXX
 AC_PROG_CC
 AC_LANG(C++)
-dnl AX_CXX_COMPILE_STDCXX(17,,mandatory)
 AX_APPEND_COMPILE_FLAGS([-pthread])
 AS_IF([test -z "${WFLAGS+set}"], AX_APPEND_COMPILE_FLAGS([-Wall], WFLAGS))
 
@@ -80,8 +79,6 @@ AM_CONDITIONAL([HAVE_LIBFYAML], [ test x$HAVE_LIBFYAML = x1 ])
 export CXXFLAGS
 export CXX
 
-AX_PKGCONFIG_SUBDIR(lib/utility)
-
 AX_PKGCONFIG_SUBDIR(lib/xdrpp)
 AC_MSG_CHECKING(for xdrc)
 AS_IF([test -n "$XDRC"],,
@@ -108,11 +105,6 @@ export global_XDRC
 export xdrpp_CFLAGS
 export xdrpp_LIBS
 
-export utility_INTERNAL
-export utility_LIBS
-export utility_CFLAGS
-
-AX_PKGCONFIG_SUBDIR(lib/merkle_trie_toolkit)
 AX_PKGCONFIG_SUBDIR(lib/wasm_api)
 
 AC_CONFIG_HEADERS([config.h])

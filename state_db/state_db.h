@@ -19,8 +19,8 @@
 #include "xdr/storage.h"
 #include "xdr/types.h"
 
-#include "mtt/trie/merkle_trie.h"
-#include "mtt/trie/atomic_merkle_trie.h"
+#include "mtt/snapshot_trie/atomic_merkle_trie.h"
+#include "mtt/trie/utils.h"
 
 #include <map>
 #include <optional>

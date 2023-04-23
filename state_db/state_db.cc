@@ -227,7 +227,7 @@ StateDB::commit_modifications(const ModifiedKeysList& list)
     uint32_t grain_size = std::max<uint32_t>(1, list.size() / 100);
     // can't have update granularity be 1, or else we'll apply
     // on a value and get_subnode will throw
-    list.get_keys().parallel_batch_value_modify<UpdateFn>(update, grain_size);
+    list.get_keys().parallel_batch_value_modify_const<UpdateFn>(update, grain_size);
 
     std::printf("parallel modify after %lf\n", utils::measure_time(ts));
 
@@ -309,7 +309,7 @@ StateDB::rewind_modifications(const ModifiedKeysList& list)
     //throw std::runtime_error("unimpl");
     RewindFn rewind(state_db);
 
-    list.get_keys().parallel_batch_value_modify<RewindFn>(rewind, 1);
+    list.get_keys().parallel_batch_value_modify_const<RewindFn>(rewind, 1);
 
     state_db.hash_and_normalize();
 

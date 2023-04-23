@@ -16,8 +16,9 @@
  * limitations under the License.
  */
 
-#include "mtt/trie/prefix.h"
-#include "mtt/trie/recycling_impl/atomic_trie.h"
+#include "mtt/common/prefix.h"
+#include "mtt/ephemeral_trie/atomic_ephemeral_trie.h"
+//#include "mtt/trie/recycling_impl/atomic_trie.h"
 
 #include <utils/threadlocal_cache.h>
 
@@ -96,7 +97,7 @@ class TxSet
 
     //using serial_trie_t = map_t::serial_trie_t;
 
-    using cache_t = utils::ThreadlocalCache<trie::AtomicTrieReference<value_t, prefix_t>, TLCACHE_SIZE>;
+    using cache_t = utils::ThreadlocalCache<trie::AtomicTrieReference<map_t>, TLCACHE_SIZE>;
 
     cache_t cache;
 

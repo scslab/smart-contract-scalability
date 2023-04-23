@@ -20,6 +20,9 @@ SUBDIRS = $(PKGCONFIG_SUBDIRS)
 
 CLEANFILES = *~ .*~
 
+include $(srcdir)/lib/utility/Makefile.am.fragment
+include $(srcdir)/lib/merkle_trie_toolkit/Makefile.am.fragment
+
 X_FILES = \
 	xdr/block.x \
 	xdr/rpc.x \
@@ -144,7 +147,6 @@ VM_SRCS = \
 	vm/vm.cc
 
 SRCS = \
-	$(PROTO_SRCS) \
 	$(BLOCK_ASSEMBLY_SRCS) \
 	$(BUILTIN_FNS_SRCS) \
 	$(CONFIG_SRCS) \
@@ -253,7 +255,7 @@ AM_CPPFLAGS = \
 	$(tbb_CFLAGS) \
 	$(utility_CFLAGS) \
 	$(lmdb_CFLAGS) \
-	$(merkle_trie_toolkit_CFLAGS) \
+	$(mtt_CFLAGS) \
 	$(wasm_api_CFLAGS) \
 	$(Catch2_CFLAGS) \
 	$(grpcpp_DEDUP_CFLAGS) \
@@ -265,7 +267,7 @@ LDADD = $(xdrpp_LIBS) \
 	$(tbb_LIBS) \
 	$(utility_LIBS) \
 	$(lmdb_LIBS) \
-	$(merkle_trie_toolkit_LIBS) \
+	$(mtt_LIBS) \
 	$(wasm_api_LIBS) \
 	$(Catch2_LIBS) \
 	./metering/target/release/libinject_metering.a \
@@ -292,8 +294,10 @@ main/test.o : $(CC_WASMS:.cc=.wasm)
 
 COMPLETE_SRCS = $(SRCS) $(TESTS_CCS) $(TEST_UTILS_SRCS)
 
+$(mtt_TEST_CCS:.cc=.o) : CXXFLAGS += $(mtt_TEST_CFLAGS)
+
 #filter_perf_SOURCES = $(SRCS) main/filter_perf.cc
-test_SOURCES = main/test.cc $(COMPLETE_SRCS)
+test_SOURCES = main/test.cc $(COMPLETE_SRCS) $(utility_TEST_CCS) $(mtt_TEST_CCS)
 basic_SOURCES = main/basic.cc $(COMPLETE_SRCS)
 blockstm_comparison_SOURCES = main/blockstm_comparison.cc $(SRCS)
 

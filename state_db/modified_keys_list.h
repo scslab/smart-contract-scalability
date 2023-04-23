@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#include "mtt/trie/recycling_impl/trie.h"
-#include "mtt/trie/recycling_impl/atomic_trie.h"
+//#include "mtt/trie/recycling_impl/trie.h"
+#include "mtt/ephemeral_trie/atomic_ephemeral_trie.h"
 
 #include <utils/threadlocal_cache.h>
 
@@ -39,7 +39,7 @@ class ModifiedKeysList
     //using map_t = trie::RecyclingTrie<value_t, trie_prefix_t, metadata_t>;
 
     map_t keys;
-    using serial_trie_t = trie::AtomicTrieReference<value_t, trie_prefix_t>;
+    using serial_trie_t = trie::AtomicTrieReference<map_t>;//value_t, trie_prefix_t>;
 
     //using serial_trie_t = map_t::serial_trie_t;
 

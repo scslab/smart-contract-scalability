@@ -16,7 +16,7 @@
 
 #include "debug/debug_utils.h"
 
-#include "mtt/trie/debug_macros.h"
+#include "mtt/common/debug_macros.h"
 
 namespace debug {
 
