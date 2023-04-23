@@ -159,7 +159,7 @@ make_mint_transaction(Address const& wallet_addr,
 
     auto calldata = make_calldata(data);
 
-    TransactionInvocation invocation(token_addr, 1, calldata);
+    TransactionInvocation invocation(token_addr, 2, calldata);
 
     SignedTransaction stx;
     stx.tx.invocation = invocation;
