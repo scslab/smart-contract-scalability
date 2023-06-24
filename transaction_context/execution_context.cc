@@ -125,9 +125,12 @@ ExecutionContext::execute(Hash const& tx_hash,
         return TransactionStatus::FAILURE;
     }
 
-    storage_commitment -> commit();
+    if (!block_context.tx_set.try_add_transaction(tx_hash, tx, tx_context -> tx_results->get_results().ndeterministic_results))
+    {
+        return TransactionStatus::FAILURE;
+    }
 
-    block_context.tx_set.add_transaction(tx_hash, tx, tx_context -> tx_results->get_results().ndeterministic_results);
+    storage_commitment -> commit();
 
     return TransactionStatus::SUCCESS;
 }
