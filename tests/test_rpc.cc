@@ -182,3 +182,69 @@ TEST_CASE("simulated echo rpc", "[rpc]")
     }
     #endif
 }
+
+
+
+TEST_CASE("test ensure ndet results all consumed", "[rpc]")
+{
+    test::DeferredContextClear defer;
+
+    GlobalContext scs_data_structures;
+    auto& script_db = scs_data_structures.contract_db;
+
+    auto c1 = load_wasm_from_file("cpp_contracts/test_log.wasm");
+    auto h1 = hash_xdr(*c1);
+
+    test::deploy_and_commit_contractdb(script_db, h1, c1);
+
+    ThreadlocalContextStore::make_ctx(scs_data_structures);
+
+    auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
+
+    BlockContext block_context(0);
+
+    auto exec_success = [&](const Hash& tx_hash, const SignedTransaction& tx, std::optional<NondeterministicResults> res) {
+        REQUIRE(exec_ctx.execute(tx_hash, tx, block_context, res)
+                == TransactionStatus::SUCCESS);
+    };
+
+    auto exec_fail = [&](const Hash& tx_hash, const SignedTransaction& tx, std::optional<NondeterministicResults> res) {
+        REQUIRE(exec_ctx.execute(tx_hash, tx, block_context, res)
+                != TransactionStatus::SUCCESS);
+    };
+
+    auto make_tx = [&](TransactionInvocation const& invocation)
+        -> std::pair<Hash, SignedTransaction> {
+        Transaction tx(
+            invocation, UINT64_MAX, 1, xdr::xvector<Contract>());
+
+        SignedTransaction stx;
+        stx.tx = tx;
+
+        return { hash_xdr(stx), stx };
+    };
+
+    SECTION("null hypothesis case")
+    {
+        TransactionInvocation invocation(h1, 0, xdr::opaque_vec<>());
+        auto [h, tx] = make_tx(invocation);
+        exec_success(h, tx, std::nullopt);
+    }
+
+    SECTION("null hypothesis validation case")
+    {
+        TransactionInvocation invocation(h1, 0, xdr::opaque_vec<>());
+        auto [h, tx] = make_tx(invocation);
+        exec_success(h, tx, NondeterministicResults());
+    }
+
+    SECTION("bad case")
+    {
+        TransactionInvocation invocation(h1, 0, xdr::opaque_vec<>());
+        auto [h, tx] = make_tx(invocation);
+        NondeterministicResults res;
+        res.rpc_results.push_back(RpcResult());
+        exec_fail(h, tx, res);
+    }
+
+}
