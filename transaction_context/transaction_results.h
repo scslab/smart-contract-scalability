@@ -58,6 +58,8 @@ public:
     TransactionResults get_results() {
         return results;
     }
+
+    bool validating_check_all_rpc_results_used() const;
 };
 
 } // namespace scs

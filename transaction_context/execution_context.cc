@@ -120,6 +120,11 @@ ExecutionContext::execute(Hash const& tx_hash,
         return TransactionStatus::FAILURE;
     }
 
+    if (!tx_context -> tx_results -> validating_check_all_rpc_results_used())
+    {
+        return TransactionStatus::FAILURE;
+    }
+
     storage_commitment -> commit();
 
     block_context.tx_set.add_transaction(tx_hash, tx, tx_context -> tx_results->get_results().ndeterministic_results);

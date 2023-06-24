@@ -58,4 +58,15 @@ TransactionResultsFrame::get_next_rpc_result()
 	}
 }
 
+bool
+TransactionResultsFrame::validating_check_all_rpc_results_used() const
+{
+	if (!validating) {
+		return true;
+	}
+
+	return (rpc_idx == results.ndeterministic_results.rpc_results.size());
+}
+
+
 }
