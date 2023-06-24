@@ -131,26 +131,23 @@ TransactionContext::get_deployable_contract(uint32_t index) const
     return tx.tx.contracts_to_deploy[index];
 }
 
-bool
+std::unique_ptr<StorageCommitment>
 TransactionContext::push_storage_deltas()
 {
     assert_not_committed();
     committed_to_statedb = true;
 
-    TransactionRewind rewind;
+    std::unique_ptr<StorageCommitment> commitment = std::make_unique<StorageCommitment>(storage_proxy);
 
-    if (!storage_proxy.push_deltas_to_statedb(rewind)) {
-        return false;
+    if (!storage_proxy.push_deltas_to_statedb(commitment->rewind)) {
+        return nullptr;
     }
 
-    if (!contract_db_proxy.push_updates_to_db(rewind)) {
-        return false;
+    if (!contract_db_proxy.push_updates_to_db(commitment->rewind)) {
+        return nullptr;
     }
 
-    rewind.commit();
-    storage_proxy.commit();
-
-    return true;
+    return commitment;
 }
 
 WitnessEntry const&

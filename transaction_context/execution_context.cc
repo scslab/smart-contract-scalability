@@ -113,9 +113,14 @@ ExecutionContext::execute(Hash const& tx_hash,
         std::abort();
     }
 
-    if (!tx_context->push_storage_deltas()) {
+    auto storage_commitment = tx_context -> push_storage_deltas();
+
+    if (!storage_commitment)
+    {
         return TransactionStatus::FAILURE;
     }
+
+    storage_commitment -> commit();
 
     block_context.tx_set.add_transaction(tx_hash, tx, tx_context -> tx_results->get_results().ndeterministic_results);
 

@@ -80,7 +80,7 @@ public:
 	__attribute__((warn_unused_result))
 	push_deltas_to_statedb(TransactionRewind& rewind) const;
 
-	void commit();
+	void log_modified_keys();
 };
 
 } /* scs */

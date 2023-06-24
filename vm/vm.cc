@@ -54,7 +54,7 @@ struct ValidateReduce
     std::atomic<bool>& found_error;
     GlobalContext& global_context;
     BlockContext& block_context;
-    std::vector<SignedTransaction> const& txs;
+    Block const& txs;
 
     void operator()(const tbb::blocked_range<std::size_t> r)
     {
@@ -71,13 +71,19 @@ struct ValidateReduce
 
             auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
 
-            auto hash = hash_xdr(txs[i]);
+            auto const& txset_entry = txs.transactions[i];
+            auto const& tx = txset_entry.tx;
 
-            auto status = exec_ctx.execute(hash, txs[i], block_context);
+            auto hash = hash_xdr(tx);
 
-            if (status != TransactionStatus::SUCCESS) {
-                local_found_error = true;
-                break;
+            for (size_t j = 0; j < txset_entry.nondeterministic_results.size(); j++)
+            {
+                auto status = exec_ctx.execute(hash, tx, block_context, txset_entry.nondeterministic_results[j]);
+
+                if (status != TransactionStatus::SUCCESS) {
+                    local_found_error = true;
+                    break;
+                }
             }
         }
 
@@ -96,7 +102,7 @@ struct ValidateReduce
     ValidateReduce(std::atomic<bool>& found_error,
                    GlobalContext& global_context,
                    BlockContext& block_context,
-                   std::vector<SignedTransaction> const& txs)
+                   Block const& txs)
         : found_error(found_error)
         , global_context(global_context)
         , block_context(block_context)
@@ -105,14 +111,14 @@ struct ValidateReduce
 };
 
 bool
-VirtualMachine::validate_tx_block(std::vector<SignedTransaction> const& txs)
+VirtualMachine::validate_tx_block(Block const& txs)
 {
     std::atomic<bool> found_error = false;
 
     ValidateReduce reduce(
         found_error, global_context, *current_block_context, txs);
 
-    tbb::parallel_reduce(tbb::blocked_range<size_t>(0, txs.size()), reduce);
+    tbb::parallel_reduce(tbb::blocked_range<size_t>(0, txs.transactions.size()), reduce);
 
     return !found_error;
 }
@@ -149,11 +155,11 @@ VirtualMachine::make_block_header()
 }
 
 std::optional<BlockHeader>
-VirtualMachine::try_exec_tx_block(std::vector<SignedTransaction> const& txs)
+VirtualMachine::try_exec_tx_block(Block const& block)
 {
     assert_initialized();
 
-    auto res = validate_tx_block(txs);
+    auto res = validate_tx_block(block);
 
     // TBB joins all the threads it uses
 
@@ -249,7 +255,6 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
     advance_block_number();
     std::printf("done proposal %lf\n", utils::measure_time(ts));
     return out;
-    //return std::make_pair<BlockHeader, std::unique_ptr<Block>>(std::move(out), std::move(block_out));
 }
 
 uint64_t 
@@ -257,7 +262,6 @@ VirtualMachine::get_current_block_number() const
 {
     return current_block_context -> block_number;
 }
-
 
 VirtualMachine::~VirtualMachine()
 {

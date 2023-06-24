@@ -51,7 +51,7 @@ class VirtualMachine : public utils::NonMovableOrCopyable
 
     void assert_initialized() const;
 
-    bool validate_tx_block(std::vector<SignedTransaction> const& txs);
+    bool validate_tx_block(Block const& txs);
 
     void advance_block_number();
 
@@ -61,7 +61,7 @@ class VirtualMachine : public utils::NonMovableOrCopyable
     void init_default_genesis();
 
     std::optional<BlockHeader>
-    try_exec_tx_block(std::vector<SignedTransaction> const& txs);
+    try_exec_tx_block(Block const& txs);
 
     Mempool& get_mempool() {
       return mempool;

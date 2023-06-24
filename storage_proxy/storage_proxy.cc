@@ -193,7 +193,7 @@ StorageProxy::push_deltas_to_statedb(TransactionRewind& rewind) const
 	return true;
 }
 
-void StorageProxy::commit()
+void StorageProxy::log_modified_keys()
 {
 	assert_not_committed_local_values();
 

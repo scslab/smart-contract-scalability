@@ -34,7 +34,7 @@ class TransactionResultsFrame
 
 public:
 
-    TransactionResultsFrame(NondeterministicResults res)
+    TransactionResultsFrame(NondeterministicResults const& res)
         : results()
         , validating(true)
         {

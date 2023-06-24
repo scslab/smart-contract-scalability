@@ -23,6 +23,7 @@
 #include "transaction_context/transaction_results.h"
 
 #include "storage_proxy/storage_proxy.h"
+#include "storage_proxy/transaction_rewind.h"
 
 #include "contract_db/contract_db_proxy.h"
 
@@ -35,6 +36,23 @@ namespace scs {
 
 class GlobalContext;
 class BlockContext;
+
+struct StorageCommitment : public utils::NonMovableOrCopyable
+{
+	TransactionRewind rewind;
+	StorageProxy& proxy;
+
+	StorageCommitment(StorageProxy& proxy)
+		: rewind()
+		, proxy(proxy)
+		{}
+
+	void commit()
+	{
+		rewind.commit();
+		proxy.log_modified_keys();
+	}
+};
 
 class TransactionContext
 {
@@ -131,7 +149,7 @@ public:
 	void pop_invocation_stack();
 	void push_invocation_stack(wasm_api::WasmRuntime* runtime, MethodInvocation const& invocation);
 
-	bool
+	std::unique_ptr<StorageCommitment>
 	__attribute__((warn_unused_result))
 	push_storage_deltas();
 };
