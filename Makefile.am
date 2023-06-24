@@ -140,7 +140,8 @@ TRANSACTION_CONTEXT_SRCS = \
 	transaction_context/transaction_results.cc
 
 TX_BLOCK_SRCS = \
-	tx_block/tx_set.cc
+	tx_block/tx_set.cc \
+	tx_block/unique_tx_set.cc
 
 VM_SRCS = \
 	vm/genesis.cc \
@@ -181,6 +182,7 @@ TESTS_CCS = \
 	tests/test_rpc.cc \
 	storage_proxy/tests/test_proxy_applicator.cc \
 	object/tests/test_revertable_object.cc \
+	tx_block/tests/test_unique_txset.cc \
 	$(HASH_SET_TEST_SRCS) \
 	$(EXPERIMENTS_TEST_SRCS)
 
