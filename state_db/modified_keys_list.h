@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-//#include "mtt/trie/recycling_impl/trie.h"
 #include "mtt/ephemeral_trie/atomic_ephemeral_trie.h"
 
 #include <utils/threadlocal_cache.h>

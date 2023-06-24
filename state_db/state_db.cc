@@ -328,8 +328,6 @@ StateDB::hash()
         h.data(),
         h.size());
     return out;
-//    state_db.hash(out);
-//    return out;
 }
 
 
