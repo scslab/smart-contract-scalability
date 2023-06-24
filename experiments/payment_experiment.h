@@ -42,13 +42,13 @@ class PaymentExperiment
 
     std::map<uint64_t, account_entry> account_map;
 
-    SignedTransaction make_deploy_wallet_transaction(
+    TxSetEntry make_deploy_wallet_transaction(
         size_t idx,
         Hash const& wallet_contract_hash,
         Address const& token_addr,
         uint16_t size_inc);
 
-    std::pair<std::vector<SignedTransaction>, std::vector<SignedTransaction>>
+    std::pair<std::vector<TxSetEntry>, std::vector<TxSetEntry>>
     make_accounts_and_mints();
 
     SignedTransaction make_random_payment(uint64_t expiration_time,

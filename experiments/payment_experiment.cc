@@ -35,14 +35,21 @@ PaymentExperiment::PaymentExperiment(size_t num_accounts, uint16_t hs_size_inc)
     , hs_size_inc(hs_size_inc)
 {}
 
-std::vector<SignedTransaction>
+TxSetEntry make_txset_entry(SignedTransaction const& stx) {
+    TxSetEntry out;
+    out.tx = stx;
+    out.nondeterministic_results.push_back(NondeterministicResults());
+    return out;
+}
+
+Block
 make_create_transactions()
 {
     auto erc20 = load_wasm_from_file("cpp_contracts/erc20.wasm");
     auto wallet
         = load_wasm_from_file("cpp_contracts/payment_experiment/payment.wasm");
 
-    auto make_tx = [](std::shared_ptr<const Contract> contract) {
+    auto make_tx = [](std::shared_ptr<const Contract> contract) -> TxSetEntry {
         struct calldata_create
         {
             uint32_t idx;
@@ -59,13 +66,15 @@ make_create_transactions()
 
         stx.tx.contracts_to_deploy.push_back(*contract);
 
-        return stx;
+        return make_txset_entry(stx);
     };
 
-    return { make_tx(erc20), make_tx(wallet) };
+    Block out;
+    out.transactions = { make_tx(erc20), make_tx(wallet) };
+    return out;
 }
 
-SignedTransaction
+TxSetEntry
 make_deploy_erc20_transaction()
 {
     auto c = load_wasm_from_file("cpp_contracts/erc20.wasm");
@@ -86,10 +95,10 @@ make_deploy_erc20_transaction()
     stx.tx.invocation = invocation;
     stx.tx.gas_limit = gas_limit;
 
-    return stx;
+    return make_txset_entry(stx);
 }
 
-SignedTransaction
+TxSetEntry
 PaymentExperiment::make_deploy_wallet_transaction(
     size_t idx,
     Hash const& wallet_contract_hash,
@@ -141,10 +150,10 @@ PaymentExperiment::make_deploy_wallet_transaction(
     stx.tx.invocation = invocation;
     stx.tx.gas_limit = gas_limit;
 
-    return stx;
+    return make_txset_entry(stx);
 }
 
-SignedTransaction
+TxSetEntry
 make_mint_transaction(Address const& wallet_addr,
                       Address const& token_addr,
                       int64_t amount = UINT32_MAX)
@@ -165,14 +174,14 @@ make_mint_transaction(Address const& wallet_addr,
     stx.tx.invocation = invocation;
     stx.tx.gas_limit = gas_limit;
 
-    return stx;
+    return make_txset_entry(stx);
 }
 
-std::pair<std::vector<SignedTransaction>, std::vector<SignedTransaction>>
+std::pair<std::vector<TxSetEntry>, std::vector<TxSetEntry>>
 PaymentExperiment::make_accounts_and_mints()
 {
-    std::vector<SignedTransaction> accounts_out;
-    std::vector<SignedTransaction> mints_out;
+    std::vector<TxSetEntry> accounts_out;
+    std::vector<TxSetEntry> mints_out;
 
     Hash wallet_contract_hash = hash_xdr(
         *load_wasm_from_file("cpp_contracts/payment_experiment/payment.wasm"));
@@ -264,7 +273,8 @@ PaymentExperiment::prepare_vm()
 
     std::printf("made create txs\n");
 
-    std::vector<SignedTransaction> deploy_erc20
+    Block deploy_erc20;
+    deploy_erc20.transactions
         = { make_deploy_erc20_transaction() };
 
     if (!vm->try_exec_tx_block(deploy_erc20)) {
@@ -278,13 +288,13 @@ PaymentExperiment::prepare_vm()
     const size_t batch_exec_size = 100'000;
     for (size_t i = 0; i < (wallet_txs.size() / batch_exec_size) + 1; i++) {
         std::fprintf(stderr, "wallet exec batch %lu\n", i);
-        std::vector<SignedTransaction> txs;
+        Block block;
         size_t start = batch_exec_size * i;
         size_t end = std::min(batch_exec_size * (i + 1), wallet_txs.size());
 
-        txs.insert(
-            txs.end(), wallet_txs.begin() + start, wallet_txs.begin() + end);
-        if (!vm->try_exec_tx_block(txs)) {
+        block.transactions.insert(
+            block.transactions.end(), wallet_txs.begin() + start, wallet_txs.begin() + end);
+        if (!vm->try_exec_tx_block(block)) {
             return nullptr;
         }
     }
@@ -293,13 +303,13 @@ PaymentExperiment::prepare_vm()
 
     for (size_t i = 0; i < (mint_txs.size() / batch_exec_size) + 1; i++) {
         std::fprintf(stderr, "mint exec batch %lu\n", i);
-        std::vector<SignedTransaction> txs;
+        Block block;
         size_t start = batch_exec_size * i;
         size_t end = std::min(batch_exec_size * (i + 1), mint_txs.size());
 
-        txs.insert(txs.end(), mint_txs.begin() + start, mint_txs.begin() + end);
+        block.transactions.insert(block.transactions.end(), mint_txs.begin() + start, mint_txs.begin() + end);
 
-        if (!vm->try_exec_tx_block(txs)) {
+        if (!vm->try_exec_tx_block(block)) {
             return nullptr;
         }
     }

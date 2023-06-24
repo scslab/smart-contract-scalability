@@ -44,20 +44,40 @@ TEST_CASE("payment experiment hashset", "[experiment][payment]")
 
 	auto vm = e.prepare_vm();
 
+	auto make_txset = [] (SignedTransaction const& stx)
+	{
+		TxSetEntry out;
+		out.tx = stx;
+		out.nondeterministic_results.push_back(NondeterministicResults());
+		return out;
+	};
+
 	REQUIRE(!!vm);
 
 	SECTION("small block ok")
 	{
 		auto batch = e.gen_transaction_batch(10);
 
-		REQUIRE(vm -> try_exec_tx_block(batch));
+		Block b;
+		for (auto const& stx : batch)
+		{
+			b.transactions.push_back(make_txset(stx));
+		}
+
+		REQUIRE(vm -> try_exec_tx_block(b));
 	}
 
 	SECTION("large blocks fill replay cache")
 	{
 		auto batch = e.gen_transaction_batch(200);
 
-		REQUIRE(!vm -> try_exec_tx_block(batch));
+		Block b;
+		for (auto const& stx : batch)
+		{
+			b.transactions.push_back(make_txset(stx));
+		}
+
+		REQUIRE(!vm -> try_exec_tx_block(b));
 	}
 }
 
