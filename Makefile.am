@@ -173,6 +173,7 @@ TEST_UTILS_SRCS = \
 	test_utils/deploy_and_commit_contractdb.cc
 
 TESTS_CCS = \
+	crypto/tests/lthash_tests.cc \
 	tests/builtin_fns_log_tests.cc \
 	tests/builtin_fns_invoke_tests.cc \
 	tests/gas_tests.cc \
