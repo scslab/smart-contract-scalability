@@ -10,15 +10,74 @@
 
 namespace scs {
 
+namespace detail {
+
+enum ArithmeticEngine
+{
+    Basic,
+    AVX
+};
+
+template<uint16_t Q, ArithmeticEngine engine>
+struct EngineImpl
+{};
+
+template<>
+struct EngineImpl<16, ArithmeticEngine::AVX>
+{
+    template<size_t word_count>
+    static void add(std::array<uint64_t, word_count>& s_words,
+                    std::array<uint64_t, word_count> const& o_words)
+    {
+        constexpr uint8_t vec_ops = word_count / 4;
+        static_assert(word_count % 4 == 0, "mistaken offset otherwise");
+
+        for (uint32_t i = 0; i < vec_ops; i++) {
+            const __m256i* o
+                = reinterpret_cast<const __m256i*>(o_words.data()) + i;
+            __m256i* self = reinterpret_cast<__m256i*>(s_words.data()) + i;
+
+            alignas(32) const __m256i v1 = _mm256_load_si256(o);
+            alignas(32) __m256i v2 = _mm256_load_si256(self);
+
+            __m256i out = _mm256_add_epi16(v1, v2);
+            _mm256_store_si256(self, out);
+        }
+    }
+};
+
+template<>
+struct EngineImpl<16, ArithmeticEngine::Basic>
+{
+    template<size_t word_count>
+    static void add(std::array<uint64_t, word_count>& s_words,
+                    std::array<uint64_t, word_count> const& o_words)
+    {
+        constexpr uint64_t maskA = 0xFFFF'0000'FFFF'0000;
+        constexpr uint64_t maskB = 0x0000'FFFF'0000'FFFF;
+
+        static_assert(word_count % 4 == 0, "mistaken offset otherwise");
+
+        // using strategy from folly implementation
+        for (size_t i = 0; i < word_count; i++) {
+            uint64_t out
+                = ((s_words[i] & maskA) + (o_words[i] & maskA)) & maskA;
+            out |= ((s_words[i] & maskB) + (o_words[i] & maskB)) & maskB;
+            s_words[i] = out;
+        }
+    }
+};
+
+} // namespace detail
+
 // parameter choices based on https://eprint.iacr.org/2019/227.pdf
 // Not quite the same as blake2x https://www.blake2.net/blake2x.pdf
 // but this should be good enough
 
-template<uint16_t N, uint16_t Q>
+template<uint16_t N, uint16_t Q, detail::ArithmeticEngine engine>
 struct LtHash
 {
-
-    static_assert(Q == 16, "unimplemented otherwise");
+    using Engine = detail::EngineImpl<Q, engine>;
 
     static_assert(N % (64 / Q) == 0, "calc error");
     constexpr static uint16_t word_count = N / (64 / Q);
@@ -82,25 +141,13 @@ struct LtHash
 
     LtHash& operator+=(const LtHash& other)
     {
-        constexpr uint8_t vec_ops = word_count / 4;
-        static_assert(word_count % 4 == 0, "mistaken offset otherwise");
-
-        for (uint32_t i = 0; i < vec_ops; i++) {
-            const __m256i* o
-                = reinterpret_cast<const __m256i*>(other.words.data()) + i;
-            __m256i* self = reinterpret_cast<__m256i*>(words.data()) + i;
-
-            alignas(32) const __m256i v1 = _mm256_load_si256(o);
-            alignas(32) __m256i v2 = _mm256_load_si256(self);
-
-            __m256i out = _mm256_add_epi16(v1, v2);
-            _mm256_store_si256(self, out);
-        }
-
+        Engine::add(words, other.words);
         return *this;
     }
+
+    const std::array<uint64_t, word_count>& get_hash() const { return words; }
 };
 
-using LtHash16 = LtHash<1024, 16>;
+using LtHash16 = LtHash<1024, 16, detail::ArithmeticEngine::AVX>;
 
 } // namespace scs

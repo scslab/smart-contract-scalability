@@ -31,7 +31,7 @@ TEST_CASE("lthash basic", "[lthash]")
 
 TEST_CASE("lthash different", "[lthash]")
 {
-    uint64_t b1 = 0, b2=1, b3=0;
+    uint64_t b1 = 0, b2 = 1, b3 = 0;
 
     LtHash16 h1(b1), h2(b2), h3(b3);
 
@@ -41,7 +41,7 @@ TEST_CASE("lthash different", "[lthash]")
 
 TEST_CASE("lthash arithmetic", "[lthash]")
 {
-    uint64_t b1 = 0, b2=1;
+    uint64_t b1 = 0, b2 = 1;
 
     LtHash16 h1(b1), h2(b2), g1, g2;
 
@@ -61,4 +61,35 @@ TEST_CASE("lthash arithmetic", "[lthash]")
     g2 += h1;
 
     REQUIRE(g1 == g2);
+}
+
+TEST_CASE("compare avx", "[lthash]")
+{
+    uint64_t b1 = 0, b2 = 1;
+
+    using LtHash16Basic = LtHash<1024, 16, detail::ArithmeticEngine::Basic>;
+
+    LtHash16 h1(b1), h2(b2), g1, g2;
+    LtHash16Basic hb1(b1), hb2(b2), gb1, gb2;
+
+    REQUIRE(h1.get_hash() == hb1.get_hash());
+    REQUIRE(h2.get_hash() == hb2.get_hash());
+
+    g1 += h1;
+    g2 += h2;
+
+    gb1 += hb1;
+    gb2 += hb2;
+
+    REQUIRE(g1.get_hash() == gb1.get_hash());
+    REQUIRE(g2.get_hash() == gb2.get_hash());
+
+    gb1 += hb2;
+    gb2 += hb1;
+
+    g1 += h2;
+    g2 += h1;
+
+    REQUIRE(g1.get_hash() == gb2.get_hash());
+    REQUIRE(g2.get_hash() == gb1.get_hash());
 }
