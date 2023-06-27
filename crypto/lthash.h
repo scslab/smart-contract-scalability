@@ -23,6 +23,30 @@ struct EngineImpl
 {};
 
 template<>
+struct EngineImpl<16, ArithmeticEngine::Basic>
+{
+    template<size_t word_count>
+    static void add(std::array<uint64_t, word_count>& s_words,
+                    std::array<uint64_t, word_count> const& o_words)
+    {
+        constexpr uint64_t maskA = 0xFFFF'0000'FFFF'0000;
+        constexpr uint64_t maskB = 0x0000'FFFF'0000'FFFF;
+
+        static_assert(word_count % 4 == 0, "mistaken offset otherwise");
+
+        // using strategy from folly implementation
+        for (size_t i = 0; i < word_count; i++) {
+            uint64_t out
+                = ((s_words[i] & maskA) + (o_words[i] & maskA)) & maskA;
+            out |= ((s_words[i] & maskB) + (o_words[i] & maskB)) & maskB;
+            s_words[i] = out;
+        }
+    }
+};
+
+#ifdef __AVX2__
+
+template<>
 struct EngineImpl<16, ArithmeticEngine::AVX>
 {
     template<size_t word_count>
@@ -46,27 +70,16 @@ struct EngineImpl<16, ArithmeticEngine::AVX>
     }
 };
 
+#else // undef __AVX2__
+
 template<>
-struct EngineImpl<16, ArithmeticEngine::Basic>
+
+struct EngineImpl<16, ArithmeticEngine::AVX> : public EngineImpl<16, ArithmeticEngine::Basic>
 {
-    template<size_t word_count>
-    static void add(std::array<uint64_t, word_count>& s_words,
-                    std::array<uint64_t, word_count> const& o_words)
-    {
-        constexpr uint64_t maskA = 0xFFFF'0000'FFFF'0000;
-        constexpr uint64_t maskB = 0x0000'FFFF'0000'FFFF;
-
-        static_assert(word_count % 4 == 0, "mistaken offset otherwise");
-
-        // using strategy from folly implementation
-        for (size_t i = 0; i < word_count; i++) {
-            uint64_t out
-                = ((s_words[i] & maskA) + (o_words[i] & maskA)) & maskA;
-            out |= ((s_words[i] & maskB) + (o_words[i] & maskB)) & maskB;
-            s_words[i] = out;
-        }
-    }
+    #warning "Attempted to use AVX2 but AVX2 not enabled on current target"
 };
+
+#endif
 
 } // namespace detail
 
