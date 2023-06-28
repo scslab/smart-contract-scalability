@@ -39,10 +39,8 @@ StateDB::get_committed_value(const AddressAndKey& a) const
 {
     auto const* res = state_db.get_value(a);
     if (res) {
-        //std::printf("got something for %s\n", debug::array_to_str(a).c_str());
         return (*res).v->get_committed_object();
     }
-    //std::printf("got nothing for %s\n",debug::array_to_str(a).c_str());
     return std::nullopt;
 }
 
@@ -148,15 +146,6 @@ struct UpdateFn
     } 
 };
 
-struct JustHashFn
-{
-    StateDB::trie_t& main_db;
-    using prefix_t = StateDB::prefix_t;
-
-
-
-};
-
 /*
 struct UpdateFn
 {
@@ -235,15 +224,9 @@ StateDB::commit_modifications(const ModifiedKeysList& list)
     std::printf("parallel modify before %lf\n", utils::measure_time(ts));
 
     uint32_t grain_size = std::max<uint32_t>(1, list.size() / 100);
-    // can't have update granularity be 1, or else we'll apply
-    // on a value and get_subnode will throw
-    list.get_keys().parallel_batch_value_modify_const<UpdateFn>(update, grain_size);
+    list.get_keys().parallel_batch_value_modify_const<UpdateFn, prefix_t::len()>(update, grain_size);
 
     std::printf("parallel modify after %lf\n", utils::measure_time(ts));
-
-//    state_db.template batch_merge_in<TLCACHE_SIZE, trie::NoDuplicateKeysMergeFn>(new_kvs);
-
-  //  state_db.perform_marked_deletions();
 
     new_key_cache.clear_for_next_block();
 
@@ -256,6 +239,11 @@ StateDB::commit_modifications(const ModifiedKeysList& list)
     std::printf("finish %lf\n", utils::measure_time(ts));
 }
 
+/** 
+ * Helper class for rewinding a transaction block that gets rejected.
+ * Relies on the fact that values aren't inserted into StateDB before 
+ * commitment of a block.
+ */
 struct RewindFn
 {
     StateDB::trie_t& main_db;
@@ -282,44 +270,15 @@ struct RewindFn
 
     }
 };
-/*
-struct RewindFn
-{
-    StateDB::trie_t& main_db;
-
-
-    using prefix_t = StateDB::prefix_t;
-
-    template<typename Applyable>
-    void operator()(const Applyable& work_root)
-    {
-         auto* main_db_subnode = main_db.get_subnode_ref_nolocks(
-            work_root.get_prefix(), work_root.get_prefix_len());
-
-        auto apply_lambda = [this, main_db_subnode](const prefix_t& addrkey,
-                                                    const trie::EmptyValue&) {
-            auto* main_db_value = main_db_subnode->get_value_nolocks(addrkey);
-            if (main_db_value) {
-                // no need to invalidate hashes when rewinding
-                main_db_value -> v -> rewind_round();
-            }
-            // otherwise new key, don't need to do anything
-        };
-
-        work_root.apply_to_kvs(apply_lambda);
-        // we're rewinding, so no need to invalidate any hashes -- we're un-invalidating them here.
-    }
-}; */
 
 void 
 StateDB::rewind_modifications(const ModifiedKeysList& list)
 {
     new_key_cache.clear_for_next_block();
 
-    //throw std::runtime_error("unimpl");
     RewindFn rewind(state_db);
 
-    list.get_keys().parallel_batch_value_modify_const<RewindFn>(rewind, 1);
+    list.get_keys().parallel_batch_value_modify_const<RewindFn, prefix_t::len()>(rewind, 1);
 
     state_db.hash_and_normalize();
 
@@ -339,122 +298,4 @@ StateDB::hash()
         h.size());
     return out;
 }
-
-
-#if 0
-std::optional<StorageObject>
-StateDB::get(AddressAndKey const& a) const
-{
-    CONTRACT_INFO("get on key %s", debug::array_to_str(a).c_str());
-    auto res = state_db.get_value(a);
-    if (res) {
-        return *res;
-    }
-    return std::nullopt;
-}
-
-
-void
-StateDB::populate_delta_batch(DeltaBatch& delta_batch) const
-{
-    // do nothing
-    // we'll deal with side effects during apply
-
-    /*auto& map = delta_batch.deltas;
-    for (auto& [k, v] : map)
-    {
-            auto it = state_db.find(k);
-            if (it != state_db.end())
-            {
-                    v.context -> mutator.populate_base(it->second);
-            }
-    } */
-
-    delta_batch.populated = true;
-}
-
-struct UpdateFn
-{
-    StateDB::trie_t& main_db;
-    StateDB::cache_t& new_kvs;
-
-    using prefix_t = StateDB::prefix_t;
-
-    template<typename Applyable>
-    void operator()(const Applyable& work_root)
-    {
-        // Must guarantee no concurrent modification of commitment_trie (other
-        // than values)
-
-        auto* main_db_subnode = main_db.get_subnode_ref_nolocks(
-            work_root.get_prefix(), work_root.get_prefix_len());
-
-        auto apply_lambda
-            = [this, main_db_subnode](const prefix_t& addrkey,
-                                      const DeltaBatchValue& dbv) {
-                  if (dbv.get_context().applier->should_ignore()) {
-                      return;
-                  }
-
-                  std::optional<StorageObject> new_obj
-                      = dbv.get_context().applier->get_object();
-
-                  if (new_obj) {
-                      auto update_fn = [&new_obj](StorageObject& old_obj) {
-                          old_obj = *new_obj;
-                      };
-                      main_db_subnode->modify_value_nolocks(addrkey, update_fn);
-                  } else {
-                      main_db.mark_for_deletion(addrkey);
-                  }
-              };
-        auto new_kv_lambda
-            = [this](const prefix_t& addrkey, const DeltaBatchValue& dbv) {
-                  if (dbv.get_context().applier->should_ignore()) {
-                      return;
-                  }
-                  std::optional<StorageObject> obj
-                      = dbv.get_context().applier->get_object();
-
-                  if (obj) {
-                      new_kvs.get().insert(addrkey, StateDB::value_t(*obj));
-                  }
-              };
-
-        if (main_db_subnode == nullptr) {
-
-            work_root.apply_to_kvs(new_kv_lambda);
-
-            return;
-        }
-
-        work_root.apply_to_kvs(apply_lambda);
-        main_db.invalidate_hash_to_node_nolocks(main_db_subnode);
-    }
-};
-
-void
-StateDB::apply_delta_batch(DeltaBatch const& delta_batch)
-{
-    if (!delta_batch.applied) {
-        throw std::runtime_error("can't write before apply");
-    }
-
-    if (delta_batch.written_to_state_db) {
-        throw std::runtime_error("double write on delta_batch");
-    }
-    delta_batch.written_to_state_db = true;
-
-    cache_t new_kvs;
-
-    UpdateFn update(state_db, new_kvs);
-
-    delta_batch.deltas.parallel_batch_value_modify(update);
-
-    state_db.batch_merge_in(new_kvs);
-
-    state_db.perform_marked_deletions();
-}
-#endif
-
 } // namespace scs
