@@ -54,7 +54,7 @@ BuiltinFns::scs_nonnegative_int64_set_add(uint32_t key_offset,
     auto addr_and_key = tx_ctx.get_storage_key(key);
 
     tx_ctx.storage_proxy.nonnegative_int64_set_add(
-        addr_and_key, set_value, delta, tx_ctx.get_src_tx_hash());
+        addr_and_key, set_value, delta);
 }
 
 void
@@ -79,7 +79,7 @@ BuiltinFns::scs_nonnegative_int64_add(uint32_t key_offset,
                debug::array_to_str(addr_and_key).c_str());
 
     tx_ctx.storage_proxy.nonnegative_int64_add(
-        addr_and_key, delta, tx_ctx.get_src_tx_hash());
+        addr_and_key, delta);
 }
 
 // return 1 if key exists, 0 else

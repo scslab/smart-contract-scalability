@@ -34,7 +34,6 @@ class TransactionRewind;
 class StorageProxy
 {
 	StateDB& state_db;
-	ModifiedKeysList& keys;
 
 	using value_t = StorageProxyValue;
 
@@ -48,39 +47,37 @@ class StorageProxy
 
 public:
 
-	using delta_identifier_t = Hash; // was DeltaPriority
-
-	StorageProxy(StateDB& state_db, ModifiedKeysList& keys);
+	StorageProxy(StateDB& state_db);
 
 	std::optional<StorageObject>
 	get(AddressAndKey const& key) const;
 
 	void
-	raw_memory_write(AddressAndKey const& key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& bytes, delta_identifier_t id);
+	raw_memory_write(AddressAndKey const& key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& bytes);
 
 	void
-	nonnegative_int64_set_add(AddressAndKey const& key, int64_t set_value, int64_t delta, delta_identifier_t id);
+	nonnegative_int64_set_add(AddressAndKey const& key, int64_t set_value, int64_t delta);
 
 	void
-	nonnegative_int64_add(AddressAndKey const& key, int64_t delta, delta_identifier_t id);
+	nonnegative_int64_add(AddressAndKey const& key, int64_t delta);
 
 	void
-	delete_object_last(AddressAndKey const& key, delta_identifier_t id);
+	delete_object_last(AddressAndKey const& key);
 
 	void
-	hashset_insert(AddressAndKey const& key, Hash const& h, uint64_t threshold, delta_identifier_t id);
+	hashset_insert(AddressAndKey const& key, Hash const& h, uint64_t threshold);
 
 	void
-	hashset_increase_limit(AddressAndKey const& key, uint32_t limit, delta_identifier_t id);
+	hashset_increase_limit(AddressAndKey const& key, uint32_t limit);
 
 	void
-	hashset_clear(AddressAndKey const& key, uint64_t threshold, delta_identifier_t id);
+	hashset_clear(AddressAndKey const& key, uint64_t threshold);
 
 	bool
 	__attribute__((warn_unused_result))
 	push_deltas_to_statedb(TransactionRewind& rewind) const;
 
-	void log_modified_keys();
+	void log_modified_keys(ModifiedKeysList& keys);
 };
 
 } /* scs */

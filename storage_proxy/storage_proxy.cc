@@ -30,9 +30,8 @@
 namespace scs
 {
 
-StorageProxy::StorageProxy(StateDB& state_db, ModifiedKeysList& keys)
+StorageProxy::StorageProxy(StateDB& state_db)
 	: state_db(state_db)
-	, keys(keys)
 	, cache()
 	{}
 
@@ -57,8 +56,7 @@ StorageProxy::get(AddressAndKey const& key) const
 void
 StorageProxy::raw_memory_write(
 	AddressAndKey const& key, 
-	xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& bytes, 
-	delta_identifier_t id)
+	xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& bytes)
 {
 	auto& v = get_local(key);
 
@@ -68,18 +66,13 @@ StorageProxy::raw_memory_write(
 	{
 		throw wasm_api::HostError("failed to apply raw_memory_write");
 	}
-
-	//v.vec.emplace_back(std::move(delta));
-
-	//v.vec.add_delta(std::move(delta), std::move(id));
 }
 
 void
 StorageProxy::nonnegative_int64_set_add(
 	AddressAndKey const& key, 
 	int64_t set_value, 
-	int64_t delta_value, 
-	delta_identifier_t id)
+	int64_t delta_value)
 {
 	auto& v = get_local(key);
 	auto delta = make_nonnegative_int64_set_add(set_value, delta_value);
@@ -91,7 +84,7 @@ StorageProxy::nonnegative_int64_set_add(
 }
 
 void 
-StorageProxy::nonnegative_int64_add(AddressAndKey const& key, int64_t delta_value, delta_identifier_t id)
+StorageProxy::nonnegative_int64_add(AddressAndKey const& key, int64_t delta_value)
 {
 	auto& v = get_local(key);
 	auto base_value = v.applicator.get_base_nnint64_set_value();
@@ -108,7 +101,7 @@ StorageProxy::nonnegative_int64_add(AddressAndKey const& key, int64_t delta_valu
 }
 
 void
-StorageProxy::delete_object_last(AddressAndKey const& key, delta_identifier_t id)
+StorageProxy::delete_object_last(AddressAndKey const& key)
 {
 	auto& v = get_local(key);
 
@@ -121,7 +114,7 @@ StorageProxy::delete_object_last(AddressAndKey const& key, delta_identifier_t id
 }
 
 void
-StorageProxy::hashset_insert(AddressAndKey const& key, Hash const& h, uint64_t threshold, delta_identifier_t id)
+StorageProxy::hashset_insert(AddressAndKey const& key, Hash const& h, uint64_t threshold)
 {
 	auto& v = get_local(key);
 
@@ -134,7 +127,7 @@ StorageProxy::hashset_insert(AddressAndKey const& key, Hash const& h, uint64_t t
 }
 
 void
-StorageProxy::hashset_increase_limit(AddressAndKey const& key, uint32_t limit, delta_identifier_t id)
+StorageProxy::hashset_increase_limit(AddressAndKey const& key, uint32_t limit)
 {
 	auto& v = get_local(key);
 
@@ -154,7 +147,7 @@ StorageProxy::hashset_increase_limit(AddressAndKey const& key, uint32_t limit, d
 }
 
 void
-StorageProxy::hashset_clear(AddressAndKey const& key, uint64_t threshold, delta_identifier_t id)
+StorageProxy::hashset_clear(AddressAndKey const& key, uint64_t threshold)
 {
 	auto& v = get_local(key);
 
@@ -193,7 +186,7 @@ StorageProxy::push_deltas_to_statedb(TransactionRewind& rewind) const
 	return true;
 }
 
-void StorageProxy::log_modified_keys()
+void StorageProxy::log_modified_keys(ModifiedKeysList& keys)
 {
 	assert_not_committed_local_values();
 
@@ -213,25 +206,5 @@ StorageProxy::assert_not_committed_local_values() const
 		throw std::runtime_error("double commit");
 	}
 }
-
-
-/*
-void 
-StorageProxy::push_deltas_to_batch(SerialDeltaBatch& local_delta_batch)
-{
-	if (committed_local_values)
-	{
-		throw std::runtime_error("double push to batch");
-	}
-
-	for (auto& [k, v] : cache)
-	{
-		local_delta_batch.add_deltas(k, std::move(v));
-	}
-
-	committed_local_values = true;
-} */
-
-
 
 } /* scs */

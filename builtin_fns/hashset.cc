@@ -57,7 +57,7 @@ BuiltinFns::scs_hashset_insert(uint32_t key_offset,
         hash_offset);
 
     tx_ctx.storage_proxy.hashset_insert(
-        addr_and_key, hash, threshold, tx_ctx.get_src_tx_hash());
+        addr_and_key, hash, threshold);
 }
 
 void
@@ -78,7 +78,7 @@ BuiltinFns::scs_hashset_increase_limit(uint32_t key_offset,
     auto addr_and_key = tx_ctx.get_storage_key(key);
 
     tx_ctx.storage_proxy.hashset_increase_limit(
-        addr_and_key, limit_increase, tx_ctx.get_src_tx_hash());
+        addr_and_key, limit_increase);
 }
 
 std::optional<StorageObject>
@@ -121,7 +121,7 @@ BuiltinFns::scs_hashset_clear(uint32_t key_offset
     auto addr_and_key = tx_ctx.get_storage_key(key);
 
     tx_ctx.storage_proxy.hashset_clear(
-        addr_and_key, threshold, tx_ctx.get_src_tx_hash());
+        addr_and_key, threshold);
 }
 
 uint32_t

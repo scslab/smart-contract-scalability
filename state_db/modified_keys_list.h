@@ -35,12 +35,8 @@ class ModifiedKeysList
 
     using map_t = trie::AtomicTrie<value_t, trie_prefix_t>;
 
-    //using map_t = trie::RecyclingTrie<value_t, trie_prefix_t, metadata_t>;
-
     map_t keys;
-    using serial_trie_t = trie::AtomicTrieReference<map_t>;//value_t, trie_prefix_t>;
-
-    //using serial_trie_t = map_t::serial_trie_t;
+    using serial_trie_t = trie::AtomicTrieReference<map_t>;
 
     using cache_t = utils::ThreadlocalCache<serial_trie_t, TLCACHE_SIZE>;
 

@@ -23,6 +23,7 @@
 #include "state_db/state_db.h"
 #include "state_db/modified_keys_list.h"
 
+#include "tx_block/unique_tx_set.h"
 #include "tx_block/tx_set.h"
 
 #include <utils/non_movable.h>

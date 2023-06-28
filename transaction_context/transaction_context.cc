@@ -28,17 +28,17 @@ namespace scs {
 TransactionContext::TransactionContext(SignedTransaction const& tx,
                                        Hash const& tx_hash,
                                        GlobalContext& global_context,
-                                       BlockContext& block_context_,
+                                       uint64_t current_block,
                                        std::optional<NondeterministicResults> const& results)
     : invocation_stack()
     , runtime_stack()
     , tx(tx)
     , tx_hash(tx_hash)
     , gas_used(0)
-    , block_context(block_context_)
+    , current_block(current_block)
     , return_buf()
     , tx_results(results ? new TransactionResultsFrame(*results) : new TransactionResultsFrame())
-    , storage_proxy(global_context.state_db, block_context_.modified_keys_list)
+    , storage_proxy(global_context.state_db)
     , contract_db_proxy(global_context.contract_db)
 {}
 
@@ -119,7 +119,7 @@ TransactionContext::get_num_deployable_contracts() const
 uint64_t 
 TransactionContext::get_block_number() const
 {
-    return block_context.block_number;
+    return current_block;
 }
 
 const Contract&

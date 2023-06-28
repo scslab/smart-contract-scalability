@@ -70,7 +70,7 @@ struct EngineImpl<16, ArithmeticEngine::AVX>
     }
 };
 
-#else // undef __AVX2__
+#else // ifndef __AVX2__
 
 template<>
 

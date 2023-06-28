@@ -111,8 +111,26 @@ struct UpdateFn
                 if (new_obj) {
                     main_db_subnode -> template insert<trie::OverwriteInsertFn<StateDB::value_t>>(addrkey, std::move(*new_obj), main_db.get_gc());
                    // new_kvs.get().insert(addrkey, std::move(*new_obj));
-                } else
+                } 
+
+                else
                 {
+                    // TODO check the logic here, but my understanding is that
+                    // this removal is marking main_db_subnode as to be deleted,
+                    // because this node might only exist due to the get_subnode_ref call above.
+                    // However, during get_subnode_ref, the value should me marked as invalid,
+                    // so this should essentially be a no-op.  TODO double check this.
+                    // The case here happens IF no new object (or one is created and then immediately destroyed)
+                    // AND either (main_db_value is null (key nexist in statedb) OR main_db_value -> v is null)
+                    // main_db_value -> v is null only when a value is default constructed,
+                    // which appears to only happen during create subnode ref.
+                    // There may be something here related to being a holdover
+                    // from a past way of sequencing modifications.
+                    // Hence the additional null check
+                    if (main_db_value != nullptr) {
+                        throw std::runtime_error("when could this possibly make sense");
+                    }
+
                     if (main_db_subnode -> is_leaf())
                     {
                        // std::printf("thread %s deleting new value %s\n", utils::ThreadlocalIdentifier::get_string().c_str(), addrkey.to_string(trie::PrefixLenBits{512}).c_str());
@@ -127,14 +145,6 @@ struct UpdateFn
        //     main_db_subnode -> log(std::string("thread ") + utils::ThreadlocalIdentifier::get_string() + " pre: ");
             main_db_subnode -> compute_hash_and_normalize(main_db.get_gc(), digest_bytes);
         //    main_db_subnode -> log(std::string("thread ") + utils::ThreadlocalIdentifier::get_string() + " post:");
-
-    /*    }
-        catch(std::exception& e)
-        {
-            std::printf(e.what());
-            std::fflush(stdout);
-            throw e;
-        } */
     } 
 };
 

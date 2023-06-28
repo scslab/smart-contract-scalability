@@ -42,8 +42,7 @@ BuiltinFns::scs_delete_key_last(uint32_t key_offset
 
     auto addr_and_key = tx_ctx.get_storage_key(key);
 
-    tx_ctx.storage_proxy.delete_object_last(addr_and_key,
-                                            tx_ctx.get_src_tx_hash());
+    tx_ctx.storage_proxy.delete_object_last(addr_and_key);
 }
 
 } // namespace scs

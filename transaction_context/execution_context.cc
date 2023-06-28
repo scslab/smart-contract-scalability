@@ -94,7 +94,7 @@ ExecutionContext::execute(Hash const& tx_hash,
     MethodInvocation invocation(tx.tx.invocation);
 
     tx_context = std::make_unique<TransactionContext>(
-        tx, tx_hash, scs_data_structures, block_context, nondeterministic_res);
+        tx, tx_hash, scs_data_structures, block_context.block_number, nondeterministic_res);
 
     defer d{ [this]() {
         extract_results();
@@ -106,7 +106,6 @@ ExecutionContext::execute(Hash const& tx_hash,
     } catch (wasm_api::HostError& e) {
 	    std::printf("tx failed %s\n", e.what());
 	    CONTRACT_INFO("Execution error: %s", e.what());
-        // txs.template invalidate<TransactionFailurePoint::COMPUTE>(tx_hash);
         return TransactionStatus::FAILURE;
     } catch (...) {
         std::printf("unrecoverable error!\n");
@@ -125,12 +124,13 @@ ExecutionContext::execute(Hash const& tx_hash,
         return TransactionStatus::FAILURE;
     }
 
+    // cannot be rewound -- this forms the threshold for commit
     if (!block_context.tx_set.try_add_transaction(tx_hash, tx, tx_context -> tx_results->get_results().ndeterministic_results))
     {
         return TransactionStatus::FAILURE;
     }
 
-    storage_commitment -> commit();
+    storage_commitment -> commit(block_context.modified_keys_list);
 
     return TransactionStatus::SUCCESS;
 }
@@ -162,7 +162,6 @@ ExecutionContext::get_transaction_context()
 std::vector<TransactionLog> const&
 ExecutionContext::get_logs()
 {
-
     if (!results_of_last_tx) {
         throw std::runtime_error("can't get logs before execution");
     }

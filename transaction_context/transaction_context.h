@@ -47,10 +47,10 @@ struct StorageCommitment : public utils::NonMovableOrCopyable
 		, proxy(proxy)
 		{}
 
-	void commit()
+	void commit(ModifiedKeysList& keys)
 	{
 		rewind.commit();
-		proxy.log_modified_keys();
+		proxy.log_modified_keys(keys);
 	}
 };
 
@@ -74,7 +74,7 @@ class TransactionContext
 
 	uint64_t gas_used;
 
-	BlockContext const& block_context;
+	const uint64_t current_block;
 
 public:
 
@@ -91,7 +91,7 @@ public:
 		SignedTransaction const& tx,
 		Hash const& tx_hash, 
 		GlobalContext& scs_data_structures,
-		BlockContext& block_context_,
+		uint64_t current_block,
 		std::optional<NondeterministicResults> const& = std::nullopt);
 
 	std::unique_ptr<TransactionResults> extract_results()
