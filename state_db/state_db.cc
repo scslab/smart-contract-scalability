@@ -39,7 +39,7 @@ StateDB::get_committed_value(const AddressAndKey& a) const
 {
     auto const* res = state_db.get_value(a);
     if (res) {
-        return (*res).v->get_committed_object();
+        return (res)->get_committed_object();
     }
     return std::nullopt;
 }
@@ -54,8 +54,13 @@ StateDB::try_apply_delta(const AddressAndKey& a, const StorageDelta& delta)
     if (!res) {
         return new_key_cache.try_reserve_delta(a, delta);
     } else {
-        return (*res).v->try_add_delta(delta);
+        return (res)->try_add_delta(delta);
     }
+}
+
+void merge_impossible(const StateDB::value_t& value, const std::optional<StorageObject>& new_obj)
+{
+    throw std::runtime_error("cannot merge old value with new");
 }
 
 struct UpdateFn
@@ -67,8 +72,8 @@ struct UpdateFn
     template<typename Applyable>
     void operator() (const Applyable& work_root)
     {
-     //   std::printf("thread %s start applyable %s\n", utils::ThreadlocalIdentifier::get_string().c_str(), work_root.get_prefix().to_string(work_root.get_prefix_len()).c_str());
-     //   try {
+        // WARNING -- don't save these pointers -- they might get deleted during the normalization cleanup,
+        // and regardless accessing them later doesn't guarantee hash invalidation.
         auto* main_db_subnode = main_db.get_subnode_ref_and_invalidate_hash(work_root.get_prefix(), work_root.get_prefix_len());
 
         if (main_db_subnode -> get_prefix_len () != work_root.get_prefix_len())
@@ -86,13 +91,13 @@ struct UpdateFn
         {
            // std::printf("thread %s apply_lambda to key %s\n", utils::ThreadlocalIdentifier::get_string().c_str(), addrkey.to_string(trie::PrefixLenBits{512}).c_str());
             auto* main_db_value = main_db_subnode -> get_value(addrkey);
-            if (main_db_value && (main_db_value -> v))
+            if (main_db_value) // && (main_db_value -> v))
             {
                 main_db_subnode -> invalidate_hash_to_key(addrkey);
 
-                main_db_value -> v -> commit_round();
+                main_db_value /*-> v*/ -> commit_round();
 
-                if (!(main_db_value -> v -> get_committed_object()))
+                if (!(main_db_value /*-> v*/ -> get_committed_object()))
                 {
                 //    std::printf("thread %s deleting preexisting key %s\n", utils::ThreadlocalIdentifier::get_string().c_str(), addrkey.to_string(trie::PrefixLenBits{512}).c_str());
                     main_db_subnode -> delete_value(addrkey, main_db.get_gc());
@@ -107,7 +112,8 @@ struct UpdateFn
                     = new_key_cache.commit_and_get(query);
 
                 if (new_obj) {
-                    main_db_subnode -> template insert<trie::OverwriteInsertFn<StateDB::value_t>>(addrkey, std::move(*new_obj), main_db.get_gc());
+                    main_db_subnode -> template insert<&merge_impossible>(addrkey, main_db.get_gc(), *new_obj);
+                    //main_db_subnode -> template insert<trie::OverwriteInsertFn<StateDB::value_t>>(addrkey, std::move(*new_obj), main_db.get_gc());
                    // new_kvs.get().insert(addrkey, std::move(*new_obj));
                 } 
 
@@ -258,10 +264,10 @@ struct RewindFn
 
         auto apply_lambda = [this, main_db_subnode](const prefix_t& addrkey,
                                                     const trie::EmptyValue&) {
-            auto* main_db_value = main_db_subnode->get_value(addrkey);
+            StateDB::value_t* main_db_value = main_db_subnode->get_value(addrkey);
             if (main_db_value) {
                 // no need to invalidate hashes when rewinding
-                main_db_value -> v -> rewind_round();
+                main_db_value -> rewind_round();
             }
             // otherwise new key, don't need to do anything
         };

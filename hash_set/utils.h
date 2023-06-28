@@ -33,7 +33,6 @@ static void normalize_hashset(HashSet& hs)
 [[maybe_unused]]
 static void clear_hashset(HashSet& hs, uint64_t threshold)
 {
-	// TODO they're sorted, so we can just truncate the list and avoid the iterator overhead
 	auto& h_list = hs.hashes;
     uint32_t min = 0, max = h_list.size();
     uint32_t med = 0;

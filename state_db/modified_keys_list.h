@@ -31,8 +31,6 @@ class ModifiedKeysList
     using value_t = trie::EmptyValue;
     using trie_prefix_t = trie::ByteArrayPrefix<sizeof(AddressAndKey)>;
 
-   // using metadata_t = void;
-
     using map_t = trie::AtomicTrie<value_t, trie_prefix_t>;
 
     map_t keys;

@@ -20,7 +20,7 @@
 #include "xdr/types.h"
 
 #include "mtt/snapshot_trie/atomic_merkle_trie.h"
-#include "mtt/trie/utils.h"
+#include "mtt/common/utils.h"
 
 #include <map>
 #include <optional>
@@ -48,7 +48,7 @@ class StateDB
         return {};
     }
 
-    using base_value_struct = trie::PointerValue<RevertableObject, &serialize>;
+   /* using base_value_struct = trie::PointerValue<RevertableObject, &serialize>;
 
     struct value_struct : public base_value_struct
     {
@@ -59,14 +59,14 @@ class StateDB
         value_struct()
             : base_value_struct()
         {}
-    };
+    }; */
 
   public:
     using prefix_t = trie::ByteArrayPrefix<sizeof(AddressAndKey)>;
     //using metadata_t
     //    = trie::CombinedMetadata<trie::SizeMixin, trie::DeletableMixin>;
-    using value_t
-        = value_struct;
+    using value_t = trie::SerializeWrapper<RevertableObject, &serialize>;
+        //= value_struct;
     using trie_t = trie::AtomicMerkleTrie<prefix_t, value_t, TLCACHE_SIZE>;
     //using trie_t = trie::MerkleTrie<prefix_t, value_t, metadata_t>;
     //using cache_t = utils::ThreadlocalCache<trie_t, TLCACHE_SIZE>;
