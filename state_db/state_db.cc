@@ -85,21 +85,17 @@ struct UpdateFn
             throw std::runtime_error("wtf");
         }
 
-     //   main_db_subnode -> log(std::string("thread ") + utils::ThreadlocalIdentifier::get_string() +" init:");
-
         auto apply_lambda = [this, main_db_subnode, &work_root](const prefix_t& addrkey, const trie::EmptyValue&)
         {
-           // std::printf("thread %s apply_lambda to key %s\n", utils::ThreadlocalIdentifier::get_string().c_str(), addrkey.to_string(trie::PrefixLenBits{512}).c_str());
             auto* main_db_value = main_db_subnode -> get_value(addrkey);
-            if (main_db_value) // && (main_db_value -> v))
+            if (main_db_value)
             {
                 main_db_subnode -> invalidate_hash_to_key(addrkey);
 
-                main_db_value /*-> v*/ -> commit_round();
+                main_db_value -> commit_round();
 
-                if (!(main_db_value /*-> v*/ -> get_committed_object()))
+                if (!(main_db_value -> get_committed_object()))
                 {
-                //    std::printf("thread %s deleting preexisting key %s\n", utils::ThreadlocalIdentifier::get_string().c_str(), addrkey.to_string(trie::PrefixLenBits{512}).c_str());
                     main_db_subnode -> delete_value(addrkey, main_db.get_gc());
                 }
             }
@@ -113,109 +109,26 @@ struct UpdateFn
 
                 if (new_obj) {
                     main_db_subnode -> template insert<&merge_impossible>(addrkey, main_db.get_gc(), *new_obj);
-                    //main_db_subnode -> template insert<trie::OverwriteInsertFn<StateDB::value_t>>(addrkey, std::move(*new_obj), main_db.get_gc());
-                   // new_kvs.get().insert(addrkey, std::move(*new_obj));
                 } 
 
-                else
-                {
-                    // TODO check the logic here, but my understanding is that
-                    // this removal is marking main_db_subnode as to be deleted,
-                    // because this node might only exist due to the get_subnode_ref call above.
-                    // However, during get_subnode_ref, the value should me marked as invalid,
-                    // so this should essentially be a no-op.  TODO double check this.
-                    // The case here happens IF no new object (or one is created and then immediately destroyed)
-                    // AND either (main_db_value is null (key nexist in statedb) OR main_db_value -> v is null)
-                    // main_db_value -> v is null only when a value is default constructed,
-                    // which appears to only happen during create subnode ref.
-                    // There may be something here related to being a holdover
-                    // from a past way of sequencing modifications.
-                    // Hence the additional null check
-                    if (main_db_value != nullptr) {
-                        throw std::runtime_error("when could this possibly make sense");
-                    }
-
-                    if (main_db_subnode -> is_leaf())
-                    {
-                       // std::printf("thread %s deleting new value %s\n", utils::ThreadlocalIdentifier::get_string().c_str(), addrkey.to_string(trie::PrefixLenBits{512}).c_str());
-                        main_db_subnode -> delete_value(addrkey, main_db.get_gc());
-                    }
-                }
+                // otherwise, main_db_value is nullptr,
+                // so value does not exist.
+                // In this case, while the actual trie node may exist,
+                // the value will get cleaned up (and the node will be gc'd)
+                // during the normalization phase. 
+                // This enables the deletion of the dead code that was present here
+                // (we do not need to delete a value that does not exist, but that was created
+                // and needed to be deleted in earlier versions of this code).
             }
         };
+
+        // preallocating reuseable buffer helps performance
         std::vector<uint8_t> digest_bytes;
 
-            work_root.apply_to_kvs(apply_lambda);
-       //     main_db_subnode -> log(std::string("thread ") + utils::ThreadlocalIdentifier::get_string() + " pre: ");
-            main_db_subnode -> compute_hash_and_normalize(main_db.get_gc(), digest_bytes);
-        //    main_db_subnode -> log(std::string("thread ") + utils::ThreadlocalIdentifier::get_string() + " post:");
+        work_root.apply_to_kvs(apply_lambda);
+        main_db_subnode -> compute_hash_and_normalize(main_db.get_gc(), digest_bytes);
     } 
 };
-
-/*
-struct UpdateFn
-{
-    NewKeyCache& new_key_cache;
-    StateDB::trie_t& main_db;
-    StateDB::cache_t& new_kvs;
-
-    using prefix_t = StateDB::prefix_t;
-
-    template<typename Applyable>
-    void operator()(const Applyable& work_root)
-    {
-        // Must guarantee no concurrent modification of commitment_trie (other
-        // than values)
-
-    //    std::printf("work root %s %d\n", work_root.get_prefix().to_string(work_root.get_prefix_len()).c_str(),
-    //        work_root.get_prefix_len().len);
-
-        auto* main_db_subnode = main_db.get_subnode_ref_nolocks(
-            work_root.get_prefix(), work_root.get_prefix_len());
-
-        auto apply_lambda = [this, main_db_subnode](const prefix_t& addrkey,
-                                                    const trie::EmptyValue&) {
-        //    std::printf("applying to key %s\n", addrkey.to_string(trie::PrefixLenBits(512)).c_str());
-            auto* main_db_value = main_db_subnode->get_value_nolocks(addrkey);
-            if (main_db_value) {
-                main_db_subnode->invalidate_hash_to_key_nolocks(addrkey);
-
-                main_db_value->v->commit_round();
-
-                if (!(main_db_value->v->get_committed_object())) {
-                    if (!main_db.mark_for_deletion_nolocks(addrkey)) {
-                        std::printf("failed to delete something\n");
-                        std::fflush(stdout);
-                        throw std::runtime_error("deletion failed");
-                    }
-                }
-            } else {
-
-                AddressAndKey query
-                    = addrkey.template get_bytes_array<AddressAndKey>();
-
-                std::optional<StorageObject> new_obj
-                    = new_key_cache.commit_and_get(query);
-
-                if (new_obj) {
-                    new_kvs.get().insert(addrkey, std::move(*new_obj));
-                }
-            }
-        };
-
-        work_root.apply_to_kvs(apply_lambda);
-        main_db.invalidate_hash_to_node_nolocks(main_db_subnode);
-
-	if (main_db_subnode)
-	{
-//		std::printf("main subnode %p\n", main_db_subnode);
-		std::vector<uint8_t> digest_bytes;
-		std::optional<trie::HashLog<prefix_t>> log = std::nullopt;
-        // need to lock main_db_subnode
-		//main_db_subnode -> compute_hash(digest_bytes, log);
-	}
-    }
-}; */
 
 void
 StateDB::commit_modifications(const ModifiedKeysList& list)
