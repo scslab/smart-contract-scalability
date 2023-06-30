@@ -129,6 +129,13 @@ class RevertableObject : public utils::NonMovableOrCopyable
     // for delete_last
     std::atomic<bool> delete_last_committed;
 
+    // for asset obj
+    // ensure value >=0 and value <= UINT64_MAX
+    // asset is amount if all pending subs are applied,
+    // upperbound is if all pending adds are applied
+    std::atomic<uint64_t> available_asset;
+    std::atomic<uint64_t> available_asset_upperbound;
+
     // base object
     std::optional<StorageObject> committed_base;
 

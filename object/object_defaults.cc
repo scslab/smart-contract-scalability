@@ -57,6 +57,16 @@ object_from_delta_class(StorageDeltaClass const& dc, std::optional<StorageObject
 			}
 			break;
 		}
+		case ObjectType::KNOWN_SUPPLY_ASSET:
+		{
+			out.body.asset().amount = 0;
+			if (prev_object)
+			{
+				out.body.asset().amount = prev_object -> body.asset().amount;
+			}
+			break;
+		}
+		break;
 		default:
 			throw std::runtime_error("unimpl sdc object_defaults.cc");
 	}

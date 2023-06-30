@@ -23,6 +23,8 @@
 
 #include "hash_set/utils.h"
 
+#include <utils/assert.h>
+
 using xdr::operator==;
 
 namespace scs {
@@ -257,6 +259,24 @@ RevertableBaseObject::~RevertableBaseObject()
     }
 }
 
+bool try_add_uint64(int64_t delta, std::atomic<uint64_t>& base)
+{
+    uint64_t expect = base.load(std::memory_order_relaxed);
+    while(true)
+    {
+        uint64_t desire;
+        if (__builtin_add_overflow(expect, delta, &desire))
+        {
+            return false;
+        }
+        if (base.compare_exchange_weak(expect, desire, std::memory_order_relaxed))
+        {
+            return true;
+        }
+        __builtin_ia32_pause();
+    }
+}
+
 std::optional<RevertableObject::DeltaRewind>
 RevertableObject::try_add_delta(const StorageDelta& delta)
 {
@@ -385,6 +405,32 @@ RevertableObject::try_add_delta(const StorageDelta& delta)
 
             return DeltaRewind(std::move(*res), delta, this);
         }
+        case DeltaType::ASSET_OBJECT_ADD:
+        {
+            StorageDeltaClass obj;
+            obj.type(ObjectType::KNOWN_SUPPLY_ASSET);
+            auto res = base_obj.try_set(obj);
+
+            if (!res) {
+                return std::nullopt;
+            }
+
+            int64_t d = delta.asset_delta();
+
+            if (d < 0)
+            {
+                if (!try_add_uint64(d, available_asset))
+                {
+                    return std::nullopt;
+                }
+            } else {
+                if (!try_add_uint64(d, available_asset_upperbound))
+                {
+                    return std::nullopt;
+                }
+            }
+            return DeltaRewind(std::move(*res), delta, this);
+        }
         default:
             throw std::runtime_error(
                 "unimplemented deltatype in RevertableObject::try_set");
@@ -438,6 +484,19 @@ RevertableObject::commit_delta(const StorageDelta& delta)
                 }
             }
         }
+        case DeltaType::ASSET_OBJECT_ADD:
+        {
+            int64_t const& d = delta.asset_delta();
+
+            if (d < 0)
+            {
+                available_asset_upperbound.fetch_add(d, std::memory_order_relaxed);
+            } else
+            {
+                available_asset.fetch_add(d, std::memory_order_relaxed);
+            }
+            return;
+        }
     }
     throw std::runtime_error("unknown deltatype in commit_delta()");
 }
@@ -478,6 +537,19 @@ RevertableObject::revert_delta(const StorageDelta& delta)
         case DeltaType::HASH_SET_CLEAR:
         {
             // no op
+            return;
+        }
+        case DeltaType::ASSET_OBJECT_ADD:
+        {
+            int64_t const& d = delta.asset_delta();
+
+            if (d < 0)
+            {
+                available_asset.fetch_sub(d, std::memory_order_relaxed);
+            } else
+            {
+                available_asset_upperbound.fetch_sub(d, std::memory_order_relaxed);
+            }
             return;
         }
     }
@@ -582,6 +654,17 @@ RevertableObject::clear_mods()
     max_committed_clear_threshold.store(0, std::memory_order_relaxed);
 
     delete_last_committed.store(false, std::memory_order_relaxed);
+
+    if (committed_base.has_value() && (committed_base->body.type() == ObjectType::KNOWN_SUPPLY_ASSET))
+    {
+        available_asset.store(committed_base->body.asset().amount, std::memory_order_relaxed);
+        available_asset_upperbound.store(committed_base->body.asset().amount, std::memory_order_relaxed);
+    } 
+    else
+    {
+        available_asset.store(0, std::memory_order_relaxed);
+        available_asset_upperbound.store(0, std::memory_order_relaxed);
+    }
 }
 
 void
@@ -654,6 +737,15 @@ RevertableObject::commit_round()
 
             break;
         }
+        case ObjectType::KNOWN_SUPPLY_ASSET:
+        {
+            committed_base -> body.asset().amount = available_asset.load(std::memory_order_relaxed);
+
+            utils::print_assert(
+                committed_base -> body.asset().amount == available_asset_upperbound.load(std::memory_order_relaxed),
+                "asset value vs. upperbound mismatch in commit");
+        }
+        break;
         default:
             throw std::runtime_error("unimplemented object type in "
                                      "RevertableObject::commit_round()");
@@ -679,6 +771,8 @@ RevertableObject::RevertableObject()
     , hashset_clear_committed(false)
     , max_committed_clear_threshold(0)
     , delete_last_committed(false)
+    , available_asset(0)
+    , available_asset_upperbound(0)
     , committed_base(std::nullopt)
 {}
 
@@ -692,10 +786,16 @@ RevertableObject::RevertableObject(const StorageObject& committed_base_)
     , hashset_clear_committed(false)
     , max_committed_clear_threshold(0)
     , delete_last_committed(false)
+    , available_asset(0)
+    , available_asset_upperbound(0)
     , committed_base(committed_base_)
 {
-    if (committed_base->body.type() == ObjectType::HASH_SET) {
+    if (committed_base -> body.type() == ObjectType::HASH_SET) {
         new_hashes.resize(committed_base->body.hash_set().max_size);
+    }
+    else if (committed_base -> body.type() == ObjectType::KNOWN_SUPPLY_ASSET) {
+        available_asset.store(committed_base -> body.asset().amount, std::memory_order_relaxed);
+        available_asset_upperbound.store(committed_base -> body.asset().amount, std::memory_order_relaxed);
     }
 }
 

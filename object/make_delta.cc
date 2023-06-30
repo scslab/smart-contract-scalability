@@ -82,7 +82,7 @@ make_hash_set_clear(uint64_t threshold)
 }
 
 StorageDelta
-make_asset_delta(int64_t delta)
+make_asset_add(int64_t delta)
 {
     StorageDelta d;
     d.type(DeltaType::ASSET_OBJECT_ADD);

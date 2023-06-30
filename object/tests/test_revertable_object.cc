@@ -497,7 +497,6 @@ TEST_CASE("hashset from nonempty", "[object]")
 
 TEST_CASE("hashset from nonempty with thresholds", "[object]")
 {
-
     StorageObject base_obj;
     base_obj.body.type(ObjectType::HASH_SET);
     base_obj.body.hash_set().max_size = 4;
@@ -554,5 +553,190 @@ TEST_CASE("hashset from nonempty with thresholds", "[object]")
     }
 }
 
+TEST_CASE("asset object from empty", "[object]")
+{
+    RevertableObject object;
+
+    auto good_add_and_commit = [&](int64_t d) {
+        auto res = object.try_add_delta(make_asset_add(d));
+        REQUIRE(!!res);
+        res->commit();
+    };
+
+    auto bad_add = [&](int64_t d) {
+        auto res = object.try_add_delta(make_asset_add(d));
+        REQUIRE(!res);
+    };
+
+    auto expect_committed = [&](uint64_t value)
+    {
+        object.commit_round();
+        auto o = object.get_committed_object();
+        REQUIRE(!!o);
+
+        REQUIRE(o->body.type() == ObjectType::KNOWN_SUPPLY_ASSET);
+
+        REQUIRE(o->body.asset().amount == value);
+    };
+
+    SECTION("add good")
+    {
+        good_add_and_commit(10);
+        good_add_and_commit(-10);
+        expect_committed(0);
+    }
+
+    SECTION("bad add")
+    {
+        bad_add(-1);
+        good_add_and_commit(10);
+        bad_add(-11);
+        good_add_and_commit(-10);
+        expect_committed(0);
+    }
+    SECTION("add overflow up")
+    {
+        good_add_and_commit(INT64_MAX);
+        good_add_and_commit(INT64_MAX);
+        good_add_and_commit(1);
+        bad_add(1);
+        good_add_and_commit(-10);
+        good_add_and_commit(5);
+        bad_add(6);
+        expect_committed(UINT64_MAX-5);
+    }
+}
+
+TEST_CASE("asset object from empty intermingled commits", "[object]")
+{
+    RevertableObject object;
+
+    auto good_add = [&](int64_t d)
+    {
+        auto res = object.try_add_delta(make_asset_add(d));
+        REQUIRE(!!res);
+        return res;
+    };
+
+    auto bad_add = [&](int64_t d)
+    {
+        auto res = object.try_add_delta(make_asset_add(d));
+        REQUIRE(!res);
+    };
+
+    auto expect_committed = [&](uint64_t value)
+    {
+        object.commit_round();
+        auto o = object.get_committed_object();
+        REQUIRE(!!o);
+
+        REQUIRE(o->body.type() == ObjectType::KNOWN_SUPPLY_ASSET);
+
+        REQUIRE(o->body.asset().amount == value);
+    };
+
+    SECTION("can't sub before commit")
+    {
+        auto r1 = good_add(10);
+        bad_add(-1);
+        r1->commit();
+        good_add(-1)->commit();
+
+        expect_committed(9);
+    }
+    SECTION("can't add before commit")
+    {
+        good_add(INT64_MAX)->commit();
+        good_add(2)->commit();
+
+        bad_add(INT64_MAX);
+
+        auto r1 = good_add(-1);
+
+        bad_add(INT64_MAX);
+
+        r1->commit();
+
+        good_add(INT64_MAX)->commit();
+
+        expect_committed(UINT64_MAX);
+    }
+
+    SECTION("both ends closed")
+    {
+        auto r1 = good_add(INT64_MAX);
+        auto r2 = good_add(INT64_MAX);
+
+        bad_add(3);
+        bad_add(-3);
+    }
+
+    SECTION("revert")
+    {
+        good_add(100)->commit();
+        {
+            auto r1 = good_add(-100);
+
+            bad_add(-1);
+        }
+        good_add(-100)->commit();
+        expect_committed(0);
+    }
+}
+
+TEST_CASE("asset object from nonempty", "[object]")
+{
+    StorageObject base_obj;
+    base_obj.body.type(ObjectType::KNOWN_SUPPLY_ASSET);
+    base_obj.body.asset().amount = 100;
+    RevertableObject object(base_obj);
+
+    auto good_add = [&](int64_t d)
+    {
+        auto res = object.try_add_delta(make_asset_add(d));
+        REQUIRE(!!res);
+        return res;
+    };
+
+    auto bad_add = [&](int64_t d)
+    {
+        auto res = object.try_add_delta(make_asset_add(d));
+        REQUIRE(!res);
+    };
+
+    auto expect_committed = [&](uint64_t value)
+    {
+        object.commit_round();
+        auto o = object.get_committed_object();
+        REQUIRE(!!o);
+
+        REQUIRE(o->body.type() == ObjectType::KNOWN_SUPPLY_ASSET);
+
+        REQUIRE(o->body.asset().amount == value);
+    };
+
+    SECTION("nothing")
+    {
+        expect_committed(100);
+    }
+
+    SECTION("sub once")
+    {
+        auto r1 = good_add(-100);
+        bad_add(-1);
+
+        r1->commit();
+
+        expect_committed(0);
+    }
+
+    SECTION("commit twice")
+    {
+        good_add(100) -> commit();
+        expect_committed(200);
+        good_add(100) -> commit();
+        expect_committed(300);
+    }
+}
 
 } // namespace scs
