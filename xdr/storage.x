@@ -25,6 +25,7 @@ enum ObjectType
 	NONNEGATIVE_INT64 = 1,
 	HASH_SET = 2,
 	UNCONSTRAINED_INT64 = 3,
+	KNOWN_SUPPLY_ASSET = 4,
 };
 
 const RAW_MEMORY_MAX_LEN = 4096;
@@ -49,6 +50,10 @@ struct HashSet
 const MAX_HASH_SET_SIZE = 65535;
 const START_HASH_SET_SIZE = 64;
 
+struct AssetObject {
+	uint64 amount;
+};
+
 struct StorageObject
 {
 	union switch (ObjectType type)
@@ -61,6 +66,8 @@ struct StorageObject
 		HashSet hash_set;
 	case UNCONSTRAINED_INT64:
 		int64 unconstrained_int64;
+	case KNOWN_SUPPLY_ASSET:
+		AssetObject asset;
 	} body;
 
 	uint64 escrowed_fee;

@@ -81,4 +81,13 @@ make_hash_set_clear(uint64_t threshold)
     return d;
 }
 
+StorageDelta
+make_asset_delta(int64_t delta)
+{
+    StorageDelta d;
+    d.type(DeltaType::ASSET_OBJECT_ADD);
+    d.asset_delta() = delta;
+    return d;
+}
+
 } // namespace scs

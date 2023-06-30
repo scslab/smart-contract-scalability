@@ -31,6 +31,7 @@ enum DeltaType
 	UNCONSTRAINED_INT64_SET_ADD = 6,
 	UNCONSTRAINED_INT64_SET_MAX = 7,
 	UNCONSTRAINED_INT64_SET_XOR = 8,
+	ASSET_OBJECT_ADD = 9,
 };
 
 % static_assert(static_cast<uint64_t>(-1) == 0xFFFF'FFFF'FFFF'FFFF, "requires two's complement");
@@ -75,6 +76,8 @@ union StorageDelta switch (DeltaType type)
 		set_max_t set_max_unconstrained_int64;
 	case UNCONSTRAINED_INT64_SET_XOR:
 		set_xor_t set_xor_unconstrained_int64;
+	case ASSET_OBJECT_ADD:
+		int64 asset_delta;
 };
 
 // REFUND DESIGN:
@@ -111,7 +114,11 @@ union StorageDeltaClass switch (ObjectType type)
 		void;
 	case UNCONSTRAINED_INT64:
 		UnconstrainedInt64DeltaClass unconstrained_int64_modtype;
+	case KNOWN_SUPPLY_ASSET:
+		void;
 };
+
+
 
 /*
 

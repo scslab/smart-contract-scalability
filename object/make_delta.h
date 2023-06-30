@@ -45,4 +45,7 @@ make_hash_set_increase_limit(uint16_t limit);
 StorageDelta
 make_hash_set_clear(uint64_t threshold);
 
+StorageDelta
+make_asset_add(int64_t delta);
+
 } // namespace scs
