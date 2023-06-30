@@ -48,28 +48,24 @@ class StateDB
         return {};
     }
 
-   /* using base_value_struct = trie::PointerValue<RevertableObject, &serialize>;
-
-    struct value_struct : public base_value_struct
-    {
-        value_struct(const StorageObject& obj)
-            : base_value_struct(std::make_unique<RevertableObject>(obj))
-        {}
-
-        value_struct()
-            : base_value_struct()
-        {}
-    }; */
-
   public:
     using prefix_t = trie::ByteArrayPrefix<sizeof(AddressAndKey)>;
-    //using metadata_t
-    //    = trie::CombinedMetadata<trie::SizeMixin, trie::DeletableMixin>;
+
     using value_t = trie::SerializeWrapper<RevertableObject, &serialize>;
-        //= value_struct;
-    using trie_t = trie::AtomicMerkleTrie<prefix_t, value_t, TLCACHE_SIZE>;
-    //using trie_t = trie::MerkleTrie<prefix_t, value_t, metadata_t>;
-    //using cache_t = utils::ThreadlocalCache<trie_t, TLCACHE_SIZE>;
+
+    struct StateDBMetadata : public trie::SnapshotTrieMetadataBase
+    {
+        using uint128_t = unsigned __int128;
+        uint128_t asset_supply = 0;
+
+        void write_to(std::vector<uint8_t>& digest_bytes) const;
+        void from_value(trie::SerializeWrapper<RevertableObject, &serialize> const& obj);
+        StateDBMetadata& operator+=(const StateDBMetadata& other);
+    };
+
+    using metadata_t = StateDBMetadata;
+
+    using trie_t = trie::AtomicMerkleTrie<prefix_t, value_t, TLCACHE_SIZE, metadata_t>;
 
   private:
     trie_t state_db;
@@ -92,16 +88,6 @@ class StateDB
     void rewind_modifications(const ModifiedKeysList& list);
 
     Hash hash();
-
-#if 0
-// old
-	void 
-	populate_delta_batch(DeltaBatch& delta_batch) const;
-
-	void 
-	apply_delta_batch(DeltaBatch const& delta_batch);
-#endif
-   
 };
 
 } // namespace scs
