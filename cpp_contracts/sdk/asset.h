@@ -39,7 +39,7 @@ asset_add(
 	int64_t delta);
 
 BUILTIN("asset_get")
-void
+uint64_t
 asset_get(
 	uint32_t key_offset
 	/* key_len = 32 */);
