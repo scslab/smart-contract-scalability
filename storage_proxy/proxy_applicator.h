@@ -49,7 +49,10 @@ class ProxyApplicator
     std::vector<HashSetEntry> new_hashes;
     std::optional<uint64_t> hs_clear_threshold = std::nullopt;
 
-    // std::optional<StorageDelta> overall_delta;
+    // known supply asset
+    std::optional<int64_t> delta;
+
+    // deletions
     bool is_deleted = false;
 
     bool delta_apply_type_guard(StorageDelta const& d) const;
@@ -68,6 +71,11 @@ class ProxyApplicator
     {}
 
     // no-op if result is false, apply if result is true
+    // One caveat is that once you try_apply one delta,
+    // future deltas will be forced to be of the type
+    // This doesn't actually matter, given
+    // that everywhere that this is used, a failed attempt
+    // to apply reverts the whole transaction.
     bool __attribute__((warn_unused_result))
     try_apply(StorageDelta const& delta);
 

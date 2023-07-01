@@ -50,6 +50,10 @@ ProxyApplicator::delta_apply_type_guard(StorageDelta const& d) const
         {
         	return current -> body.type() == ObjectType::HASH_SET;
         }
+        case DeltaType::ASSET_OBJECT_ADD:
+        {
+            return current -> body.type() == ObjectType::KNOWN_SUPPLY_ASSET;
+        }
         default:
             throw std::runtime_error("unknown deltatype");
     }
@@ -137,6 +141,9 @@ ProxyApplicator::make_current(ObjectType obj_type)
         	case ObjectType::HASH_SET:
         		current -> body.hash_set().max_size = START_HASH_SET_SIZE;
         		break;
+            case ObjectType::KNOWN_SUPPLY_ASSET:
+                // nothing to do
+                break;
         	default:
         		throw std::runtime_error("unimplemented object type");
         }
@@ -272,6 +279,34 @@ ProxyApplicator::try_apply(StorageDelta const& d)
             clear_hashset(current -> body.hash_set(), *hs_clear_threshold);
     		return true;
     	}
+        case DeltaType::ASSET_OBJECT_ADD:
+        {
+            make_current(ObjectType::KNOWN_SUPPLY_ASSET);
+
+            // check overflow on delta
+            if (delta.has_value() && __builtin_add_overflow_p(*delta, d.asset_delta(), static_cast<int64_t>(0)))
+            {
+                return false;
+            }
+
+            uint64_t cur_asset_value = current->body.asset().amount;
+            if (__builtin_add_overflow_p(cur_asset_value, d.asset_delta(), static_cast<uint64_t>(0)))
+            {
+                return false;
+            }
+
+            if (!delta)
+            {
+                delta = d.asset_delta();
+            }
+            else
+            {
+                *delta += d.asset_delta();
+            }
+
+            current->body.asset().amount += d.asset_delta();
+            return true;
+        }
         default:
             throw std::runtime_error("unknown deltatype");
     }
@@ -327,8 +362,13 @@ ProxyApplicator::get_deltas() const
         out.push_back(make_hash_set_insert(h));
     }
 
-    if (hs_clear_threshold) {
+    if (hs_clear_threshold.has_value()) {
         out.push_back(make_hash_set_clear(*hs_clear_threshold));
+    }
+
+    if (delta.has_value())
+    {
+        out.push_back(make_asset_add(*delta));
     }
 
     if (is_deleted) {

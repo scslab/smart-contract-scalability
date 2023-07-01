@@ -431,4 +431,69 @@ TEST_CASE("hash set only", "[mutator]")
     }
 }
 
+TEST_CASE("asset only", "[mutator]")
+{
+    std::unique_ptr<ProxyApplicator> applicator;
+
+    auto check_valid
+        = [&](StorageDelta const& d) { REQUIRE(applicator->try_apply(d)); };
+
+    auto check_invalid
+        = [&](StorageDelta const& d) { REQUIRE(!applicator->try_apply(d)); };
+
+
+    auto val_expect_amount = [&](uint64_t amount) {
+        REQUIRE(applicator->get());
+        REQUIRE(applicator->get()->body.asset().amount == amount);
+    };
+
+    auto expect_delta = [&](int64_t delta)
+    {
+        REQUIRE(applicator -> get_deltas().size() == 1);
+        REQUIRE(applicator -> get_deltas().at(0).asset_delta() == delta);
+    };
+
+    SECTION("add to empty")
+    {
+        applicator = std::make_unique<ProxyApplicator>(std::nullopt);
+
+        check_valid(make_asset_add(10));
+        check_valid(make_asset_add(20));
+        val_expect_amount(30);
+    }
+
+    SECTION("sub to empty")
+    {
+        applicator = std::make_unique<ProxyApplicator>(std::nullopt);
+
+        check_invalid(make_asset_add(-10));
+
+        REQUIRE(applicator -> get_deltas().size() == 0);
+    }
+
+    SECTION("add but sub fails")
+    {
+        applicator = std::make_unique<ProxyApplicator>(std::nullopt);
+        check_valid(make_asset_add(5));
+        check_invalid(make_asset_add(-10));
+
+        val_expect_amount(5);
+
+        expect_delta(5);
+    }
+    SECTION("overflow not on value but on delta")
+    {
+        applicator = std::make_unique<ProxyApplicator>(std::nullopt);
+
+        check_valid(make_asset_add(INT64_MAX));
+
+        check_valid(make_asset_add(-10));
+        check_invalid(make_asset_add(11));
+
+        val_expect_amount(INT64_MAX - 10);
+        expect_delta(INT64_MAX - 10);
+    }
+}
+
+
 } // namespace scs

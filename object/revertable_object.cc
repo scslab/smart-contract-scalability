@@ -423,7 +423,8 @@ RevertableObject::try_add_delta(const StorageDelta& delta)
                 {
                     return std::nullopt;
                 }
-            } else {
+            } else
+            {
                 if (!try_add_uint64(d, available_asset_upperbound))
                 {
                     return std::nullopt;
