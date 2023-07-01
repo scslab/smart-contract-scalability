@@ -84,6 +84,9 @@ DECL_COST_STATIC(hashset_get_max_size, 50)
 DECL_COST_STATIC(hashset_get_index_of, 100)
 DECL_COST_STATIC(hashset_get_index, 50)
 
+/* asset */
+DECL_COST_STATIC(asset_add, 200);
+
 /* crypto */
 DECL_COST_STATIC(hash, 10000);
 DECL_COST_STATIC(check_sig_ed25519, 10000);

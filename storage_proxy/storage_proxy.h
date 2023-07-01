@@ -73,6 +73,9 @@ public:
 	void
 	hashset_clear(AddressAndKey const& key, uint64_t threshold);
 
+	void
+	asset_add(AddressAndKey const& key, int64_t d);
+
 	bool
 	__attribute__((warn_unused_result))
 	push_deltas_to_statedb(TransactionRewind& rewind) const;

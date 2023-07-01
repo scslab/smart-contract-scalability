@@ -159,6 +159,19 @@ StorageProxy::hashset_clear(AddressAndKey const& key, uint64_t threshold)
 	}
 }
 
+void
+StorageProxy::asset_add(AddressAndKey const& key, int64_t d)
+{
+	auto& v = get_local(key);
+
+	auto delta = make_asset_add(d);
+
+	if (!v.applicator.try_apply(delta))
+	{
+		throw wasm_api::HostError("failed to apply asset add");
+	}
+}
+
 
 bool 
 StorageProxy::push_deltas_to_statedb(TransactionRewind& rewind) const
@@ -168,8 +181,6 @@ StorageProxy::push_deltas_to_statedb(TransactionRewind& rewind) const
 	for (auto const& [k, v] : cache)
 	{
 		auto deltas = v.applicator.get_deltas();
-		//auto const& dv = v.vec;
-		//auto const& deltas = dv.get();
 		for (auto const& delta : deltas)
 		{
 			auto res = state_db.try_apply_delta(k, delta);

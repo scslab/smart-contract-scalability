@@ -208,6 +208,13 @@ class BuiltinFns
 		/* output_len = 32 */
 		uint32_t index);
 
+	/* -- asset -- */
+	static void
+	scs_asset_add(
+		uint32_t key_offset,
+		/* key_len = 32 */
+		int64_t delta);
+
 	/* -- crypto -- */
 	static void
 	scs_hash(

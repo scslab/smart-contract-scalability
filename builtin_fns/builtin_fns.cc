@@ -153,6 +153,11 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 		"scs",
 		"hashset_get_index");
 
+	/* -- asset -- */
+	runtime.template link_fn<&BuiltinFns::scs_asset_add>(
+		"scs",
+		"asset_add");
+
 	/* -- crypto -- */
 	runtime.template link_fn<&BuiltinFns::scs_hash>(
 		"scs",

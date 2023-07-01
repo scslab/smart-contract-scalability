@@ -56,6 +56,7 @@ BLOCK_ASSEMBLY_SRCS = \
 	block_assembly/limits.cc
 
 BUILTIN_FNS_SRCS = \
+	builtin_fns/asset.cc \
 	builtin_fns/builtin_fns.cc \
 	builtin_fns/contract.cc \
 	builtin_fns/crypto.cc \
