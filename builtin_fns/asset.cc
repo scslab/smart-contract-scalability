@@ -46,4 +46,32 @@ BuiltinFns::scs_asset_add(uint32_t key_offset,
     tx_ctx.storage_proxy.asset_add(addr_and_key, delta);
 }
 
+uint64_t
+BuiltinFns::scs_asset_get(uint32_t key_offset
+                          /* key_len = 32 */)
+{
+    auto& tx_ctx
+        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    tx_ctx.consume_gas(gas_asset_get);
+
+    auto& runtime = *tx_ctx.get_current_runtime();
+
+    auto key
+        = runtime.template load_from_memory_to_const_size_buf<InvariantKey>(
+            key_offset);
+
+    auto addr_and_key = tx_ctx.get_storage_key(key);
+    auto const& res = tx_ctx.storage_proxy.get(addr_and_key);
+
+    if (!res) {
+        return 0;
+    }
+
+    if (res->body.type() != ObjectType::KNOWN_SUPPLY_ASSET) {
+        throw wasm_api::HostError("type mismatch in asset get");
+    }
+
+    return res -> body.asset().amount;
+}
+
 } // namespace scs

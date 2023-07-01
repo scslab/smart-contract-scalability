@@ -215,6 +215,11 @@ class BuiltinFns
 		/* key_len = 32 */
 		int64_t delta);
 
+	static uint64_t
+	scs_asset_get(
+		uint32_t key_offset
+		/* key_len = 32 */);
+
 	/* -- crypto -- */
 	static void
 	scs_hash(

@@ -86,6 +86,7 @@ DECL_COST_STATIC(hashset_get_index, 50)
 
 /* asset */
 DECL_COST_STATIC(asset_add, 200);
+DECL_COST_STATIC(asset_get, 50);
 
 /* crypto */
 DECL_COST_STATIC(hash, 10000);

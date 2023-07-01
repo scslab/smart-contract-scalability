@@ -158,6 +158,10 @@ BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
 		"scs",
 		"asset_add");
 
+	runtime.template link_fn<&BuiltinFns::scs_asset_get>(
+		"scs",
+		"asset_get");
+
 	/* -- crypto -- */
 	runtime.template link_fn<&BuiltinFns::scs_hash>(
 		"scs",
