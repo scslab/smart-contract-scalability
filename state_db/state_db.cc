@@ -36,7 +36,7 @@ StateDB::StateDBMetadata::write_to(std::vector<uint8_t>& digest_bytes) const
 
 void
 StateDB::StateDBMetadata::from_value(
-    trie::SerializeWrapper<RevertableObject, &serialize> const& obj)
+    value_t const& obj)
 {
     trie::SnapshotTrieMetadataBase::from_value(obj);
     auto const& committed_obj = obj.get_committed_object();

@@ -59,7 +59,7 @@ class StateDB
         uint128_t asset_supply = 0;
 
         void write_to(std::vector<uint8_t>& digest_bytes) const;
-        void from_value(trie::SerializeWrapper<RevertableObject, &serialize> const& obj);
+        void from_value(value_t const& obj);
         StateDBMetadata& operator+=(const StateDBMetadata& other);
     };
 
