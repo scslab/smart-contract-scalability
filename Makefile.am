@@ -22,6 +22,7 @@ CLEANFILES = *~ .*~
 
 include $(srcdir)/lib/utility/Makefile.am.fragment
 include $(srcdir)/lib/merkle_trie_toolkit/Makefile.am.fragment
+include $(srcdir)/lib/wasm_api/Makefile.am.fragment
 
 X_FILES = \
 	xdr/block.x \
@@ -168,7 +169,9 @@ SRCS = \
 	$(THREADLOCAL_SRCS) \
 	$(TRANSACTION_CONTEXT_SRCS) \
 	$(TX_BLOCK_SRCS) \
-	$(VM_SRCS)
+	$(VM_SRCS) \
+	$(WASM3_SRCS) \
+	$(WASM_API_SRCS)
 
 TEST_UTILS_SRCS = \
 	test_utils/deploy_and_commit_contractdb.cc
@@ -302,7 +305,7 @@ COMPLETE_SRCS = $(SRCS) $(TESTS_CCS) $(TEST_UTILS_SRCS)
 $(mtt_TEST_CCS:.cc=.o) : CXXFLAGS += $(mtt_TEST_CFLAGS)
 
 #filter_perf_SOURCES = $(SRCS) main/filter_perf.cc
-test_SOURCES = main/test.cc $(COMPLETE_SRCS) $(utility_TEST_CCS) $(mtt_TEST_CCS)
+test_SOURCES = main/test.cc $(COMPLETE_SRCS) $(utility_TEST_CCS) $(mtt_TEST_CCS) $(WASM_API_TEST_CCS)
 basic_SOURCES = main/basic.cc $(COMPLETE_SRCS)
 blockstm_comparison_SOURCES = main/blockstm_comparison.cc $(SRCS)
 

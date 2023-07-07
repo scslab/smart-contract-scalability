@@ -20,9 +20,9 @@ AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_MACRO_DIR([m4])
 
 OPT_FLAGS="-march=native -O3 -flto=auto"
-DEBUG_FLAGS="-ggdb -O0"
+DEBUG_FLAGS="-ggdb -O0 -march=native"
 
-CXXFLAGS="-std=gnu++2b $OPT_FLAGS $CXXFLAGS"
+CXXFLAGS="-std=gnu++2b $DEBUG_FLAGS $CXXFLAGS"
 CXX="g++"
 dnl clang --sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
 
@@ -105,7 +105,7 @@ export global_XDRC
 export xdrpp_CFLAGS
 export xdrpp_LIBS
 
-AX_PKGCONFIG_SUBDIR(lib/wasm_api)
+dnl AX_PKGCONFIG_SUBDIR(lib/wasm_api)
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile])
