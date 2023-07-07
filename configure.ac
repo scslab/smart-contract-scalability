@@ -97,6 +97,8 @@ ABS_TOP_SRCDIR=$ac_pwd
 export ABS_TOP_BUILDDIR
 export ABS_TOP_SRCDIR
 
+AC_DEFINE_UNQUOTED([TESTS_RELDIR], ["$ac_pwd"], [top source dir: used for tests in submodules to find data files])
+
 export xdrpp_INTERNAL
 
 global_XDRC=$XDRC
