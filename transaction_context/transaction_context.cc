@@ -25,7 +25,7 @@
 
 namespace scs {
 
-template class TransactionContext<StateDB>;
+template class TransactionContext<StateDBv2>;
 
 #define TC_TEMPLATE template<typename StateDB_t>
 #define TC_DECL TransactionContext<StateDB_t>

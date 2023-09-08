@@ -17,6 +17,7 @@
 #include "storage_proxy/storage_proxy.h"
 
 #include "state_db/state_db.h"
+#include "state_db/state_db_v2.h"
 #include "state_db/modified_keys_list.h"
 
 #include "storage_proxy/transaction_rewind.h"
@@ -31,6 +32,7 @@ namespace scs
 {
 
 template class StorageProxy<StateDB>;
+template class StorageProxy<StateDBv2>;
 
 #define PROXY_TEMPLATE template<typename StateDB_t>
 #define PROXY_DECL StorageProxy<StateDB_t>

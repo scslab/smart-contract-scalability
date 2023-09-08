@@ -47,7 +47,6 @@ StateDBv2::try_apply_delta(const AddressAndKey& a, const StorageDelta& delta)
     auto* res = state_db.get_value(a);
 
     if (!res) {
-
         auto* root = state_db.get_root_and_invalidate_hash();
 
         root->template insert<&do_nothing_if_merge>(
@@ -56,10 +55,14 @@ StateDBv2::try_apply_delta(const AddressAndKey& a, const StorageDelta& delta)
         res = state_db.get_value(a);
     }
 
+    if (res == nullptr) {
+        throw std::runtime_error("should be impossible");
+    }
+
     return (res)->try_add_delta(delta);
 }
 
-struct UpdateFn
+struct UpdateFnv2
 {
     StateDBv2::trie_t& main_db;
     using prefix_t = StateDBv2::prefix_t;
@@ -98,6 +101,8 @@ struct UpdateFn
                     main_db_subnode->delete_value(addrkey, main_db.get_gc());
                 }
             } else {
+                std::printf("there was no value returned from %s\n", addrkey.to_string(prefix_t::len()).c_str());
+                std::fflush(stdout);
                 throw std::runtime_error("should never happen");
              /*   AddressAndKey query
                     = addrkey.template get_bytes_array<AddressAndKey>();
@@ -126,13 +131,13 @@ StateDBv2::commit_modifications(const ModifiedKeysList& list)
 {
     auto ts = utils::init_time_measurement();
 
-    UpdateFn update(state_db);
+    UpdateFnv2 update(state_db);
 
     std::printf("parallel modify before %lf\n", utils::measure_time(ts));
 
     uint32_t grain_size = std::max<uint32_t>(1, list.size() / 100);
     list.get_keys()
-        .parallel_batch_value_modify_const<UpdateFn, prefix_t::len()>(
+        .parallel_batch_value_modify_const<UpdateFnv2, prefix_t::len()>(
             update, grain_size);
 
     std::printf("parallel modify after %lf\n", utils::measure_time(ts));
@@ -151,7 +156,7 @@ StateDBv2::commit_modifications(const ModifiedKeysList& list)
  * Relies on the fact that values aren't inserted into StateDB before
  * commitment of a block.
  */
-struct RewindFn
+struct RewindFnv2
 {
     StateDBv2::trie_t& main_db;
 
@@ -184,10 +189,10 @@ struct RewindFn
 void
 StateDBv2::rewind_modifications(const ModifiedKeysList& list)
 {
-    RewindFn rewind(state_db);
+    RewindFnv2 rewind(state_db);
 
     list.get_keys()
-        .parallel_batch_value_modify_const<RewindFn, prefix_t::len()>(rewind,
+        .parallel_batch_value_modify_const<RewindFnv2, prefix_t::len()>(rewind,
                                                                       1);
     state_db.hash_and_normalize();
 }

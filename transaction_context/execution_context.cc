@@ -96,7 +96,7 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
 
 template
 TransactionStatus
-ExecutionContext<TransactionContext<StateDB>>::execute(
+ExecutionContext<GroundhogTxContext>::execute(
     Hash const&,
     SignedTransaction const&,
     GlobalContext&,

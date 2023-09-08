@@ -21,6 +21,7 @@
 #include "rpc/rpc_address_db.h"
 
 #include "state_db/state_db.h"
+#include "state_db/state_db_v2.h"
 #include "state_db/modified_keys_list.h"
 
 #include "tx_block/unique_tx_set.h"
@@ -34,7 +35,7 @@ namespace scs
 struct GlobalContext : public utils::NonMovableOrCopyable
 {
 	ContractDB contract_db;
-	StateDB state_db;
+	StateDBv2 state_db;
 	RpcAddressDB address_db;
 
 	GlobalContext()

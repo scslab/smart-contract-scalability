@@ -61,7 +61,7 @@ class StateDBv2
 
     using metadata_t = trie::SnapshotTrieMetadataBase;
 
-    using trie_t = trie::AtomicMerkleTrie<prefix_t, value_t, TLCACHE_SIZE, metadata_t, value_wrapper_t>;
+    using trie_t = trie::AtomicMerkleTrie<prefix_t, value_t, TLCACHE_SIZE, metadata_t, &validate_value>;
 
   private:
     trie_t state_db;
