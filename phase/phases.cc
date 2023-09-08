@@ -24,13 +24,15 @@
 
 #include "transaction_context/global_context.h"
 
+#include "transaction_context/transaction_context.h"
+
 #include <utils/time.h>
 #include <tbb/task_group.h>
 
 namespace scs
 {
 
-void phase_finish_block(GlobalContext& global_structures, BlockContext& block_structures)
+void phase_finish_block(GlobalContext& global_structures, GroundhogBlockContext& block_structures)
 {
 	auto ts = utils::init_time_measurement();
 	tbb::task_group g;
@@ -45,18 +47,18 @@ void phase_finish_block(GlobalContext& global_structures, BlockContext& block_st
 	std::printf("commit statedb %lf\n", utils::measure_time(ts));
 	g.wait();
 	std::printf("task group wait %lf\n", utils::measure_time(ts));
-	ThreadlocalContextStore::post_block_clear();
+	ThreadlocalContextStore::post_block_clear<TransactionContext<StateDB>>();
 	std::printf("post block tlcs clear %lf\n", utils::measure_time(ts));
 }
 
-void phase_undo_block(GlobalContext& global_structures, BlockContext& block_structures)
+void phase_undo_block(GlobalContext& global_structures, GroundhogBlockContext& block_structures)
 {
 	block_structures.modified_keys_list.merge_logs();
 
 	global_structures.contract_db.rewind();
 	global_structures.state_db.rewind_modifications(block_structures.modified_keys_list);
 
-	ThreadlocalContextStore::post_block_clear();
+	ThreadlocalContextStore::post_block_clear<TransactionContext<StateDB>>();
 }
 
 } /* scs */

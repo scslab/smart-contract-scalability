@@ -37,10 +37,12 @@
 #include <cstdint>
 #include <vector>
 
+#include "groundhog/types.h"
 
-namespace scs
-{
-	
+namespace scs {
+
+BUILTIN_INSTANTIATE;
+
 BUILTIN_DECL(void)::scs_hash(
 	uint32_t input_offset,
 	uint32_t input_len,

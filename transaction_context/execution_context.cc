@@ -22,6 +22,8 @@
 
 #include "threadlocal/threadlocal_context.h"
 
+#include "groundhog/types.h"
+
 #include "crypto/hash.h"
 
 #include "debug/debug_macros.h"
@@ -41,11 +43,14 @@
 
 namespace scs {
 
+template class ExecutionContext<GroundhogTxContext>;
+
 EC_DECL()::ExecutionContext()
     : wasm_context(MAX_STACK_BYTES)
     , active_runtimes()
     , tx_context(nullptr)
     , results_of_last_tx(nullptr)
+    , addr_db(nullptr)
 {}
 
 
@@ -94,8 +99,8 @@ TransactionStatus
 ExecutionContext<TransactionContext<StateDB>>::execute(
     Hash const&,
     SignedTransaction const&,
-    GroundhogBlockContext&,
     GlobalContext&,
+    GroundhogBlockContext&,
     std::optional<NondeterministicResults>);
 
 template<typename TransactionContext_t>
@@ -103,13 +108,15 @@ template<typename BlockContext, typename GlobalContext>
 TransactionStatus
 ExecutionContext<TransactionContext_t>::execute(Hash const& tx_hash,
                           SignedTransaction const& tx,
-                          BlockContext& block_context,
                           GlobalContext& scs_data_structures,
+                          BlockContext& block_context,
                           std::optional<NondeterministicResults> nondeterministic_res)
 {
     if (tx_context) {
         throw std::runtime_error("one execution at one time");
     }
+
+    addr_db = &scs_data_structures.address_db;
 
     MethodInvocation invocation(tx.tx.invocation);
 
@@ -165,6 +172,7 @@ EC_DECL(void)::reset()
     // nothing to do to clear wasm_context
     active_runtimes.clear();
     tx_context.reset();
+    addr_db = nullptr;
 }
 
 EC_DECL(std::vector<TransactionLog> const&)::get_logs()

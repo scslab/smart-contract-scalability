@@ -21,7 +21,12 @@
 #include "threadlocal/threadlocal_context.h"
 #include "transaction_context/execution_context.h"
 
+#include "groundhog/types.h"
+
 namespace scs {
+
+BUILTIN_INSTANTIATE;
+
 
 BUILTIN_DECL(int32_t)::memcmp(uint32_t lhs, uint32_t rhs, uint32_t sz)
 {

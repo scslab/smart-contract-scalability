@@ -23,6 +23,7 @@
 
 #include "transaction_context/execution_context.h"
 #include "transaction_context/method_invocation.h"
+#include "groundhog/types.h"
 
 #include "wasm_api/error.h"
 
@@ -33,6 +34,8 @@
 #include <vector>
 
 namespace scs {
+
+BUILTIN_INSTANTIATE;
 
 BUILTIN_DECL(void)::scs_hashset_insert(uint32_t key_offset,
                                /* key_len = 32 */

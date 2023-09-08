@@ -31,18 +31,18 @@ namespace scs
 class AssemblyLimits;
 class Mempool;
 class GlobalContext;
-class BlockContext;
+class GroundhogBlockContext;
 
 class AssemblyWorker
 {
 	Mempool& mempool;
 	GlobalContext& global_context;
-	BlockContext& block_context;
+	GroundhogBlockContext& block_context;
 	AssemblyLimits& limits;
 
 public:
 
-	AssemblyWorker(Mempool& mempool, GlobalContext& global_context, BlockContext& block_context, AssemblyLimits& limits)
+	AssemblyWorker(Mempool& mempool, GlobalContext& global_context, GroundhogBlockContext& block_context, AssemblyLimits& limits)
 		: mempool(mempool)
 		, global_context(global_context)
 		, block_context(block_context)
@@ -100,7 +100,7 @@ StaticAssemblyWorkerCache
 
 public:
 
-	static void start_assembly_threads(Mempool& mp, GlobalContext& gc, BlockContext& bc, AssemblyLimits& limits, uint32_t n_threads)
+	static void start_assembly_threads(Mempool& mp, GlobalContext& gc, GroundhogBlockContext& bc, AssemblyLimits& limits, uint32_t n_threads)
 	{
 		std::lock_guard lock(mtx);
 		while(workers.size() < n_threads)

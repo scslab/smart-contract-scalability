@@ -17,6 +17,8 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "transaction_context/global_context.h"
+#include "transaction_context/execution_context.h"
+#include "groundhog/types.h"
 
 #include "phase/phases.h"
 
@@ -33,7 +35,7 @@ using namespace scs;
 
 TEST_CASE("hashset manipulation test contract", "[sdk][hashset]")
 {
-    test::DeferredContextClear defer;
+    test::DeferredContextClear<GroundhogTxContext> defer;
 
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -44,15 +46,14 @@ TEST_CASE("hashset manipulation test contract", "[sdk][hashset]")
 
     test::deploy_and_commit_contractdb(script_db, h, c);
 
-    ThreadlocalContextStore::make_ctx(scs_data_structures);
-
-    auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
-
-    std::unique_ptr<BlockContext> block_context
-        = std::make_unique<BlockContext>(0);
+    std::unique_ptr<GroundhogBlockContext> block_context
+        = std::make_unique<GroundhogBlockContext>(0);
 
 
     auto make_tx = [&](uint32_t round, bool success = true) -> Hash {
+
+        ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
+        auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
 
         const uint64_t gas_bid = 1;
 
@@ -67,12 +68,12 @@ TEST_CASE("hashset manipulation test contract", "[sdk][hashset]")
 
         if (success)
         {
-            REQUIRE(exec_ctx.execute(hash, stx, *block_context)
+            REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
                     == TransactionStatus::SUCCESS);
         }
         else
         {
-            REQUIRE(exec_ctx.execute(hash, stx, *block_context)
+            REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
                     != TransactionStatus::SUCCESS);
         }
 
@@ -89,8 +90,10 @@ TEST_CASE("hashset manipulation test contract", "[sdk][hashset]")
 
     auto advance_block = [&] ()
     {
-        block_context = std::make_unique<BlockContext>(block_context -> block_number + 1);
+        block_context = std::make_unique<GroundhogBlockContext>(block_context -> block_number + 1);
     };
+
+    std::printf("start work section\n");
 
     SECTION("good manips")
     {

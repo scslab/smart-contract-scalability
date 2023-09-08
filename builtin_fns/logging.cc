@@ -25,10 +25,14 @@
 #include "debug/debug_macros.h"
 #include "debug/debug_utils.h"
 
+#include "groundhog/types.h"
+
 #include <cstdint>
 #include <vector>
 
 namespace scs {
+
+BUILTIN_INSTANTIATE;
 
 BUILTIN_DECL(void)::scs_print_debug(uint32_t addr, uint32_t len)
 {

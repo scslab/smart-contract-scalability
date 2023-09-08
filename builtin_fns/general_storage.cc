@@ -25,7 +25,11 @@
 #include <cstdint>
 #include <vector>
 
+#include "groundhog/types.h"
+
 namespace scs {
+
+BUILTIN_INSTANTIATE;
 
 BUILTIN_DECL(uint32_t)::scs_has_key(uint32_t key_offset
                         /* key_len = 32 */)

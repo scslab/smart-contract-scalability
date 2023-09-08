@@ -52,7 +52,9 @@ deploy_and_commit_contractdb(ContractDB& contract_db,
 
     contract_db.commit();
 
-    REQUIRE(contract_db.get_script(addr, nullptr).data);
+    ContractDBProxy proxy_new(contract_db);
+
+    REQUIRE(proxy_new.get_script(addr).data);
 }
 
 } // namespace test

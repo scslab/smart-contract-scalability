@@ -19,6 +19,8 @@
 #include "block_assembly/limits.h"
 
 #include "transaction_context/global_context.h"
+#include "transaction_context/transaction_context.h"
+#include "transaction_context/execution_context.h"
 
 #include "mempool/mempool.h"
 
@@ -52,10 +54,10 @@ AssemblyWorker::run()
             return;
         }
 
-        ThreadlocalContextStore::make_ctx(global_context);
-        auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
+        ThreadlocalTransactionContextStore<TransactionContext<StateDB>>::make_ctx();
+        auto& exec_ctx = ThreadlocalTransactionContextStore<TransactionContext<StateDB>>::get_exec_ctx();
 
-        auto result = exec_ctx.execute(hash_xdr(*tx), *tx, block_context);
+        auto result = exec_ctx.execute(hash_xdr(*tx), *tx, global_context, block_context);
         if (result == TransactionStatus::SUCCESS) {
             reservation->commit();
         }

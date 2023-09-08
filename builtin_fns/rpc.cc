@@ -23,6 +23,8 @@
 #include "transaction_context/global_context.h"
 #include "transaction_context/transaction_context.h"
 
+#include "groundhog/types.h"
+
 #include "xdr/rpc.h"
 
 #include <utils/time.h>
@@ -31,6 +33,8 @@
 
 namespace scs {
 
+BUILTIN_INSTANTIATE;
+
 BUILTIN_DECL(void)::scs_external_call(uint32_t target_addr,
                               /* addr_len = 32 */
                               uint32_t call_data_offset,
@@ -38,8 +42,7 @@ BUILTIN_DECL(void)::scs_external_call(uint32_t target_addr,
                               uint32_t response_offset,
                               uint32_t response_max_len)
 {
-    auto& exec_ctx = ThreadlocalContextStore<TransactionContext_t>::get_exec_ctx();
-    auto& tx_ctx = exec_ctx.get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     auto& runtime = *tx_ctx.get_current_runtime();
 
     RpcResult result;
@@ -58,7 +61,8 @@ BUILTIN_DECL(void)::scs_external_call(uint32_t target_addr,
                 call_data_offset, call_data_len);
     	
             // TODO load balancing, something in background?
-            auto sock = exec_ctx.scs_data_structures.address_db.connect(h);
+            //auto sock = exec_ctx.scs_data_structures.address_db.connect(h);
+            auto sock = ThreadlocalTransactionContextStore<TransactionContext_t>::get_exec_ctx().get_address_db();
             if (!sock) {
                 throw wasm_api::HostError("connection failed");
             }

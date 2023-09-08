@@ -20,8 +20,11 @@
 
 #include "transaction_context/global_context.h"
 
-#define TLC_TEMPLATE template<typename TransactionContext_t>
-#define TLC_DECL ThreadlocalContextStore<TransactionContext_t>
+#include "transaction_context/transaction_context.h"
+#include "transaction_context/execution_context.h"
+
+#define TLC_TEMPLATE 
+#define TLC_DECL ThreadlocalContextStore
 
 namespace scs {
 
@@ -31,6 +34,37 @@ TLC_DECL::get_uid()
 {
     return cache.get().uid.get();
 }
+
+template
+class ThreadlocalTransactionContextStore<TransactionContext<StateDB>>;
+
+template<typename TransactionContext_t>
+template<typename... Args>
+void
+ThreadlocalTransactionContextStore<TransactionContext_t>::make_ctx(Args&... args)
+{
+    auto& ctx = cache.get();
+    if (!ctx) {
+        ctx = std::unique_ptr<ExecutionContext<TransactionContext_t>>(new ExecutionContext<TransactionContext_t>(args...));
+    }
+}
+
+template void
+ThreadlocalTransactionContextStore<TransactionContext<StateDB>>::make_ctx();
+
+template<typename TransactionContext_t>
+void 
+ThreadlocalTransactionContextStore<TransactionContext_t>::post_block_clear()
+{
+    for (auto& ctx : cache.get_objects())
+    {
+        if (ctx)
+        {
+            ctx -> reset();
+        }
+    }
+}
+
 
 /*
 TLC_TEMPLATE
@@ -48,25 +82,6 @@ template void
 ThreadlocalContextStore<TransactionContext<StateDB>>::make_ctx(GlobalContext&);
 
 */
-
-TLC_TEMPLATE
-void
-TLC_DECL::post_block_clear()
-{
-    auto& ctxs = cache.get_objects();
-    for (auto& ctx : ctxs) {
-        if (ctx) {
-            auto& c = *ctx;
-            if (c.ctx) {
-                c.ctx->reset();
-            }
-            c.gc.post_block_clear();
-            // no need to reset uid, we're not going to overflow 2^48
-        }
-    }
-
-    hash_allocator.reset();
-}
 
 TLC_TEMPLATE
 void
@@ -106,14 +121,6 @@ const& stub, RpcCall const& call)
 }
 
 #endif
-
-TLC_TEMPLATE
-void
-TLC_DECL::clear_entire_context()
-{
-    cache.clear();
-    hash_allocator.reset();
-}
 
 #undef TLC_DECL
 #undef TLC_TEMPLATE

@@ -25,7 +25,11 @@
 #include "transaction_context/execution_context.h"
 #include "transaction_context/method_invocation.h"
 
+#include "groundhog/types.h"
+
 namespace scs {
+
+BUILTIN_INSTANTIATE;
 
 BUILTIN_DECL(void)::scs_return(uint32_t offset, uint32_t len)
 {
@@ -92,7 +96,7 @@ BUILTIN_DECL(uint32_t)::scs_invoke(uint32_t addr_offset,
                   debug::array_to_str(invocation.addr).c_str(),
                   methodname);
 
-    ThreadlocalContextStore<TransactionContext_t>::get_exec_ctx().invoke_subroutine(invocation);
+    ThreadlocalTransactionContextStore<TransactionContext_t>::get_exec_ctx().invoke_subroutine(invocation);
 
     if (return_len > 0) {
         runtime.write_to_memory(tx_ctx.return_buf, return_offset, return_len);

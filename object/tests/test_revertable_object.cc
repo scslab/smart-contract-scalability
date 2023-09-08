@@ -22,6 +22,10 @@
 
 #include "threadlocal/threadlocal_context.h"
 
+#include "transaction_context/execution_context.h"
+
+#include "groundhog/types.h"
+
 #include "xdr/storage_delta.h"
 
 #include "crypto/hash.h"
@@ -311,7 +315,7 @@ TEST_CASE("revert object from nonempty", "[object]")
 
 TEST_CASE("hashset from empty", "[object]")
 {
-    test::DeferredContextClear defer;
+    test::DeferredContextClear<GroundhogTxContext> defer;
 
     RevertableObject object;
 
@@ -446,7 +450,7 @@ TEST_CASE("hashset from empty", "[object]")
 
 TEST_CASE("hashset from nonempty", "[object]")
 {
-    test::DeferredContextClear defer;
+    test::DeferredContextClear<GroundhogTxContext> defer;
 
     StorageObject base_obj;
     base_obj.body.type(ObjectType::HASH_SET);

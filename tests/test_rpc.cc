@@ -17,6 +17,9 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "transaction_context/global_context.h"
+#include "transaction_context/execution_context.h"
+
+#include "groundhog/types.h"
 
 #include "phase/phases.h"
 
@@ -42,7 +45,7 @@ using xdr::operator==;
 
 TEST_CASE("simulated echo rpc", "[rpc]")
 {
-	test::DeferredContextClear defer;
+	test::DeferredContextClear<GroundhogTxContext> defer;
 
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -53,12 +56,12 @@ TEST_CASE("simulated echo rpc", "[rpc]")
 
     test::deploy_and_commit_contractdb(script_db, h, c);
 
-    ThreadlocalContextStore::make_ctx(scs_data_structures);
+    ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
 
-    auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
+    auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
 
-    std::unique_ptr<BlockContext> block_context
-        = std::make_unique<BlockContext>(0);
+    std::unique_ptr<GroundhogBlockContext> block_context
+        = std::make_unique<GroundhogBlockContext>(0);
 
     /**
      * Note to future:
@@ -100,12 +103,12 @@ TEST_CASE("simulated echo rpc", "[rpc]")
 
         if (success)
         {
-            REQUIRE(exec_ctx.execute(hash, stx, *block_context, make_ndet(response))
+            REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context, make_ndet(response))
                     == TransactionStatus::SUCCESS);
         }
         else
         {
-            REQUIRE(exec_ctx.execute(hash, stx, *block_context, make_ndet(response))
+            REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context, make_ndet(response))
                     != TransactionStatus::SUCCESS);
         }
 
@@ -132,12 +135,12 @@ TEST_CASE("simulated echo rpc", "[rpc]")
 
         if (success)
         {
-            REQUIRE(exec_ctx.execute(hash, stx, *block_context)
+            REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
                     == TransactionStatus::SUCCESS);
         }
         else
         {
-            REQUIRE(exec_ctx.execute(hash, stx, *block_context)
+            REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
                     != TransactionStatus::SUCCESS);
         }
 
@@ -187,7 +190,7 @@ TEST_CASE("simulated echo rpc", "[rpc]")
 
 TEST_CASE("test ensure ndet results all consumed", "[rpc]")
 {
-    test::DeferredContextClear defer;
+    test::DeferredContextClear<GroundhogTxContext> defer;
 
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -197,19 +200,19 @@ TEST_CASE("test ensure ndet results all consumed", "[rpc]")
 
     test::deploy_and_commit_contractdb(script_db, h1, c1);
 
-    ThreadlocalContextStore::make_ctx(scs_data_structures);
+    ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
 
-    auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
+    auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
 
-    BlockContext block_context(0);
+    GroundhogBlockContext block_context(0);
 
     auto exec_success = [&](const Hash& tx_hash, const SignedTransaction& tx, std::optional<NondeterministicResults> res) {
-        REQUIRE(exec_ctx.execute(tx_hash, tx, block_context, res)
+        REQUIRE(exec_ctx.execute(tx_hash, tx, scs_data_structures, block_context, res)
                 == TransactionStatus::SUCCESS);
     };
 
     auto exec_fail = [&](const Hash& tx_hash, const SignedTransaction& tx, std::optional<NondeterministicResults> res) {
-        REQUIRE(exec_ctx.execute(tx_hash, tx, block_context, res)
+        REQUIRE(exec_ctx.execute(tx_hash, tx, scs_data_structures, block_context, res)
                 != TransactionStatus::SUCCESS);
     };
 

@@ -21,6 +21,8 @@
 #include "transaction_context/execution_context.h"
 #include "transaction_context/global_context.h"
 
+#include "groundhog/types.h"
+
 #include "crypto/hash.h"
 #include "utils/load_wasm.h"
 
@@ -30,7 +32,7 @@ namespace scs {
 
 TEST_CASE("test log", "[builtin]")
 {
-    test::DeferredContextClear defer;
+    test::DeferredContextClear<GroundhogTxContext> defer;
     
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -40,19 +42,19 @@ TEST_CASE("test log", "[builtin]")
 
     test::deploy_and_commit_contractdb(script_db, h, c);
 
-    ThreadlocalContextStore::make_ctx(scs_data_structures);
+    ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
 
-    auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
+    auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
 
-    BlockContext block_context(0);
+    GroundhogBlockContext block_context(0);
 
     auto exec_success = [&](const Hash& tx_hash, const SignedTransaction& tx) {
-        REQUIRE(exec_ctx.execute(tx_hash, tx, block_context)
+        REQUIRE(exec_ctx.execute(tx_hash, tx, scs_data_structures, block_context)
                 == TransactionStatus::SUCCESS);
     };
 
     auto exec_fail = [&](const Hash& tx_hash, const SignedTransaction& tx) {
-        REQUIRE(exec_ctx.execute(tx_hash, tx, block_context)
+        REQUIRE(exec_ctx.execute(tx_hash, tx, scs_data_structures, block_context)
                 != TransactionStatus::SUCCESS);
     };
 

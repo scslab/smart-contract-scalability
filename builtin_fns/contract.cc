@@ -20,6 +20,7 @@
 #include "threadlocal/threadlocal_context.h"
 
 #include "transaction_context/transaction_context.h"
+#include "transaction_context/execution_context.h"
 
 #include "contract_db/contract_utils.h"
 
@@ -30,7 +31,12 @@
 #include <cstdint>
 #include <vector>
 
+#include "groundhog/types.h"
+
 namespace scs {
+
+BUILTIN_INSTANTIATE;
+
 
 BUILTIN_DECL(void)::scs_create_contract(uint32_t contract_index, uint32_t hash_out
                                 /* out_len = 32 */)

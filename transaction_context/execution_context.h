@@ -29,7 +29,7 @@
 namespace scs {
 
 template<typename TransactionContext_t>
-class ThreadlocalContextStore;
+class ThreadlocalTransactionContextStore;
 template<typename TransactionContext_t>
 class BuiltinFns;
 
@@ -47,9 +47,11 @@ class ExecutionContext
 
     std::unique_ptr<TransactionResults> results_of_last_tx;
 
+    RpcAddressDB* addr_db;
+
     ExecutionContext();
 
-    friend class ThreadlocalContextStore<TransactionContext_t>;
+    friend class ThreadlocalTransactionContextStore<TransactionContext_t>;
     friend class BuiltinFns<TransactionContext_t>;
 
     // should only be used by builtin fns
@@ -67,12 +69,19 @@ class ExecutionContext
     void extract_results();
     void reset();
 
+    RpcAddressDB& get_address_db() {
+      if (addr_db == nullptr) {
+        throw std::runtime_error("null addr db");
+      }
+      return *addr_db;
+    }
+
   public:
     template<typename BlockContext, typename GlobalContext>
     TransactionStatus execute(Hash const& tx_hash,
                               SignedTransaction const& tx,
-                              BlockContext& block_context,
                               GlobalContext& global_context,
+                              BlockContext& block_context,
                               std::optional<NondeterministicResults> res = std::nullopt);
 
     std::vector<TransactionLog> const& get_logs();

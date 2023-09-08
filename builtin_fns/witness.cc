@@ -21,7 +21,11 @@
 
 #include "transaction_context/execution_context.h"
 
+#include "groundhog/types.h"
+
 namespace scs {
+
+BUILTIN_INSTANTIATE;
 
 BUILTIN_DECL(void)::scs_get_witness(uint64_t wit_idx,
                             uint32_t out_offset,

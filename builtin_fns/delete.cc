@@ -21,10 +21,15 @@
 
 #include "transaction_context/execution_context.h"
 
+#include "groundhog/types.h"
+
 #include <cstdint>
 #include <vector>
 
 namespace scs {
+
+BUILTIN_INSTANTIATE;
+
 
 BUILTIN_DECL(void)::scs_delete_key_last(uint32_t key_offset
                                 /* key_len = 32 */)

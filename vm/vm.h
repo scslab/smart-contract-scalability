@@ -40,11 +40,13 @@ class AssemblyLimits;
  * but find a hash mismatch at the end,
  * we say that's ok, and move on (presumably rejecting subsequent
  * blocks from that proposer).
+ * 
+ * Groundhog version
  */
 class VirtualMachine : public utils::NonMovableOrCopyable
 {
     GlobalContext global_context;
-    std::unique_ptr<BlockContext> current_block_context;
+    std::unique_ptr<GroundhogBlockContext> current_block_context;
     Mempool mempool;
 
     Hash prev_block_hash;

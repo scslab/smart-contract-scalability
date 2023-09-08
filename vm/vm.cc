@@ -23,6 +23,8 @@
 #include "crypto/hash.h"
 #include "phase/phases.h"
 #include "threadlocal/threadlocal_context.h"
+#include "transaction_context/transaction_context.h"
+#include "transaction_context/execution_context.h"
 
 #include "vm/genesis.h"
 
@@ -37,7 +39,7 @@ void
 VirtualMachine::init_default_genesis()
 {
     install_genesis_contracts(global_context.contract_db);
-    current_block_context = std::make_unique<BlockContext>(0);
+    current_block_context = std::make_unique<GroundhogBlockContext>(0);
 }
 
 void
@@ -53,7 +55,7 @@ struct ValidateReduce
 {
     std::atomic<bool>& found_error;
     GlobalContext& global_context;
-    BlockContext& block_context;
+    GroundhogBlockContext& block_context;
     Block const& txs;
 
     void operator()(const tbb::blocked_range<std::size_t> r)
@@ -61,7 +63,7 @@ struct ValidateReduce
         if (found_error)
             return;
 
-        ThreadlocalContextStore::make_ctx(global_context);
+        ThreadlocalTransactionContextStore<TransactionContext<StateDB>>::make_ctx();
 
         // TBB docs suggest this type of pattern (use local var until end)
         //  optimizes better.
@@ -69,7 +71,7 @@ struct ValidateReduce
 
         for (size_t i = r.begin(); i < r.end(); i++) {
 
-            auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
+            auto& exec_ctx = ThreadlocalTransactionContextStore<TransactionContext<StateDB>>::get_exec_ctx();
 
             auto const& txset_entry = txs.transactions[i];
             auto const& tx = txset_entry.tx;
@@ -78,7 +80,7 @@ struct ValidateReduce
 
             for (size_t j = 0; j < txset_entry.nondeterministic_results.size(); j++)
             {
-                auto status = exec_ctx.execute(hash, tx, block_context, txset_entry.nondeterministic_results[j]);
+                auto status = exec_ctx.execute(hash, tx, global_context, block_context, txset_entry.nondeterministic_results[j]);
 
                 if (status != TransactionStatus::SUCCESS) {
                     local_found_error = true;
@@ -101,7 +103,7 @@ struct ValidateReduce
 
     ValidateReduce(std::atomic<bool>& found_error,
                    GlobalContext& global_context,
-                   BlockContext& block_context,
+                   GroundhogBlockContext& block_context,
                    Block const& txs)
         : found_error(found_error)
         , global_context(global_context)
@@ -236,7 +238,7 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
 
 	global_context.contract_db.commit();
 	global_context.state_db.commit_modifications(current_block_context->modified_keys_list);
-	ThreadlocalContextStore::post_block_clear();
+	ThreadlocalContextStore::post_block_clear<TransactionContext<StateDB>>();
 
 	std::printf("done commit mods %lf\n", utils::measure_time(ts));
 	out.state_db_hash = global_context.state_db.hash();
@@ -269,7 +271,7 @@ VirtualMachine::~VirtualMachine()
     ThreadlocalContextStore::stop_rpcs();
     StaticAssemblyWorkerCache::wait_for_stop_assembly_threads();
     // execution context has dangling reference to GlobalContext without this
-    ThreadlocalContextStore::clear_entire_context();
+    ThreadlocalContextStore::clear_entire_context<TransactionContext<StateDB>>();
 }
 
 } // namespace scs

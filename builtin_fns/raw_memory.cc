@@ -27,6 +27,8 @@
 
 #include "wasm_api/error.h"
 
+#include "groundhog/types.h"
+
 #include "xdr/storage.h"
 #include "xdr/storage_delta.h"
 
@@ -34,6 +36,8 @@
 #include <vector>
 
 namespace scs {
+
+BUILTIN_INSTANTIATE;
 
 BUILTIN_DECL(void)::scs_raw_memory_set(uint32_t key_offset,
                                /* key_len = 32 */

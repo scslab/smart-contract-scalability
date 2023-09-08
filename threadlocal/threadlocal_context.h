@@ -43,12 +43,32 @@ template<typename TransactionContext_t>
 class ExecutionContext;
 
 template<typename TransactionContext_t>
+class ThreadlocalTransactionContextStore
+{
+    using ptr_t = std::unique_ptr<ExecutionContext<TransactionContext_t>>;
+    inline static utils::ThreadlocalCache<ptr_t, TLCACHE_SIZE> cache;
+public:
+
+    static auto& get_exec_ctx()
+    {
+        return *(cache.get());
+    }
+
+    template<typename... Args>
+    static void make_ctx(Args&... args);
+
+    static void clear()
+    {
+        cache.clear();
+    }
+    
+    static void post_block_clear();
+};
+
 class ThreadlocalContextStore
 {
     struct context_t
     {
-        std::unique_ptr<ExecutionContext<TransactionContext_t>> ctx;
-
         MultitypeGarbageCollector<StorageDeltaClass>
             gc;
 
@@ -57,8 +77,7 @@ class ThreadlocalContextStore
         CancellableRPC rpc;
 
         context_t()
-            : ctx()
-            , gc()
+            : gc()
             , uid()
             , rpc()
             {}
@@ -73,10 +92,6 @@ class ThreadlocalContextStore
     ThreadlocalContextStore() = delete;
 
   public:
-    static auto& get_exec_ctx()
-    {
-        return *(cache.get().ctx);
-    }
 
     template<typename delete_t>
     static void defer_delete(const delete_t* ptr)
@@ -108,21 +123,37 @@ class ThreadlocalContextStore
 
     static uint64_t get_uid();
 
-    template<typename... Args>
-    static void make_ctx(Args&... args)
-    {
-        auto& ctx = cache.get().ctx;
-        if (!ctx) {
-            ctx = std::unique_ptr<ExecutionContext<TransactionContext_t>>(new ExecutionContext<TransactionContext_t>(args...));
-        }
-    }
-
     static void enable_rpcs();
     static void stop_rpcs();
 
-    static void post_block_clear();
+    template<typename TransactionContext_t>
+    static void
+    post_block_clear()
+    {
+        auto& ctxs = cache.get_objects();
+        for (auto& ctx : ctxs) {
+            if (ctx) {
+                //auto& c = *ctx;
+                //if (c.ctx) {
+                //    c.ctx->reset();
+                //}
+                ctx->gc.post_block_clear();
+                // no need to reset uid, we're not going to overflow 2^48
+            }
+        }
+        hash_allocator.reset();
+        ThreadlocalTransactionContextStore<TransactionContext_t>::post_block_clear();
+    }
 
-    static void clear_entire_context();
+
+    template<typename TransactionContext_t>
+    static void clear_entire_context()
+    {
+        cache.clear();
+        hash_allocator.reset();
+
+        ThreadlocalTransactionContextStore<TransactionContext_t>::clear();
+    }
 };
 
 namespace test {
@@ -131,7 +162,7 @@ template<typename TransactionContext_t>
 struct DeferredContextClear
 {
     ~DeferredContextClear() { 
-        ThreadlocalContextStore<TransactionContext_t>::clear_entire_context();
+        ThreadlocalContextStore::clear_entire_context<TransactionContext_t>();
     }
 };
 
