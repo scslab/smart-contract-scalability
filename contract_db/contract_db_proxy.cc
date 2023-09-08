@@ -170,7 +170,7 @@ ContractDBProxy::get_script(const wasm_api::Hash& address) const
     auto it = new_deployments.find(address);
 
     if (it == new_deployments.end()) {
-        return wasm_api::null_script;
+        return contract_db.get_script_by_address(address);
     }
 
     auto const& script_hash = it->second;

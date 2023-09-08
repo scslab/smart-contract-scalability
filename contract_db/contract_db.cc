@@ -43,9 +43,9 @@ ContractDB::assert_not_uncommitted_modifications() const
 
 
 wasm_api::Script
-ContractDB::get_script(wasm_api::Hash const& addr,
-                       const wasm_api::script_context_t& context) const
+ContractDB::get_script_by_address(wasm_api::Hash const& addr) const
 {
+    /*
     const ContractDBProxy* proxy = static_cast<const ContractDBProxy*>(context);
 
     if (proxy != nullptr) {
@@ -54,7 +54,7 @@ ContractDB::get_script(wasm_api::Hash const& addr,
         if (res.data) {
             return res;
         }
-    }
+    } */
 
     auto const* contract = addresses_to_contracts_map.get_value_nolocks(addr);
     if (contract == nullptr)
@@ -70,13 +70,6 @@ ContractDB::get_script(wasm_api::Hash const& addr,
     }
 
     return { metered_script_out -> data(), metered_script_out -> size()};
-
-    /*
-    auto it = hashes_to_contracts_map.find(addr);
-    if (it == hashes_to_contracts_map.end()) {
-        return nullptr;
-    }
-    return it->second.get(); */
 }
 
 wasm_api::Script

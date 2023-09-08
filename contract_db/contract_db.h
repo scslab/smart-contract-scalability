@@ -104,12 +104,12 @@ class ContractDB
 
     wasm_api::Script get_script_by_hash(const wasm_api::Hash& hash) const;
 
+    wasm_api::Script get_script_by_address(
+        wasm_api::Hash const& addr) const;
+
+
   public:
     ContractDB();
-
-    wasm_api::Script get_script(
-        wasm_api::Hash const& addr,
-        const wasm_api::script_context_t&) const;
 
     bool check_address_open_for_deployment(const wasm_api::Hash& addr) const;
 
