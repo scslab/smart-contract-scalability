@@ -16,41 +16,42 @@
 
 #include "threadlocal/threadlocal_context.h"
 
-#include "transaction_context/execution_context.h"
-
 #include "wasm_api/wasm_api.h"
 
 #include "transaction_context/global_context.h"
 
+#define TLC_TEMPLATE template<typename TransactionContext_t>
+#define TLC_DECL ThreadlocalContextStore<TransactionContext_t>
+
 namespace scs {
 
-ExecutionContext&
-ThreadlocalContextStore::get_exec_ctx()
-{
-    return *(cache.get().ctx);
-}
-
+TLC_TEMPLATE
 uint64_t
-ThreadlocalContextStore::get_uid()
+TLC_DECL::get_uid()
 {
     return cache.get().uid.get();
 }
 
+/*
+TLC_TEMPLATE
 template<typename... Args>
 void
-ThreadlocalContextStore::make_ctx(Args&... args)
+TLC_DECL::make_ctx(Args&... args)
 {
     auto& ctx = cache.get().ctx;
     if (!ctx) {
-        ctx = std::unique_ptr<ExecutionContext>(new ExecutionContext(args...));
+        ctx = std::unique_ptr<ExecutionContext<TransactionContext_t>>(new ExecutionContext<TransactionContext_t>(args...));
     }
 }
 
 template void
-ThreadlocalContextStore::make_ctx(GlobalContext&);
+ThreadlocalContextStore<TransactionContext<StateDB>>::make_ctx(GlobalContext&);
 
+*/
+
+TLC_TEMPLATE
 void
-ThreadlocalContextStore::post_block_clear()
+TLC_DECL::post_block_clear()
 {
     auto& ctxs = cache.get_objects();
     for (auto& ctx : ctxs) {
@@ -67,8 +68,9 @@ ThreadlocalContextStore::post_block_clear()
     hash_allocator.reset();
 }
 
+TLC_TEMPLATE
 void
-ThreadlocalContextStore::stop_rpcs()
+TLC_DECL::stop_rpcs()
 {
     auto& ctxs = cache.get_objects();
     for (auto& ctx : ctxs) {
@@ -78,8 +80,9 @@ ThreadlocalContextStore::stop_rpcs()
     }
 }
 
+TLC_TEMPLATE
 void
-ThreadlocalContextStore::enable_rpcs()
+TLC_DECL::enable_rpcs()
 {
     auto& ctxs = cache.get_objects();
     for (auto& ctx : ctxs) {
@@ -90,8 +93,10 @@ ThreadlocalContextStore::enable_rpcs()
 }
 
 #if USE_RPC
+
+TLC_TEMPLATE
 std::optional<RpcResult>
-ThreadlocalContextStore::send_cancellable_rpc(std::unique_ptr<ExternalCall::Stub>
+TLC_DECL::send_cancellable_rpc(std::unique_ptr<ExternalCall::Stub>
 const& stub, RpcCall const& call)
 {
     auto& ctx = cache.get();
@@ -99,13 +104,18 @@ const& stub, RpcCall const& call)
 
     return ctx.rpc.send_query(call, uid, stub);
 }
+
 #endif
 
+TLC_TEMPLATE
 void
-ThreadlocalContextStore::clear_entire_context()
+TLC_DECL::clear_entire_context()
 {
     cache.clear();
     hash_allocator.reset();
 }
+
+#undef TLC_DECL
+#undef TLC_TEMPLATE
 
 } // namespace scs

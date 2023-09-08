@@ -41,14 +41,13 @@
 namespace scs
 {
 	
-void
-BuiltinFns::scs_hash(
+BUILTIN_DECL(void)::scs_hash(
 	uint32_t input_offset,
 	uint32_t input_len,
 	uint32_t output_offset
 	/* output_len = 32 */)
 {
-	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	auto& tx_ctx = GET_TEC;
 	tx_ctx.consume_gas(gas_hash);
 
 	auto& runtime = *tx_ctx.get_current_runtime();
@@ -63,8 +62,7 @@ BuiltinFns::scs_hash(
 	runtime.write_to_memory(out, output_offset, out.size());
 }
 
-uint32_t
-BuiltinFns::scs_check_sig_ed25519(
+BUILTIN_DECL(uint32_t)::scs_check_sig_ed25519(
 	uint32_t pk_offset,
 	/* pk len = 32 */
 	uint32_t sig_offset,
@@ -75,7 +73,7 @@ BuiltinFns::scs_check_sig_ed25519(
 	static_assert(sizeof(PublicKey) == 32, "expected 32 byte pk");
 	static_assert(sizeof(Signature) == 64, "expected 64 byte sig");
 
-	auto& tx_ctx = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+	auto& tx_ctx = GET_TEC;
 	tx_ctx.consume_gas(gas_check_sig_ed25519);
 	
 	auto& runtime = *tx_ctx.get_current_runtime();

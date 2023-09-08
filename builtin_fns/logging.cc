@@ -30,11 +30,9 @@
 
 namespace scs {
 
-void
-BuiltinFns::scs_print_debug(uint32_t addr, uint32_t len)
+BUILTIN_DECL(void)::scs_print_debug(uint32_t addr, uint32_t len)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
 
     auto& runtime = *tx_ctx.get_current_runtime();
 
@@ -47,11 +45,9 @@ BuiltinFns::scs_print_debug(uint32_t addr, uint32_t len)
                   debug::array_to_str(log).c_str());
 }
 
-void
-BuiltinFns::scs_print_c_str(uint32_t addr, uint32_t len)
+BUILTIN_DECL(void)::scs_print_c_str(uint32_t addr, uint32_t len)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
 
     auto& runtime = *tx_ctx.get_current_runtime();
 
@@ -62,11 +58,9 @@ BuiltinFns::scs_print_c_str(uint32_t addr, uint32_t len)
     std::printf("print: %s\n", log.data());
 }
 
-void
-BuiltinFns::scs_log(uint32_t log_offset, uint32_t log_len)
+BUILTIN_DECL(void)::scs_log(uint32_t log_offset, uint32_t log_len)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_log(log_len));
 
     auto& runtime = *tx_ctx.get_current_runtime();

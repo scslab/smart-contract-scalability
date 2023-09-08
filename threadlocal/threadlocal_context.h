@@ -20,8 +20,6 @@
 
 #include <utils/threadlocal_cache.h>
 
-#include "transaction_context/execution_context.h"
-
 #include "threadlocal/gc.h"
 #include "threadlocal/uid.h"
 #include "threadlocal/allocator.h"
@@ -29,6 +27,7 @@
 #include "threadlocal/cancellable_rpc.h"
 
 #include "xdr/storage.h"
+#include "xdr/storage_delta.h"
 
 #include "config.h"
 
@@ -40,13 +39,15 @@
 
 namespace scs {
 
+template<typename TransactionContext_t>
 class ExecutionContext;
 
+template<typename TransactionContext_t>
 class ThreadlocalContextStore
 {
     struct context_t
     {
-        std::unique_ptr<ExecutionContext> ctx;
+        std::unique_ptr<ExecutionContext<TransactionContext_t>> ctx;
 
         MultitypeGarbageCollector<StorageDeltaClass>
             gc;
@@ -72,7 +73,10 @@ class ThreadlocalContextStore
     ThreadlocalContextStore() = delete;
 
   public:
-    static ExecutionContext& get_exec_ctx();
+    static auto& get_exec_ctx()
+    {
+        return *(cache.get().ctx);
+    }
 
     template<typename delete_t>
     static void defer_delete(const delete_t* ptr)
@@ -105,7 +109,13 @@ class ThreadlocalContextStore
     static uint64_t get_uid();
 
     template<typename... Args>
-    static void make_ctx(Args&... args);
+    static void make_ctx(Args&... args)
+    {
+        auto& ctx = cache.get().ctx;
+        if (!ctx) {
+            ctx = std::unique_ptr<ExecutionContext<TransactionContext_t>>(new ExecutionContext<TransactionContext_t>(args...));
+        }
+    }
 
     static void enable_rpcs();
     static void stop_rpcs();
@@ -117,10 +127,11 @@ class ThreadlocalContextStore
 
 namespace test {
 
+template<typename TransactionContext_t>
 struct DeferredContextClear
 {
     ~DeferredContextClear() { 
-        ThreadlocalContextStore::clear_entire_context();
+        ThreadlocalContextStore<TransactionContext_t>::clear_entire_context();
     }
 };
 

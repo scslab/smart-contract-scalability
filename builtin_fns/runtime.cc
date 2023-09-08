@@ -27,11 +27,9 @@
 
 namespace scs {
 
-void
-BuiltinFns::scs_return(uint32_t offset, uint32_t len)
+BUILTIN_DECL(void)::scs_return(uint32_t offset, uint32_t len)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_return(len));
 
     tx_ctx.return_buf
@@ -40,13 +38,11 @@ BuiltinFns::scs_return(uint32_t offset, uint32_t len)
     return;
 }
 
-void
-BuiltinFns::scs_get_calldata(uint32_t offset,
+BUILTIN_DECL(void)::scs_get_calldata(uint32_t offset,
                              uint32_t calldata_slice_start,
                              uint32_t calldata_slice_end)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
 
     auto& calldata = tx_ctx.get_current_method_invocation().calldata;
     if (calldata_slice_end > calldata.size()) {
@@ -64,27 +60,23 @@ BuiltinFns::scs_get_calldata(uint32_t offset,
         calldata, offset, calldata_slice_start, calldata_slice_end);
 }
 
-uint32_t
-BuiltinFns::scs_get_calldata_len()
+BUILTIN_DECL(uint32_t)::scs_get_calldata_len()
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_get_calldata_len);
 
     auto& calldata = tx_ctx.get_current_method_invocation().calldata;
     return calldata.size();
 }
 
-uint32_t
-BuiltinFns::scs_invoke(uint32_t addr_offset,
+BUILTIN_DECL(uint32_t)::scs_invoke(uint32_t addr_offset,
                        uint32_t methodname,
                        uint32_t calldata_offset,
                        uint32_t calldata_len,
                        uint32_t return_offset,
                        uint32_t return_len)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_invoke(calldata_len + return_len));
 
     auto& runtime = *tx_ctx.get_current_runtime();
@@ -100,7 +92,7 @@ BuiltinFns::scs_invoke(uint32_t addr_offset,
                   debug::array_to_str(invocation.addr).c_str(),
                   methodname);
 
-    ThreadlocalContextStore::get_exec_ctx().invoke_subroutine(invocation);
+    ThreadlocalContextStore<TransactionContext_t>::get_exec_ctx().invoke_subroutine(invocation);
 
     if (return_len > 0) {
         runtime.write_to_memory(tx_ctx.return_buf, return_offset, return_len);
@@ -111,13 +103,11 @@ BuiltinFns::scs_invoke(uint32_t addr_offset,
     return return_len;
 }
 
-void
-BuiltinFns::scs_get_msg_sender(uint32_t addr_offset
+BUILTIN_DECL(void)::scs_get_msg_sender(uint32_t addr_offset
                                /* addr_len = 32 */
 )
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_get_msg_sender);
 
     auto& runtime = *tx_ctx.get_current_runtime();
@@ -127,13 +117,11 @@ BuiltinFns::scs_get_msg_sender(uint32_t addr_offset
     runtime.write_to_memory(sender, addr_offset, sizeof(Address));
 }
 
-void
-BuiltinFns::scs_get_self_addr(uint32_t addr_offset
+BUILTIN_DECL(void)::scs_get_self_addr(uint32_t addr_offset
                               /* addr_len = 32 */
 )
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_get_self_addr);
 
     auto& runtime = *tx_ctx.get_current_runtime();
@@ -143,21 +131,17 @@ BuiltinFns::scs_get_self_addr(uint32_t addr_offset
     runtime.write_to_memory(invoke.addr, addr_offset, sizeof(Address));
 }
 
-uint64_t
-BuiltinFns::scs_get_block_number()
+BUILTIN_DECL(uint64_t)::scs_get_block_number()
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_get_block_number);
 
     return tx_ctx.get_block_number();
 }
 
-void
-BuiltinFns::scs_get_src_tx_hash(uint32_t hash_offset)
+BUILTIN_DECL(void)::scs_get_src_tx_hash(uint32_t hash_offset)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_get_src_tx_hash);
 
     auto& runtime = *tx_ctx.get_current_runtime();
@@ -167,11 +151,9 @@ BuiltinFns::scs_get_src_tx_hash(uint32_t hash_offset)
     runtime.write_to_memory(h, hash_offset, sizeof(Hash));
 }
 
-void
-BuiltinFns::scs_get_invoked_tx_hash(uint32_t hash_offset)
+BUILTIN_DECL(void)::scs_get_invoked_tx_hash(uint32_t hash_offset)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_get_invoked_tx_hash);
 
     auto& runtime = *tx_ctx.get_current_runtime();
@@ -181,11 +163,9 @@ BuiltinFns::scs_get_invoked_tx_hash(uint32_t hash_offset)
     runtime.write_to_memory(h, hash_offset, sizeof(Hash));
 }
 
-void
-BuiltinFns::scs_gas(uint64_t consumed_gas)
+BUILTIN_DECL(void)::scs_gas(uint64_t consumed_gas)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(consumed_gas);
 }
 

@@ -35,14 +35,12 @@
 
 namespace scs {
 
-void
-BuiltinFns::scs_raw_memory_set(uint32_t key_offset,
+BUILTIN_DECL(void)::scs_raw_memory_set(uint32_t key_offset,
                                /* key_len = 32 */
                                uint32_t mem_offset,
                                uint32_t mem_len)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_raw_memory_set(mem_len));
 
     auto& runtime = *tx_ctx.get_current_runtime();
@@ -66,14 +64,12 @@ BuiltinFns::scs_raw_memory_set(uint32_t key_offset,
 }
 
 // return 1 if key exists, 0 else
-uint32_t
-BuiltinFns::scs_raw_memory_get(uint32_t key_offset,
+BUILTIN_DECL(uint32_t)::scs_raw_memory_get(uint32_t key_offset,
                                /* key_len = 32 */
                                uint32_t output_offset,
                                uint32_t output_max_len)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_raw_memory_get(output_max_len));
 
     auto& runtime = *tx_ctx.get_current_runtime();
@@ -102,12 +98,10 @@ BuiltinFns::scs_raw_memory_get(uint32_t key_offset,
 }
 
 // returns UINT32_MAX if key nexist
-uint32_t
-BuiltinFns::scs_raw_memory_get_len(uint32_t key_offset
+BUILTIN_DECL(uint32_t)::scs_raw_memory_get_len(uint32_t key_offset
                                    /* key_len = 32 */)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_raw_memory_get_len);
 
     auto& runtime = *tx_ctx.get_current_runtime();

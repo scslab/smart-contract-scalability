@@ -27,13 +27,14 @@
 
 namespace scs
 {
-class StateDB;
+
 class ModifiedKeysList;
 class TransactionRewind;
 
+template<typename StateDB_t>
 class StorageProxy
 {
-	StateDB& state_db;
+	StateDB_t& state_db;
 
 	using value_t = StorageProxyValue;
 
@@ -47,7 +48,7 @@ class StorageProxy
 
 public:
 
-	StorageProxy(StateDB& state_db);
+	StorageProxy(StateDB_t& state_db);
 
 	std::optional<StorageObject>
 	get(AddressAndKey const& key) const;

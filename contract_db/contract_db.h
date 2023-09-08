@@ -36,8 +36,7 @@
 namespace scs {
 
 class ContractDB
-    : public wasm_api::ScriptDB
-    , public utils::NonMovableOrCopyable
+    : public utils::NonMovableOrCopyable
 {
 
     static_assert(
@@ -110,7 +109,7 @@ class ContractDB
 
     wasm_api::Script get_script(
         wasm_api::Hash const& addr,
-        const wasm_api::script_context_t&) const override final;
+        const wasm_api::script_context_t&) const;
 
     bool check_address_open_for_deployment(const wasm_api::Hash& addr) const;
 

@@ -32,12 +32,10 @@
 
 namespace scs {
 
-void
-BuiltinFns::scs_create_contract(uint32_t contract_index, uint32_t hash_out
+BUILTIN_DECL(void)::scs_create_contract(uint32_t contract_index, uint32_t hash_out
                                 /* out_len = 32 */)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
 
     uint32_t num_contracts = tx_ctx.get_num_deployable_contracts();
     if (num_contracts <= contract_index) {
@@ -56,13 +54,11 @@ BuiltinFns::scs_create_contract(uint32_t contract_index, uint32_t hash_out
     runtime.write_to_memory(h, hash_out, h.size());
 }
 
-void
-BuiltinFns::scs_deploy_contract(uint32_t hash_offset, /* hash_len = 32 */
+BUILTIN_DECL(void)::scs_deploy_contract(uint32_t hash_offset, /* hash_len = 32 */
                                 uint64_t nonce,
                                 uint32_t out_address_offset /* addr_len = 32 */)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_deploy_contract);
 
     auto& runtime = *tx_ctx.get_current_runtime();

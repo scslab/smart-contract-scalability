@@ -16,7 +16,9 @@
 
 #include "transaction_context/execution_context.h"
 #include "transaction_context/global_context.h"
+#include "transaction_context/method_invocation.h"
 #include "transaction_context/transaction_results.h"
+#include "transaction_context/transaction_context.h"
 
 #include "threadlocal/threadlocal_context.h"
 
@@ -35,19 +37,19 @@
 
 #include <utils/time.h>
 
+#define EC_DECL(ret) template<typename TransactionContext_t> ret ExecutionContext<TransactionContext_t>
+
 namespace scs {
 
-ExecutionContext::ExecutionContext(GlobalContext& scs_data_structures)
-    : wasm_context(scs_data_structures.contract_db, MAX_STACK_BYTES)
-    , scs_data_structures(scs_data_structures)
+EC_DECL()::ExecutionContext()
+    : wasm_context(MAX_STACK_BYTES)
     , active_runtimes()
     , tx_context(nullptr)
     , results_of_last_tx(nullptr)
 {}
 
 
-void
-ExecutionContext::invoke_subroutine(MethodInvocation const& invocation)
+EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
 {
     auto iter = active_runtimes.find(invocation.addr);
     if (iter == active_runtimes.end()) {
@@ -57,8 +59,14 @@ ExecutionContext::invoke_subroutine(MethodInvocation const& invocation)
         auto timestamp = utils::init_time_measurement();
 
         auto runtime_instance = wasm_context.new_runtime_instance(
+            tx_context -> get_contract_db_proxy().get_script(invocation.addr));
+
+
+
+       /* auto runtime_instance = wasm_context.new_runtime_instance(
             invocation.addr,
-            static_cast<const void*>(&(tx_context->get_contract_db_proxy())));
+            static_cast<const void*>(&(tx_context->get_contract_db_proxy()))); */
+
         if (!runtime_instance) {
             throw wasm_api::HostError("cannot find target address");
         }
@@ -66,7 +74,7 @@ ExecutionContext::invoke_subroutine(MethodInvocation const& invocation)
         //std::printf("launch time: %lf\n", utils::measure_time(timestamp));
 
         active_runtimes.emplace(invocation.addr, std::move(runtime_instance));
-        BuiltinFns::link_fns(*active_runtimes.at(invocation.addr));
+        BuiltinFns<TransactionContext_t>::link_fns(*active_runtimes.at(invocation.addr));
 
         //std::printf("link time: %lf\n", utils::measure_time(timestamp));
     }
@@ -81,10 +89,22 @@ ExecutionContext::invoke_subroutine(MethodInvocation const& invocation)
     tx_context->pop_invocation_stack();
 }
 
+template
 TransactionStatus
-ExecutionContext::execute(Hash const& tx_hash,
+ExecutionContext<TransactionContext<StateDB>>::execute(
+    Hash const&,
+    SignedTransaction const&,
+    GroundhogBlockContext&,
+    GlobalContext&,
+    std::optional<NondeterministicResults>);
+
+template<typename TransactionContext_t>
+template<typename BlockContext, typename GlobalContext>
+TransactionStatus
+ExecutionContext<TransactionContext_t>::execute(Hash const& tx_hash,
                           SignedTransaction const& tx,
                           BlockContext& block_context,
+                          GlobalContext& scs_data_structures,
                           std::optional<NondeterministicResults> nondeterministic_res)
 {
     if (tx_context) {
@@ -93,7 +113,7 @@ ExecutionContext::execute(Hash const& tx_hash,
 
     MethodInvocation invocation(tx.tx.invocation);
 
-    tx_context = std::make_unique<TransactionContext>(
+    tx_context = std::make_unique<TransactionContext_t>(
         tx, tx_hash, scs_data_structures, block_context.block_number, nondeterministic_res);
 
     defer d{ [this]() {
@@ -135,32 +155,19 @@ ExecutionContext::execute(Hash const& tx_hash,
     return TransactionStatus::SUCCESS;
 }
 
-void
-ExecutionContext::extract_results()
+EC_DECL(void)::extract_results()
 {
     results_of_last_tx = tx_context->extract_results();
 }
 
-void
-ExecutionContext::reset()
+EC_DECL(void)::reset()
 {
     // nothing to do to clear wasm_context
     active_runtimes.clear();
     tx_context.reset();
 }
 
-TransactionContext&
-ExecutionContext::get_transaction_context()
-{
-    if (!tx_context) {
-        throw std::runtime_error(
-            "can't get ctx outside of active tx execution");
-    }
-    return *tx_context;
-}
-
-std::vector<TransactionLog> const&
-ExecutionContext::get_logs()
+EC_DECL(std::vector<TransactionLog> const&)::get_logs()
 {
     if (!results_of_last_tx) {
         throw std::runtime_error("can't get logs before execution");
@@ -168,7 +175,7 @@ ExecutionContext::get_logs()
     return results_of_last_tx->logs;
 }
 
-ExecutionContext::~ExecutionContext()
+EC_DECL()::~ExecutionContext()
 {
   if (tx_context)
   {
@@ -177,6 +184,5 @@ ExecutionContext::~ExecutionContext()
     std::terminate();
   }
 }
-
 
 } // namespace scs

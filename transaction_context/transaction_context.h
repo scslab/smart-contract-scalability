@@ -21,6 +21,7 @@
 
 #include "transaction_context/method_invocation.h"
 #include "transaction_context/transaction_results.h"
+#include "transaction_context/global_context.h"
 
 #include "storage_proxy/storage_proxy.h"
 #include "storage_proxy/transaction_rewind.h"
@@ -34,15 +35,13 @@
 
 namespace scs {
 
-class GlobalContext;
-class BlockContext;
-
+template<typename StateDB_t>
 struct StorageCommitment : public utils::NonMovableOrCopyable
 {
 	TransactionRewind rewind;
-	StorageProxy& proxy;
+	StorageProxy<StateDB_t>& proxy;
 
-	StorageCommitment(StorageProxy& proxy)
+	StorageCommitment(StorageProxy<StateDB_t>& proxy)
 		: rewind()
 		, proxy(proxy)
 		{}
@@ -54,6 +53,7 @@ struct StorageCommitment : public utils::NonMovableOrCopyable
 	}
 };
 
+template<typename StateDB_t>
 class TransactionContext
 {
 	std::vector<MethodInvocation> invocation_stack;
@@ -84,7 +84,7 @@ public:
 
 	std::unique_ptr<TransactionResultsFrame> tx_results;
 
-	StorageProxy storage_proxy;
+	StorageProxy<StateDB_t> storage_proxy;
 	ContractDBProxy contract_db_proxy;
 
 	TransactionContext(
@@ -149,7 +149,7 @@ public:
 	void pop_invocation_stack();
 	void push_invocation_stack(wasm_api::WasmRuntime* runtime, MethodInvocation const& invocation);
 
-	std::unique_ptr<StorageCommitment>
+	std::unique_ptr<StorageCommitment<StateDB_t>>
 	__attribute__((warn_unused_result))
 	push_storage_deltas();
 };

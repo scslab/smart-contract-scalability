@@ -26,13 +26,11 @@
 
 namespace scs {
 
-void
-BuiltinFns::scs_asset_add(uint32_t key_offset,
+BUILTIN_DECL(void)::scs_asset_add(uint32_t key_offset,
                           /* key_len = 32 */
                           int64_t delta)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_asset_add);
 
     auto& runtime = *tx_ctx.get_current_runtime();
@@ -46,12 +44,10 @@ BuiltinFns::scs_asset_add(uint32_t key_offset,
     tx_ctx.storage_proxy.asset_add(addr_and_key, delta);
 }
 
-uint64_t
-BuiltinFns::scs_asset_get(uint32_t key_offset
+BUILTIN_DECL(uint64_t)::scs_asset_get(uint32_t key_offset
                           /* key_len = 32 */)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_asset_get);
 
     auto& runtime = *tx_ctx.get_current_runtime();

@@ -31,15 +31,14 @@
 
 namespace scs {
 
-void
-BuiltinFns::scs_external_call(uint32_t target_addr,
+BUILTIN_DECL(void)::scs_external_call(uint32_t target_addr,
                               /* addr_len = 32 */
                               uint32_t call_data_offset,
                               uint32_t call_data_len,
                               uint32_t response_offset,
                               uint32_t response_max_len)
 {
-    auto& exec_ctx = ThreadlocalContextStore::get_exec_ctx();
+    auto& exec_ctx = ThreadlocalContextStore<TransactionContext_t>::get_exec_ctx();
     auto& tx_ctx = exec_ctx.get_transaction_context();
     auto& runtime = *tx_ctx.get_current_runtime();
 

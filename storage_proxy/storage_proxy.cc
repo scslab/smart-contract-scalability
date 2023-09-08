@@ -30,13 +30,20 @@
 namespace scs
 {
 
-StorageProxy::StorageProxy(StateDB& state_db)
+template class StorageProxy<StateDB>;
+
+#define PROXY_TEMPLATE template<typename StateDB_t>
+#define PROXY_DECL StorageProxy<StateDB_t>
+
+PROXY_TEMPLATE
+PROXY_DECL::StorageProxy(StateDB_t& state_db)
 	: state_db(state_db)
 	, cache()
 	{}
 
-StorageProxy::value_t& 
-StorageProxy::get_local(AddressAndKey const& key) const
+PROXY_TEMPLATE
+StorageProxy<StateDB_t>::value_t& 
+StorageProxy<StateDB_t>::get_local(AddressAndKey const& key) const
 {
 	auto it = cache.find(key);
 	if (it == cache.end())
@@ -47,14 +54,16 @@ StorageProxy::get_local(AddressAndKey const& key) const
 	return it->second;
 }
 
+PROXY_TEMPLATE
 std::optional<StorageObject>
-StorageProxy::get(AddressAndKey const& key) const
+PROXY_DECL::get(AddressAndKey const& key) const
 {
 	return get_local(key).applicator.get();
 }
 
+PROXY_TEMPLATE
 void
-StorageProxy::raw_memory_write(
+PROXY_DECL::raw_memory_write(
 	AddressAndKey const& key, 
 	xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& bytes)
 {
@@ -68,8 +77,9 @@ StorageProxy::raw_memory_write(
 	}
 }
 
+PROXY_TEMPLATE
 void
-StorageProxy::nonnegative_int64_set_add(
+PROXY_DECL::nonnegative_int64_set_add(
 	AddressAndKey const& key, 
 	int64_t set_value, 
 	int64_t delta_value)
@@ -83,8 +93,9 @@ StorageProxy::nonnegative_int64_set_add(
 	}
 }
 
+PROXY_TEMPLATE
 void 
-StorageProxy::nonnegative_int64_add(AddressAndKey const& key, int64_t delta_value)
+PROXY_DECL::nonnegative_int64_add(AddressAndKey const& key, int64_t delta_value)
 {
 	auto& v = get_local(key);
 	auto base_value = v.applicator.get_base_nnint64_set_value();
@@ -100,8 +111,9 @@ StorageProxy::nonnegative_int64_add(AddressAndKey const& key, int64_t delta_valu
 	}
 }
 
+PROXY_TEMPLATE
 void
-StorageProxy::delete_object_last(AddressAndKey const& key)
+PROXY_DECL::delete_object_last(AddressAndKey const& key)
 {
 	auto& v = get_local(key);
 
@@ -113,8 +125,9 @@ StorageProxy::delete_object_last(AddressAndKey const& key)
 	}
 }
 
+PROXY_TEMPLATE
 void
-StorageProxy::hashset_insert(AddressAndKey const& key, Hash const& h, uint64_t threshold)
+PROXY_DECL::hashset_insert(AddressAndKey const& key, Hash const& h, uint64_t threshold)
 {
 	auto& v = get_local(key);
 
@@ -126,8 +139,9 @@ StorageProxy::hashset_insert(AddressAndKey const& key, Hash const& h, uint64_t t
 	}
 }
 
+PROXY_TEMPLATE
 void
-StorageProxy::hashset_increase_limit(AddressAndKey const& key, uint32_t limit)
+PROXY_DECL::hashset_increase_limit(AddressAndKey const& key, uint32_t limit)
 {
 	auto& v = get_local(key);
 
@@ -146,8 +160,9 @@ StorageProxy::hashset_increase_limit(AddressAndKey const& key, uint32_t limit)
 	}
 }
 
+PROXY_TEMPLATE
 void
-StorageProxy::hashset_clear(AddressAndKey const& key, uint64_t threshold)
+PROXY_DECL::hashset_clear(AddressAndKey const& key, uint64_t threshold)
 {
 	auto& v = get_local(key);
 
@@ -159,8 +174,9 @@ StorageProxy::hashset_clear(AddressAndKey const& key, uint64_t threshold)
 	}
 }
 
+PROXY_TEMPLATE
 void
-StorageProxy::asset_add(AddressAndKey const& key, int64_t d)
+PROXY_DECL::asset_add(AddressAndKey const& key, int64_t d)
 {
 	auto& v = get_local(key);
 
@@ -172,9 +188,9 @@ StorageProxy::asset_add(AddressAndKey const& key, int64_t d)
 	}
 }
 
-
+PROXY_TEMPLATE
 bool 
-StorageProxy::push_deltas_to_statedb(TransactionRewind& rewind) const
+PROXY_DECL::push_deltas_to_statedb(TransactionRewind& rewind) const
 {
 	assert_not_committed_local_values();
 
@@ -197,7 +213,9 @@ StorageProxy::push_deltas_to_statedb(TransactionRewind& rewind) const
 	return true;
 }
 
-void StorageProxy::log_modified_keys(ModifiedKeysList& keys)
+PROXY_TEMPLATE
+void 
+PROXY_DECL::log_modified_keys(ModifiedKeysList& keys)
 {
 	assert_not_committed_local_values();
 
@@ -209,13 +227,17 @@ void StorageProxy::log_modified_keys(ModifiedKeysList& keys)
 	committed_local_values = true;
 }
 
+PROXY_TEMPLATE
 void 
-StorageProxy::assert_not_committed_local_values() const
+PROXY_DECL::assert_not_committed_local_values() const
 {
 	if (committed_local_values)
 	{
 		throw std::runtime_error("double commit");
 	}
 }
+
+#undef PROXY_DECL
+#undef PROXY_TEMPLATE
 
 } /* scs */

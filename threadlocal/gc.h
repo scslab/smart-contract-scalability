@@ -16,6 +16,9 @@
  * limitations under the License.
  */
 
+#include <memory>
+#include <vector>
+
 namespace scs {
 
 template<typename T>

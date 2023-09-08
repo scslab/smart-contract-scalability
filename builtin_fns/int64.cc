@@ -35,14 +35,12 @@
 
 namespace scs {
 
-void
-BuiltinFns::scs_nonnegative_int64_set_add(uint32_t key_offset,
+BUILTIN_DECL(void)::scs_nonnegative_int64_set_add(uint32_t key_offset,
                                           /* key_len = 32 */
                                           int64_t set_value,
                                           int64_t delta)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_nonnegative_int64_set_add);
 
     auto& runtime = *tx_ctx.get_current_runtime();
@@ -57,13 +55,11 @@ BuiltinFns::scs_nonnegative_int64_set_add(uint32_t key_offset,
         addr_and_key, set_value, delta);
 }
 
-void
-BuiltinFns::scs_nonnegative_int64_add(uint32_t key_offset,
+BUILTIN_DECL(void)::scs_nonnegative_int64_add(uint32_t key_offset,
                                       /* key_len = 32 */
                                       int64_t delta)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_nonnegative_int64_add);
 
     auto& runtime = *tx_ctx.get_current_runtime();
@@ -83,14 +79,12 @@ BuiltinFns::scs_nonnegative_int64_add(uint32_t key_offset,
 }
 
 // return 1 if key exists, 0 else
-uint32_t
-BuiltinFns::scs_nonnegative_int64_get(uint32_t key_offset,
+BUILTIN_DECL(uint32_t)::scs_nonnegative_int64_get(uint32_t key_offset,
                                       /* key_len = 32 */
                                       uint32_t output_offset
                                       /* output_len = 8 */)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_nonnegative_int64_get);
 
     auto& runtime = *tx_ctx.get_current_runtime();

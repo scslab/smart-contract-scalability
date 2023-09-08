@@ -20,9 +20,13 @@
 
 #include <wasm_api/wasm_api.h>
 
+#define BUILTIN_DECL(ret) template<typename TransactionContext_t> ret BuiltinFns<TransactionContext_t>
+#define GET_TEC ThreadlocalContextStore<TransactionContext_t>::get_exec_ctx().get_transaction_context();
+
 namespace scs
 {
 
+template<typename TransactionContext_t>
 class BuiltinFns
 {
 	/* env */

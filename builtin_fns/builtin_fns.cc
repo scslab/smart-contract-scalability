@@ -21,8 +21,9 @@
 namespace scs
 {
 
+template<typename TransactionContext_t>
 void
-BuiltinFns::link_fns(wasm_api::WasmRuntime& runtime)
+BuiltinFns<TransactionContext_t>::link_fns(wasm_api::WasmRuntime& runtime)
 {
 	/* -- env -- */
 

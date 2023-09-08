@@ -27,12 +27,10 @@
 
 namespace scs {
 
-uint32_t
-BuiltinFns::scs_has_key(uint32_t key_offset
+BUILTIN_DECL(uint32_t)::scs_has_key(uint32_t key_offset
                         /* key_len = 32 */)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_has_key);
 
     auto& runtime = *tx_ctx.get_current_runtime();

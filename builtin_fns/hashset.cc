@@ -34,15 +34,13 @@
 
 namespace scs {
 
-void
-BuiltinFns::scs_hashset_insert(uint32_t key_offset,
+BUILTIN_DECL(void)::scs_hashset_insert(uint32_t key_offset,
                                /* key_len = 32 */
                                uint32_t hash_offset
                                /* hash_len = 32 */,
                                uint64_t threshold)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_hashset_insert);
 
     auto& runtime = *tx_ctx.get_current_runtime();
@@ -60,13 +58,11 @@ BuiltinFns::scs_hashset_insert(uint32_t key_offset,
         addr_and_key, hash, threshold);
 }
 
-void
-BuiltinFns::scs_hashset_increase_limit(uint32_t key_offset,
+BUILTIN_DECL(void)::scs_hashset_increase_limit(uint32_t key_offset,
                                        /* key_len = 32 */
                                        uint32_t limit_increase)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_hashset_increase_limit);
 
     auto& runtime = *tx_ctx.get_current_runtime();
@@ -81,8 +77,9 @@ BuiltinFns::scs_hashset_increase_limit(uint32_t key_offset,
         addr_and_key, limit_increase);
 }
 
+template<typename TransactionContext_t>
 std::optional<StorageObject>
-get_hashset(TransactionContext const& tx_ctx, uint32_t key_offset)
+get_hashset(TransactionContext_t const& tx_ctx, uint32_t key_offset)
 {
     auto const& runtime = *tx_ctx.get_current_runtime();
 
@@ -103,13 +100,11 @@ get_hashset(TransactionContext const& tx_ctx, uint32_t key_offset)
     return res;
 }
 
-void
-BuiltinFns::scs_hashset_clear(uint32_t key_offset
+BUILTIN_DECL(void)::scs_hashset_clear(uint32_t key_offset
                               /* key_len = 32 */,
                               uint64_t threshold)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_hashset_clear);
 
     auto& runtime = *tx_ctx.get_current_runtime();
@@ -124,12 +119,10 @@ BuiltinFns::scs_hashset_clear(uint32_t key_offset
         addr_and_key, threshold);
 }
 
-uint32_t
-BuiltinFns::scs_hashset_get_size(uint32_t key_offset
+BUILTIN_DECL(uint32_t)::scs_hashset_get_size(uint32_t key_offset
                                  /* key_len = 32 */)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_hashset_get_size);
 
     auto const& res = get_hashset(tx_ctx, key_offset);
@@ -141,12 +134,10 @@ BuiltinFns::scs_hashset_get_size(uint32_t key_offset
     return res->body.hash_set().hashes.size();
 }
 
-uint32_t
-BuiltinFns::scs_hashset_get_max_size(uint32_t key_offset
+BUILTIN_DECL(uint32_t)::scs_hashset_get_max_size(uint32_t key_offset
                                      /* key_len = 32 */)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_hashset_get_max_size);
 
     auto const& res = get_hashset(tx_ctx, key_offset);
@@ -163,13 +154,11 @@ BuiltinFns::scs_hashset_get_max_size(uint32_t key_offset
  * returns lowest index.
  * If none, returns UINT32_MAX
  **/
-uint32_t
-BuiltinFns::scs_hashset_get_index_of(uint32_t key_offset,
+BUILTIN_DECL(uint32_t)::scs_hashset_get_index_of(uint32_t key_offset,
                                      /* key_len = 32 */
                                      uint64_t threshold)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_hashset_get_index_of);
 
     auto const& res = get_hashset(tx_ctx, key_offset);
@@ -187,15 +176,13 @@ BuiltinFns::scs_hashset_get_index_of(uint32_t key_offset,
     throw wasm_api::HostError("key nexist (not found in hashset)");
 }
 
-uint64_t
-BuiltinFns::scs_hashset_get_index(uint32_t key_offset,
+BUILTIN_DECL(uint64_t)::scs_hashset_get_index(uint32_t key_offset,
                                   /* key_len = 32 */
                                   uint32_t output_offset,
                                   /* output_len = 32 */
                                   uint32_t index)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_hashset_get_index);
 
     auto const& res = get_hashset(tx_ctx, key_offset);

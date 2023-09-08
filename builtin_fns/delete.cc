@@ -26,12 +26,10 @@
 
 namespace scs {
 
-void
-BuiltinFns::scs_delete_key_last(uint32_t key_offset
+BUILTIN_DECL(void)::scs_delete_key_last(uint32_t key_offset
                                 /* key_len = 32 */)
 {
-    auto& tx_ctx
-        = ThreadlocalContextStore::get_exec_ctx().get_transaction_context();
+    auto& tx_ctx = GET_TEC;
     tx_ctx.consume_gas(gas_delete_key_last);
 
     auto& runtime = *tx_ctx.get_current_runtime();

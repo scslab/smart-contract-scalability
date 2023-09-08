@@ -25,7 +25,13 @@
 
 namespace scs {
 
-TransactionContext::TransactionContext(SignedTransaction const& tx,
+template class TransactionContext<StateDB>;
+
+#define TC_TEMPLATE template<typename StateDB_t>
+#define TC_DECL TransactionContext<StateDB_t>
+
+TC_TEMPLATE
+TC_DECL::TransactionContext(SignedTransaction const& tx,
                                        Hash const& tx_hash,
                                        GlobalContext& global_context,
                                        uint64_t current_block,
@@ -42,8 +48,9 @@ TransactionContext::TransactionContext(SignedTransaction const& tx,
     , contract_db_proxy(global_context.contract_db)
 {}
 
+TC_TEMPLATE
 wasm_api::WasmRuntime*
-TransactionContext::get_current_runtime()
+TC_DECL::get_current_runtime()
 {
     if (runtime_stack.size() == 0) {
         throw std::runtime_error(
@@ -52,29 +59,33 @@ TransactionContext::get_current_runtime()
     return runtime_stack.back();
 }
 
+TC_TEMPLATE
 const MethodInvocation&
-TransactionContext::get_current_method_invocation() const
+TC_DECL::get_current_method_invocation() const
 {
     return invocation_stack.back();
 }
 
+TC_TEMPLATE
 void
-TransactionContext::pop_invocation_stack()
+TC_DECL::pop_invocation_stack()
 {
     invocation_stack.pop_back();
     runtime_stack.pop_back();
 }
 
+TC_TEMPLATE
 void
-TransactionContext::push_invocation_stack(wasm_api::WasmRuntime* runtime,
+TC_DECL::push_invocation_stack(wasm_api::WasmRuntime* runtime,
                                           MethodInvocation const& invocation)
 {
     invocation_stack.push_back(invocation);
     runtime_stack.push_back(runtime);
 }
 
+TC_TEMPLATE
 AddressAndKey
-TransactionContext::get_storage_key(InvariantKey const& key) const
+TC_DECL::get_storage_key(InvariantKey const& key) const
 {
     static_assert(sizeof(Address) + sizeof(InvariantKey)
                       == sizeof(AddressAndKey),
@@ -88,8 +99,9 @@ TransactionContext::get_storage_key(InvariantKey const& key) const
     return out;
 }
 
+TC_TEMPLATE
 const Address&
-TransactionContext::get_msg_sender() const
+TC_DECL::get_msg_sender() const
 {
     if (invocation_stack.size() <= 1) {
         throw wasm_api::HostError("no sender on root tx");
@@ -98,32 +110,37 @@ TransactionContext::get_msg_sender() const
     return invocation_stack[invocation_stack.size() - 2].addr;
 }
 
+TC_TEMPLATE
 const Hash&
-TransactionContext::get_src_tx_hash() const
+TC_DECL::get_src_tx_hash() const
 {
     return tx_hash;
 }
 
+TC_TEMPLATE
 Hash
-TransactionContext::get_invoked_tx_hash() const
+TC_DECL::get_invoked_tx_hash() const
 {
     return hash_xdr(tx.tx);
 }
 
+TC_TEMPLATE
 uint32_t
-TransactionContext::get_num_deployable_contracts() const
+TC_DECL::get_num_deployable_contracts() const
 {
     return tx.tx.contracts_to_deploy.size();
 }
 
+TC_TEMPLATE
 uint64_t 
-TransactionContext::get_block_number() const
+TC_DECL::get_block_number() const
 {
     return current_block;
 }
 
+TC_TEMPLATE
 const Contract&
-TransactionContext::get_deployable_contract(uint32_t index) const
+TC_DECL::get_deployable_contract(uint32_t index) const
 {
     if (index >= tx.tx.contracts_to_deploy.size()) {
         throw std::runtime_error("invalid contract access");
@@ -131,13 +148,14 @@ TransactionContext::get_deployable_contract(uint32_t index) const
     return tx.tx.contracts_to_deploy[index];
 }
 
-std::unique_ptr<StorageCommitment>
-TransactionContext::push_storage_deltas()
+TC_TEMPLATE
+std::unique_ptr<StorageCommitment<StateDB_t>>
+TC_DECL::push_storage_deltas()
 {
     assert_not_committed();
     committed_to_statedb = true;
 
-    std::unique_ptr<StorageCommitment> commitment = std::make_unique<StorageCommitment>(storage_proxy);
+    auto commitment = std::make_unique<StorageCommitment<StateDB_t>>(storage_proxy);
 
     if (!storage_proxy.push_deltas_to_statedb(commitment->rewind)) {
         return nullptr;
@@ -150,8 +168,9 @@ TransactionContext::push_storage_deltas()
     return commitment;
 }
 
+TC_TEMPLATE
 WitnessEntry const&
-TransactionContext::get_witness(uint64_t wit_idx) const
+TC_DECL::get_witness(uint64_t wit_idx) const
 {
     for (auto const& w : tx.witnesses)
     {
@@ -163,8 +182,9 @@ TransactionContext::get_witness(uint64_t wit_idx) const
     throw wasm_api::HostError("witness not found");
 }
 
+TC_TEMPLATE
 void
-TransactionContext::consume_gas(uint64_t consumed_gas) 
+TC_DECL::consume_gas(uint64_t consumed_gas) 
 {   
     //std::printf("consume gas %" PRIu64 " += %" PRIu64 " of %" PRIu64 "\n", gas_used, consumed_gas, tx.tx.gas_limit);
     if (__builtin_add_overflow_p(gas_used, consumed_gas, static_cast<uint64_t>(0)))
@@ -180,4 +200,9 @@ TransactionContext::consume_gas(uint64_t consumed_gas)
     }
 }
 
+#undef TC_DECL
+#undef TC_TEMPLATE
+
 } // namespace scs
+
+
