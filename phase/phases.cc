@@ -26,6 +26,8 @@
 
 #include "transaction_context/transaction_context.h"
 
+#include "groundhog/types.h"
+
 #include <utils/time.h>
 #include <tbb/task_group.h>
 
@@ -47,7 +49,7 @@ void phase_finish_block(GlobalContext& global_structures, GroundhogBlockContext&
 	std::printf("commit statedb %lf\n", utils::measure_time(ts));
 	g.wait();
 	std::printf("task group wait %lf\n", utils::measure_time(ts));
-	ThreadlocalContextStore::post_block_clear<TransactionContext<StateDB>>();
+	ThreadlocalContextStore::post_block_clear<GroundhogTxContext>();
 	std::printf("post block tlcs clear %lf\n", utils::measure_time(ts));
 }
 
@@ -58,7 +60,7 @@ void phase_undo_block(GlobalContext& global_structures, GroundhogBlockContext& b
 	global_structures.contract_db.rewind();
 	global_structures.state_db.rewind_modifications(block_structures.modified_keys_list);
 
-	ThreadlocalContextStore::post_block_clear<TransactionContext<StateDB>>();
+	ThreadlocalContextStore::post_block_clear<GroundhogTxContext>();
 }
 
 } /* scs */

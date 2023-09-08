@@ -31,6 +31,8 @@
 #include "block_assembly/limits.h"
 #include "block_assembly/assembly_worker.h"
 
+#include "groundhog/types.h"
+
 #include <utils/time.h>
 
 namespace scs {
@@ -63,7 +65,7 @@ struct ValidateReduce
         if (found_error)
             return;
 
-        ThreadlocalTransactionContextStore<TransactionContext<StateDB>>::make_ctx();
+        ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
 
         // TBB docs suggest this type of pattern (use local var until end)
         //  optimizes better.
@@ -71,7 +73,7 @@ struct ValidateReduce
 
         for (size_t i = r.begin(); i < r.end(); i++) {
 
-            auto& exec_ctx = ThreadlocalTransactionContextStore<TransactionContext<StateDB>>::get_exec_ctx();
+            auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
 
             auto const& txset_entry = txs.transactions[i];
             auto const& tx = txset_entry.tx;
@@ -238,7 +240,7 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
 
 	global_context.contract_db.commit();
 	global_context.state_db.commit_modifications(current_block_context->modified_keys_list);
-	ThreadlocalContextStore::post_block_clear<TransactionContext<StateDB>>();
+	ThreadlocalContextStore::post_block_clear<GroundhogTxContext>();
 
 	std::printf("done commit mods %lf\n", utils::measure_time(ts));
 	out.state_db_hash = global_context.state_db.hash();
@@ -270,8 +272,8 @@ VirtualMachine::~VirtualMachine()
     ThreadlocalContextStore::get_rate_limiter().stop_threads();
     ThreadlocalContextStore::stop_rpcs();
     StaticAssemblyWorkerCache::wait_for_stop_assembly_threads();
-    // execution context has dangling reference to GlobalContext without this
-    ThreadlocalContextStore::clear_entire_context<TransactionContext<StateDB>>();
+    // execution context used to have dangling reference to GlobalContext without this
+    ThreadlocalContextStore::clear_entire_context<GroundhogTxContext>();
 }
 
 } // namespace scs

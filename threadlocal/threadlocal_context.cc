@@ -23,6 +23,8 @@
 #include "transaction_context/transaction_context.h"
 #include "transaction_context/execution_context.h"
 
+#include "groundhog/types.h"
+
 #define TLC_TEMPLATE 
 #define TLC_DECL ThreadlocalContextStore
 
@@ -36,7 +38,7 @@ TLC_DECL::get_uid()
 }
 
 template
-class ThreadlocalTransactionContextStore<TransactionContext<StateDB>>;
+class ThreadlocalTransactionContextStore<GroundhogTxContext>;
 
 template<typename TransactionContext_t>
 template<typename... Args>
@@ -50,7 +52,7 @@ ThreadlocalTransactionContextStore<TransactionContext_t>::make_ctx(Args&... args
 }
 
 template void
-ThreadlocalTransactionContextStore<TransactionContext<StateDB>>::make_ctx();
+ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
 
 template<typename TransactionContext_t>
 void 

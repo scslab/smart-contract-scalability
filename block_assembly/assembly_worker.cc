@@ -28,6 +28,8 @@
 
 #include "crypto/hash.h"
 
+#include "groundhog/types.h"
+
 namespace scs {
 
 void
@@ -54,8 +56,8 @@ AssemblyWorker::run()
             return;
         }
 
-        ThreadlocalTransactionContextStore<TransactionContext<StateDB>>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<TransactionContext<StateDB>>::get_exec_ctx();
+        ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
+        auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
 
         auto result = exec_ctx.execute(hash_xdr(*tx), *tx, global_context, block_context);
         if (result == TransactionStatus::SUCCESS) {
