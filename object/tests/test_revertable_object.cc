@@ -45,7 +45,10 @@ TEST_CASE("revert object from empty", "[object]")
 
     SECTION("nothing")
     {
+        REQUIRE(!object.get_committed_object());
+
         object.commit_round();
+        
         REQUIRE(!object.get_committed_object());
     }
 
