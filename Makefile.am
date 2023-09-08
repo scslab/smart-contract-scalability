@@ -124,7 +124,8 @@ RPC_SERVER_SRCS = \
 STATE_DB_SRCS = \
 	state_db/modified_keys_list.cc \
 	state_db/new_key_cache.cc \
-	state_db/state_db.cc
+	state_db/state_db.cc \
+	state_db/state_db_v2.cc
 
 STORAGE_PROXY_SRCS = \
 	storage_proxy/proxy_applicator.cc \
