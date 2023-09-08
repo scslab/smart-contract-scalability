@@ -34,7 +34,6 @@
 
 namespace scs {
 
-class DeltaBatch;
 class ModifiedKeysList;
 
 class StateDB
@@ -56,7 +55,7 @@ class StateDB
     struct StateDBMetadata : public trie::SnapshotTrieMetadataBase
     {
         using uint128_t = unsigned __int128;
-        uint128_t asset_supply = 0;
+       // uint128_t asset_supply = 0;
 
         void write_to(std::vector<uint8_t>& digest_bytes) const;
         void from_value(value_t const& obj);

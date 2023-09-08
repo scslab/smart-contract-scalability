@@ -31,7 +31,7 @@ void
 StateDB::StateDBMetadata::write_to(std::vector<uint8_t>& digest_bytes) const
 {
     trie::SnapshotTrieMetadataBase::write_to(digest_bytes);
-    utils::append_unsigned_big_endian(digest_bytes, asset_supply);
+    //utils::append_unsigned_big_endian(digest_bytes, asset_supply);
 }
 
 void
@@ -44,16 +44,16 @@ StateDB::StateDBMetadata::from_value(
     utils::print_assert(!!committed_obj,
                         "null obj in statedb! should have been deleted");
 
-    if (committed_obj->body.type() == ObjectType::KNOWN_SUPPLY_ASSET) {
-        asset_supply = committed_obj->body.asset().amount;
-    }
+    //if (committed_obj->body.type() == ObjectType::KNOWN_SUPPLY_ASSET) {
+    //    asset_supply = committed_obj->body.asset().amount;
+    //}
 }
 
 StateDB::StateDBMetadata&
 StateDB::StateDBMetadata::operator+=(const StateDBMetadata& other)
 {
     trie::SnapshotTrieMetadataBase::operator+=(other);
-    asset_supply += other.asset_supply;
+    //asset_supply += other.asset_supply;
     return *this;
 }
 
