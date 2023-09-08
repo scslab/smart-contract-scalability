@@ -263,6 +263,7 @@ ProxyApplicator::try_apply(StorageDelta const& d)
 
         	hs_size_increase += d.limit_increase();
         	// limit change does not take effect until next block
+            do_limit_increase = true;
         	return true;
         }
         case DeltaType::HASH_SET_CLEAR:
@@ -350,7 +351,7 @@ ProxyApplicator::get_deltas() const
                                                      nnint64_delta->delta));
     }
 
-    if (hs_size_increase > 0) {
+    if (do_limit_increase) {
         static_assert(
             MAX_HASH_SET_SIZE <= UINT16_MAX,
             "change uint16 type on make_hash_set_increase_limit to wider uint");

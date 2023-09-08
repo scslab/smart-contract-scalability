@@ -45,6 +45,7 @@ class ProxyApplicator
 
     // hash set
 
+    bool do_limit_increase = false;
     uint64_t hs_size_increase = 0;
     std::vector<HashSetEntry> new_hashes;
     std::optional<uint64_t> hs_clear_threshold = std::nullopt;
@@ -64,6 +65,7 @@ class ProxyApplicator
         : current(base)
         , memory_write(std::nullopt)
         , nnint64_delta(std::nullopt)
+        , do_limit_increase(false)
         , hs_size_increase(0)
         , new_hashes()
         , hs_clear_threshold(std::nullopt)

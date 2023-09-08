@@ -427,7 +427,21 @@ TEST_CASE("hash set only", "[mutator]")
 
             check_invalid(make_hash_set_insert(make_hash(5), 5));
 
-            val_nexpect_hash(make_hash(5));        }
+            val_nexpect_hash(make_hash(5));
+        }
+        SECTION("no hash limit inc means no delta output")
+        {
+            auto res = applicator->get_deltas();
+            REQUIRE(res.size() == 0);
+        }
+        SECTION("increase limit by 0")
+        {
+            check_valid(make_hash_set_increase_limit(0));
+            auto res = applicator->get_deltas();
+            REQUIRE(res.size() == 1);
+            REQUIRE(res[0].type() == DeltaType::HASH_SET_INCREASE_LIMIT);
+            REQUIRE(res[0].limit_increase() == 0);
+        }
     }
 }
 
