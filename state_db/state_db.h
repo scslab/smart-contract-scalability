@@ -57,7 +57,10 @@ class StateDB
         using uint128_t = unsigned __int128;
        // uint128_t asset_supply = 0;
 
-        void write_to(std::vector<uint8_t>& digest_bytes) const;
+        void write_to(std::vector<uint8_t>& digest_bytes) const
+        {
+            trie::SnapshotTrieMetadataBase::write_to(digest_bytes);
+        }
         void from_value(value_t const& obj);
         StateDBMetadata& operator+=(const StateDBMetadata& other);
     };

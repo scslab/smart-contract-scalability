@@ -26,14 +26,7 @@
 #include <utils/time.h>
 
 namespace scs {
-
-void
-StateDB::StateDBMetadata::write_to(std::vector<uint8_t>& digest_bytes) const
-{
-    trie::SnapshotTrieMetadataBase::write_to(digest_bytes);
-    //utils::append_unsigned_big_endian(digest_bytes, asset_supply);
-}
-
+    
 void
 StateDB::StateDBMetadata::from_value(
     value_t const& obj)
