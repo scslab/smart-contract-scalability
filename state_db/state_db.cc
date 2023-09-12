@@ -26,7 +26,7 @@
 #include <utils/time.h>
 
 namespace scs {
-    
+
 void
 StateDB::StateDBMetadata::from_value(
     value_t const& obj)
@@ -172,7 +172,7 @@ StateDB::commit_modifications(const ModifiedKeysList& list)
 
     std::printf("parallel modify before %lf\n", utils::measure_time(ts));
 
-    uint32_t grain_size = std::max<uint32_t>(1, list.size() / 100);
+    uint32_t grain_size = std::max<uint32_t>(1, list.size() / 1000);
     list.get_keys()
         .parallel_batch_value_modify_const<UpdateFn, prefix_t::len()>(
             update, grain_size);
