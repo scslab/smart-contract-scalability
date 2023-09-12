@@ -216,9 +216,9 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
 
     tbb::task_group txset;
     tbb::task_group modlog_merge;
-    modlog_merge.run([&]() {
+
 	current_block_context -> modified_keys_list.merge_logs();
-	});
+
     txset.run([&] () {
 	current_block_context -> tx_set.finalize();
 	out.tx_set_hash = current_block_context -> tx_set.hash();
@@ -228,7 +228,7 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
 //	block_structures->tx_set.finalize();
    
 //	current_block_context->modified_keys_list.merge_logs();
-    modlog_merge.wait();
+   // modlog_merge.wait();
 	std::printf("keys merge logs time %lf\n", utils::measure_time(ts));
 	tbb::task_group rest_of_hash;
     rest_of_hash.run([&] ()
