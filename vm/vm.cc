@@ -240,7 +240,7 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
 
 	global_context.contract_db.commit();
 	global_context.state_db.commit_modifications(current_block_context->modified_keys_list);
-	ThreadlocalContextStore::post_block_clear<GroundhogTxContext>();
+	ThreadlocalContextStore::post_block_clear();
 
 	std::printf("done commit mods %lf\n", utils::measure_time(ts));
 	out.state_db_hash = global_context.state_db.hash();

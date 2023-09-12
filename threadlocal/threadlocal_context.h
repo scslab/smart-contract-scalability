@@ -61,8 +61,6 @@ public:
     {
         cache.clear();
     }
-    
-    static void post_block_clear();
 };
 
 class ThreadlocalContextStore
@@ -126,23 +124,22 @@ class ThreadlocalContextStore
     static void enable_rpcs();
     static void stop_rpcs();
 
-    template<typename TransactionContext_t>
     static void
     post_block_clear()
     {
         auto& ctxs = cache.get_objects();
         for (auto& ctx : ctxs) {
             if (ctx) {
-                //auto& c = *ctx;
-                //if (c.ctx) {
-                //    c.ctx->reset();
-                //}
                 ctx->gc.post_block_clear();
                 // no need to reset uid, we're not going to overflow 2^48
+                // rps cancelled through stop_rpcs()
             }
         }
         hash_allocator.reset();
-        ThreadlocalTransactionContextStore<TransactionContext_t>::post_block_clear();
+
+        // no need to reset execution contexts -- those are automatically reset after every transaction
+        // for some reason executing reset() on each threadlocal execution context
+        // in the old post_block_clear caused a 7-8ms delay when it was a no-op (??? optimizer shenanigans, perhaps)
     }
 
 

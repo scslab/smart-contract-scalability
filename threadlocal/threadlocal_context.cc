@@ -54,20 +54,6 @@ ThreadlocalTransactionContextStore<TransactionContext_t>::make_ctx(Args&... args
 template void
 ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
 
-template<typename TransactionContext_t>
-void 
-ThreadlocalTransactionContextStore<TransactionContext_t>::post_block_clear()
-{
-    for (auto& ctx : cache.get_objects())
-    {
-        if (ctx)
-        {
-            ctx -> reset();
-        }
-    }
-}
-
-
 /*
 TLC_TEMPLATE
 template<typename... Args>
