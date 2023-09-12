@@ -38,19 +38,18 @@ class ModifiedKeysList;
 
 class StateDB
 {
-    static std::vector<uint8_t> serialize(const RevertableObject& v)
+    static void serialize(std::vector<uint8_t>& buf, const RevertableObject& v)
     {
         auto const& res = v.get_committed_object();
         if (res) {
-            return xdr::xdr_to_opaque(*res);
+            xdr::append_xdr_to_opaque(buf, *res);
         }
-        return {};
     }
 
   public:
     using prefix_t = trie::ByteArrayPrefix<sizeof(AddressAndKey)>;
 
-    using value_t = trie::SerializeWrapper<RevertableObject, &serialize>;
+    using value_t = trie::BetterSerializeWrapper<RevertableObject, &serialize>;
 
     struct StateDBMetadata : public trie::SnapshotTrieMetadataBase
     {
