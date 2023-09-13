@@ -20,24 +20,22 @@
 
 #include "object/make_delta.h"
 
-#include "debug/debug_utils.h"
-
 #include "state_db/typed_modification_index.h"
 
 namespace scs {
 
-namespace test
+namespace test {
+AddressAndKey
+indextest_make_addrkey(uint64_t v)
 {
-    AddressAndKey indextest_make_addrkey(uint64_t v)
-    {
-        AddressAndKey a;
-        auto h1 = hash_xdr<uint64_t>(v);
-        auto h2 = hash_xdr<uint64_t>(v+1);
-        std::memcpy(a.data(), h1.data(), h1.size());
-        std::memcpy(a.data() + h1.size(), h2.data(), h2.size());
-        return a;
-    }
+    AddressAndKey a;
+    auto h1 = hash_xdr<uint64_t>(v);
+    auto h2 = hash_xdr<uint64_t>(v + 1);
+    std::memcpy(a.data(), h1.data(), h1.size());
+    std::memcpy(a.data() + h1.size(), h2.data(), h2.size());
+    return a;
 }
+} // namespace test
 
 TEST_CASE("test key format delete last", "[index]")
 {
@@ -49,23 +47,22 @@ TEST_CASE("test key format delete last", "[index]")
     auto bytes = res.get_bytes_array();
 
     std::vector<uint8_t> expect_bytes;
-    expect_bytes.insert(expect_bytes.end(),
-        expect_addr.begin(),
-        expect_addr.end());
+    expect_bytes.insert(
+        expect_bytes.end(), expect_addr.begin(), expect_addr.end());
 
     // delta_type
     expect_bytes.push_back(0);
 
     // delta value
-    expect_bytes.resize(expect_bytes.size() + 36, 0);
+    expect_bytes.resize(expect_bytes.size() + 40, 0);
 
-    expect_bytes.insert(expect_bytes.end(),
-        expect_hash.begin(),
-        expect_hash.end());
+    expect_bytes.insert(
+        expect_bytes.end(), expect_hash.begin(), expect_hash.end());
 
     REQUIRE(bytes.size() == expect_bytes.size());
 
-    REQUIRE(std::memcmp(bytes.data(), expect_bytes.data(), expect_bytes.size()) == 0);
+    REQUIRE(std::memcmp(bytes.data(), expect_bytes.data(), expect_bytes.size())
+            == 0);
 }
 
 TEST_CASE("test key format raw mem", "[index]")
@@ -73,16 +70,18 @@ TEST_CASE("test key format raw mem", "[index]")
     AddressAndKey expect_addr = test::indextest_make_addrkey(1);
     auto expect_hash = hash_xdr<uint64_t>(101);
 
-    const xdr::opaque_vec<RAW_MEMORY_MAX_LEN> val = {0x00, 0x01, 0x02, 0x03};
+    const xdr::opaque_vec<RAW_MEMORY_MAX_LEN> val = { 0x00, 0x01, 0x02, 0x03 };
 
-    auto res = make_index_key(expect_addr, make_raw_memory_write(xdr::opaque_vec<RAW_MEMORY_MAX_LEN>(val)), expect_hash);
+    auto res = make_index_key(
+        expect_addr,
+        make_raw_memory_write(xdr::opaque_vec<RAW_MEMORY_MAX_LEN>(val)),
+        expect_hash);
 
     auto bytes = res.get_bytes_array();
 
     std::vector<uint8_t> expect_bytes;
-    expect_bytes.insert(expect_bytes.end(),
-        expect_addr.begin(),
-        expect_addr.end());
+    expect_bytes.insert(
+        expect_bytes.end(), expect_addr.begin(), expect_addr.end());
 
     // delta_type
     expect_bytes.push_back(1);
@@ -90,21 +89,78 @@ TEST_CASE("test key format raw mem", "[index]")
     Hash h;
     hash_raw(val.data(), val.size(), h.data());
 
-    expect_bytes.insert(expect_bytes.end(),
-        h.begin(),
-        h.end());
+    expect_bytes.insert(expect_bytes.end(), h.begin(), h.end());
 
     // delta value
-    expect_bytes.resize(expect_bytes.size() + 4, 0);
+    expect_bytes.resize(expect_bytes.size() + 8, 0);
 
-    expect_bytes.insert(expect_bytes.end(),
-        expect_hash.begin(),
-        expect_hash.end());
+    expect_bytes.insert(
+        expect_bytes.end(), expect_hash.begin(), expect_hash.end());
 
     REQUIRE(bytes.size() == expect_bytes.size());
 
-    //std::printf("expect %s\nbytes  %s\n", debug::array_to_str(expect_bytes).c_str(), debug::array_to_str(bytes).c_str());
-    REQUIRE(std::memcmp(bytes.data(), expect_bytes.data(), expect_bytes.size()) == 0);
+    REQUIRE(std::memcmp(bytes.data(), expect_bytes.data(), expect_bytes.size())
+            == 0);
+}
+
+TEST_CASE("test key format asset pos", "[index]")
+{
+    AddressAndKey expect_addr = test::indextest_make_addrkey(2);
+    auto expect_hash = hash_xdr<uint64_t>(102);
+
+    auto res = make_index_key(expect_addr, make_asset_add(1), expect_hash);
+
+    auto bytes = res.get_bytes_array();
+
+    std::vector<uint8_t> expect_bytes;
+    expect_bytes.insert(
+        expect_bytes.end(), expect_addr.begin(), expect_addr.end());
+
+    // delta_type
+    expect_bytes.push_back(9);
+
+    utils::append_unsigned_big_endian(expect_bytes, static_cast<uint64_t>(1));
+
+    expect_bytes.resize(expect_bytes.size() + 32, 0);
+
+    expect_bytes.insert(
+        expect_bytes.end(), expect_hash.begin(), expect_hash.end());
+
+    REQUIRE(bytes.size() == expect_bytes.size());
+
+    REQUIRE(std::memcmp(bytes.data(), expect_bytes.data(), expect_bytes.size())
+            == 0);
+}
+
+TEST_CASE("test key format asset neg", "[index]")
+{
+    AddressAndKey expect_addr = test::indextest_make_addrkey(2);
+    auto expect_hash = hash_xdr<uint64_t>(102);
+
+    auto res
+        = make_index_key(expect_addr, make_asset_add(INT64_MIN), expect_hash);
+
+    auto bytes = res.get_bytes_array();
+
+    std::vector<uint8_t> expect_bytes;
+    expect_bytes.insert(
+        expect_bytes.end(), expect_addr.begin(), expect_addr.end());
+
+    // delta_type
+    expect_bytes.push_back(9);
+
+    utils::append_unsigned_big_endian(expect_bytes,
+                                      static_cast<uint64_t>(INT64_MIN));
+
+    expect_bytes.resize(expect_bytes.size() + 32, 0);
+
+    expect_bytes.insert(
+        expect_bytes.end(), expect_hash.begin(), expect_hash.end());
+
+    REQUIRE(bytes.size() == expect_bytes.size());
+
+    REQUIRE(std::memcmp(bytes.data(), expect_bytes.data(), expect_bytes.size())
+            == 0);
 }
 
 } // namespace scs

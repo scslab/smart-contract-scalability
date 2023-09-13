@@ -32,7 +32,7 @@ class TypedModificationIndex
 public:
     using value_t = StorageDelta;
     // keys are [addrkey] [modification type] [modification] [txid]
-    constexpr static size_t modification_key_length = 32 + 4; // len(hash) + len(tag), for hashset entries
+    constexpr static size_t modification_key_length = 32 + 8; // len(hash) + len(tag), for hashset entries
 
     using trie_prefix_t = trie::ByteArrayPrefix<sizeof(AddressAndKey) + 1 + modification_key_length + sizeof(Hash)>;
     using map_t = trie::AtomicTrie<value_t, trie_prefix_t>;
