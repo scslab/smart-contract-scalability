@@ -124,6 +124,7 @@ RPC_SERVER_SRCS = \
 STATE_DB_SRCS = \
 	state_db/modified_keys_list.cc \
 	state_db/new_key_cache.cc \
+	state_db/sisyphus_state_db.cc \
 	state_db/state_db.cc \
 	state_db/state_db_v2.cc \
 	state_db/typed_modification_index.cc

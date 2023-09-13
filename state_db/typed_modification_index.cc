@@ -112,4 +112,29 @@ make_index_key(AddressAndKey const& addrkey,
     return out;
 }
 
+void 
+TypedModificationIndex::log_modification(
+    AddressAndKey const& addrkey, StorageDelta const& mod, Hash const& src_tx_hash)
+{
+    auto& local_trie = cache.get(keys);
+    auto key = make_index_key(addrkey, value_t(mod), src_tx_hash);
+    local_trie.insert(key, mod);
+}
+
+Hash 
+TypedModificationIndex::hash()
+{
+    Hash out;
+    auto h = keys.hash();
+    std::memcpy(out.data(), h.data(), h.size());
+    return out;
+}
+
+void 
+TypedModificationIndex::clear()
+{
+    cache.clear();
+    keys.clear();
+}
+
 } // namespace scs

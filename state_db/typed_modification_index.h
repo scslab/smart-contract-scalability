@@ -19,6 +19,8 @@
 
 #include <utils/threadlocal_cache.h>
 
+#include <xdrpp/marshal.h>
+
 #include "xdr/types.h"
 #include "xdr/storage_delta.h"
 
@@ -29,13 +31,20 @@ namespace scs
 
 class TypedModificationIndex
 {
+
+	static void serialize(std::vector<uint8_t>& buf, const StorageDelta& v)
+    {
+        xdr::append_xdr_to_opaque(buf, v);
+    }
+
 public:
-    using value_t = StorageDelta;
+    using value_t = trie::BetterSerializeWrapper<StorageDelta, &serialize>;
     // keys are [addrkey] [modification type] [modification] [txid]
     constexpr static size_t modification_key_length = 32 + 8; // len(hash) + len(tag), for hashset entries
 
     using trie_prefix_t = trie::ByteArrayPrefix<sizeof(AddressAndKey) + 1 + modification_key_length + sizeof(Hash)>;
     using map_t = trie::AtomicTrie<value_t, trie_prefix_t>;
+
 private:
     map_t keys;
     using serial_trie_t = trie::AtomicTrieReference<map_t>;
@@ -49,7 +58,12 @@ public:
 
 	void log_modification(AddressAndKey const& addrkey, StorageDelta const& mod, Hash const& src_tx_hash);
 
+    const map_t& get_keys() const
+    {
+        return keys;
+    }
 
+    Hash hash();
 	void clear();
 };
 
