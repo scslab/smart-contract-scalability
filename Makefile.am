@@ -125,7 +125,11 @@ STATE_DB_SRCS = \
 	state_db/modified_keys_list.cc \
 	state_db/new_key_cache.cc \
 	state_db/state_db.cc \
-	state_db/state_db_v2.cc
+	state_db/state_db_v2.cc \
+	state_db/typed_modification_index.cc
+
+STATE_DB_TEST_SRCS = \
+	state_db/tests/test_typed_modification_index.cc
 
 STORAGE_PROXY_SRCS = \
 	storage_proxy/proxy_applicator.cc \
@@ -190,7 +194,8 @@ TESTS_CCS = \
 	object/tests/test_revertable_object.cc \
 	tx_block/tests/test_unique_txset.cc \
 	$(HASH_SET_TEST_SRCS) \
-	$(EXPERIMENTS_TEST_SRCS)
+	$(EXPERIMENTS_TEST_SRCS) \
+	$(STATE_DB_TEST_SRCS)
 
 MAIN_CCS = \
 	main/blockstm_comparison.cc \

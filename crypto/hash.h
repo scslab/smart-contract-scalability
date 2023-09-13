@@ -52,7 +52,8 @@ hash_xdr(const xdr_type& value)
     return hash_buf;
 }
 
-[[maybe_unused]] static Hash
+[[maybe_unused]]
+static Hash
 hash_vec(std::vector<uint8_t> const& bytes)
 {
     Hash hash_buf;
@@ -67,6 +68,21 @@ hash_vec(std::vector<uint8_t> const& bytes)
         throw std::runtime_error("error in crypto_generichash");
     }
     return hash_buf;
+}
+
+[[maybe_unused]]
+static void
+hash_raw(const uint8_t* data, size_t len, uint8_t* hash_out)
+{
+    if (crypto_generichash(hash_out,
+                           sizeof(Hash),
+                           data,
+                           len,
+                           NULL,
+                           0)
+        != 0) {
+        throw std::runtime_error("error in crypto_generichash");
+    }
 }
 
 } // namespace scs
