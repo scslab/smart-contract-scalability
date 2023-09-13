@@ -24,8 +24,6 @@
 #include "utils/load_wasm.h"
 #include "utils/make_calldata.h"
 
-#include "groundhog/types.h"
-
 #include "debug/debug_utils.h"
 
 #include "threadlocal/threadlocal_context.h"

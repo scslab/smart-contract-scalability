@@ -21,8 +21,6 @@
 #include "transaction_context/execution_context.h"
 #include "transaction_context/global_context.h"
 
-#include "groundhog/types.h"
-
 #include "crypto/hash.h"
 #include "test_utils/deploy_and_commit_contractdb.h"
 #include "utils/load_wasm.h"

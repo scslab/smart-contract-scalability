@@ -22,8 +22,6 @@
 
 #include "threadlocal/threadlocal_context.h"
 
-#include "groundhog/types.h"
-
 #include "crypto/hash.h"
 
 #include "debug/debug_macros.h"

@@ -23,7 +23,6 @@
 
 #include "transaction_context/execution_context.h"
 #include "transaction_context/method_invocation.h"
-#include "groundhog/types.h"
 
 #include "wasm_api/error.h"
 

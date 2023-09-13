@@ -21,8 +21,6 @@
 
 #include "transaction_context/execution_context.h"
 
-#include "groundhog/types.h"
-
 #include <cstdint>
 #include <vector>
 

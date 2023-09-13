@@ -35,7 +35,7 @@ namespace scs
 struct GlobalContext : public utils::NonMovableOrCopyable
 {
 	ContractDB contract_db;
-	StateDBv2 state_db;
+	StateDB state_db;
 	RpcAddressDB address_db;
 
 	GlobalContext()
@@ -44,6 +44,11 @@ struct GlobalContext : public utils::NonMovableOrCopyable
 		, address_db()
 		{}
 };
+
+template<typename T>
+class TransactionContext;
+
+typedef TransactionContext<decltype(GlobalContext().state_db)> GroundhogTxContext;
 
 struct GroundhogBlockContext : public utils::NonMovableOrCopyable
 {

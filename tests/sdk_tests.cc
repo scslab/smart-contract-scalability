@@ -18,7 +18,6 @@
 
 #include "transaction_context/global_context.h"
 #include "transaction_context/execution_context.h"
-#include "groundhog/types.h"
 
 #include "phase/phases.h"
 

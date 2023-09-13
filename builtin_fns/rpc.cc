@@ -23,8 +23,6 @@
 #include "transaction_context/global_context.h"
 #include "transaction_context/transaction_context.h"
 
-#include "groundhog/types.h"
-
 #include "xdr/rpc.h"
 
 #include <utils/time.h>

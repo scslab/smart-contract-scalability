@@ -25,8 +25,6 @@
 #include "debug/debug_macros.h"
 #include "debug/debug_utils.h"
 
-#include "groundhog/types.h"
-
 #include <cstdint>
 #include <vector>
 

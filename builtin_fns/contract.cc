@@ -31,8 +31,6 @@
 #include <cstdint>
 #include <vector>
 
-#include "groundhog/types.h"
-
 namespace scs {
 
 BUILTIN_INSTANTIATE;

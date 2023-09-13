@@ -28,8 +28,6 @@
 
 #include "crypto/hash.h"
 
-#include "groundhog/types.h"
-
 namespace scs {
 
 void

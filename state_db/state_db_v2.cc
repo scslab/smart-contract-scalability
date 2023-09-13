@@ -97,6 +97,7 @@ struct UpdateFnv2
 
                 main_db_value->commit_round();
 
+                // TODO this check shouldn't be necessary
                 if (!(main_db_value->get_committed_object())) {
                     main_db_subnode->delete_value(addrkey, main_db.get_gc());
                 }
@@ -135,7 +136,7 @@ StateDBv2::commit_modifications(const ModifiedKeysList& list)
 
     std::printf("parallel modify before %lf\n", utils::measure_time(ts));
 
-    uint32_t grain_size = std::max<uint32_t>(1, list.size() / 100);
+    uint32_t grain_size = std::max<uint32_t>(1, list.size() / 1000);
     list.get_keys()
         .parallel_batch_value_modify_const<UpdateFnv2, prefix_t::len()>(
             update, grain_size);

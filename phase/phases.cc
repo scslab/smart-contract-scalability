@@ -26,8 +26,6 @@
 
 #include "transaction_context/transaction_context.h"
 
-#include "groundhog/types.h"
-
 #include <utils/time.h>
 #include <tbb/task_group.h>
 

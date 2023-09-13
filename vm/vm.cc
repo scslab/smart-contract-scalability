@@ -31,8 +31,6 @@
 #include "block_assembly/limits.h"
 #include "block_assembly/assembly_worker.h"
 
-#include "groundhog/types.h"
-
 #include <utils/time.h>
 
 namespace scs {

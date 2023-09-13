@@ -27,8 +27,6 @@
 
 #include "wasm_api/error.h"
 
-#include "groundhog/types.h"
-
 #include "xdr/storage.h"
 #include "xdr/storage_delta.h"
 

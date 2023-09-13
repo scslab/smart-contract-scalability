@@ -18,8 +18,6 @@
 
 #include "wasm_api/wasm_api.h"
 
-#include "groundhog/types.h"
-
 namespace scs
 {
 

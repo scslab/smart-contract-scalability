@@ -23,8 +23,6 @@
 #include "transaction_context/transaction_context.h"
 #include "transaction_context/execution_context.h"
 
-#include "groundhog/types.h"
-
 #define TLC_TEMPLATE 
 #define TLC_DECL ThreadlocalContextStore
 

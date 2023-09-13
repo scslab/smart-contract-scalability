@@ -24,8 +24,6 @@
 
 #include "transaction_context/execution_context.h"
 
-#include "groundhog/types.h"
-
 #include "xdr/storage_delta.h"
 
 #include "crypto/hash.h"
