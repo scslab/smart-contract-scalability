@@ -16,7 +16,7 @@
 
 #include "builtin_fns/builtin_fns.h"
 
-#include "wasm_api/wasm_api.h"
+#include <wasm_api/wasm_api.h>
 
 namespace scs
 {

@@ -18,13 +18,16 @@
 
 #include <cstdint>
 
-#include <wasm_api/wasm_api.h>
-
 #include "transaction_context/transaction_context.h"
 
 #define BUILTIN_DECL(ret) template<typename TransactionContext_t> ret BuiltinFns<TransactionContext_t>
 #define GET_TEC ThreadlocalTransactionContextStore<TransactionContext_t>::get_exec_ctx().get_transaction_context();
 #define BUILTIN_INSTANTIATE template class BuiltinFns<GroundhogTxContext>; template class BuiltinFns<SisyphusTxContext>;
+
+namespace wasm_api
+{
+	class WasmRuntime;
+}
 
 namespace scs
 {
