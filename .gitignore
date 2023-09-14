@@ -31,6 +31,7 @@ proto/*.pb.h
 #binaries
 basic
 test
+blockstm_comparison
 
 #mac
 .DS_STORE
