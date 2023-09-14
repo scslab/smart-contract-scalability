@@ -18,7 +18,9 @@
 
 #include "state_db/state_db.h"
 #include "state_db/state_db_v2.h"
+#include "state_db/sisyphus_state_db.h"
 #include "state_db/modified_keys_list.h"
+#include "state_db/typed_modification_index.h"
 
 #include "storage_proxy/transaction_rewind.h"
 
@@ -33,6 +35,7 @@ namespace scs
 
 template class StorageProxy<StateDB>;
 template class StorageProxy<StateDBv2>;
+template class StorageProxy<SisyphusStateDB>;
 
 #define PROXY_TEMPLATE template<typename StateDB_t>
 #define PROXY_DECL StorageProxy<StateDB_t>
@@ -217,13 +220,31 @@ PROXY_DECL::push_deltas_to_statedb(TransactionRewind& rewind) const
 
 PROXY_TEMPLATE
 void 
-PROXY_DECL::log_modified_keys(ModifiedKeysList& keys)
+PROXY_DECL::log_modified_keys(ModifiedKeysList& keys, const Hash&)
 {
 	assert_not_committed_local_values();
 
 	for (auto const& [k, _] : cache)
 	{
 		keys.log_key(k);
+	}
+
+	committed_local_values = true;
+}
+
+PROXY_TEMPLATE
+void 
+PROXY_DECL::log_modified_keys(TypedModificationIndex& keys, const Hash& src_hash)
+{
+	assert_not_committed_local_values();
+
+	for (auto const& [k, v] : cache)
+	{
+		auto deltas = v.applicator.get_deltas();
+		for (auto const& delta : deltas)
+		{
+			keys.log_modification(k, delta, src_hash);
+		}
 	}
 
 	committed_local_values = true;

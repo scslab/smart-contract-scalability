@@ -42,6 +42,7 @@
 namespace scs {
 
 template class ExecutionContext<GroundhogTxContext>;
+template class ExecutionContext<SisyphusTxContext>;
 
 EC_DECL()::ExecutionContext()
     : wasm_context(MAX_STACK_BYTES)
@@ -59,7 +60,7 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
         CONTRACT_INFO("creating new runtime for contract at %s",
                       debug::array_to_str(invocation.addr).c_str());
 
-        auto timestamp = utils::init_time_measurement();
+        //auto timestamp = utils::init_time_measurement();
 
         auto runtime_instance = wasm_context.new_runtime_instance(
             tx_context -> get_contract_db_proxy().get_script(invocation.addr));
@@ -100,6 +101,16 @@ ExecutionContext<GroundhogTxContext>::execute(
     GlobalContext&,
     GroundhogBlockContext&,
     std::optional<NondeterministicResults>);
+
+template
+TransactionStatus
+ExecutionContext<SisyphusTxContext>::execute(
+    Hash const&,
+    SignedTransaction const&,
+    SisyphusGlobalContext&,
+    SisyphusBlockContext&,
+    std::optional<NondeterministicResults>);
+
 
 template<typename TransactionContext_t>
 template<typename BlockContext, typename GlobalContext>

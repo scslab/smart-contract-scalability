@@ -19,8 +19,8 @@
 #include "xdr/storage.h"
 #include "xdr/types.h"
 
-#include "mtt/snapshot_trie/atomic_merkle_trie.h"
 #include "mtt/common/utils.h"
+#include "mtt/snapshot_trie/atomic_merkle_trie.h"
 
 #include <map>
 #include <optional>
@@ -31,8 +31,7 @@
 
 #include "config/static_constants.h"
 
-namespace scs
-{
+namespace scs {
 
 class TypedModificationIndex;
 
@@ -66,7 +65,7 @@ class SisyphusStateDB
 
         void write_to(std::vector<uint8_t>& digest_bytes) const
         {
-        	utils::append_unsigned_little_endian(digest_bytes, asset_supply);
+            utils::append_unsigned_little_endian(digest_bytes, asset_supply);
             trie::SnapshotTrieMetadataBase::write_to(digest_bytes);
         }
         void from_value(value_t const& obj);
@@ -75,7 +74,11 @@ class SisyphusStateDB
 
     using metadata_t = SisyphusStateMetadata;
 
-    using trie_t = trie::AtomicMerkleTrie<prefix_t, value_t, TLCACHE_SIZE, metadata_t, &validate_value>;
+    using trie_t = trie::AtomicMerkleTrie<prefix_t,
+                                          value_t,
+                                          TLCACHE_SIZE,
+                                          metadata_t,
+                                          &validate_value>;
 
   private:
     trie_t state_db;
@@ -95,4 +98,4 @@ class SisyphusStateDB
     Hash hash();
 };
 
-}
+} // namespace scs

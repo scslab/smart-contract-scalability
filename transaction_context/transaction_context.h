@@ -40,20 +40,23 @@ struct StorageCommitment : public utils::NonMovableOrCopyable
 {
 	TransactionRewind rewind;
 	StorageProxy<StateDB_t>& proxy;
+	Hash const& src_tx_hash;
 
-	StorageCommitment(StorageProxy<StateDB_t>& proxy)
+	StorageCommitment(StorageProxy<StateDB_t>& proxy, Hash const& src_tx_hash)
 		: rewind()
 		, proxy(proxy)
+		, src_tx_hash(src_tx_hash)
 		{}
 
-	void commit(ModifiedKeysList& keys)
+	template<typename ModificationLog>
+	void commit(ModificationLog& keys)
 	{
 		rewind.commit();
-		proxy.log_modified_keys(keys);
+		proxy.log_modified_keys(keys, src_tx_hash);
 	}
 };
 
-template<typename StateDB_t>
+template<typename GlobalContext_t>
 class TransactionContext
 {
 	std::vector<MethodInvocation> invocation_stack;
@@ -78,6 +81,8 @@ class TransactionContext
 
 public:
 
+	using StateDB_t = decltype(GlobalContext_t().state_db);
+
 	void consume_gas(uint64_t gas_to_consume);
 
 	std::vector<uint8_t> return_buf;
@@ -90,7 +95,7 @@ public:
 	TransactionContext(
 		SignedTransaction const& tx,
 		Hash const& tx_hash, 
-		GlobalContext& scs_data_structures,
+		GlobalContext_t& scs_data_structures,
 		uint64_t current_block,
 		std::optional<NondeterministicResults> const& = std::nullopt);
 

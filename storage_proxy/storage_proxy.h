@@ -28,8 +28,9 @@
 namespace scs
 {
 
-class ModifiedKeysList;
 class TransactionRewind;
+class ModifiedKeysList;
+class TypedModificationIndex;
 
 template<typename StateDB_t>
 class StorageProxy
@@ -81,7 +82,8 @@ public:
 	__attribute__((warn_unused_result))
 	push_deltas_to_statedb(TransactionRewind& rewind) const;
 
-	void log_modified_keys(ModifiedKeysList& keys);
+	void log_modified_keys(ModifiedKeysList& keys, const Hash&);
+	void log_modified_keys(TypedModificationIndex& keys, const Hash& src_hash);
 };
 
 } /* scs */

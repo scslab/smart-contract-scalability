@@ -15,34 +15,31 @@
  * limitations under the License.
  */
 
-namespace scs
-{
+namespace scs {
 
-void 
+void
 SisyphusStateDB::SisyphusStateMetadata::from_value(value_t const& obj)
 {
-	auto const& res = obj.get_committed_object();
-	if (res)
-	{
-		if (res-> body.type() == ObjectType::KNOWN_SUPPLY_ASSET)
-		{
-			asset_supply = res->body.asset().amount;
-		} else
-		{
-			asset_supply = 0;
-		}
-	} else {
-		asset_supply = 0;
-	}
-	trie::SnapshotTrieMetadataBase::from_value(obj);
+    auto const& res = obj.get_committed_object();
+    if (res) {
+        if (res->body.type() == ObjectType::KNOWN_SUPPLY_ASSET) {
+            asset_supply = res->body.asset().amount;
+        } else {
+            asset_supply = 0;
+        }
+    } else {
+        asset_supply = 0;
+    }
+    trie::SnapshotTrieMetadataBase::from_value(obj);
 }
 
-SisyphusStateDB::SisyphusStateMetadata& 
-SisyphusStateDB::SisyphusStateMetadata::operator+=(const SisyphusStateMetadata& other)
+SisyphusStateDB::SisyphusStateMetadata&
+SisyphusStateDB::SisyphusStateMetadata::operator+=(
+    const SisyphusStateMetadata& other)
 {
-	asset_supply += other.asset_supply;
-	trie::SnapshotTrieMetadataBase::operator+=(other);
-	return *this;
+    asset_supply += other.asset_supply;
+    trie::SnapshotTrieMetadataBase::operator+=(other);
+    return *this;
 }
 
 std::optional<StorageObject>
@@ -56,19 +53,19 @@ SisyphusStateDB::get_committed_value(const AddressAndKey& a) const
 }
 
 void
-do_nothing_if_merge(
-    const SisyphusStateDB::value_t& value) {}
+do_nothing_if_merge(const SisyphusStateDB::value_t& value)
+{}
 
 std::optional<RevertableObject::DeltaRewind>
-SisyphusStateDB::try_apply_delta(const AddressAndKey& a, const StorageDelta& delta)
+SisyphusStateDB::try_apply_delta(const AddressAndKey& a,
+                                 const StorageDelta& delta)
 {
     auto* res = state_db.get_value(a);
 
     if (!res) {
         auto* root = state_db.get_root_and_invalidate_hash();
 
-        root->template insert<&do_nothing_if_merge>(
-                a, state_db.get_gc());
+        root->template insert<&do_nothing_if_merge>(a, state_db.get_gc());
 
         res = state_db.get_value(a);
     }
@@ -80,25 +77,25 @@ SisyphusStateDB::try_apply_delta(const AddressAndKey& a, const StorageDelta& del
     return (res)->try_add_delta(delta);
 }
 
-void 
+void
 SisyphusStateDB::commit_modifications(const TypedModificationIndex& list)
 {
-	throw std::runtime_error("unimpl");
+    throw std::runtime_error("unimpl");
 }
 
 void
 SisyphusStateDB::rewind_modifications(const TypedModificationIndex& list)
 {
-	throw std::runtime_error("unimplemented");
+    throw std::runtime_error("unimplemented");
 }
 
 Hash
 SisyphusStateDB::hash()
 {
-	auto h = state_db.hash_and_normalize();
+    auto h = state_db.hash_and_normalize();
     Hash out;
     std::memcpy(out.data(), h.data(), h.size());
     return out;
 }
 
-}
+} // namespace scs

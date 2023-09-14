@@ -25,15 +25,16 @@
 
 namespace scs {
 
-template class TransactionContext<decltype(GlobalContext().state_db)>;
+template class TransactionContext<GlobalContext>;
+template class TransactionContext<SisyphusGlobalContext>;
 
-#define TC_TEMPLATE template<typename StateDB_t>
-#define TC_DECL TransactionContext<StateDB_t>
+#define TC_TEMPLATE template<typename GlobalContext_t>
+#define TC_DECL TransactionContext<GlobalContext_t>
 
 TC_TEMPLATE
 TC_DECL::TransactionContext(SignedTransaction const& tx,
                                        Hash const& tx_hash,
-                                       GlobalContext& global_context,
+                                       GlobalContext_t& global_context,
                                        uint64_t current_block,
                                        std::optional<NondeterministicResults> const& results)
     : invocation_stack()
@@ -149,13 +150,13 @@ TC_DECL::get_deployable_contract(uint32_t index) const
 }
 
 TC_TEMPLATE
-std::unique_ptr<StorageCommitment<StateDB_t>>
+std::unique_ptr<StorageCommitment<typename TC_DECL::StateDB_t>>
 TC_DECL::push_storage_deltas()
 {
     assert_not_committed();
     committed_to_statedb = true;
 
-    auto commitment = std::make_unique<StorageCommitment<StateDB_t>>(storage_proxy);
+    auto commitment = std::make_unique<StorageCommitment<StateDB_t>>(storage_proxy, tx_hash);
 
     if (!storage_proxy.push_deltas_to_statedb(commitment->rewind)) {
         return nullptr;
