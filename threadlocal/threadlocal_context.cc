@@ -37,6 +37,8 @@ TLC_DECL::get_uid()
 
 template
 class ThreadlocalTransactionContextStore<GroundhogTxContext>;
+template
+class ThreadlocalTransactionContextStore<SisyphusTxContext>;
 
 template<typename TransactionContext_t>
 template<typename... Args>
@@ -51,23 +53,8 @@ ThreadlocalTransactionContextStore<TransactionContext_t>::make_ctx(Args&... args
 
 template void
 ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
-
-/*
-TLC_TEMPLATE
-template<typename... Args>
-void
-TLC_DECL::make_ctx(Args&... args)
-{
-    auto& ctx = cache.get().ctx;
-    if (!ctx) {
-        ctx = std::unique_ptr<ExecutionContext<TransactionContext_t>>(new ExecutionContext<TransactionContext_t>(args...));
-    }
-}
-
 template void
-ThreadlocalContextStore<TransactionContext<StateDB>>::make_ctx(GlobalContext&);
-
-*/
+ThreadlocalTransactionContextStore<SisyphusTxContext>::make_ctx();
 
 TLC_TEMPLATE
 void

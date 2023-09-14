@@ -121,6 +121,9 @@ RPC_SRCS = \
 RPC_SERVER_SRCS = \
 	rpc_server/server_runner.cc
 
+SISYPHUS_VM_SRCS = \
+	sisyphus_vm/vm.cc
+
 STATE_DB_SRCS = \
 	state_db/modified_keys_list.cc \
 	state_db/new_key_cache.cc \
@@ -170,6 +173,7 @@ SRCS = \
 	$(PHASE_SRCS) \
 	$(RPC_SRCS) \
 	$(RPC_SERVER_SRCS) \
+	$(SISYPHUS_VM_SRCS) \
 	$(STATE_DB_SRCS) \
 	$(STORAGE_PROXY_SRCS) \
 	$(THREADLOCAL_SRCS) \

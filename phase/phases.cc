@@ -61,4 +61,31 @@ void phase_undo_block(GlobalContext& global_structures, GroundhogBlockContext& b
 	ThreadlocalContextStore::post_block_clear();
 }
 
+void phase_finish_block(SisyphusGlobalContext& global_structures, SisyphusBlockContext& block_structures)
+{
+	auto ts = utils::init_time_measurement();
+	tbb::task_group g;
+	g.run([&] () {
+		block_structures.tx_set.finalize();
+	});
+
+	std::printf("keylist merge %lf\n", utils::measure_time(ts));
+	global_structures.contract_db.commit();
+	std::printf("contract db commit %lf\n", utils::measure_time(ts));
+	global_structures.state_db.commit_modifications(block_structures.modified_keys_list);
+	std::printf("commit statedb %lf\n", utils::measure_time(ts));
+	g.wait();
+	std::printf("task group wait %lf\n", utils::measure_time(ts));
+	ThreadlocalContextStore::post_block_clear();
+	std::printf("post block tlcs clear %lf\n", utils::measure_time(ts));
+}
+
+void phase_undo_block(SisyphusGlobalContext& global_structures, SisyphusBlockContext& block_structures)
+{
+	//block_structures are thrown away post block
+	global_structures.contract_db.rewind();
+	global_structures.state_db.rewind_modifications(block_structures.modified_keys_list);
+	ThreadlocalContextStore::post_block_clear();
+}
+
 } /* scs */

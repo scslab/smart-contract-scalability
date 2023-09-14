@@ -21,8 +21,14 @@ namespace scs
 
 class GlobalContext;
 struct GroundhogBlockContext;
+class SisyphusGlobalContext;
+struct SisyphusBlockContext;
+
 
 void phase_finish_block(GlobalContext& global_structures, GroundhogBlockContext& block_structures);
 void phase_undo_block(GlobalContext& global_structures, GroundhogBlockContext& block_structures);
+
+void phase_finish_block(SisyphusGlobalContext& global_structures, SisyphusBlockContext& block_structures);
+void phase_undo_block(SisyphusGlobalContext& global_structures, SisyphusBlockContext& block_structures);
 
 } /* scs */

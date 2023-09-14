@@ -188,7 +188,7 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
 	auto ts = utils::init_time_measurement();
     ThreadlocalContextStore::get_rate_limiter().prep_for_notify();
     ThreadlocalContextStore::enable_rpcs();
-    StaticAssemblyWorkerCache::start_assembly_threads(mempool, global_context, *current_block_context, limits, n_threads);
+    StaticAssemblyWorkerCache<GlobalContext, GroundhogBlockContext>::start_assembly_threads(mempool, global_context, *current_block_context, limits, n_threads);
     std::printf("start assembly threads time %lf\n", utils::measure_time(ts));
     ThreadlocalContextStore::get_rate_limiter().start_threads(n_threads);
 
@@ -204,7 +204,7 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
     ThreadlocalContextStore::stop_rpcs();
 
     std::printf("stop time %lf\n", utils::measure_time(ts));
-    StaticAssemblyWorkerCache::wait_for_stop_assembly_threads();
+    StaticAssemblyWorkerCache<GlobalContext, GroundhogBlockContext>::wait_for_stop_assembly_threads();
     std::printf("done join assembly threads %lf\n", utils::measure_time(ts));
 
     //phase_finish_block(global_context, *current_block_context);
@@ -269,7 +269,7 @@ VirtualMachine::~VirtualMachine()
 {
     ThreadlocalContextStore::get_rate_limiter().stop_threads();
     ThreadlocalContextStore::stop_rpcs();
-    StaticAssemblyWorkerCache::wait_for_stop_assembly_threads();
+    StaticAssemblyWorkerCache<GlobalContext, GroundhogBlockContext>::wait_for_stop_assembly_threads();
     // execution context used to have dangling reference to GlobalContext without this
     ThreadlocalContextStore::clear_entire_context<GroundhogTxContext>();
 }

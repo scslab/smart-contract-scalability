@@ -80,6 +80,7 @@ struct GroundhogBlockContext : public utils::NonMovableOrCopyable
 		tx_set.clear();
 		modified_keys_list.clear();
 	}
+	using tx_context_t = GroundhogTxContext;
 };
 
 struct SisyphusBlockContext : public utils::NonMovableOrCopyable
@@ -100,6 +101,7 @@ struct SisyphusBlockContext : public utils::NonMovableOrCopyable
 		tx_set.clear();
 		modified_keys_list.clear();
 	}
+	using tx_context_t = SisyphusTxContext;
 };
 
 } /* scs */

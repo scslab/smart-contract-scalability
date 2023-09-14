@@ -196,6 +196,7 @@ StateDBv2::rewind_modifications(const ModifiedKeysList& list)
         .parallel_batch_value_modify_const<RewindFnv2, prefix_t::len()>(rewind,
                                                                       1);
     state_db.hash_and_normalize();
+    state_db.do_gc();
 }
 
 Hash

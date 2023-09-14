@@ -63,6 +63,10 @@ public:
         return keys;
     }
 
+    size_t size() const {
+    	return keys.size();
+    }
+
     Hash hash();
 	void clear();
 };

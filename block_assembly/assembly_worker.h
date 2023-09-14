@@ -30,19 +30,18 @@ namespace scs
 
 class AssemblyLimits;
 class Mempool;
-class GlobalContext;
-class GroundhogBlockContext;
 
+template<typename GlobalContext_t, typename BlockContext_t>
 class AssemblyWorker
 {
 	Mempool& mempool;
-	GlobalContext& global_context;
-	GroundhogBlockContext& block_context;
+	GlobalContext_t& global_context;
+	BlockContext_t& block_context;
 	AssemblyLimits& limits;
 
 public:
 
-	AssemblyWorker(Mempool& mempool, GlobalContext& global_context, GroundhogBlockContext& block_context, AssemblyLimits& limits)
+	AssemblyWorker(Mempool& mempool, GlobalContext_t& global_context, BlockContext_t& block_context, AssemblyLimits& limits)
 		: mempool(mempool)
 		, global_context(global_context)
 		, block_context(block_context)
@@ -53,9 +52,10 @@ public:
 	void run();
 };
 
+template<typename worker_t>
 class AsyncAssemblyWorker : public utils::AsyncWorker
 {
-	std::optional<AssemblyWorker> worker;
+	std::optional<worker_t> worker;
 
 	bool exists_work_to_do() override final
 	{
@@ -80,7 +80,7 @@ public:
 		terminate_worker();
 	}
 
-	void start_worker(AssemblyWorker w)
+	void start_worker(worker_t w)
 	{
 		std::lock_guard lock(mtx);
 		worker.emplace(w);
@@ -90,27 +90,30 @@ public:
 	using AsyncWorker::wait_for_async_task;
 };
 
+template<typename GlobalContext_t, typename BlockContext_t>
 class
 StaticAssemblyWorkerCache 
 {
-	inline static std::vector<std::unique_ptr<AsyncAssemblyWorker>> workers;
+	using worker_t = AssemblyWorker<GlobalContext_t, BlockContext_t>;
+
+	inline static std::vector<std::unique_ptr<AsyncAssemblyWorker<worker_t>>> workers;
 	inline static std::mutex mtx;
 
 	StaticAssemblyWorkerCache() = delete;
 
 public:
 
-	static void start_assembly_threads(Mempool& mp, GlobalContext& gc, GroundhogBlockContext& bc, AssemblyLimits& limits, uint32_t n_threads)
+	static void start_assembly_threads(Mempool& mp, GlobalContext_t& gc, BlockContext_t& bc, AssemblyLimits& limits, uint32_t n_threads)
 	{
 		std::lock_guard lock(mtx);
 		while(workers.size() < n_threads)
 		{
-			workers.push_back(std::make_unique<AsyncAssemblyWorker>());
+			workers.push_back(std::make_unique<AsyncAssemblyWorker<worker_t>>());
 		}
 
 		for (uint32_t i = 0; i < n_threads; i++)
 		{
-			workers[i] -> start_worker(AssemblyWorker(mp, gc, bc, limits));
+			workers[i] -> start_worker(worker_t(mp, gc, bc, limits));
 		}
 	}
 

@@ -30,8 +30,9 @@
 
 namespace scs {
 
+template<typename GlobalContext_t, typename BlockContext_t>
 void
-AssemblyWorker::run()
+AssemblyWorker<GlobalContext_t, BlockContext_t>::run()
 {
     auto& limiter = ThreadlocalContextStore::get_rate_limiter();
 
@@ -54,21 +55,25 @@ AssemblyWorker::run()
             return;
         }
 
-        ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
+        ThreadlocalTransactionContextStore<typename BlockContext_t::tx_context_t>::make_ctx();
+        auto& exec_ctx = ThreadlocalTransactionContextStore<typename BlockContext_t::tx_context_t>::get_exec_ctx();
 
         auto result = exec_ctx.execute(hash_xdr(*tx), *tx, global_context, block_context);
         if (result == TransactionStatus::SUCCESS) {
             reservation->commit();
         }
-	else {
-		std::printf("tx failed\n");
-	}
+    	else {
+    		std::printf("tx failed\n");
+    	}
     }
 }
 
+template class AssemblyWorker<GlobalContext, GroundhogBlockContext>;
+template class AssemblyWorker<SisyphusGlobalContext, SisyphusBlockContext>;
+
+template<typename worker_t>
 void
-AsyncAssemblyWorker::run()
+AsyncAssemblyWorker<worker_t>::run()
 {
     while (true) {
         std::unique_lock lock(mtx);
@@ -91,5 +96,11 @@ AsyncAssemblyWorker::run()
         cv.notify_all();
     }
 }
+
+template class
+AsyncAssemblyWorker<AssemblyWorker<GlobalContext, GroundhogBlockContext>>;
+
+template class
+AsyncAssemblyWorker<AssemblyWorker<SisyphusGlobalContext, SisyphusBlockContext>>;
 
 } // namespace scs
