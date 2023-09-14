@@ -25,9 +25,9 @@
 #include "sdk/constexpr.h"
 #include "sdk/asset.h"
 
-#include "sisyphus_erc20.h"
+#include "erc20.h"
 
-namespace sisyphus_erc20
+namespace erc20
 {
 
 using sdk::Address;
