@@ -207,18 +207,6 @@ MAIN_CCS = \
 	main/test.cc \
 	main/sisyphus_payment_sim.cc
 
-TEST_WATS = \
-	$(wildcard */tests/wat/*.wat)
-
-TEST_WASMS = ${TEST_WATS:.wat=.wasm}
-
-TEST_RUST_WASMS = \
-	contracts/built_wasms/test_log.wasm
-
-contracts/built_wasms/%.wasm : $(wildcard contracts/*/src/*.rs) $(wildcard rust_sdk/*/src/*.rs) contracts/Makefile
-	cd contracts/ && \
-	make $(notdir $@)
-
 .wat.wasm:
 	wat2wasm -o $@ $<
 
@@ -309,7 +297,7 @@ bin_PROGRAMS = \
 	sisyphus_payment_sim
 
 vm/genesis.o: $(CC_WASMS:.cc=.wasm)
-main/test.o : $(CC_WASMS:.cc=.wasm)
+main/test.o : $(CC_WASMS:.cc=.wasm) $(WASM_API_TEST_WASMS)
 
 COMPLETE_SRCS = $(SRCS) $(TESTS_CCS) $(TEST_UTILS_SRCS)
 
