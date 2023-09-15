@@ -32,6 +32,7 @@ proto/*.pb.h
 basic
 test
 blockstm_comparison
+sisyphus_payment_sim
 
 #mac
 .DS_STORE
