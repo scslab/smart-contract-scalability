@@ -17,6 +17,7 @@
  */
 
 #include "vm/vm.h"
+#include "sisyphus_vm/vm.h"
 
 #include "xdr/types.h"
 
@@ -49,7 +50,7 @@ class PaymentExperiment
         uint16_t size_inc);
 
     std::pair<std::vector<TxSetEntry>, std::vector<TxSetEntry>>
-    make_accounts_and_mints();
+    make_accounts_and_mints(const char* erc20_contract);
 
     SignedTransaction make_random_payment(uint64_t expiration_time,
                                           uint64_t nonce,
@@ -59,6 +60,8 @@ class PaymentExperiment
     PaymentExperiment(size_t num_accounts, uint16_t hs_size_inc = 0);
 
     std::unique_ptr<VirtualMachine> prepare_vm();
+
+    std::unique_ptr<SisyphusVirtualMachine> prepare_sisyphus_vm();
 
     std::vector<SignedTransaction> gen_transaction_batch(
         size_t batch_size,

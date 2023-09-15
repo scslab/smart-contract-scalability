@@ -204,7 +204,8 @@ TESTS_CCS = \
 
 MAIN_CCS = \
 	main/blockstm_comparison.cc \
-	main/test.cc
+	main/test.cc \
+	main/sisyphus_payment_sim.cc
 
 TEST_WATS = \
 	$(wildcard */tests/wat/*.wat)
@@ -293,8 +294,6 @@ LDADD = $(xdrpp_LIBS) \
 	$(grpcpp_LIBS) \
 	$(protobuf_LIBS)
 
-#LDFLAGS += -Wl,--shared
-
 metering/target/release/libinject_metering.a : metering/inject_metering/src/*.rs
 	cd metering && \
 	cargo build --release --package inject_metering
@@ -306,24 +305,20 @@ $(MAIN_CCS:.cc=.o) : $(XH_FILES)
 bin_PROGRAMS = \
 	test \
 	basic \
-	blockstm_comparison
+	blockstm_comparison \
+	sisyphus_payment_sim
 
 vm/genesis.o: $(CC_WASMS:.cc=.wasm)
 main/test.o : $(CC_WASMS:.cc=.wasm)
 
 COMPLETE_SRCS = $(SRCS) $(TESTS_CCS) $(TEST_UTILS_SRCS)
 
-$(mtt_TEST_CCS:.cc=.o) : CXXFLAGS += $(mtt_TEST_CFLAGS)
+#$(mtt_TEST_CCS:.cc=.o) : CXXFLAGS += $(mtt_TEST_CFLAGS)
 
-#filter_perf_SOURCES = $(SRCS) main/filter_perf.cc
 test_SOURCES = main/test.cc $(COMPLETE_SRCS) $(utility_TEST_CCS) $(mtt_TEST_CCS) $(WASM_API_TEST_CCS)
-basic_SOURCES = main/basic.cc $(COMPLETE_SRCS)
 blockstm_comparison_SOURCES = main/blockstm_comparison.cc $(SRCS)
-
-#linux
-#test_LDFLAGS= -Wl,--whole-archive,$(merkle_trie_toolkit_LIBS)  -Wl,--no-whole-archive
-#mac
-#test_LDFLAGS= -Wl,-force_load $(merkle_trie_toolkit_LIBS)
+sisyphus_payment_sim_SOURCES = main/sisyphus_payment_sim.cc $(SRCS)
+basic_SOURCES = main/basic.cc $(COMPLETE_SRCS)
 
 clean-local:
 	cd metering && \

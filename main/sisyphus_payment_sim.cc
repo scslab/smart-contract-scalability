@@ -21,7 +21,7 @@ run_experiment(uint32_t num_accounts,
 {
     PaymentExperiment e(num_accounts, size_boost);
 
-    auto vm = e.prepare_vm();
+    auto vm = e.prepare_sisyphus_vm();
 
     if (!vm) {
         throw std::runtime_error("failed to initialize virtual machine!");
@@ -49,7 +49,6 @@ run_experiment(uint32_t num_accounts,
     auto ts = utils::init_time_measurement();
 
     Block block_buffer;
-    // std::vector<std::unique_ptr<Block>> gc;
 
     for (size_t i = 0; i < num_blocks; i++) {
         AssemblyLimits limits(batch_size, INT64_MAX);
@@ -148,7 +147,7 @@ main(int argc, const char** argv)
             std::printf("start %lu %lu %lu\n", acct, batch, nthread);
             uint32_t trials = 15;
             // 10 trials, 5 warmup
-	    uint16_t boost = 0;
+	        uint16_t boost = 0;
             auto results = run_experiment(acct, batch, nthread, trials, boost);
             double res = 0;
             for (size_t i = 5; i < trials; i++) {

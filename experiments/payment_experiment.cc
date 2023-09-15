@@ -43,9 +43,9 @@ TxSetEntry make_txset_entry(SignedTransaction const& stx) {
 }
 
 Block
-make_create_transactions()
+make_create_transactions(const char* erc20_contract)
 {
-    auto erc20 = load_wasm_from_file("cpp_contracts/erc20.wasm");
+    auto erc20 = load_wasm_from_file(erc20_contract);
     auto wallet
         = load_wasm_from_file("cpp_contracts/payment_experiment/payment.wasm");
 
@@ -75,9 +75,9 @@ make_create_transactions()
 }
 
 TxSetEntry
-make_deploy_erc20_transaction()
+make_deploy_erc20_transaction(const char* erc20_contract)
 {
-    auto c = load_wasm_from_file("cpp_contracts/erc20.wasm");
+    auto c = load_wasm_from_file(erc20_contract);
 
     Hash h = hash_xdr(*c);
 
@@ -178,7 +178,7 @@ make_mint_transaction(Address const& wallet_addr,
 }
 
 std::pair<std::vector<TxSetEntry>, std::vector<TxSetEntry>>
-PaymentExperiment::make_accounts_and_mints()
+PaymentExperiment::make_accounts_and_mints(const char* erc20_contract)
 {
     std::vector<TxSetEntry> accounts_out;
     std::vector<TxSetEntry> mints_out;
@@ -186,7 +186,7 @@ PaymentExperiment::make_accounts_and_mints()
     Hash wallet_contract_hash = hash_xdr(
         *load_wasm_from_file("cpp_contracts/payment_experiment/payment.wasm"));
     Hash token_contract_hash
-        = hash_xdr(*load_wasm_from_file("cpp_contracts/erc20.wasm"));
+        = hash_xdr(*load_wasm_from_file(erc20_contract));
 
     Address token_addr = compute_contract_deploy_address(
         DEPLOYER_ADDRESS, token_contract_hash, UINT64_MAX);
@@ -267,7 +267,7 @@ PaymentExperiment::prepare_vm()
 
     vm->init_default_genesis();
 
-    if (!vm->try_exec_tx_block(make_create_transactions())) {
+    if (!vm->try_exec_tx_block(make_create_transactions("cpp_contracts/erc20.wasm"))) {
         return nullptr;
     }
 
@@ -275,7 +275,7 @@ PaymentExperiment::prepare_vm()
 
     Block deploy_erc20;
     deploy_erc20.transactions
-        = { make_deploy_erc20_transaction() };
+        = { make_deploy_erc20_transaction("cpp_contracts/erc20.wasm") };
 
     if (!vm->try_exec_tx_block(deploy_erc20)) {
         return nullptr;
@@ -283,7 +283,7 @@ PaymentExperiment::prepare_vm()
 
     std::printf("made deploy erc20\n");
 
-    auto [wallet_txs, mint_txs] = make_accounts_and_mints();
+    auto [wallet_txs, mint_txs] = make_accounts_and_mints("cpp_contracts/erc20.wasm");
 
     const size_t batch_exec_size = 100'000;
     for (size_t i = 0; i < (wallet_txs.size() / batch_exec_size) + 1; i++) {
@@ -318,6 +318,66 @@ PaymentExperiment::prepare_vm()
 
     return vm;
 }
+
+std::unique_ptr<SisyphusVirtualMachine>
+PaymentExperiment::prepare_sisyphus_vm()
+{
+    auto vm = std::make_unique<SisyphusVirtualMachine>();
+
+    vm->init_default_genesis();
+
+    if (!vm->try_exec_tx_block(make_create_transactions("cpp_contracts/sisyphus_erc20.wasm"))) {
+        return nullptr;
+    }
+
+    std::printf("made create txs\n");
+
+    Block deploy_erc20;
+    deploy_erc20.transactions
+        = { make_deploy_erc20_transaction("cpp_contracts/sisyphus_erc20.wasm") };
+
+    if (!vm->try_exec_tx_block(deploy_erc20)) {
+        return nullptr;
+    }
+
+    std::printf("made deploy erc20\n");
+
+    auto [wallet_txs, mint_txs] = make_accounts_and_mints("cpp_contracts/sisyphus_erc20.wasm");
+
+    const size_t batch_exec_size = 100'000;
+    for (size_t i = 0; i < (wallet_txs.size() / batch_exec_size) + 1; i++) {
+        std::fprintf(stderr, "wallet exec batch %lu\n", i);
+        Block block;
+        size_t start = batch_exec_size * i;
+        size_t end = std::min(batch_exec_size * (i + 1), wallet_txs.size());
+
+        block.transactions.insert(
+            block.transactions.end(), wallet_txs.begin() + start, wallet_txs.begin() + end);
+        if (!vm->try_exec_tx_block(block)) {
+            return nullptr;
+        }
+    }
+
+    std::printf("made wallets\n");
+
+    for (size_t i = 0; i < (mint_txs.size() / batch_exec_size) + 1; i++) {
+        std::fprintf(stderr, "mint exec batch %lu\n", i);
+        Block block;
+        size_t start = batch_exec_size * i;
+        size_t end = std::min(batch_exec_size * (i + 1), mint_txs.size());
+
+        block.transactions.insert(block.transactions.end(), mint_txs.begin() + start, mint_txs.begin() + end);
+
+        if (!vm->try_exec_tx_block(block)) {
+            return nullptr;
+        }
+    }
+
+    std::printf("funded wallets\n");
+
+    return vm;
+}
+
 
 std::vector<SignedTransaction>
 PaymentExperiment::gen_transaction_batch(size_t batch_size,
