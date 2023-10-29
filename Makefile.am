@@ -181,7 +181,8 @@ SRCS = \
 	$(TX_BLOCK_SRCS) \
 	$(VM_SRCS) \
 	$(WASM3_SRCS) \
-	$(WASM_API_SRCS)
+	$(WASM_API_SRCS) \
+	$(utility_CCS)
 
 TEST_UTILS_SRCS = \
 	test_utils/deploy_and_commit_contractdb.cc
@@ -240,9 +241,6 @@ CC_WASMS = \
 		-Wl,--no-entry -fno-exceptions -Wl,--allow-undefined \
 		wasi/wasi-sdk/lib/clang/15.0.6/lib/wasi/libclang_rt.builtins-wasm32.a
 
-#	-nostdlib 
-#	-nostdlib++ 
-
 #TODO parity-wasm serialization doesn't support bulk memory ops
 # This ruins the metering (it outputs wasm in an invalid section ordering)
 # Could fix if I care
@@ -300,8 +298,6 @@ vm/genesis.o: $(CC_WASMS:.cc=.wasm)
 main/test.o : $(CC_WASMS:.cc=.wasm) $(WASM_API_TEST_WASMS)
 
 COMPLETE_SRCS = $(SRCS) $(TESTS_CCS) $(TEST_UTILS_SRCS)
-
-#$(mtt_TEST_CCS:.cc=.o) : CXXFLAGS += $(mtt_TEST_CFLAGS)
 
 test_SOURCES = main/test.cc $(COMPLETE_SRCS) $(utility_TEST_CCS) $(mtt_TEST_CCS) $(WASM_API_TEST_CCS)
 blockstm_comparison_SOURCES = main/blockstm_comparison.cc $(SRCS)

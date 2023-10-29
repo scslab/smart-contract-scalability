@@ -48,9 +48,9 @@ make_index_key(AddressAndKey const& addrkey,
 
     data += sizeof(AddressAndKey);
 
-    static_assert(xdr::xdr_traits<DeltaType>::enum_values().size() < 256,
+    static_assert(xdr::xdr_traits<DeltaType>::enum_values.size() < 256,
                   "too many enum vals");
-    static_assert(validate_enum(xdr::xdr_traits<DeltaType>::enum_values()),
+    static_assert(validate_enum(xdr::xdr_traits<DeltaType>::enum_values),
                   "invalid enum vals");
 
     // conversion int32_t -> uint8_t safe because of check above
