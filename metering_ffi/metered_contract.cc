@@ -20,6 +20,9 @@ namespace scs {
 
 namespace detail {
 
+/**
+ * Imported from the rust library under ../metering
+ */
 extern "C"
 {
 

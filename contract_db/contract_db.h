@@ -49,6 +49,15 @@ class ContractDB
     {
         metered_contract_ptr_t contract;
 
+        /**
+         * One might consider swapping this for a hash of the data, instead.
+         * The merkle trie library stores all of the intermediate node hashes,
+         * so (because these values never change) a contract only has copy_data
+         * called on it once.  Hashing it before copying it over
+         * would trade the cost of a hash against the cost of a memcpy,
+         * but regardless both are one-time costs and at the moment
+         * are not particularly significant in experiments.
+         */
         void copy_data(std::vector<uint8_t>& buf) const
         {
             if (contract)
@@ -66,7 +75,6 @@ class ContractDB
 
     using contract_map_t
         = trie::MerkleTrie<prefix_t, value_t, metadata_t>;
-    //    = std::map<wasm_api::Hash, std::shared_ptr<const Contract>>;
 
     contract_map_t addresses_to_contracts_map;
     std::map<wasm_api::Hash, metered_contract_ptr_t> hashes_to_contracts_map;

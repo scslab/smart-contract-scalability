@@ -55,7 +55,13 @@ pub extern "C" fn add_metering_ext(data_ptr: *const u8, len: u32) -> metered_con
         }
     } {
         // https://doc.rust-lang.org/std/mem/fn.forget.html
-        Some(v) => std::mem::ManuallyDrop::new(v),
+        Some(v) => {
+            if v.capacity() <= u32::MAX as usize {
+                std::mem::ManuallyDrop::new(v)
+            } else {
+                return metered_contract::null();
+            }
+        },
         None => {
             return metered_contract::null();
         }
