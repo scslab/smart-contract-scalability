@@ -40,7 +40,7 @@ AC_ARG_ENABLE([rpc],
   yes) rpc=true ;;
   no)  rpc=false ;;
   *) AC_MSG_ERROR([bad value ${enableval} for --enable-rpc]) ;;
-esac],[rpc=true])
+esac],[rpc=false])
 AM_CONDITIONAL([USE_RPC_AM], [test x$use-rpc = xtrue])
 
 PKG_PROG_PKG_CONFIG
@@ -57,10 +57,10 @@ if test "x$rpc" == "xtrue" ; then
 	PKG_CHECK_MODULES([grpcpp], [grpc++])
 	PKG_CHECK_MODULES([protobuf], [protobuf])
 	AC_CHECK_PROG([PROTOC], [protoc], [protoc])
-	AC_DEFINE_UNQUOTED([USE_RPC], [1], "Define if RPCs enabled")
+	AC_DEFINE_UNQUOTED([USE_RPC], [1], "Define to 1 if RPCs enabled")
 else
 	AC_MSG_NOTICE(rpcs disabled)
- 	AC_DEFINE_UNQUOTED([USE_RPC], [0], "Define if RPCs enabled")
+ 	AC_DEFINE_UNQUOTED([USE_RPC], [0], "Define to 1 if RPCs enabled")
 fi
 
 
