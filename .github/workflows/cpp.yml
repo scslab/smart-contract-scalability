@@ -1,0 +1,36 @@
+name: C++ CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with: 
+        submodules: "recursive"
+    - name: install packages
+      run: sudo apt-get install -y git g++-13 autoconf libtool pkg-config libsodium-dev liblmdb-dev libgmp-dev libtbb-dev
+    - name: install libfyaml
+      run: git clone https://github.com/pantoniou/libfyaml.git && cd libfyaml && ./bootstrap.sh && ./configure && make -j && sudo make install
+    - name: install catch2
+      run: git clone https://github.com/catchorg/Catch2.git && cd Catch2 && cmake -Bbuild -H. -DBUILD_TESTING=OFF && sudo cmake --build build/ --target install -j
+    - name: autogen
+      run: ./autogen.sh
+    - name: configure
+      run: ./configure
+    - name: install wasi
+      run: cd wasi && ./linux_install.sh
+    - name: make
+      run: make
+    - name: make test -j
+      run: make test
+    - name: run tests
+      run: ./test
+    
