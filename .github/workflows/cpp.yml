@@ -16,7 +16,7 @@ jobs:
       with: 
         submodules: "recursive"
     - name: install packages
-      run: sudo apt-get install -y git g++-13 autoconf libtool pkg-config libsodium-dev liblmdb-dev libgmp-dev libtbb-dev
+      run: sudo apt-get install -y git g++-13 autoconf libtool pkg-config libsodium-dev liblmdb-dev libgmp-dev libtbb-dev wabt
     - name: install libfyaml
       run: git clone https://github.com/pantoniou/libfyaml.git && cd libfyaml && ./bootstrap.sh && ./configure && make -j && sudo make install
     - name: install catch2
