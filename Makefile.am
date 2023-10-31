@@ -239,7 +239,7 @@ CC_WASMS = \
 		-nostdlib++ \
 		-nostdlib \
 		-Wl,--no-entry -fno-exceptions -Wl,--allow-undefined \
-		wasi/wasi-sdk/lib/clang/15.0.6/lib/wasi/libclang_rt.builtins-wasm32.a
+		wasi/wasi-sdk/lib/clang/16/lib/wasi/libclang_rt.builtins-wasm32.a
 
 #TODO parity-wasm serialization doesn't support bulk memory ops
 # This ruins the metering (it outputs wasm in an invalid section ordering)
