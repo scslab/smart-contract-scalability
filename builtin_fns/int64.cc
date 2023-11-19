@@ -37,6 +37,26 @@ namespace scs {
 
 BUILTIN_INSTANTIATE;
 
+/**
+ * Implements the Nonnegative Integer primitive.
+ * 
+ * Values stored on the ledger are 64-bit _signed_ integers.
+ * Transactions modify these with `set_add(x,y)` operations.
+ * This sets the value of the integer to x, and then adds y to it.
+ * 
+ * All transactions in a block must set the value to the same
+ * integer, if multiple transactions call set_add(x, y_i) on the same value.
+ * 
+ * After a block of transactions, if x is nonnegative,
+ * then the runtime guarantees that $x + \sum_i y_i$ must be nonnegative.
+ * If x is set to a negative integer, then each $y_i$ must be nonnegative.
+ * 
+ * The choice to allow negative values of x is in the name of adding flexibility.
+ * This choice makes it slightly easier for accounts to implement some applications,
+ * such as debts (incurred e.g. by accumulated interest), and it does not 
+ * make any other applications more difficult
+ * (a contract can always wrap calls to set_add by an assertion that x>=0).
+ **/
 BUILTIN_DECL(void)::scs_nonnegative_int64_set_add(uint32_t key_offset,
                                           /* key_len = 32 */
                                           int64_t set_value,
