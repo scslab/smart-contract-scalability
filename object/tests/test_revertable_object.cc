@@ -744,4 +744,35 @@ TEST_CASE("asset object from nonempty", "[object]")
     }
 }
 
+TEST_CASE("hashset size limit increases respected", "[object]")
+{
+    RevertableObject object;
+
+    auto make_insert = [](uint64_t i) {
+        return make_hash_set_insert(hash_xdr<uint64_t>(i), 0);
+    };
+
+    auto r = object.try_add_delta(make_hash_set_increase_limit(64));
+    REQUIRE(!!r);
+    r->commit();
+
+    for (size_t i = 0; i < 64; i++)
+    {
+        auto h = object.try_add_delta(make_insert(i));
+        REQUIRE(!!h);
+        h -> commit();
+    }
+
+    REQUIRE(!object.try_add_delta(make_insert(64)));
+
+    object.commit_round();
+
+    for (size_t i = 64; i < 128; i++)
+    {
+        auto h = object.try_add_delta(make_insert(i));
+        REQUIRE(!!h);
+        h -> commit();
+    }
+}
+
 } // namespace scs
