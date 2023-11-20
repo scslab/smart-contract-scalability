@@ -65,14 +65,14 @@ std::optional<RevertableObject::DeltaRewind>
 SisyphusStateDB::try_apply_delta(const AddressAndKey& a,
                                  const StorageDelta& delta)
 {
-    auto* res = state_db.get_value(a);
+    auto* res = state_db.get_value(a, true);
 
     if (!res) {
         auto* root = state_db.get_root_and_invalidate_hash(current_timestamp);
 
         root->template insert<&do_nothing_if_merge>(a, state_db.get_gc(), current_timestamp, state_db.get_storage());
 
-        res = state_db.get_value(a);
+        res = state_db.get_value(a, true);
     }
 
     if (res == nullptr) {
@@ -116,7 +116,7 @@ struct SisyphusUpdateFn
 
         auto apply_lambda = [this, main_db_subnode, &work_root](
                                 const prefix_t& addrkey) {
-            auto* main_db_value = main_db_subnode->get_value(addrkey, main_db.get_storage());
+            auto* main_db_value = main_db_subnode->get_value(addrkey, main_db.get_storage(), false);
             if (main_db_value) {
                 main_db_subnode->invalidate_hash_to_key(addrkey, current_timestamp);
 
@@ -162,7 +162,7 @@ struct SisyphusRewindFn
 
         auto apply_lambda = [this, main_db_subnode](const prefix_t& addrkey) {
             auto* main_db_value
-                = main_db_subnode->get_value(addrkey, main_db.get_storage());
+                = main_db_subnode->get_value(addrkey, main_db.get_storage(), false);
             if (main_db_value) {
                 // no need to invalidate hashes when rewinding,
                 // as we are merely rewinding to committed values.
