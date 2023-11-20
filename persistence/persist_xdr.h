@@ -83,6 +83,7 @@ class AsyncPersistXDR : public utils::AsyncWorker
     void clear_folder()
     {
         utils::clear_directory(folder);
+        make_folder();
     }
 
     using AsyncWorker::wait_for_async_task;
