@@ -98,10 +98,15 @@ struct SisyphusUpdateFn
         // doesn't guarantee hash invalidation.
 
         static_assert(!std::is_same<decltype(work_root.get_prefix()), prefix_t>::value, "not same");
-        auto* main_db_subnode = main_db.get_subnode_ref_and_invalidate_hash(
-            work_root.get_prefix(), work_root.get_prefix_len(), current_timestamp);
 
-        if (main_db_subnode->get_prefix_len() != std::min(prefix_t::len(), work_root.get_prefix_len()))
+        auto statedb_query_len = std::min(prefix_t::len(), work_root.get_prefix_len()); 
+
+        prefix_t work_root_prefix = work_root.get_prefix();
+
+        auto* main_db_subnode = main_db.get_subnode_ref_and_invalidate_hash(
+            work_root_prefix, statedb_query_len, current_timestamp);
+
+        if (main_db_subnode->get_prefix_len() != statedb_query_len)
         {
             std::printf("len mismatch got %s wanted %s\n",
                         main_db_subnode->get_prefix()
