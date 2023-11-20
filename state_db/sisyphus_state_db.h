@@ -24,6 +24,7 @@
 #include "mtt/memcached_snapshot_trie/serialize_disk_interface.h"
 #include "mtt/memcached_snapshot_trie/memcache_trie.h"
 #include "mtt/memcached_snapshot_trie/durable_interface.h"
+#include "mtt/memcached_snapshot_trie/null_interface.h"
 
 #include "state_db/async_keys_to_disk.h"
 
@@ -103,7 +104,9 @@ class SisyphusStateDB
 
     using metadata_t = SisyphusStateMetadata;
     */
+
     using metadata_t = trie::SnapshotTrieMetadataBase;
+    using null_storage_t = trie::NullInterface<sizeof(AddressAndKey)>;
     using storage_t = trie::SerializeDiskInterface<sizeof(AddressAndKey), TLCACHE_SIZE>;
 
     using trie_t = trie::MemcacheTrie<prefix_t,

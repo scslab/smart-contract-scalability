@@ -91,6 +91,9 @@ class AsyncKeysToDisk : public utils::AsyncWorker
         cv.notify_all();
     }
 
+    void log_keys(trie::NullInterface<sizeof(AddressAndKey)>& iface, uint32_t timestamp)
+    {}
+
     void clear_folder()
     {
         utils::clear_directory(folder);

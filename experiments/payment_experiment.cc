@@ -324,9 +324,11 @@ PaymentExperiment::prepare_sisyphus_vm()
 {
     auto vm = std::make_unique<SisyphusVirtualMachine>();
 
+    const char* erc20_contract = "cpp_contracts/erc20.wasm"; //"cpp_contracts/sisyphus_erc20.wasm"; // version with asset implementation
+
     vm->init_default_genesis();
 
-    if (!vm->try_exec_tx_block(make_create_transactions("cpp_contracts/sisyphus_erc20.wasm"))) {
+    if (!vm->try_exec_tx_block(make_create_transactions(erc20_contract))) {
         return nullptr;
     }
 
@@ -334,7 +336,7 @@ PaymentExperiment::prepare_sisyphus_vm()
 
     Block deploy_erc20;
     deploy_erc20.transactions
-        = { make_deploy_erc20_transaction("cpp_contracts/sisyphus_erc20.wasm") };
+        = { make_deploy_erc20_transaction(erc20_contract) };
 
     if (!vm->try_exec_tx_block(deploy_erc20)) {
         return nullptr;
@@ -342,7 +344,7 @@ PaymentExperiment::prepare_sisyphus_vm()
 
     std::printf("made deploy erc20\n");
 
-    auto [wallet_txs, mint_txs] = make_accounts_and_mints("cpp_contracts/sisyphus_erc20.wasm");
+    auto [wallet_txs, mint_txs] = make_accounts_and_mints(erc20_contract);
 
     const size_t batch_exec_size = 100'000;
     for (size_t i = 0; i < (wallet_txs.size() / batch_exec_size) + 1; i++) {
