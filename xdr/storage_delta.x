@@ -119,6 +119,15 @@ union StorageDeltaClass switch (ObjectType type)
 };
 
 
+struct IndexedModification
+{
+    AddressAndKey addr;
+    Hash tx_hash;
+    StorageDelta delta;
+};
+
+typedef IndexedModification ModIndexLog<>;
+
 
 /*
 

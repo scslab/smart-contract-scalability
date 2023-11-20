@@ -21,6 +21,7 @@
 
 namespace scs {
 
+/*
 void
 SisyphusStateDB::SisyphusStateMetadata::from_value(value_t const& obj)
 {
@@ -44,10 +45,10 @@ SisyphusStateDB::SisyphusStateMetadata::operator+=(
     asset_supply += other.asset_supply;
     trie::SnapshotTrieMetadataBase::operator+=(other);
     return *this;
-}
+} */
 
 std::optional<StorageObject>
-SisyphusStateDB::get_committed_value(const AddressAndKey& a) const
+SisyphusStateDB::get_committed_value(const AddressAndKey& a)
 {
     auto const* res = state_db.get_value(a);
     if (res) {
@@ -67,9 +68,9 @@ SisyphusStateDB::try_apply_delta(const AddressAndKey& a,
     auto* res = state_db.get_value(a);
 
     if (!res) {
-        auto* root = state_db.get_root_and_invalidate_hash();
+        auto* root = state_db.get_root_and_invalidate_hash(current_timestamp);
 
-        root->template insert<&do_nothing_if_merge>(a, state_db.get_gc());
+        root->template insert<&do_nothing_if_merge>(a, state_db.get_gc(), current_timestamp, state_db.get_storage());
 
         res = state_db.get_value(a);
     }
@@ -85,6 +86,8 @@ SisyphusStateDB::try_apply_delta(const AddressAndKey& a,
 struct SisyphusUpdateFn
 {
     SisyphusStateDB::trie_t& main_db;
+    uint32_t current_timestamp;
+
     using prefix_t = SisyphusStateDB::prefix_t;
     using index_trie_t = TypedModificationIndex::map_t;
 
@@ -96,7 +99,7 @@ struct SisyphusUpdateFn
 
         static_assert(!std::is_same<decltype(work_root.get_prefix()), prefix_t>::value, "not same");
         auto* main_db_subnode = main_db.get_subnode_ref_and_invalidate_hash(
-            work_root.get_prefix(), work_root.get_prefix_len());
+            work_root.get_prefix(), work_root.get_prefix_len(), current_timestamp);
 
         if (main_db_subnode->get_prefix_len() != std::min(prefix_t::len(), work_root.get_prefix_len()))
         {
@@ -113,15 +116,15 @@ struct SisyphusUpdateFn
 
         auto apply_lambda = [this, main_db_subnode, &work_root](
                                 const prefix_t& addrkey) {
-            auto* main_db_value = main_db_subnode->get_value(addrkey);
+            auto* main_db_value = main_db_subnode->get_value(addrkey, main_db.get_storage());
             if (main_db_value) {
-                main_db_subnode->invalidate_hash_to_key(addrkey);
+                main_db_subnode->invalidate_hash_to_key(addrkey, current_timestamp);
 
                 main_db_value->commit_round();
 
                 // TODO this check shouldn't be necessary
                 if (!(main_db_value->get_committed_object())) {
-                    main_db_subnode->delete_value(addrkey, main_db.get_gc());
+                    main_db_subnode->delete_value(addrkey, current_timestamp, main_db.get_gc(), main_db.get_storage());
                 }
             } else {
                 std::printf("there was no value returned from %s\n", addrkey.to_string(prefix_t::len()).c_str());
@@ -134,8 +137,8 @@ struct SisyphusUpdateFn
         std::vector<uint8_t> digest_bytes;
 
         work_root.apply_to_keys(apply_lambda, prefix_t::len());
-        main_db_subnode->compute_hash_and_normalize(main_db.get_gc(),
-                                                    digest_bytes);
+        main_db_subnode->compute_hash_and_normalize(main_db.get_gc(), 0,
+                                                    digest_bytes, main_db.get_storage());
     }
 };
 
@@ -147,6 +150,7 @@ struct SisyphusUpdateFn
 struct SisyphusRewindFn
 {
     SisyphusStateDB::trie_t& main_db;
+    uint32_t current_timestamp;
 
     using prefix_t = SisyphusStateDB::prefix_t;
 
@@ -154,11 +158,11 @@ struct SisyphusRewindFn
     void operator()(const Applyable& work_root)
     {
         auto* main_db_subnode = main_db.get_subnode_ref_and_invalidate_hash(
-            work_root.get_prefix(), work_root.get_prefix_len());
+            work_root.get_prefix(), work_root.get_prefix_len(), current_timestamp);
 
         auto apply_lambda = [this, main_db_subnode](const prefix_t& addrkey) {
             auto* main_db_value
-                = main_db_subnode->get_value(addrkey);
+                = main_db_subnode->get_value(addrkey, main_db.get_storage());
             if (main_db_value) {
                 // no need to invalidate hashes when rewinding,
                 // as we are merely rewinding to committed values.
@@ -178,7 +182,7 @@ SisyphusStateDB::commit_modifications(const TypedModificationIndex& list)
 {
     auto ts = utils::init_time_measurement();
 
-    SisyphusUpdateFn update(state_db);
+    SisyphusUpdateFn update(state_db, current_timestamp);
 
     std::printf("parallel modify before %lf\n", utils::measure_time(ts));
 
@@ -189,7 +193,7 @@ SisyphusStateDB::commit_modifications(const TypedModificationIndex& list)
 
     std::printf("parallel modify after %lf\n", utils::measure_time(ts));
 
-    state_db.hash_and_normalize();
+    state_db.hash_and_normalize(0);
 
     std::printf("root hash %lf\n", utils::measure_time(ts));
 
@@ -200,19 +204,19 @@ SisyphusStateDB::commit_modifications(const TypedModificationIndex& list)
 void
 SisyphusStateDB::rewind_modifications(const TypedModificationIndex& list)
 {
-    SisyphusRewindFn rewind(state_db);
+    SisyphusRewindFn rewind(state_db, current_timestamp);
 
     list.get_keys()
         .parallel_batch_value_modify_const<SisyphusRewindFn, prefix_t::len()>(rewind,
                                                                       1);
-    state_db.hash_and_normalize();
+    state_db.hash_and_normalize(0);
     state_db.do_gc();
 }
 
 Hash
 SisyphusStateDB::hash()
 {
-    auto h = state_db.hash_and_normalize();
+    auto h = state_db.hash_and_normalize(0);
     Hash out;
     std::memcpy(out.data(), h.data(), h.size());
     return out;

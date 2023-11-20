@@ -21,6 +21,11 @@
 
 #include "mtt/common/utils.h"
 #include "mtt/snapshot_trie/atomic_merkle_trie.h"
+#include "mtt/memcached_snapshot_trie/serialize_disk_interface.h"
+#include "mtt/memcached_snapshot_trie/memcache_trie.h"
+#include "mtt/memcached_snapshot_trie/durable_interface.h"
+
+#include "state_db/async_keys_to_disk.h"
 
 #include <map>
 #include <optional>
@@ -34,6 +39,29 @@
 namespace scs {
 
 class TypedModificationIndex;
+
+class SisyphusValueWrapper : public RevertableObject
+{
+    using slice_t = trie::DurableValueSlice;
+
+    static StorageObject from_slice(const slice_t& slice) {
+        throw std::runtime_error("unimplemented");
+    }
+
+public:
+
+    using RevertableObject::RevertableObject;
+
+    SisyphusValueWrapper(slice_t const& slice) : RevertableObject(from_slice(slice)) {}
+
+    void copy_data(std::vector<uint8_t>& buf) const
+    {
+        auto const& res = get_committed_object();
+        if (res) {
+            xdr::append_xdr_to_opaque(buf, *res);
+        }
+    }
+};
 
 class SisyphusStateDB
 {
@@ -50,14 +78,15 @@ class SisyphusStateDB
         return (bool)v.get_committed_object();
     }
 
-    template<typename T>
-    using value_wrapper_t = trie::OptionalValue<T, &validate_value>;
+    //template<typevalue_wrapper_tname T>
+    //using  = trie::OptionalValue<T, &validate_value>;
 
   public:
     using prefix_t = trie::ByteArrayPrefix<sizeof(AddressAndKey)>;
 
-    using value_t = trie::BetterSerializeWrapper<RevertableObject, &serialize>;
+    using value_t = SisyphusValueWrapper; // trie::BetterSerializeWrapper<RevertableObject, &serialize>;
 
+/*
     struct SisyphusStateMetadata : public trie::SnapshotTrieMetadataBase
     {
         using uint128_t = unsigned __int128;
@@ -73,19 +102,31 @@ class SisyphusStateDB
     };
 
     using metadata_t = SisyphusStateMetadata;
+    */
+    using metadata_t = trie::SnapshotTrieMetadataBase;
+    using storage_t = trie::SerializeDiskInterface<sizeof(AddressAndKey), TLCACHE_SIZE>;
 
-    using trie_t = trie::AtomicMerkleTrie<prefix_t,
+    using trie_t = trie::MemcacheTrie<prefix_t,
                                           value_t,
                                           TLCACHE_SIZE,
+                                          storage_t,
                                           metadata_t,
                                           &validate_value>;
 
   private:
+    uint32_t current_timestamp = 0;
+
     trie_t state_db;
 
   public:
+
+    SisyphusStateDB() 
+        : current_timestamp(0)
+        , state_db(current_timestamp)
+        {}
+
     std::optional<StorageObject> get_committed_value(
-        const AddressAndKey& a) const;
+        const AddressAndKey& a);
 
     std::optional<RevertableObject::DeltaRewind> try_apply_delta(
         const AddressAndKey& a,
@@ -96,6 +137,15 @@ class SisyphusStateDB
     void rewind_modifications(const TypedModificationIndex& list);
 
     Hash hash();
+
+    void set_timestamp(uint32_t ts) {
+        current_timestamp = ts;
+    }
+
+    void log_keys(AsyncKeysToDisk& logger)
+    {
+        logger.log_keys(state_db.get_storage(), current_timestamp);
+    }
 };
 
 } // namespace scs

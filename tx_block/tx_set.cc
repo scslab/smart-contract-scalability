@@ -75,7 +75,7 @@ struct ResultListInsertFn
     }
 };
 
-static TxSetEntry const& get_txset_entry(const LockableTxSetEntry& entry)
+static TxSetEntry const& get_txset_entry(trie::ByteArrayPrefix<sizeof(Hash)> const&, const LockableTxSetEntry& entry)
 {
     return entry.get();
 }

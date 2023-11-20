@@ -26,6 +26,8 @@
 
 #include "config/static_constants.h"
 
+#include "state_db/modification_metadata.h"
+
 namespace scs
 {
 
@@ -43,7 +45,7 @@ public:
     constexpr static size_t modification_key_length = 32 + 8; // len(hash) + len(tag), for hashset entries
 
     using trie_prefix_t = trie::ByteArrayPrefix<sizeof(AddressAndKey) + 1 + modification_key_length + sizeof(Hash)>;
-    using map_t = trie::AtomicTrie<value_t, trie_prefix_t>;
+    using map_t = trie::AtomicTrie<value_t, trie_prefix_t, ModificationMetadata>;
 
 private:
     map_t keys;
@@ -52,7 +54,6 @@ private:
     using cache_t = utils::ThreadlocalCache<serial_trie_t, TLCACHE_SIZE>;
 
     cache_t cache;
-
 
 public:
 
@@ -67,10 +68,14 @@ public:
     	return keys.size();
     }
 
+    void save_modifications(ModIndexLog& out);
+
     Hash hash();
 	void clear();
 };
 
+
+// public for testing
 TypedModificationIndex::trie_prefix_t
 make_index_key(AddressAndKey const& addrkey, StorageDelta const& delta, Hash const& src_tx_hash);
 

@@ -28,6 +28,8 @@
 
 #include "mempool/mempool.h"
 
+#include "state_db/async_keys_to_disk.h"
+
 namespace scs {
 
 class AssemblyLimits;
@@ -51,6 +53,8 @@ class SisyphusVirtualMachine : public utils::NonMovableOrCopyable
 
     Hash prev_block_hash;
 
+    AsyncKeysToDisk keys_persist;
+
     void assert_initialized() const;
 
     bool validate_tx_block(Block const& txs);
@@ -69,7 +73,7 @@ class SisyphusVirtualMachine : public utils::NonMovableOrCopyable
       return mempool;
     }
 
-    BlockHeader propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& out);
+    BlockHeader propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& out, ModIndexLog& out_modlog);
 
     uint64_t get_current_block_number() const;
 

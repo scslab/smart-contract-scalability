@@ -23,6 +23,8 @@
 #include <thread>
 #include <cinttypes>
 
+#include "state_db/sisyphus_state_db.h"
+
 namespace scs {
 
 void
@@ -32,6 +34,7 @@ print_configs()
     std::printf("USE_RPC      = %d\n", USE_RPC);
     std::printf("HW THREADS   = %u\n", std::thread::hardware_concurrency());
     std::printf("TLCACHE_SIZE = %" PRIu32 "\n", TLCACHE_SIZE);
+    std::printf("Sisyphus SDB iface = %s\n", typeid(SisyphusStateDB::storage_t).name());
 }
 
 } // namespace scs

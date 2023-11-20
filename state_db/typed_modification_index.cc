@@ -118,8 +118,25 @@ TypedModificationIndex::log_modification(
 {
     auto& local_trie = cache.get(keys);
     auto key = make_index_key(addrkey, value_t(mod), src_tx_hash);
+
     local_trie.insert(key, mod);
 }
+
+void 
+TypedModificationIndex::save_modifications(ModIndexLog& out)
+{
+    auto get_fn = [](trie_prefix_t const& prefix, StorageDelta const& delta) -> IndexedModification
+    {
+        IndexedModification out;
+        std::memcpy(out.addr.data(), prefix.underlying_data_ptr(), sizeof(AddressAndKey));
+        std::memcpy(out.tx_hash.data(), prefix.underlying_data_ptr() + trie_prefix_t::size_bytes() - sizeof(Hash), sizeof(Hash));
+        out.delta = delta;
+        return out;
+    };
+
+    keys.accumulate_values_parallel<decltype(out), get_fn>(out, 10);
+}
+
 
 Hash 
 TypedModificationIndex::hash()

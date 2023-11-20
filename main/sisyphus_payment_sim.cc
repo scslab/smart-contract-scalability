@@ -8,6 +8,8 @@
 
 #include "block_assembly/limits.h"
 
+#include "persistence/persist_xdr.h"
+
 #include <tbb/global_control.h>
 
 using namespace scs;
@@ -32,7 +34,6 @@ run_experiment(uint32_t num_accounts,
     const uint32_t tx_batch_buffer
         = 10 + (num_blocks) * (num_threads) / (batch_size);
 
-
     for (size_t i = 0; i < num_blocks + tx_batch_buffer; i++) {
         if (mp.add_txs(e.gen_transaction_batch(batch_size, i + vm -> get_current_block_number())) != batch_size) {
             throw std::runtime_error("failed to add txs to batch!");
@@ -49,18 +50,30 @@ run_experiment(uint32_t num_accounts,
     auto ts = utils::init_time_measurement();
 
     Block block_buffer;
+    ModIndexLog log_buffer;
+
+    AsyncPersistXDR<Block> block_persist("block_logs/");
+    block_persist.clear_folder();
+
+    AsyncPersistXDR<ModIndexLog> log_persist("modlog_logs/");
+    log_persist.clear_folder();
 
     for (size_t i = 0; i < num_blocks; i++) {
         AssemblyLimits limits(batch_size, INT64_MAX);
 
         auto ts_local = utils::init_time_measurement();
 
+        uint32_t blk_number = vm -> get_current_block_number();
+
     	auto header
-                = vm->propose_tx_block(limits, 100'000, num_threads, block_buffer);
+                = vm->propose_tx_block(limits, 100'000, num_threads, block_buffer, log_buffer);
         std::printf("local measurement %lf\n", utils::measure_time(ts_local));
 
         uint64_t blk_size = block_buffer.transactions.size();
         double duration = utils::measure_time(ts);
+
+        block_persist.log(block_buffer, blk_number);
+        log_persist.log(log_buffer, blk_number);
 
         std::printf("duration: %lf size %lu rate %lf remaining_mempool %lu \n",
                     duration,

@@ -71,7 +71,7 @@ UniqueTxSet::clear()
     txs_merged = false;
 }
 
-static TxSetEntry const& get_txset_entry(const TxSetEntry& entry)
+static TxSetEntry const& get_txset_entry(trie::ByteArrayPrefix<sizeof(Hash)> const&, const TxSetEntry& entry)
 {
     return entry;
 }

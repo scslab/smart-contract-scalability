@@ -168,6 +168,15 @@ SisyphusVirtualMachine::try_exec_tx_block(Block const& block)
     if (!res) {
         phase_undo_block(global_context, *current_block_context);
         advance_block_number();
+
+        // It should be the case (and it is for our current implementation of the memcache trie)
+        // that a no-op block doesn't log anything to storage.
+        // (This is true because we don't call compute_hash() unless we commit to the block).
+        // A more complicated eviction policy might push things to storage.
+        // It's not wrong if that happens, but we just don't want the in-memory buffer to 
+        // build up too much.
+        global_context.state_db.set_timestamp(current_block_context -> block_number);
+        
         return std::nullopt;
     } 
 
@@ -179,16 +188,22 @@ SisyphusVirtualMachine::try_exec_tx_block(Block const& block)
     prev_block_hash = hash_xdr(out);
 
     advance_block_number();
+
+    auto ts = utils::init_time_measurement();
+    global_context.state_db.log_keys(keys_persist);
+    global_context.state_db.set_timestamp(current_block_context -> block_number);
+    std::printf("in try_exec wait for statedb log time %lf\n", utils::measure_time(ts));
     return out;
 }
 
 BlockHeader
-SisyphusVirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& block_out)
+SisyphusVirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& block_out, ModIndexLog& out_modlog)
 {
 	auto ts = utils::init_time_measurement();
     ThreadlocalContextStore::get_rate_limiter().prep_for_notify();
     ThreadlocalContextStore::enable_rpcs();
-    StaticAssemblyWorkerCache<SisyphusGlobalContext, SisyphusBlockContext>::start_assembly_threads(mempool, global_context, *current_block_context, limits, n_threads);
+    StaticAssemblyWorkerCache<SisyphusGlobalContext, SisyphusBlockContext>::start_assembly_threads(
+        mempool, global_context, *current_block_context, limits, n_threads);
     std::printf("start assembly threads time %lf\n", utils::measure_time(ts));
     ThreadlocalContextStore::get_rate_limiter().start_threads(n_threads);
 
@@ -225,6 +240,7 @@ SisyphusVirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_ti
 			     out.block_number = current_block_context -> block_number;
    			      out.prev_header_hash = prev_block_hash;
     			 out.modified_keys_hash = current_block_context -> modified_keys_list.hash();
+                 current_block_context -> modified_keys_list.save_modifications(out_modlog);
 		    });
 
 	global_context.contract_db.commit();
@@ -241,6 +257,10 @@ SisyphusVirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_ti
     std::printf("final wait time %lf\n", utils::measure_time(ts));
     advance_block_number();
     std::printf("done proposal %lf\n", utils::measure_time(ts));
+
+    global_context.state_db.log_keys(keys_persist);
+    global_context.state_db.set_timestamp(current_block_context -> block_number);
+    std::printf("wait for statedb log time %lf\n", utils::measure_time(ts));
     return out;
 }
 

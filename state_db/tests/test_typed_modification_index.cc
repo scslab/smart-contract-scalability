@@ -163,4 +163,75 @@ TEST_CASE("test key format asset neg", "[index]")
             == 0);
 }
 
+TEST_CASE("test modification metadata", "[index]")
+{
+    AddressAndKey expect_addr = test::indextest_make_addrkey(2);
+    AddressAndKey other_addr = test::indextest_make_addrkey(3);
+
+    auto h1 = hash_xdr<uint64_t>(1);
+    auto h2 = hash_xdr<uint64_t>(2);
+
+    TypedModificationIndex index;
+
+    SECTION("add nnint")
+    {
+        index.log_modification(expect_addr, make_nonnegative_int64_set_add(1, 100), h1);
+        index.log_modification(expect_addr, make_nonnegative_int64_set_add(1, 200), h2);
+        index.log_modification(expect_addr, make_asset_add(0), h1);
+        index.log_modification(other_addr, make_nonnegative_int64_set_add(2, 50), h1);
+
+        index.hash();
+
+        auto const& keys = index.get_keys();
+
+        auto query
+             = make_index_key(expect_addr, make_nonnegative_int64_set_add(1, 100), h1);
+
+        REQUIRE(keys.get_metadata(query, TypedModificationIndex::trie_prefix_t::len().len).get_nnint64() == 100);
+
+        REQUIRE(keys.get_metadata(query, 512 + 8 + 64 + 56).get_nnint64() == 300);
+
+
+        REQUIRE(keys.get_metadata(query, 516).get_active() == ModificationMetadata::ActiveMeta::NONE);
+        REQUIRE(keys.get_metadata(query, 0).get_active() == ModificationMetadata::ActiveMeta::NONE);
+    }
+    SECTION("add nnint duplicate")
+    {
+        index.log_modification(expect_addr, make_nonnegative_int64_set_add(1, 100), h1);
+        index.log_modification(expect_addr, make_nonnegative_int64_set_add(1, 100), h2);
+
+        index.hash();
+
+        auto const& keys = index.get_keys();
+
+        auto query
+             = make_index_key(expect_addr, make_nonnegative_int64_set_add(1, 100), h1);
+
+        REQUIRE(keys.get_metadata(query, TypedModificationIndex::trie_prefix_t::len().len).get_nnint64() == 100);
+
+        REQUIRE(keys.get_metadata(query, 512 + 8 + 40 * 8).get_nnint64() == 200);
+
+        REQUIRE(keys.get_metadata(query, 0).get_nnint64() == 200);
+    }
+
+    SECTION("hs limit")
+    {
+        index.log_modification(expect_addr, make_hash_set_increase_limit(1), h1);
+        index.log_modification(expect_addr, make_hash_set_increase_limit(2), h2);
+
+        index.hash();
+
+        auto const& keys = index.get_keys();
+
+        auto query
+             = make_index_key(expect_addr, make_hash_set_increase_limit(1), h1);
+
+        REQUIRE(keys.get_metadata(query, TypedModificationIndex::trie_prefix_t::len().len).get_hs_limit() == 1);
+
+        REQUIRE(keys.get_metadata(query, 512 + 8 + 28).get_hs_limit() == 3);
+
+        REQUIRE(keys.get_metadata(query, 0).get_hs_limit() == 3);
+    }
+}
+
 } // namespace scs
