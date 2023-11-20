@@ -56,9 +56,10 @@ class AsyncKeysToDisk : public utils::AsyncWorker
 				throw std::runtime_error("failed to open file");
 			}
 
-			for (auto const& buf : work_item)
+			for (auto& buf : work_item)
 			{
 				std::fwrite(buf.data(), sizeof(buf.data()[0]), buf.size(), f);
+				buf.clear();
 			}
 
 			std::fflush(f);
