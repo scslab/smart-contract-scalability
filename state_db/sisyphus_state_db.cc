@@ -116,7 +116,7 @@ struct SisyphusUpdateFn
 
         auto apply_lambda = [this, main_db_subnode, &work_root](
                                 const prefix_t& addrkey) {
-            auto* main_db_value = main_db_subnode->get_value(addrkey, main_db.get_storage(), false);
+            auto* main_db_value = main_db_subnode->get_value(addrkey, main_db.get_storage(), true);
             if (main_db_value) {
                 main_db_subnode->invalidate_hash_to_key(addrkey, current_timestamp);
 
@@ -162,7 +162,7 @@ struct SisyphusRewindFn
 
         auto apply_lambda = [this, main_db_subnode](const prefix_t& addrkey) {
             auto* main_db_value
-                = main_db_subnode->get_value(addrkey, main_db.get_storage(), false);
+                = main_db_subnode->get_value(addrkey, main_db.get_storage(), true);
             if (main_db_value) {
                 // no need to invalidate hashes when rewinding,
                 // as we are merely rewinding to committed values.
