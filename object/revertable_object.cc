@@ -21,6 +21,8 @@
 #include "object/object_defaults.h"
 #include "object/comparators.h"
 
+#include "debug/debug_utils.h"
+
 #include "hash_set/utils.h"
 
 #include <utils/assert.h>
@@ -713,13 +715,19 @@ RevertableObject::commit_round()
             // no op
             break;
         case ObjectType::HASH_SET: {
-            uint64_t new_size = size_increase.load(std::memory_order_relaxed)
+	    uint64_t size_inc = size_increase.load(std::memory_order_relaxed);
+            uint64_t new_size = size_inc
                                 + committed_base->body.hash_set().max_size;
 
             committed_base->body.hash_set().max_size
                 = std::min((uint64_t)MAX_HASH_SET_SIZE, new_size);
 
             auto new_hashes_list = new_hashes.get_hashes();
+
+	    if (size_inc >0)
+	    {
+		    new_hashes.resize(new_size);
+	    }
 
             auto& h_list = committed_base->body.hash_set().hashes;
 

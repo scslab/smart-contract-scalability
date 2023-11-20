@@ -35,17 +35,17 @@ storage_object_to_str(scs::StorageObject const& obj)
     switch (obj.body.type()) {
         case scs::ObjectType::RAW_MEMORY:
             return "[raw_memory: "
-                   + debug::array_to_str(obj.body.raw_memory_storage().data) + "]";
+                   + debug::array_to_str(obj.body.raw_memory_storage().data)
+                   + "]";
         case scs::ObjectType::NONNEGATIVE_INT64:
             return "[nn_int64: " + std::to_string(obj.body.nonnegative_int64())
                    + "]";
-        case scs::ObjectType::HASH_SET:
-        {
+        case scs::ObjectType::HASH_SET: {
             std::string out = "hash_set: max_size = ";
             out += std::to_string(obj.body.hash_set().max_size);
-            for (auto const& h : obj.body.hash_set().hashes)
-            {
-                out += " <" + array_to_str(h.hash.data(), h.hash.size()) + " " + std::to_string(h.index) + ">";
+            for (auto const& h : obj.body.hash_set().hashes) {
+                out += " <" + array_to_str(h.hash.data(), h.hash.size()) + " "
+                       + std::to_string(h.index) + ">";
             }
             return out + "]";
         }
@@ -56,22 +56,28 @@ storage_object_to_str(scs::StorageObject const& obj)
 std::string
 storage_delta_to_str(scs::StorageDelta const& delta)
 {
-    switch(delta.type())
-    {
+    switch (delta.type()) {
         case scs::DeltaType::DELETE_LAST:
             return "[delete_last]";
         case scs::DeltaType::RAW_MEMORY_WRITE:
-            return "[raw memory write: " + debug::array_to_str(delta.data()) + "]";
+            return "[raw memory write: " + debug::array_to_str(delta.data())
+                   + "]";
         case scs::DeltaType::NONNEGATIVE_INT64_SET_ADD:
-            return "[nn_int64: set " + std::to_string(delta.set_add_nonnegative_int64().set_value) +
-                " " + std::to_string(delta.set_add_nonnegative_int64().delta) + "]";
+            return "[nn_int64: set "
+                   + std::to_string(delta.set_add_nonnegative_int64().set_value)
+                   + " "
+                   + std::to_string(delta.set_add_nonnegative_int64().delta)
+                   + "]";
         case scs::DeltaType::HASH_SET_INSERT:
-            return "[hs insert: " + debug::array_to_str(delta.hash().hash) + " tag " + std::to_string(delta.hash().index) + "]";
+            return "[hs insert: " + debug::array_to_str(delta.hash().hash)
+                   + " tag " + std::to_string(delta.hash().index) + "]";
+        case scs::DeltaType::HASH_SET_INCREASE_LIMIT:
+            return "[hs limit inc: " + std::to_string(delta.limit_increase())
+                   + "]";
         default:
             return "[unimplemented]";
     }
 }
-
 
 std::string
 array_to_str(const unsigned char* array, const int len)
