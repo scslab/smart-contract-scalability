@@ -30,6 +30,7 @@ ContractDB::ContractDB()
     : addresses_to_contracts_map()
     , hashes_to_contracts_map()
     , uncommitted_contracts()
+    , persistence("contract_log/")
 {}
 
 void
@@ -119,6 +120,8 @@ ContractDB::commit_registration(wasm_api::Hash const& new_address,
     }
 
     addresses_to_contracts_map.insert(new_address, value_t(ptr));
+
+    persistence.log_deploy(new_address, contract_hash);
 }
 
 bool
@@ -144,10 +147,12 @@ ContractDB::check_committed_contract_exists(const Hash& contract_hash) const
 void
 ContractDB::add_new_uncommitted_contract(
     wasm_api::Hash const& h, 
-    std::shared_ptr<const MeteredContract> new_contract)
+    std::shared_ptr<const MeteredContract> new_contract,
+    std::shared_ptr<const Contract> new_unmetered_contract)
 {
     has_uncommitted_modifications.store(true, std::memory_order_relaxed);
     uncommitted_contracts.add_new_contract(h, new_contract);
+    persistence.log_create(h, new_unmetered_contract);
 }
 
 bool
@@ -159,10 +164,11 @@ ContractDB::check_address_open_for_deployment(const wasm_api::Hash& addr) const
 }
 
 void
-ContractDB::commit()
+ContractDB::commit(uint32_t timestamp)
 {
     uncommitted_contracts.commit(*this);
     has_uncommitted_modifications.store(false, std::memory_order_relaxed);
+    persistence.write(timestamp);
 }
 
 void
@@ -170,6 +176,7 @@ ContractDB::rewind()
 {
     uncommitted_contracts.clear();
     has_uncommitted_modifications.store(false, std::memory_order_relaxed);
+    persistence.nowrite();
 }
 
 Hash

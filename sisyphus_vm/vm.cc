@@ -243,7 +243,7 @@ SisyphusVirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_ti
                  current_block_context -> modified_keys_list.save_modifications(out_modlog);
 		    });
 
-	global_context.contract_db.commit();
+	global_context.contract_db.commit(get_current_block_number());
 	global_context.state_db.commit_modifications(current_block_context->modified_keys_list);
 	ThreadlocalContextStore::post_block_clear();
 

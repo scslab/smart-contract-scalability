@@ -37,6 +37,7 @@ class ContractCreateClosure : public utils::NonCopyable
 {
     wasm_api::Hash h;
     std::shared_ptr<const MeteredContract> contract;
+    std::shared_ptr<const Contract> unmetered_contract;
     ContractDB& contract_db;
 
     bool do_create = false;
@@ -44,6 +45,7 @@ class ContractCreateClosure : public utils::NonCopyable
   public:
     ContractCreateClosure(wasm_api::Hash h, 
                           std::shared_ptr<const MeteredContract> contract,
+                          std::shared_ptr<const Contract> unmetered_contract,
                           ContractDB& contract_db);
 
     ContractCreateClosure(ContractCreateClosure&& other);
@@ -75,7 +77,7 @@ class ContractDBProxy
 {
     ContractDB& contract_db;
 
-    std::map<wasm_api::Hash, std::shared_ptr<const MeteredContract>> new_contracts;
+    std::map<wasm_api::Hash, std::pair<std::shared_ptr<const MeteredContract>, std::shared_ptr<const Contract>>> new_contracts;
 
     std::map<wasm_api::Hash, wasm_api::Hash> new_deployments;
 
@@ -86,7 +88,8 @@ class ContractDBProxy
                          const wasm_api::Hash& contract_hash);
 
     ContractCreateClosure __attribute__((warn_unused_result))
-    push_create_contract(wasm_api::Hash const& h, std::shared_ptr<const MeteredContract> contract);
+    push_create_contract(wasm_api::Hash const& h, 
+      std::pair<std::shared_ptr<const MeteredContract>, std::shared_ptr<const Contract>> const& contract);
 
     bool is_committed = false;
     void assert_not_committed() const;

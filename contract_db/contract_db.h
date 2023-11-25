@@ -33,6 +33,8 @@
 
 #include "metering_ffi/metered_contract.h"
 
+#include "contract_db/contract_persistence.h"
+
 namespace scs {
 
 class ContractDB
@@ -83,6 +85,8 @@ class ContractDB
 
     std::atomic<bool> has_uncommitted_modifications = false;
 
+    AsyncPersistContracts persistence;
+
     void assert_not_uncommitted_modifications() const;
 
     friend class UncommittedContracts;
@@ -108,7 +112,8 @@ class ContractDB
 
     void add_new_uncommitted_contract(
         wasm_api::Hash const& h,
-        std::shared_ptr<const MeteredContract> new_contract);
+        std::shared_ptr<const MeteredContract> new_contract,
+        std::shared_ptr<const Contract> new_unmetered_contract);
 
     wasm_api::Script get_script_by_hash(const wasm_api::Hash& hash) const;
 
@@ -123,7 +128,7 @@ class ContractDB
 
     bool check_committed_contract_exists(const Hash& contract_hash) const;
 
-    void commit();
+    void commit(uint32_t timestamp);
 
     void rewind();
 

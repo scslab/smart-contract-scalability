@@ -41,7 +41,7 @@ void phase_finish_block(GlobalContext& global_structures, GroundhogBlockContext&
 	});
 	block_structures.modified_keys_list.merge_logs();
 	std::printf("keylist merge %lf\n", utils::measure_time(ts));
-	global_structures.contract_db.commit();
+	global_structures.contract_db.commit(block_structures.block_number);
 	std::printf("contract db commit %lf\n", utils::measure_time(ts));
 	global_structures.state_db.commit_modifications(block_structures.modified_keys_list);
 	std::printf("commit statedb %lf\n", utils::measure_time(ts));
@@ -70,7 +70,7 @@ void phase_finish_block(SisyphusGlobalContext& global_structures, SisyphusBlockC
 	});
 
 	std::printf("keylist merge %lf\n", utils::measure_time(ts));
-	global_structures.contract_db.commit();
+	global_structures.contract_db.commit(block_structures.block_number);
 	std::printf("contract db commit %lf\n", utils::measure_time(ts));
 	global_structures.state_db.commit_modifications(block_structures.modified_keys_list);
 	std::printf("commit statedb %lf\n", utils::measure_time(ts));

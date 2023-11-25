@@ -68,7 +68,7 @@ install_genesis_contracts(ContractDB& contract_db)
         rewind.commit();
     }
 
-    contract_db.commit();
+    contract_db.commit(0);
 }
 
 } // namespace scs

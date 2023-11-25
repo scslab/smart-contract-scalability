@@ -29,15 +29,18 @@ namespace scs {
 ContractCreateClosure::ContractCreateClosure(
     wasm_api::Hash h, 
     std::shared_ptr<const MeteredContract> contract,
+    std::shared_ptr<const Contract> unmetered_contract,
     ContractDB& contract_db)
     : h(h)
     , contract(contract)
+    , unmetered_contract(unmetered_contract)
     , contract_db(contract_db)
 {}
 
 ContractCreateClosure::ContractCreateClosure(ContractCreateClosure&& other)
     : h(other.h)
     , contract(other.contract)
+    , unmetered_contract(other.unmetered_contract)
     , contract_db(other.contract_db)
     , do_create(other.do_create)
 {
@@ -53,7 +56,7 @@ ContractCreateClosure::commit()
 ContractCreateClosure::~ContractCreateClosure()
 {
     if (do_create) {
-        contract_db.add_new_uncommitted_contract(h, std::move(contract));
+        contract_db.add_new_uncommitted_contract(h, std::move(contract), std::move(unmetered_contract));
     }
 }
 
@@ -133,14 +136,15 @@ Hash
 ContractDBProxy::create_contract(std::shared_ptr<const Contract> contract)
 {
     Hash h = hash_xdr(*contract);
-    new_contracts[h] = std::make_unique<const MeteredContract>(contract);
+    new_contracts[h] = std::make_pair(std::make_shared<const MeteredContract>(contract), contract);
     return h;
 }
 
 ContractCreateClosure
-ContractDBProxy::push_create_contract(wasm_api::Hash const& h, std::shared_ptr<const MeteredContract> contract)
+ContractDBProxy::push_create_contract(
+    wasm_api::Hash const& h, std::pair<std::shared_ptr<const MeteredContract>, std::shared_ptr<const Contract>> const& contract)
 {
-    return ContractCreateClosure(h, contract, contract_db);
+    return ContractCreateClosure(h, contract.first, contract.second, contract_db);
 }
 
 bool
@@ -179,7 +183,7 @@ ContractDBProxy::get_script(const wasm_api::Hash& address) const
     if (s_it == new_contracts.end()) {
         return contract_db.get_script_by_hash(script_hash);
     }
-    return {s_it->second->data(), s_it -> second-> size() };
+    return {s_it->second.first->data(), s_it -> second.first -> size() };
 }
 
 void

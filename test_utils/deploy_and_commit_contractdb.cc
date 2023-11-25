@@ -50,7 +50,7 @@ deploy_and_commit_contractdb(ContractDB& contract_db,
         rewind.commit();
     }
 
-    contract_db.commit();
+    contract_db.commit(0);
 
     ContractDBProxy proxy_new(contract_db);
 
