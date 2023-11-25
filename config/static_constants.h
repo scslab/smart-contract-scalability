@@ -27,4 +27,6 @@ constexpr static uint32_t TLCACHE_BITS_REQUIRED = 9; // 512 = 2^9
 
 static_assert (static_cast<uint32_t>(1) << TLCACHE_BITS_REQUIRED == TLCACHE_SIZE, "mismatch");
 
+constexpr static bool PERSISTENT_STORAGE_ENABLED = true;
+
 }

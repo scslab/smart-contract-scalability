@@ -35,6 +35,7 @@ print_configs()
     std::printf("HW THREADS   = %u\n", std::thread::hardware_concurrency());
     std::printf("TLCACHE_SIZE = %" PRIu32 "\n", TLCACHE_SIZE);
     std::printf("Sisyphus SDB iface = %s\n", typeid(SisyphusStateDB::storage_t).name());
+    std::printf("Persistence  = %u\n", PERSISTENT_STORAGE_ENABLED);
 }
 
 } // namespace scs

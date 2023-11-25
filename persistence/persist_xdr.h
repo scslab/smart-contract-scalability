@@ -11,6 +11,8 @@
 
 #include <utils/mkdir.h>
 
+#include "config/static_constants.h"
+
 namespace scs {
 
 template<typename xdr_type>
@@ -65,14 +67,27 @@ class AsyncPersistXDR : public utils::AsyncWorker
         , folder(folder)
         , work_item()
     {
-        make_folder();
-        start_async_thread([this] { run(); });
+        if constexpr (PERSISTENT_STORAGE_ENABLED)
+        {
+            make_folder();
+            start_async_thread([this] { run(); });
+        }
     }
 
-    ~AsyncPersistXDR() { terminate_worker(); }
+    ~AsyncPersistXDR()
+    { 
+        if constexpr (PERSISTENT_STORAGE_ENABLED)
+        {
+            terminate_worker(); 
+        }
+    }
 
     void log(xdr_type& block, uint32_t timestamp)
     {
+        if constexpr (!PERSISTENT_STORAGE_ENABLED)
+        {
+            return;
+        }
         std::lock_guard lock(mtx);
         std::swap(block, work_item);
         work_done = false;
@@ -82,8 +97,11 @@ class AsyncPersistXDR : public utils::AsyncWorker
 
     void clear_folder()
     {
-        utils::clear_directory(folder);
-        make_folder();
+        if constexpr (PERSISTENT_STORAGE_ENABLED)
+        {
+            utils::clear_directory(folder);
+            make_folder();
+        }
     }
 
     using AsyncWorker::wait_for_async_task;

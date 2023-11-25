@@ -18,7 +18,9 @@
 #include <fcntl.h>
 
 #include "config/static_constants.h"
+
 #include <utils/threadlocal_cache.h>
+
 namespace scs {
 
 class AsyncPersistContracts : public utils::AsyncWorker
@@ -160,42 +162,59 @@ class AsyncPersistContracts : public utils::AsyncWorker
         , folder(folder)
         , work_item()
     {
-        make_folder();
-        start_async_thread([this] { run(); });
+        if constexpr (PERSISTENT_STORAGE_ENABLED) {
+            make_folder();
+            start_async_thread([this] { run(); });
+        }
     }
 
-    ~AsyncPersistContracts() { terminate_worker(); }
+    ~AsyncPersistContracts()
+    {
+        if constexpr (PERSISTENT_STORAGE_ENABLED) {
+            terminate_worker();
+        }
+    }
 
     void log_deploy(wasm_api::Hash const& contract_addr,
                     const wasm_api::Hash& contract_hash)
     {
-        cache.get().deployments.emplace_back(contract_addr, contract_hash);
+        if constexpr (PERSISTENT_STORAGE_ENABLED) {
+            cache.get().deployments.emplace_back(contract_addr, contract_hash);
+        }
     }
 
     void log_create(const wasm_api::Hash& hash,
                     std::shared_ptr<const Contract> contract)
     {
-        cache.get().creations.emplace_back(hash, contract);
+        if constexpr (PERSISTENT_STORAGE_ENABLED) {
+            cache.get().creations.emplace_back(hash, contract);
+        }
     }
     void write(uint32_t timestamp)
     {
-        std::lock_guard lock(mtx);
-        work_done = false;
-        work_ts = timestamp;
-        cv.notify_all();
+        if constexpr (PERSISTENT_STORAGE_ENABLED) {
+            std::lock_guard lock(mtx);
+            work_done = false;
+            work_ts = timestamp;
+            cv.notify_all();
+        }
     }
     void nowrite()
     {
-        std::lock_guard lock(mtx);
-        work_done = true;
-        swap_data();
-        cv.notify_all();
+        if constexpr (PERSISTENT_STORAGE_ENABLED) {
+            std::lock_guard lock(mtx);
+            work_done = true;
+            swap_data();
+            cv.notify_all();
+        }
     }
 
     void clear_folder()
     {
-        utils::clear_directory(folder);
-        make_folder();
+        if constexpr (PERSISTENT_STORAGE_ENABLED) {
+            utils::clear_directory(folder);
+            make_folder();
+        }
     }
 
     using AsyncWorker::wait_for_async_task;
