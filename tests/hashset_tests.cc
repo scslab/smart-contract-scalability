@@ -34,7 +34,7 @@ using namespace scs;
 
 TEST_CASE("hashset manipulation test contract", "[sdk][hashset]")
 {
-    test::DeferredContextClear<GroundhogTxContext> defer;
+    test::DeferredContextClear<TxContext> defer;
 
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -45,14 +45,14 @@ TEST_CASE("hashset manipulation test contract", "[sdk][hashset]")
 
     test::deploy_and_commit_contractdb(script_db, h, c);
 
-    std::unique_ptr<GroundhogBlockContext> block_context
-        = std::make_unique<GroundhogBlockContext>(0);
+    std::unique_ptr<BlockContext> block_context
+        = std::make_unique<BlockContext>(0);
 
 
     auto make_tx = [&](uint32_t round, bool success = true) -> Hash {
 
-        ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
+        ThreadlocalTransactionContextStore<TxContext>::make_ctx();
+        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
         const uint64_t gas_bid = 1;
 
@@ -89,7 +89,7 @@ TEST_CASE("hashset manipulation test contract", "[sdk][hashset]")
 
     auto advance_block = [&] ()
     {
-        block_context = std::make_unique<GroundhogBlockContext>(block_context -> block_number + 1);
+        block_context = std::make_unique<BlockContext>(block_context -> block_number + 1);
     };
 
     std::printf("start work section\n");

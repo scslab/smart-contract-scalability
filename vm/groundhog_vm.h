@@ -30,6 +30,9 @@
 
 #include "mempool/mempool.h"
 
+#include "state_db/async_keys_to_disk.h"
+
+
 namespace scs {
 
 class AssemblyLimits;
@@ -46,46 +49,14 @@ class AssemblyLimits;
  * Groundhog version, no persistence
  */
 
-class VirtualMachine : public BaseVirtualMachine<GlobalContext, BlockContext>
+class GroundhogVirtualMachine : public BaseVirtualMachine<GroundhogGlobalContext, GroundhogBlockContext>
 {
+
+    AsyncKeysToDisk keys_persist;
 
   public:
     BlockHeader propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& out);
 };
 
-#if 0
-class VirtualMachine : public utils::NonMovableOrCopyable
-{
-    GlobalContext global_context;
-    std::unique_ptr<BlockContext> current_block_context;
-    Mempool mempool;
-
-    Hash prev_block_hash;
-
-    void assert_initialized() const;
-
-    bool validate_tx_block(Block const& txs);
-
-    void advance_block_number();
-
-    BlockHeader make_block_header();
-
-  public:
-    void init_default_genesis();
-
-    std::optional<BlockHeader>
-    try_exec_tx_block(Block const& txs);
-
-    Mempool& get_mempool() {
-      return mempool;
-    }
-
-    BlockHeader propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& out);
-
-    uint64_t get_current_block_number() const;
-
-    ~VirtualMachine();
-};
-#endif
 
 } // namespace scs

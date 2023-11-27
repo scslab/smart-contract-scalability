@@ -21,6 +21,7 @@
 #include "state_db/sisyphus_state_db.h"
 #include "state_db/modified_keys_list.h"
 #include "state_db/typed_modification_index.h"
+#include "state_db/groundhog_persistent_state_db.h"
 
 #include "storage_proxy/transaction_rewind.h"
 
@@ -36,6 +37,7 @@ namespace scs
 template class StorageProxy<StateDB>;
 template class StorageProxy<StateDBv2>;
 template class StorageProxy<SisyphusStateDB>;
+template class StorageProxy<GroundhogPersistentStateDB>;
 
 #define PROXY_TEMPLATE template<typename StateDB_t>
 #define PROXY_DECL StorageProxy<StateDB_t>

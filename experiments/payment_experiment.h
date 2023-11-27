@@ -18,6 +18,7 @@
 
 #include "vm/vm.h"
 #include "sisyphus_vm/vm.h"
+#include "vm/groundhog_vm.h"
 
 #include "xdr/types.h"
 
@@ -60,8 +61,8 @@ class PaymentExperiment
     PaymentExperiment(size_t num_accounts, uint16_t hs_size_inc = 0);
 
     std::unique_ptr<VirtualMachine> prepare_vm();
-
     std::unique_ptr<SisyphusVirtualMachine> prepare_sisyphus_vm();
+    std::unique_ptr<GroundhogVirtualMachine> prepare_groundhog_vm();
 
     std::vector<SignedTransaction> gen_transaction_batch(
         size_t batch_size,

@@ -43,7 +43,7 @@ using xdr::operator==;
 
 TEST_CASE("simulated echo rpc", "[rpc]")
 {
-	test::DeferredContextClear<GroundhogTxContext> defer;
+	test::DeferredContextClear<TxContext> defer;
 
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -54,12 +54,12 @@ TEST_CASE("simulated echo rpc", "[rpc]")
 
     test::deploy_and_commit_contractdb(script_db, h, c);
 
-    ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
+    ThreadlocalTransactionContextStore<TxContext>::make_ctx();
 
-    auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
+    auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
-    std::unique_ptr<GroundhogBlockContext> block_context
-        = std::make_unique<GroundhogBlockContext>(0);
+    std::unique_ptr<BlockContext> block_context
+        = std::make_unique<BlockContext>(0);
 
     /**
      * Note to future:
@@ -188,7 +188,7 @@ TEST_CASE("simulated echo rpc", "[rpc]")
 
 TEST_CASE("test ensure ndet results all consumed", "[rpc]")
 {
-    test::DeferredContextClear<GroundhogTxContext> defer;
+    test::DeferredContextClear<TxContext> defer;
 
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -198,11 +198,11 @@ TEST_CASE("test ensure ndet results all consumed", "[rpc]")
 
     test::deploy_and_commit_contractdb(script_db, h1, c1);
 
-    ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
+    ThreadlocalTransactionContextStore<TxContext>::make_ctx();
 
-    auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
+    auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
-    GroundhogBlockContext block_context(0);
+    BlockContext block_context(0);
 
     auto exec_success = [&](const Hash& tx_hash, const SignedTransaction& tx, std::optional<NondeterministicResults> res) {
         REQUIRE(exec_ctx.execute(tx_hash, tx, scs_data_structures, block_context, res)

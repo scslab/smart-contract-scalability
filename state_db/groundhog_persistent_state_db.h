@@ -32,48 +32,23 @@
 #include <map>
 #include <optional>
 
-#include <xdrpp/marshal.h>
-
-#include "object/revertable_object.h"
-
 #include "config/static_constants.h"
 
 namespace scs {
 
-class TypedModificationIndex;
+class ModifiedKeysList;
 
-class SisyphusStateDB
+class GroundhogPersistentStateDB
 {
     static bool validate_value(const RevertableObject& v)
     {
         return (bool)v.get_committed_object();
     }
 
-    //template<typevalue_wrapper_tname T>
-    //using  = trie::OptionalValue<T, &validate_value>;
-
   public:
     using prefix_t = trie::ByteArrayPrefix<sizeof(AddressAndKey)>;
 
-    using value_t = OptionalValueWrapper; // trie::BetterSerializeWrapper<RevertableObject, &serialize>;
-
-/*
-    struct SisyphusStateMetadata : public trie::SnapshotTrieMetadataBase
-    {
-        using uint128_t = unsigned __int128;
-        uint128_t asset_supply = 0;
-
-        void write_to(std::vector<uint8_t>& digest_bytes) const
-        {
-            utils::append_unsigned_little_endian(digest_bytes, asset_supply);
-            trie::SnapshotTrieMetadataBase::write_to(digest_bytes);
-        }
-        void from_value(value_t const& obj);
-        SisyphusStateMetadata& operator+=(const SisyphusStateMetadata& other);
-    };
-
-    using metadata_t = SisyphusStateMetadata;
-    */
+    using value_t = OptionalValueWrapper;
 
     using metadata_t = trie::SnapshotTrieMetadataBase;
     using null_storage_t = trie::NullInterface<sizeof(AddressAndKey)>;
@@ -94,7 +69,7 @@ class SisyphusStateDB
 
   public:
 
-    SisyphusStateDB() 
+    GroundhogPersistentStateDB() 
         : current_timestamp(0)
         , state_db(current_timestamp)
         {}
@@ -106,9 +81,9 @@ class SisyphusStateDB
         const AddressAndKey& a,
         const StorageDelta& delta);
 
-    void commit_modifications(const TypedModificationIndex& list);
+    void commit_modifications(const ModifiedKeysList& list);
 
-    void rewind_modifications(const TypedModificationIndex& list);
+    void rewind_modifications(const ModifiedKeysList& list);
 
     Hash hash();
 

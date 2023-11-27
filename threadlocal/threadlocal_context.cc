@@ -35,27 +35,6 @@ TLC_DECL::get_uid()
     return cache.get().uid.get();
 }
 
-template
-class ThreadlocalTransactionContextStore<GroundhogTxContext>;
-template
-class ThreadlocalTransactionContextStore<SisyphusTxContext>;
-
-template<typename TransactionContext_t>
-template<typename... Args>
-void
-ThreadlocalTransactionContextStore<TransactionContext_t>::make_ctx(Args&... args)
-{
-    auto& ctx = cache.get();
-    if (!ctx) {
-        ctx = std::unique_ptr<ExecutionContext<TransactionContext_t>>(new ExecutionContext<TransactionContext_t>(args...));
-    }
-}
-
-template void
-ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
-template void
-ThreadlocalTransactionContextStore<SisyphusTxContext>::make_ctx();
-
 TLC_TEMPLATE
 void
 TLC_DECL::stop_rpcs()

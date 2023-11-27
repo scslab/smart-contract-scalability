@@ -38,7 +38,7 @@ using namespace scs;
 
 TEST_CASE("replay cache", "[sdk]")
 {
-    test::DeferredContextClear<GroundhogTxContext> defer;
+    test::DeferredContextClear<TxContext> defer;
 
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -49,8 +49,8 @@ TEST_CASE("replay cache", "[sdk]")
 
     test::deploy_and_commit_contractdb(script_db, h, c);
 
-    std::unique_ptr<GroundhogBlockContext> block_context
-        = std::make_unique<GroundhogBlockContext>(0);
+    std::unique_ptr<BlockContext> block_context
+        = std::make_unique<BlockContext>(0);
 
     struct calldata_0
     {
@@ -77,8 +77,8 @@ TEST_CASE("replay cache", "[sdk]")
         SignedTransaction stx;
         stx.tx = tx;
 
-        ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
+        ThreadlocalTransactionContextStore<TxContext>::make_ctx();
+        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
         auto hash = hash_xdr(stx);
 
@@ -103,7 +103,7 @@ TEST_CASE("replay cache", "[sdk]")
 
     auto advance_block = [&] ()
     {
-    	block_context = std::make_unique<GroundhogBlockContext>(block_context -> block_number + 1);
+    	block_context = std::make_unique<BlockContext>(block_context -> block_number + 1);
     };
 
     SECTION("one block")
@@ -148,7 +148,7 @@ TEST_CASE("replay cache", "[sdk]")
 
 TEST_CASE("semaphore", "[sdk]")
 {
-    test::DeferredContextClear<GroundhogTxContext> defer;
+    test::DeferredContextClear<TxContext> defer;
 
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -159,8 +159,8 @@ TEST_CASE("semaphore", "[sdk]")
 
     test::deploy_and_commit_contractdb(script_db, h, c);
 
-    std::unique_ptr<GroundhogBlockContext> block_context
-        = std::make_unique<GroundhogBlockContext>(0);
+    std::unique_ptr<BlockContext> block_context
+        = std::make_unique<BlockContext>(0);
 
     struct calldata_0
     {
@@ -183,8 +183,8 @@ TEST_CASE("semaphore", "[sdk]")
 
         auto hash = hash_xdr(stx);
       
-        ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
+        ThreadlocalTransactionContextStore<TxContext>::make_ctx();
+        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
         if (success) {
             REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
@@ -216,8 +216,8 @@ TEST_CASE("semaphore", "[sdk]")
         
         auto hash = hash_xdr(stx);
 
-        ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
+        ThreadlocalTransactionContextStore<TxContext>::make_ctx();
+        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
         if (success) {
             REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
@@ -249,8 +249,8 @@ TEST_CASE("semaphore", "[sdk]")
         
         auto hash = hash_xdr(stx);
 
-        ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
+        ThreadlocalTransactionContextStore<TxContext>::make_ctx();
+        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
         if (success) {
             REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
@@ -269,7 +269,7 @@ TEST_CASE("semaphore", "[sdk]")
 
     auto advance_block = [&] ()
     {
-    	block_context = std::make_unique<GroundhogBlockContext>(block_context -> block_number + 1);
+    	block_context = std::make_unique<BlockContext>(block_context -> block_number + 1);
     };
 
     auto make_addrkey = [](const Address& a, const InvariantKey& k)

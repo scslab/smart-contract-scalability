@@ -27,6 +27,7 @@
 #include "transaction_context/execution_context.h"
 
 #include "vm/genesis.h"
+#include "vm/validate_reduce.h"
 
 #include "block_assembly/limits.h"
 #include "block_assembly/assembly_worker.h"
@@ -50,6 +51,8 @@ SisyphusVirtualMachine::assert_initialized() const
         throw std::runtime_error("uninitialized");
     }
 }
+
+#if 0
 
 struct SisyphusValidateReduce
 {
@@ -112,12 +115,14 @@ struct SisyphusValidateReduce
     {}
 };
 
+#endif
+
 bool
 SisyphusVirtualMachine::validate_tx_block(Block const& txs)
 {
     std::atomic<bool> found_error = false;
 
-    SisyphusValidateReduce reduce(
+    ValidateReduce reduce(
         found_error, global_context, *current_block_context, txs);
 
     tbb::parallel_reduce(tbb::blocked_range<size_t>(0, txs.transactions.size()), reduce);

@@ -43,6 +43,7 @@ namespace scs {
 
 template class ExecutionContext<GroundhogTxContext>;
 template class ExecutionContext<SisyphusTxContext>;
+template class ExecutionContext<TxContext>;
 
 EC_DECL()::ExecutionContext()
     : wasm_context(MAX_STACK_BYTES)
@@ -95,10 +96,19 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
 
 template
 TransactionStatus
-ExecutionContext<GroundhogTxContext>::execute(
+ExecutionContext<TxContext>::execute(
     Hash const&,
     SignedTransaction const&,
     GlobalContext&,
+    BlockContext&,
+    std::optional<NondeterministicResults>);
+
+template
+TransactionStatus
+ExecutionContext<GroundhogTxContext>::execute(
+    Hash const&,
+    SignedTransaction const&,
+    GroundhogGlobalContext&,
     GroundhogBlockContext&,
     std::optional<NondeterministicResults>);
 
@@ -113,12 +123,12 @@ ExecutionContext<SisyphusTxContext>::execute(
 
 
 template<typename TransactionContext_t>
-template<typename BlockContext, typename GlobalContext>
+template<typename BlockContext_t, typename GlobalContext_t>
 TransactionStatus
 ExecutionContext<TransactionContext_t>::execute(Hash const& tx_hash,
                           SignedTransaction const& tx,
-                          GlobalContext& scs_data_structures,
-                          BlockContext& block_context,
+                          GlobalContext_t& scs_data_structures,
+                          BlockContext_t& block_context,
                           std::optional<NondeterministicResults> nondeterministic_res)
 {
     if (tx_context) {

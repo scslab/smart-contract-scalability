@@ -40,7 +40,7 @@ using xdr::operator==;
 
 TEST_CASE("hashset insert", "[storage]")
 {
-    test::DeferredContextClear<GroundhogTxContext> defer;
+    test::DeferredContextClear<TxContext> defer;
 
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -54,8 +54,8 @@ TEST_CASE("hashset insert", "[storage]")
 
     InvariantKey k0 = hash_xdr<uint64_t>(0);
 
-    std::unique_ptr<GroundhogBlockContext> block_context
-        = std::make_unique<GroundhogBlockContext>(0);
+    std::unique_ptr<BlockContext> block_context
+        = std::make_unique<BlockContext>(0);
 
     struct calldata_0
     {
@@ -84,8 +84,8 @@ TEST_CASE("hashset insert", "[storage]")
 
         auto hash = hash_xdr(stx);
 
-        ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
+        ThreadlocalTransactionContextStore<TxContext>::make_ctx();
+        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
         if (success) {
             REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
@@ -151,7 +151,7 @@ TEST_CASE("hashset insert", "[storage]")
 
 TEST_CASE("int64 storage write", "[storage]")
 {
-    test::DeferredContextClear<GroundhogTxContext> defer;
+    test::DeferredContextClear<TxContext> defer;
 
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -165,8 +165,8 @@ TEST_CASE("int64 storage write", "[storage]")
 
     InvariantKey k0 = hash_xdr<uint64_t>(0);
 
-    std::unique_ptr<GroundhogBlockContext> block_context
-        = std::make_unique<GroundhogBlockContext>(0);
+    std::unique_ptr<BlockContext> block_context
+        = std::make_unique<BlockContext>(0);
 
     struct calldata_0
     {
@@ -199,8 +199,8 @@ TEST_CASE("int64 storage write", "[storage]")
         stx.tx = tx;
         auto hash = hash_xdr(stx);
 
-        ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
+        ThreadlocalTransactionContextStore<TxContext>::make_ctx();
+        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
         if (success) {
             REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
@@ -231,8 +231,8 @@ TEST_CASE("int64 storage write", "[storage]")
         SignedTransaction stx;
         stx.tx = tx;
 
-        ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
+        ThreadlocalTransactionContextStore<TxContext>::make_ctx();
+        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
 
         auto hash = hash_xdr(stx);
@@ -360,7 +360,7 @@ TEST_CASE("int64 storage write", "[storage]")
         REQUIRE(!!db_val);
         REQUIRE(db_val->body.nonnegative_int64() == 100);
 
-        block_context.reset(new GroundhogBlockContext(1));
+        block_context.reset(new BlockContext(1));
 
         SECTION("without set")
         {
@@ -408,7 +408,7 @@ TEST_CASE("int64 storage write", "[storage]")
 
 TEST_CASE("raw mem storage write", "[storage]")
 {
-    test::DeferredContextClear<GroundhogTxContext> defer; // must be first -- must destruct RpcAddressDB
+    test::DeferredContextClear<TxContext> defer; // must be first -- must destruct RpcAddressDB
     // before clearing timeouts (rpc pollset callbacks might have timeout& refs)
 
     GlobalContext scs_data_structures;
@@ -423,8 +423,8 @@ TEST_CASE("raw mem storage write", "[storage]")
 
     InvariantKey k0 = hash_xdr<uint64_t>(0);
 
-    std::unique_ptr<GroundhogBlockContext> block_context
-        = std::make_unique<GroundhogBlockContext>(0);
+    std::unique_ptr<BlockContext> block_context
+        = std::make_unique<BlockContext>(0);
 
     struct calldata_0
     {
@@ -457,7 +457,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
     auto start_new_block = [&] (uint64_t block_number) 
     {
-        block_context = std::make_unique<GroundhogBlockContext>(block_number);
+        block_context = std::make_unique<BlockContext>(block_number);
     };
 
     auto make_key
@@ -471,16 +471,16 @@ TEST_CASE("raw mem storage write", "[storage]")
     };
 
     auto exec_success = [&](const Hash& tx_hash, const SignedTransaction& tx) {
-        ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
+        ThreadlocalTransactionContextStore<TxContext>::make_ctx();
+        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
         REQUIRE(exec_ctx.execute(tx_hash, tx, scs_data_structures, *block_context)
                 == TransactionStatus::SUCCESS);
     };
 
     auto exec_fail = [&](const Hash& tx_hash, const SignedTransaction& tx) {
-        ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
+        ThreadlocalTransactionContextStore<TxContext>::make_ctx();
+        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
         REQUIRE(exec_ctx.execute(tx_hash, tx, scs_data_structures, *block_context)
                 != TransactionStatus::SUCCESS);
@@ -519,7 +519,7 @@ TEST_CASE("raw mem storage write", "[storage]")
                 == xdr::opaque_vec<RAW_MEMORY_MAX_LEN>{
                     0x11, 0x00, 0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA });
 
-        block_context.reset(new GroundhogBlockContext(1));
+        block_context.reset(new BlockContext(1));
 
         SECTION("read key from prev block")
         {
@@ -530,7 +530,7 @@ TEST_CASE("raw mem storage write", "[storage]")
             auto [tx_hash, tx] = make_transaction(invocation);
 
             exec_success(tx_hash, tx);
-            auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
+            auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
             auto const& logs = exec_ctx.get_logs();
             REQUIRE(logs.size() == 1);
@@ -734,7 +734,7 @@ TEST_CASE("raw mem storage write", "[storage]")
 
         exec_success(tx_hash, tx);
         {
-            auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
+            auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
             auto const& logs = exec_ctx.get_logs();
             REQUIRE(logs.size() == 2);
@@ -772,7 +772,7 @@ TEST_CASE("raw mem storage write", "[storage]")
         exec_success(tx_hash, tx);
 
         {
-            auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
+            auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
             auto const& logs = exec_ctx.get_logs();
             REQUIRE(logs.size() == 1);

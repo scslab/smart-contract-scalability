@@ -22,7 +22,10 @@
 
 #define BUILTIN_DECL(ret) template<typename TransactionContext_t> ret BuiltinFns<TransactionContext_t>
 #define GET_TEC ThreadlocalTransactionContextStore<TransactionContext_t>::get_exec_ctx().get_transaction_context();
-#define BUILTIN_INSTANTIATE template class BuiltinFns<GroundhogTxContext>; template class BuiltinFns<SisyphusTxContext>;
+#define BUILTIN_INSTANTIATE \
+	template class BuiltinFns<GroundhogTxContext>; \
+	template class BuiltinFns<SisyphusTxContext>; \
+	template class BuiltinFns<TxContext>;
 
 namespace wasm_api
 {

@@ -34,7 +34,7 @@ namespace scs {
 
 TEST_CASE("test invoke", "[builtin]")
 {
-    test::DeferredContextClear<GroundhogTxContext> defer;
+    test::DeferredContextClear<TxContext> defer;
 
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -49,11 +49,11 @@ TEST_CASE("test invoke", "[builtin]")
     test::deploy_and_commit_contractdb(script_db, h1, c1);
     test::deploy_and_commit_contractdb(script_db, h2, c2);
 
-    ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
+    ThreadlocalTransactionContextStore<TxContext>::make_ctx();
 
-    auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
+    auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
-    GroundhogBlockContext block_context(0);
+    BlockContext block_context(0);
 
     auto exec_success = [&](const Hash& tx_hash, const SignedTransaction& tx) {
         REQUIRE(exec_ctx.execute(tx_hash, tx, scs_data_structures, block_context)

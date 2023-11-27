@@ -28,11 +28,12 @@ namespace scs {
 
 class ModifiedKeysList
 {
+public:
     using value_t = trie::EmptyValue;
     using trie_prefix_t = trie::ByteArrayPrefix<sizeof(AddressAndKey)>;
 
     using map_t = trie::AtomicTrie<value_t, trie_prefix_t>;
-
+private:
     map_t keys;
     using serial_trie_t = trie::AtomicTrieReference<map_t>;
 

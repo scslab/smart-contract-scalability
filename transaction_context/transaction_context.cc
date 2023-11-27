@@ -27,6 +27,7 @@ namespace scs {
 
 template class TransactionContext<GlobalContext>;
 template class TransactionContext<SisyphusGlobalContext>;
+template class TransactionContext<GroundhogGlobalContext>;
 
 #define TC_TEMPLATE template<typename GlobalContext_t>
 #define TC_DECL TransactionContext<GlobalContext_t>

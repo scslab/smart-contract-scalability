@@ -21,7 +21,7 @@ run_experiment(uint32_t num_accounts,
 {
     PaymentExperiment e(num_accounts, size_boost);
 
-    auto vm = e.prepare_vm();
+    auto vm = e.prepare_groundhog_vm();
 
     if (!vm) {
         throw std::runtime_error("failed to initialize virtual machine!");
@@ -111,7 +111,7 @@ main(int argc, const char** argv)
         }
     };
 
-    std::printf("Groundhog VM No Persistence (original impl)\n");
+    std::printf("Groundhog VM With Persistence (optionally)\n");
 
     std::vector<exp_res> overall_results;
 

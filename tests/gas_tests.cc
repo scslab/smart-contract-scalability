@@ -32,7 +32,7 @@ using namespace scs;
 
 TEST_CASE("gas metering", "[gas]")
 {
-    test::DeferredContextClear<GroundhogTxContext> defer;
+    test::DeferredContextClear<TxContext> defer;
 
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -43,12 +43,12 @@ TEST_CASE("gas metering", "[gas]")
 
     test::deploy_and_commit_contractdb(script_db, h, c);
 
-    ThreadlocalTransactionContextStore<GroundhogTxContext>::make_ctx();
+    ThreadlocalTransactionContextStore<TxContext>::make_ctx();
 
-    std::unique_ptr<GroundhogBlockContext> block_context
-        = std::make_unique<GroundhogBlockContext>(0);
+    std::unique_ptr<BlockContext> block_context
+        = std::make_unique<BlockContext>(0);
 
-    auto& exec_ctx = ThreadlocalTransactionContextStore<GroundhogTxContext>::get_exec_ctx();
+    auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
     auto make_spin_tx = [&](uint64_t duration,
                             uint64_t gas_limit,

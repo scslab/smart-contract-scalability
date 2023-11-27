@@ -22,6 +22,7 @@
 
 #include "state_db/state_db.h"
 #include "state_db/state_db_v2.h"
+#include "state_db/groundhog_persistent_state_db.h"
 #include "state_db/sisyphus_state_db.h"
 #include "state_db/modified_keys_list.h"
 #include "state_db/typed_modification_index.h"
@@ -40,11 +41,7 @@ struct GlobalContext : public utils::NonMovableOrCopyable
 	StateDB state_db;
 	RpcAddressDB address_db;
 
-	GlobalContext()
-		: contract_db()
-		, state_db()
-		, address_db()
-		{}
+	GlobalContext() = default;
 };
 
 struct SisyphusGlobalContext : public utils::NonMovableOrCopyable
@@ -56,11 +53,42 @@ struct SisyphusGlobalContext : public utils::NonMovableOrCopyable
 	SisyphusGlobalContext() = default;
 };
 
+struct GroundhogGlobalContext : public utils::NonMovableOrCopyable
+{
+	ContractDB contract_db;
+	GroundhogPersistentStateDB state_db;
+	RpcAddressDB address_db;
+
+	GroundhogGlobalContext() = default;
+};
+
 template<typename T>
 class TransactionContext;
 
-typedef TransactionContext<GlobalContext> GroundhogTxContext;
+typedef TransactionContext<GlobalContext> TxContext;
+typedef TransactionContext<GroundhogGlobalContext> GroundhogTxContext;
 typedef TransactionContext<SisyphusGlobalContext> SisyphusTxContext;
+
+struct BlockContext : public utils::NonMovableOrCopyable
+{
+	TxSet tx_set;
+	ModifiedKeysList modified_keys_list;
+	uint64_t block_number;
+
+	BlockContext(uint64_t block_number)
+		: tx_set()
+		, modified_keys_list()
+		, block_number(block_number)
+		{}
+
+	void reset_context(uint64_t new_block_number)
+	{
+		block_number = new_block_number;
+		tx_set.clear();
+		modified_keys_list.clear();
+	}
+	using tx_context_t = TxContext;
+};
 
 struct GroundhogBlockContext : public utils::NonMovableOrCopyable
 {

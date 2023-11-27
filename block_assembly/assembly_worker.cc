@@ -68,7 +68,8 @@ AssemblyWorker<GlobalContext_t, BlockContext_t>::run()
     }
 }
 
-template class AssemblyWorker<GlobalContext, GroundhogBlockContext>;
+template class AssemblyWorker<GlobalContext, BlockContext>;
+template class AssemblyWorker<GroundhogGlobalContext, GroundhogBlockContext>;
 template class AssemblyWorker<SisyphusGlobalContext, SisyphusBlockContext>;
 
 template<typename worker_t>
@@ -98,7 +99,10 @@ AsyncAssemblyWorker<worker_t>::run()
 }
 
 template class
-AsyncAssemblyWorker<AssemblyWorker<GlobalContext, GroundhogBlockContext>>;
+AsyncAssemblyWorker<AssemblyWorker<GlobalContext, BlockContext>>;
+
+template class
+AsyncAssemblyWorker<AssemblyWorker<GroundhogGlobalContext, GroundhogBlockContext>>;
 
 template class
 AsyncAssemblyWorker<AssemblyWorker<SisyphusGlobalContext, SisyphusBlockContext>>;

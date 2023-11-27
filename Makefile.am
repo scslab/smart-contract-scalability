@@ -125,6 +125,7 @@ SISYPHUS_VM_SRCS = \
 	sisyphus_vm/vm.cc
 
 STATE_DB_SRCS = \
+	state_db/groundhog_persistent_state_db.cc \
 	state_db/modified_keys_list.cc \
 	state_db/new_key_cache.cc \
 	state_db/sisyphus_state_db.cc \
@@ -156,7 +157,9 @@ TX_BLOCK_SRCS = \
 
 VM_SRCS = \
 	vm/genesis.cc \
-	vm/vm.cc
+	vm/vm.cc \
+	vm/groundhog_vm.cc \
+	vm/base_vm.cc 
 
 SRCS = \
 	$(BLOCK_ASSEMBLY_SRCS) \
@@ -206,7 +209,8 @@ TESTS_CCS = \
 MAIN_CCS = \
 	main/blockstm_comparison.cc \
 	main/test.cc \
-	main/sisyphus_payment_sim.cc
+	main/sisyphus_payment_sim.cc \
+	main/groundhog_payment_sim.cc
 
 .wat.wasm:
 	wat2wasm -o $@ $<
@@ -292,7 +296,8 @@ bin_PROGRAMS = \
 	test \
 	basic \
 	blockstm_comparison \
-	sisyphus_payment_sim
+	sisyphus_payment_sim \
+	groundhog_payment_sim
 
 vm/genesis.o: $(CC_WASMS:.cc=.wasm)
 main/test.o : $(CC_WASMS:.cc=.wasm) $(WASM_API_TEST_WASMS)
@@ -302,6 +307,7 @@ COMPLETE_SRCS = $(SRCS) $(TESTS_CCS) $(TEST_UTILS_SRCS)
 test_SOURCES = main/test.cc $(COMPLETE_SRCS) $(utility_TEST_CCS) $(mtt_TEST_CCS) $(WASM_API_TEST_CCS)
 blockstm_comparison_SOURCES = main/blockstm_comparison.cc $(SRCS)
 sisyphus_payment_sim_SOURCES = main/sisyphus_payment_sim.cc $(SRCS)
+groundhog_payment_sim_SOURCES = main/groundhog_payment_sim.cc $(SRCS)
 basic_SOURCES = main/basic.cc $(COMPLETE_SRCS)
 
 clean-local:

@@ -55,7 +55,13 @@ public:
     }
 
     template<typename... Args>
-    static void make_ctx(Args&... args);
+    static void make_ctx(Args&... args)
+    {
+            auto& ctx = cache.get();
+        if (!ctx) {
+            ctx = std::unique_ptr<ExecutionContext<TransactionContext_t>>(new ExecutionContext<TransactionContext_t>(args...));
+        }
+    }
 
     static void clear()
     {

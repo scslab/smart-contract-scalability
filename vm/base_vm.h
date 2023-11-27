@@ -26,38 +26,18 @@
 
 #include <utils/non_movable.h>
 
-#include "vm/base_vm.h"
-
 #include "mempool/mempool.h"
 
 namespace scs {
 
 class AssemblyLimits;
 
-/**
- * Block policy:
- * Header is <hashes of data structures, prev hash, etc>
- * We reject a block if prev_hash doesn't match our hash,
- * but if we execute a block and find no errors
- * but find a hash mismatch at the end,
- * we say that's ok, and move on (presumably rejecting subsequent
- * blocks from that proposer).
- * 
- * Groundhog version, no persistence
- */
-
-class VirtualMachine : public BaseVirtualMachine<GlobalContext, BlockContext>
+template<typename GlobalContext_t, typename BlockContext_t>
+class BaseVirtualMachine : public utils::NonMovableOrCopyable
 {
-
-  public:
-    BlockHeader propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& out);
-};
-
-#if 0
-class VirtualMachine : public utils::NonMovableOrCopyable
-{
-    GlobalContext global_context;
-    std::unique_ptr<BlockContext> current_block_context;
+  protected:
+    GlobalContext_t global_context;
+    std::unique_ptr<BlockContext_t> current_block_context;
     Mempool mempool;
 
     Hash prev_block_hash;
@@ -80,12 +60,9 @@ class VirtualMachine : public utils::NonMovableOrCopyable
       return mempool;
     }
 
-    BlockHeader propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& out);
-
     uint64_t get_current_block_number() const;
 
-    ~VirtualMachine();
+    ~BaseVirtualMachine();
 };
-#endif
 
 } // namespace scs

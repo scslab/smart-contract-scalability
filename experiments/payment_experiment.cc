@@ -319,6 +319,65 @@ PaymentExperiment::prepare_vm()
     return vm;
 }
 
+std::unique_ptr<GroundhogVirtualMachine>
+PaymentExperiment::prepare_groundhog_vm()
+{
+    auto vm = std::make_unique<GroundhogVirtualMachine>();
+
+    vm->init_default_genesis();
+
+    if (!vm->try_exec_tx_block(make_create_transactions("cpp_contracts/erc20.wasm"))) {
+        return nullptr;
+    }
+
+    std::printf("made create txs\n");
+
+    Block deploy_erc20;
+    deploy_erc20.transactions
+        = { make_deploy_erc20_transaction("cpp_contracts/erc20.wasm") };
+
+    if (!vm->try_exec_tx_block(deploy_erc20)) {
+        return nullptr;
+    }
+
+    std::printf("made deploy erc20\n");
+
+    auto [wallet_txs, mint_txs] = make_accounts_and_mints("cpp_contracts/erc20.wasm");
+
+    const size_t batch_exec_size = 100'000;
+    for (size_t i = 0; i < (wallet_txs.size() / batch_exec_size) + 1; i++) {
+        std::fprintf(stderr, "wallet exec batch %lu\n", i);
+        Block block;
+        size_t start = batch_exec_size * i;
+        size_t end = std::min(batch_exec_size * (i + 1), wallet_txs.size());
+
+        block.transactions.insert(
+            block.transactions.end(), wallet_txs.begin() + start, wallet_txs.begin() + end);
+        if (!vm->try_exec_tx_block(block)) {
+            return nullptr;
+        }
+    }
+
+    std::printf("made wallets\n");
+
+    for (size_t i = 0; i < (mint_txs.size() / batch_exec_size) + 1; i++) {
+        std::fprintf(stderr, "mint exec batch %lu\n", i);
+        Block block;
+        size_t start = batch_exec_size * i;
+        size_t end = std::min(batch_exec_size * (i + 1), mint_txs.size());
+
+        block.transactions.insert(block.transactions.end(), mint_txs.begin() + start, mint_txs.begin() + end);
+
+        if (!vm->try_exec_tx_block(block)) {
+            return nullptr;
+        }
+    }
+
+    std::printf("funded wallets\n");
+
+    return vm;
+}
+
 std::unique_ptr<SisyphusVirtualMachine>
 PaymentExperiment::prepare_sisyphus_vm()
 {
