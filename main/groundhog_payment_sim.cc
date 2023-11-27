@@ -48,11 +48,16 @@ run_experiment(uint32_t num_accounts,
 
     auto ts = utils::init_time_measurement();
 
+    AsyncPersistXDR<Block> block_persist("block_logs/");
+    block_persist.clear_folder();
+
     Block block_buffer;
     // std::vector<std::unique_ptr<Block>> gc;
 
     for (size_t i = 0; i < num_blocks; i++) {
         AssemblyLimits limits(batch_size, INT64_MAX);
+
+        uint32_t blk_number = vm -> get_current_block_number();
 
         auto ts_local = utils::init_time_measurement();
 
@@ -68,6 +73,9 @@ run_experiment(uint32_t num_accounts,
                     blk_size,
                     blk_size / duration,
                     mp.available_size());
+
+        block_persist.log(block_buffer, blk_number);
+
         std::fprintf(
             stderr,
             "duration %lf rate %lf nacc %lu batch %lu nthread %lu i %lu\n",
