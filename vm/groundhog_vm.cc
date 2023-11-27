@@ -38,6 +38,20 @@
 namespace scs {
 
 
+std::optional<BlockHeader>
+GroundhogVirtualMachine::try_exec_tx_block(Block const& txs)
+{
+    auto out = BaseVirtualMachine<GroundhogGlobalContext, GroundhogBlockContext>::try_exec_tx_block(txs);
+
+    if (out)
+    {
+        global_context.state_db.log_keys(keys_persist);
+        global_context.state_db.set_timestamp(current_block_context -> block_number);
+    }
+    return out;
+}
+
+
 BlockHeader
 GroundhogVirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& block_out)
 {
