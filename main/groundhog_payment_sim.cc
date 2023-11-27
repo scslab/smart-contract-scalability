@@ -8,6 +8,8 @@
 
 #include "block_assembly/limits.h"
 
+#include "persistence/persist_xdr.h"
+
 #include <tbb/global_control.h>
 
 using namespace scs;
