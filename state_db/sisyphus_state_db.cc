@@ -19,7 +19,47 @@
 #include <utils/time.h>
 #include "state_db/typed_modification_index.h"
 
+#include <sodium.h>
+
+#include "pedersen_ffi/pedersen.h"
+
 namespace scs {
+
+Hash current_pedersen_random_seed;
+
+void 
+SisyphusStateDB::SisyphusStateMetadata::write_to(std::vector<uint8_t>& digest_bytes) const
+{
+    if constexpr (SisyphusStateDB::USE_PEDERSEN)
+    {
+        auto db_copy = digest_bytes;
+        db_copy.insert(
+            db_copy.end(),
+            current_pedersen_random_seed.begin(),
+            current_pedersen_random_seed.end());
+
+        Hash h;
+        if (crypto_generichash(h.data(),
+                           h.size(),
+                           db_copy.data(),
+                           db_copy.size(),
+                           NULL,
+                           0)
+            != 0) {
+            throw std::runtime_error("error from crypto_generichash");
+        }
+
+        auto out = pedersen_commitment(asset_supply, h);
+        digest_bytes.insert(
+            digest_bytes.end(),
+            out.begin(),
+            out.end());
+    } else
+    {
+        utils::append_unsigned_little_endian(digest_bytes, asset_supply);
+    }
+    trie::SnapshotTrieMetadataBase::write_to(digest_bytes);
+}
 
 void
 SisyphusStateDB::SisyphusStateMetadata::from_value(value_t const& obj)
@@ -185,6 +225,11 @@ void
 SisyphusStateDB::commit_modifications(const TypedModificationIndex& list)
 {
     auto ts = utils::init_time_measurement();
+
+    if constexpr (USE_PEDERSEN)
+    {
+        randombytes_buf(current_pedersen_random_seed.data(), current_pedersen_random_seed.size());
+    }
 
     SisyphusUpdateFn update(state_db, current_timestamp);
 

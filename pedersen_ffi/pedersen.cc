@@ -44,12 +44,9 @@ pedersen_commitment(unsigned __int128 value, Hash const& blinding)
 	return out;
 }
 
-
 void init_pedersen() 
 {
 	pedersen_params = detail::gen_pedersen_params();
 }
-
-
 
 }

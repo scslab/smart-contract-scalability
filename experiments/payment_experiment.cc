@@ -387,6 +387,8 @@ PaymentExperiment::prepare_sisyphus_vm()
 
     vm->init_default_genesis();
 
+    std::printf("preparing sisyphus vm with erc20 contact= %s\n", erc20_contract);
+
     if (!vm->try_exec_tx_block(make_create_transactions(erc20_contract))) {
         return nullptr;
     }

@@ -57,26 +57,20 @@ class SisyphusStateDB
 
     using value_t = OptionalValueWrapper; // trie::BetterSerializeWrapper<RevertableObject, &serialize>;
 
+    constexpr static bool USE_PEDERSEN = false;
+    constexpr static bool USE_ASSETS = false;
 
-    
     struct __attribute__((packed)) SisyphusStateMetadata : public trie::SnapshotTrieMetadataBase
     {
         using uint128_t = unsigned __int128;
         uint128_t asset_supply = 0;
 
-        void write_to(std::vector<uint8_t>& digest_bytes) const
-        {
-            utils::append_unsigned_little_endian(digest_bytes, asset_supply);
-            trie::SnapshotTrieMetadataBase::write_to(digest_bytes);
-        }
+        void write_to(std::vector<uint8_t>& digest_bytes) const;
         void from_value(value_t const& obj);
         SisyphusStateMetadata& operator+=(const SisyphusStateMetadata& other);
-    };
+    };    
 
-    using metadata_t = SisyphusStateMetadata;
-    
-
-    //using metadata_t = trie::SnapshotTrieMetadataBase;
+    using metadata_t = typename std::conditional<USE_ASSETS, SisyphusStateMetadata, trie::SnapshotTrieMetadataBase>::type;
     using null_storage_t = trie::NullInterface<sizeof(AddressAndKey)>;
     using nonnull_storage_t = trie::SerializeDiskInterface<sizeof(AddressAndKey), TLCACHE_SIZE>;
     using storage_t = typename std::conditional<PERSISTENT_STORAGE_ENABLED, nonnull_storage_t, null_storage_t>::type;

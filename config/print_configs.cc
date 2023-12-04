@@ -36,6 +36,8 @@ print_configs()
     std::printf("TLCACHE_SIZE = %" PRIu32 "\n", TLCACHE_SIZE);
     std::printf("Sisyphus SDB iface = %s\n", typeid(SisyphusStateDB::storage_t).name());
     std::printf("Persistence  = %u\n", PERSISTENT_STORAGE_ENABLED);
+    std::printf("Sisyphus SDB USE_ASSETS = %u\n", SisyphusStateDB::USE_ASSETS);
+    std::printf("Sisyphus SDB USE_PEDERSEN = %u\n", SisyphusStateDB::USE_PEDERSEN);
 }
 
 } // namespace scs
