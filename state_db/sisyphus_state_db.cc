@@ -32,28 +32,7 @@ SisyphusStateDB::SisyphusStateMetadata::write_to(std::vector<uint8_t>& digest_by
 {
     if constexpr (SisyphusStateDB::USE_PEDERSEN)
     {
-        auto db_copy = digest_bytes;
-        db_copy.insert(
-            db_copy.end(),
-            current_pedersen_random_seed.begin(),
-            current_pedersen_random_seed.end());
-
-        Hash h;
-        if (crypto_generichash(h.data(),
-                           h.size(),
-                           db_copy.data(),
-                           db_copy.size(),
-                           NULL,
-                           0)
-            != 0) {
-            throw std::runtime_error("error from crypto_generichash");
-        }
-
-        auto out = pedersen_commitment(asset_supply, h);
-        digest_bytes.insert(
-            digest_bytes.end(),
-            out.begin(),
-            out.end());
+        throw std::runtime_error("unimpl");
     } else
     {
         utils::append_unsigned_little_endian(digest_bytes, asset_supply);
