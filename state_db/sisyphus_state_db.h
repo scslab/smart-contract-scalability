@@ -57,8 +57,9 @@ class SisyphusStateDB
 
     using value_t = OptionalValueWrapper; // trie::BetterSerializeWrapper<RevertableObject, &serialize>;
 
-/*
-    struct SisyphusStateMetadata : public trie::SnapshotTrieMetadataBase
+
+    
+    struct __attribute__((packed)) SisyphusStateMetadata : public trie::SnapshotTrieMetadataBase
     {
         using uint128_t = unsigned __int128;
         uint128_t asset_supply = 0;
@@ -73,9 +74,9 @@ class SisyphusStateDB
     };
 
     using metadata_t = SisyphusStateMetadata;
-    */
+    
 
-    using metadata_t = trie::SnapshotTrieMetadataBase;
+    //using metadata_t = trie::SnapshotTrieMetadataBase;
     using null_storage_t = trie::NullInterface<sizeof(AddressAndKey)>;
     using nonnull_storage_t = trie::SerializeDiskInterface<sizeof(AddressAndKey), TLCACHE_SIZE>;
     using storage_t = typename std::conditional<PERSISTENT_STORAGE_ENABLED, nonnull_storage_t, null_storage_t>::type;

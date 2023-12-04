@@ -21,7 +21,6 @@
 
 namespace scs {
 
-/*
 void
 SisyphusStateDB::SisyphusStateMetadata::from_value(value_t const& obj)
 {
@@ -45,7 +44,7 @@ SisyphusStateDB::SisyphusStateMetadata::operator+=(
     asset_supply += other.asset_supply;
     trie::SnapshotTrieMetadataBase::operator+=(other);
     return *this;
-} */
+} 
 
 std::optional<StorageObject>
 SisyphusStateDB::get_committed_value(const AddressAndKey& a)
