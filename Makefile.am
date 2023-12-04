@@ -112,6 +112,9 @@ OBJECT_SRCS = \
 	object/object_defaults.cc \
 	object/revertable_object.cc
 
+PEDERSEN_FFI_SRCS = \
+	pedersen_ffi/pedersen.cc
+
 PHASE_SRCS = \
 	phase/phases.cc
 
@@ -173,6 +176,7 @@ SRCS = \
 	$(MEMPOOL_SRCS) \
 	$(METERING_FFI_SRCS) \
 	$(OBJECT_SRCS) \
+	$(PEDERSEN_FFI_SRCS) \
 	$(PHASE_SRCS) \
 	$(RPC_SRCS) \
 	$(RPC_SERVER_SRCS) \
@@ -281,12 +285,17 @@ LDADD = $(xdrpp_LIBS) \
 	$(wasm_api_LIBS) \
 	$(Catch2_LIBS) \
 	./metering/target/release/libinject_metering.a \
+	./pedersen/target/release/libcommitments.a \
 	$(grpcpp_LIBS) \
 	$(protobuf_LIBS)
 
 metering/target/release/libinject_metering.a : metering/inject_metering/src/*.rs
 	cd metering && \
 	cargo build --release --package inject_metering
+
+pedersen/target/release/libcommitments.a : pedersen/commitments/src/*.rs
+	cd pedersen && \
+	cargo build --release --package commitments
 
 $(SRCS:.cc=.o) : $(XH_FILES)
 $(TESTS_CCS:.cc=.o) : $(XH_FILES)
