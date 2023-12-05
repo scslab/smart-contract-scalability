@@ -73,9 +73,14 @@ class SisyphusVirtualMachine : public utils::NonMovableOrCopyable
       return mempool;
     }
 
-    BlockHeader propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& out, ModIndexLog& out_modlog);
+    BlockHeader propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& out, ModIndexLog& out_modlog,
+      std::unique_ptr<SisyphusBlockContext>* extract_block_context = nullptr);
 
     uint64_t get_current_block_number() const;
+
+    const auto& get_global_context() const {
+      return global_context;  
+    }
 
     ~SisyphusVirtualMachine();
 };

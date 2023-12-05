@@ -202,7 +202,8 @@ SisyphusVirtualMachine::try_exec_tx_block(Block const& block)
 }
 
 BlockHeader
-SisyphusVirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& block_out, ModIndexLog& out_modlog)
+SisyphusVirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& block_out, ModIndexLog& out_modlog, 
+    std::unique_ptr<BlockContext>* extract_block_context)
 {
 	auto ts = utils::init_time_measurement();
     ThreadlocalContextStore::get_rate_limiter().prep_for_notify();
@@ -260,7 +261,15 @@ SisyphusVirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_ti
     txset.wait();
     rest_of_hash.wait();
     std::printf("final wait time %lf\n", utils::measure_time(ts));
-    advance_block_number();
+    if (extract_block_context != nullptr) {
+        uint64_t current_block_number = get_current_block_number();
+        (*extract_block_context).reset(current_block_context.release());
+        current_block_context = std::make_unique<SisyphusBlockContext>(current_block_number + 1);
+    } 
+    else
+    {
+        advance_block_number();
+    }
     std::printf("done proposal %lf\n", utils::measure_time(ts));
 
     global_context.state_db.log_keys(keys_persist);

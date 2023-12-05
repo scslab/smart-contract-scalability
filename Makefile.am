@@ -285,7 +285,6 @@ LDADD = $(xdrpp_LIBS) \
 	$(wasm_api_LIBS) \
 	$(Catch2_LIBS) \
 	./metering/target/release/libinject_metering.a \
-	./pedersen/target/release/libcommitments.a \
 	$(grpcpp_LIBS) \
 	$(protobuf_LIBS)
 
@@ -306,7 +305,8 @@ bin_PROGRAMS = \
 	basic \
 	blockstm_comparison \
 	sisyphus_payment_sim \
-	groundhog_payment_sim
+	groundhog_payment_sim \
+	sisyphus_proof_size_exp
 
 vm/genesis.o: $(CC_WASMS:.cc=.wasm)
 main/test.o : $(CC_WASMS:.cc=.wasm) $(WASM_API_TEST_WASMS)
@@ -318,6 +318,7 @@ blockstm_comparison_SOURCES = main/blockstm_comparison.cc $(SRCS)
 sisyphus_payment_sim_SOURCES = main/sisyphus_payment_sim.cc $(SRCS)
 groundhog_payment_sim_SOURCES = main/groundhog_payment_sim.cc $(SRCS)
 basic_SOURCES = main/basic.cc $(COMPLETE_SRCS)
+sisyphus_proof_size_exp_SOURCES = main/sisyphus_proof_size_exp.cc $(SRCS)
 
 clean-local:
 	cd metering && \
