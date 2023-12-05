@@ -14,6 +14,8 @@
 
 using namespace scs;
 
+AsyncPersistXDR<Block> block_persist("block_logs/");
+
 std::vector<double>
 run_experiment(uint32_t num_accounts,
                uint32_t batch_size,
@@ -42,7 +44,6 @@ run_experiment(uint32_t num_accounts,
     }
     std::printf("blk num = %lu\n", vm -> get_current_block_number());
 
-
     tbb::global_control control(tbb::global_control::max_allowed_parallelism,
                         num_threads);
 
@@ -50,7 +51,6 @@ run_experiment(uint32_t num_accounts,
 
     auto ts = utils::init_time_measurement();
 
-    AsyncPersistXDR<Block> block_persist("block_logs/");
     block_persist.clear_folder();
 
     Block block_buffer;
@@ -94,6 +94,7 @@ run_experiment(uint32_t num_accounts,
 	    	throw std::runtime_error("batch size mismatch!");
         }
     }
+    block_persist.wait_for_async_task();
     return out;
 }
 

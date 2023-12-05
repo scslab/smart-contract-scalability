@@ -14,6 +14,10 @@
 
 using namespace scs;
 
+AsyncPersistXDR<Block> block_persist("block_logs/");
+
+AsyncPersistXDR<ModIndexLog> log_persist("modlog_logs/");
+
 std::vector<double>
 run_experiment(uint32_t num_accounts,
                uint32_t batch_size,
@@ -52,10 +56,8 @@ run_experiment(uint32_t num_accounts,
     Block block_buffer;
     ModIndexLog log_buffer;
 
-    AsyncPersistXDR<Block> block_persist("block_logs/");
     block_persist.clear_folder();
 
-    AsyncPersistXDR<ModIndexLog> log_persist("modlog_logs/");
     log_persist.clear_folder();
 
     for (size_t i = 0; i < num_blocks; i++) {
@@ -96,6 +98,8 @@ run_experiment(uint32_t num_accounts,
 	    	throw std::runtime_error("batch size mismatch!");
         }
     }
+    log_persist.wait_for_async_task();
+    block_persist.wait_for_async_task();
     return out;
 }
 
