@@ -41,7 +41,7 @@ run_experiment(uint32_t num_accounts,
     std::printf("blk num = %lu\n", vm -> get_current_block_number());
 
 
-    tbb::global_control(tbb::global_control::max_allowed_parallelism,
+    tbb::global_control control(tbb::global_control::max_allowed_parallelism,
                         num_threads);
 
     std::vector<double> out;
