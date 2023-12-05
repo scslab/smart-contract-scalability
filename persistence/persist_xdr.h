@@ -76,10 +76,7 @@ class AsyncPersistXDR : public utils::AsyncWorker
 
     ~AsyncPersistXDR()
     { 
-        if constexpr (PERSISTENT_STORAGE_ENABLED)
-        {
-            terminate_worker(); 
-        }
+        terminate_worker(); 
     }
 
     void log(xdr_type& block, uint32_t timestamp)
