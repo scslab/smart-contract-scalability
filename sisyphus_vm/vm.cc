@@ -203,7 +203,7 @@ SisyphusVirtualMachine::try_exec_tx_block(Block const& block)
 
 BlockHeader
 SisyphusVirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& block_out, ModIndexLog& out_modlog, 
-    std::unique_ptr<BlockContext>* extract_block_context)
+    std::unique_ptr<SisyphusBlockContext>* extract_block_context)
 {
 	auto ts = utils::init_time_measurement();
     ThreadlocalContextStore::get_rate_limiter().prep_for_notify();
