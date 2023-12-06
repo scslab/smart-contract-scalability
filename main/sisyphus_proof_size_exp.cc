@@ -164,20 +164,20 @@ main(int argc, const char** argv)
     std::vector<uint32_t> batches = {100, 1'000,  10'000, 100'000 };
     std::vector<uint32_t> big_accts = {  100'000,  1'000'000 , 10'000'000  };
 
-    run_experiment(1000000, 10, 5);
-    run_experiment(1000000, 100, 5);
-    run_experiment(1000000, 1000, 5);
-    run_experiment(1000000, 10000, 5);
-    run_experiment(1000000, 100000, 5);
+    run_experiment(1000000, 10, 5, 0);
+    run_experiment(1000000, 100, 5, 0);
+    run_experiment(1000000, 1000, 5, 0);
+    run_experiment(1000000, 10000, 5, 0);
+    run_experiment(1000000, 100000, 5, 0);
 
-    run_experiment(2, 100000, 5);
-    run_experiment(10, 100000, 5);
-    run_experiment(100, 100000, 5);
-    run_experiment(1000, 100000, 5);
-    run_experiment(10000, 100000, 5);
-    run_experiment(100000, 100000, 5);
-    run_experiment(1'000'000, 100000, 5);
-    run_experiment(10'000'000, 100000, 5);
+    run_experiment(2, 100000, 5, UINT16_MAX);
+    run_experiment(10, 100000, 5, UINT16_MAX);
+    run_experiment(100, 100000, 5, UINT16_MAX);
+    run_experiment(1000, 100000, 5, UINT16_MAX);
+    run_experiment(10000, 100000, 5, UINT16_MAX);
+    run_experiment(100000, 100000, 5, 0);
+    run_experiment(1'000'000, 100000, 5, 0);
+    run_experiment(10'000'000, 100000, 5, 0);
 
 
 
