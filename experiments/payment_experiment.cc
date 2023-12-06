@@ -287,6 +287,8 @@ PaymentExperiment::make_random_payment(uint64_t expiration_time,
 
         return out;
     };
+    // bizarre case of gen_account() always returning 0 on first invocation
+    gen_account();
 
     uint64_t src_acct = gen_account();
     uint64_t dst_acct = gen_account();
