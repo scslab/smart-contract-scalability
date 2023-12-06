@@ -115,6 +115,10 @@ class SisyphusStateDB
     {
         logger.log_keys(state_db.get_storage(), current_timestamp);
     }
+
+    const trie_t& get_trie() const {
+        return state_db;
+    }
 };
 
 } // namespace scs

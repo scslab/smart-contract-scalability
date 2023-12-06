@@ -81,12 +81,21 @@ run_experiment(uint32_t num_accounts,
 
         std::map<DeltaType, std::vector<uint32_t>> stats;
 
-        for (auto const& i : log_buffer)
+        for (auto const& il : log_buffer)
         {
-            auto key = make_index_key(i.addr, i.delta, i.tx_hash);
+            auto key = make_index_key(il.addr, il.delta, il.tx_hash);
             auto pf = index.get_keys().make_proof(key, key.len());
-            stats[i.delta.type()].push_back(pf.serialize().size());
-            std::printf("key: %s\n", key.to_string(key.len()).c_str());
+            stats[il.delta.type()].push_back(pf.serialize().size());
+        }
+
+        std::vector<uint32_t> statedb_sizes;
+        using prefix_t = SisyphusStateDB::prefix_t;
+
+        for (auto const& addr : keys)
+        {
+            auto prefix = prefix_t(addr);
+            auto pf = sdb.get_trie().make_proof(prefix, prefix.len());
+            statedb_sizes.push_back(pf.serialize().size());
         }
 
         for (auto it = stats.begin(); it != stats.end(); it++)
@@ -101,11 +110,29 @@ run_experiment(uint32_t num_accounts,
                 min = std::min(min, val);
             }
 
-            std::printf("nacc %lu batch %lu stat %u min %u max %u avg %lf\n", 
+            std::printf("trial %u modlog stats nacc %lu batch %lu stat %u min %u max %u avg %lf\n", 
+                i,
                 num_accounts,
                 batch_size,
                 it -> first, min, max, ((double)sum) / it -> second.size());
         }
+
+        uint32_t state_min = UINT32_MAX, state_max = 0;
+        uint64_t state_sum;
+
+        for (auto const& val : statedb_sizes)
+        {
+            state_sum += val;
+            state_max = std::max(state_max, val);
+            state_min = std::min(state_min, val);
+        }
+
+        std::printf("trial %u sdb stats nacc %lu batch %lu min %u max %u avg %lf\n", 
+            i,
+            num_accounts,
+            batch_size,
+            state_min, state_max, ((double)state_sum) / statedb_sizes.size());
+
 
         std::printf("duration: %lf size %lu rate %lf remaining_mempool %lu \n",
                     duration,
