@@ -34,5 +34,28 @@ compute_contract_deploy_address(Address const& deployer_address,
 
     return hash_vec(bytes);
 }
+ 
+void write_uint64_t(uint8_t* out, uint64_t value)
+{
+    for (size_t i = 0; i < 8; i++)
+    {
+        out[i] = (value >> (8*i)) & 0xFF;
+    }
+}
+
+InvariantKey 
+make_static_key(
+    uint64_t a,
+    uint64_t b,
+    uint64_t c,
+    uint64_t d)
+{
+    InvariantKey out;
+    write_uint64_t(out.data(), a);
+    write_uint64_t(out.data() + 8, b);
+    write_uint64_t(out.data() + 16, c);
+    write_uint64_t(out.data() + 24, d);
+    return out;
+}
 
 } // namespace scs

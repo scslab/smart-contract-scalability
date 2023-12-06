@@ -29,5 +29,10 @@ compute_contract_deploy_address(
 	Hash const& hash,
 	uint64_t nonce);
 
+InvariantKey make_static_key(
+	uint64_t a,
+	uint64_t b = 0,
+	uint64_t c = 0,
+	uint64_t d = 0);
 
 }

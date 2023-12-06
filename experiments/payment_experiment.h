@@ -64,6 +64,8 @@ class PaymentExperiment
     std::unique_ptr<SisyphusVirtualMachine> prepare_sisyphus_vm();
     std::unique_ptr<GroundhogVirtualMachine> prepare_groundhog_vm();
 
+    std::vector<AddressAndKey> get_active_key_set();
+
     std::vector<SignedTransaction> gen_transaction_batch(
         size_t batch_size,
         uint64_t expiration_time = UINT64_MAX);

@@ -206,6 +206,75 @@ PaymentExperiment::make_accounts_and_mints(const char* erc20_contract)
     return { accounts_out, mints_out };
 }
 
+std::vector<AddressAndKey> 
+PaymentExperiment::get_active_key_set()
+{
+    std::vector<AddressAndKey> keys;
+    keys.resize(num_accounts * 5);
+    Hash wallet_contract_hash = hash_xdr(
+        *load_wasm_from_file("cpp_contracts/payment_experiment/payment.wasm"));
+
+    InvariantKey pkaddr = make_static_key(1);
+    InvariantKey replayaddr = make_static_key(0);
+    InvariantKey token_addr = make_static_key(0, 2);
+
+    const char* erc20_contract = (SisyphusStateDB::USE_ASSETS == 1) ? "cpp_contracts/sisyphus_erc20.wasm" : "cpp_contracts/erc20.wasm"; 
+
+    Hash token_contract_hash
+        = hash_xdr(*load_wasm_from_file(erc20_contract));
+
+    Address token_deploy_addr = compute_contract_deploy_address(
+        DEPLOYER_ADDRESS, token_contract_hash, UINT64_MAX);
+
+    auto make_balance_key = [&] (Hash const& account) -> InvariantKey {
+        xdr::opaque_vec<MAX_HASH_LEN> key;
+        key.insert(key.end(),
+            account.begin(),
+            account.end());
+        return hash_xdr(key);
+    };
+
+    auto make_allowance_key = [&] (Hash const& owner, Hash const& auth) -> InvariantKey 
+    {
+        xdr::opaque_vec<MAX_HASH_LEN> key;
+        key.insert(key.end(),
+            owner.begin(),
+            owner.end());
+        key.insert(key.end(),
+            auth.begin(),
+            auth.end());
+        return hash_xdr(key);
+    };
+
+
+    tbb::parallel_for(tbb::blocked_range<size_t>(0, num_accounts),
+     [&](auto r) {
+        for (auto i = r.begin(); i < r.end(); i++) {
+            auto account = compute_contract_deploy_address(
+                    DEPLOYER_ADDRESS, wallet_contract_hash, i);
+
+            AddressAndKey addrkey;
+            std::memcpy(addrkey.data(), account.data(), account.size());
+            std::memcpy(addrkey.data() + account.size(), pkaddr.data(), pkaddr.size());
+            keys[5*i] = addrkey;
+            std::memcpy(addrkey.data() + account.size(), replayaddr.data(), replayaddr.size());
+            keys[5*i + 1] = addrkey;
+            std::memcpy(addrkey.data() + account.size(), token_addr.data(), token_addr.size());
+            keys[5*i + 2] = addrkey;
+            std::memcpy(addrkey.data(), token_deploy_addr.data(), token_deploy_addr.size());
+            auto bk = make_balance_key(account);
+            std::memcpy(addrkey.data() + token_deploy_addr.size(),bk.data(), bk.size());
+            keys[5*i + 3] = addrkey;
+            auto ak = make_allowance_key(account, account);
+            std::memcpy(addrkey.data() + token_deploy_addr.size(), ak.data(), ak.size());
+            keys[5*i + 4] = addrkey;
+        }
+    });
+
+    return keys;
+}
+
+
 SignedTransaction
 PaymentExperiment::make_random_payment(uint64_t expiration_time,
                                        uint64_t nonce,
@@ -383,7 +452,7 @@ PaymentExperiment::prepare_sisyphus_vm()
 {
     auto vm = std::make_unique<SisyphusVirtualMachine>();
 
-    const char* erc20_contract = "cpp_contracts/erc20.wasm"; //"cpp_contracts/sisyphus_erc20.wasm"; // version with asset implementation
+    const char* erc20_contract = (SisyphusStateDB::USE_ASSETS == 1) ? "cpp_contracts/sisyphus_erc20.wasm" : "cpp_contracts/erc20.wasm"; //"cpp_contracts/sisyphus_erc20.wasm"; // version with asset implementation
 
     vm->init_default_genesis();
 

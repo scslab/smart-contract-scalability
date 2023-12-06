@@ -16,7 +16,7 @@ struct PedersenResponse {
 	uint8_t serialized[32];
 };
 
-
+/*
 namespace detail
 {
 
@@ -29,9 +29,12 @@ PedersenResponse pedersen_commitment(const PedersenQuery*, const void*);
 
 } // detail
 
+*/
 std::array<uint8_t, 32>
 pedersen_commitment(unsigned __int128 value, Hash const& blinding)
 {
+	throw std::runtime_error("unimpl");
+	/*
 	PedersenQuery query;
 	query.query_low = value & UINT64_MAX;
 	query.query_high = value >> 64;
@@ -41,12 +44,12 @@ pedersen_commitment(unsigned __int128 value, Hash const& blinding)
 
 	std::array<uint8_t, 32> out;
 	std::memcpy(out.data(), response.serialized, 32);
-	return out;
-}
+	return out; */
+} 
 
 void init_pedersen() 
 {
-	pedersen_params = detail::gen_pedersen_params();
+	//pedersen_params = detail::gen_pedersen_params();
 }
 
 }
