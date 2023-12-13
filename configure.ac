@@ -50,6 +50,7 @@ PKG_CHECK_MODULES([Catch2], [catch2])
 PKG_CHECK_MODULES([lmdb], [lmdb])
 PKG_CHECK_MODULES([gmp], [gmp])
 PKG_CHECK_MODULES([gmpxx], [gmpxx])
+PKG_CHECK_MODULES([rocksdb], [rocksdb])
 
 if test "x$rpc" == "xtrue" ; then
 	AC_MSG_NOTICE(rpcs enabled)
@@ -62,7 +63,6 @@ else
 	AC_MSG_NOTICE(rpcs disabled)
  	AC_DEFINE_UNQUOTED([USE_RPC], [0], "Define to 1 if RPCs enabled")
 fi
-
 
 PKG_CHECK_MODULES(LIBFYAML, [ libfyaml ], HAVE_LIBFYAML=1, HAVE_LIBFYAML=0)
 

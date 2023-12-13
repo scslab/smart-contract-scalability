@@ -11,6 +11,8 @@
 
 #include "config/static_constants.h"
 
+#include "persistence/rocksdb_iface.h"
+
 namespace scs {
 
 class AsyncKeysToDisk : public utils::AsyncWorker
@@ -90,6 +92,9 @@ class AsyncKeysToDisk : public utils::AsyncWorker
         work_ts = timestamp;
         cv.notify_all();
     }
+
+    void log_keys(DirectWriteRocksDBIface<sizeof(AddressAndKey)> const& rdb, uint32_t timestamp)
+    {}
 
     void log_keys(trie::NullInterface<sizeof(AddressAndKey)>& iface, uint32_t timestamp)
     {}

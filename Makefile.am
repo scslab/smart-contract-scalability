@@ -115,6 +115,9 @@ OBJECT_SRCS = \
 PEDERSEN_FFI_SRCS = \
 	pedersen_ffi/pedersen.cc
 
+PERSISTENCE_SRCS = \
+	persistence/rocksdb_wrapper.cc
+
 PHASE_SRCS = \
 	phase/phases.cc
 
@@ -177,6 +180,7 @@ SRCS = \
 	$(METERING_FFI_SRCS) \
 	$(OBJECT_SRCS) \
 	$(PEDERSEN_FFI_SRCS) \
+	$(PERSISTENCE_SRCS) \
 	$(PHASE_SRCS) \
 	$(RPC_SRCS) \
 	$(RPC_SERVER_SRCS) \

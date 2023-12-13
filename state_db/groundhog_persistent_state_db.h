@@ -29,6 +29,8 @@
 #include "state_db/async_keys_to_disk.h"
 #include "state_db/optional_value_wrapper.h"
 
+#include "persistence/rocksdb_iface.h"
+
 #include <map>
 #include <optional>
 
@@ -52,7 +54,8 @@ class GroundhogPersistentStateDB
 
     using metadata_t = trie::SnapshotTrieMetadataBase;
     using null_storage_t = trie::NullInterface<sizeof(AddressAndKey)>;
-    using nonnull_storage_t = trie::SerializeDiskInterface<sizeof(AddressAndKey), TLCACHE_SIZE>;
+    //using nonnull_storage_t = trie::SerializeDiskInterface<sizeof(AddressAndKey), TLCACHE_SIZE>;
+    using nonnull_storage_t = DirectWriteRocksDBIface<sizeof(AddressAndKey)>;
     using storage_t = typename std::conditional<PERSISTENT_STORAGE_ENABLED, nonnull_storage_t, null_storage_t>::type;
 
     using trie_t = trie::MemcacheTrie<prefix_t,
@@ -67,12 +70,18 @@ class GroundhogPersistentStateDB
 
     trie_t state_db;
 
+    RocksdbWrapper rdb;
+
   public:
 
     GroundhogPersistentStateDB() 
         : current_timestamp(0)
-        , state_db(current_timestamp)
-        {}
+        , state_db(current_timestamp, rdb)
+        , rdb("rdb_tmp/")
+        {
+            rdb.clear_previous();
+            rdb.open();
+        }
 
     std::optional<StorageObject> get_committed_value(
         const AddressAndKey& a);
