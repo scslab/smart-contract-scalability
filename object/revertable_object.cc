@@ -26,6 +26,7 @@
 #include "hash_set/utils.h"
 
 #include <utils/assert.h>
+#include <utils/compat.h>
 
 using xdr::operator==;
 
@@ -275,7 +276,7 @@ bool try_add_uint64(int64_t delta, std::atomic<uint64_t>& base)
         {
             return true;
         }
-        __builtin_ia32_pause();
+        SPINLOCK_PAUSE();
     }
 }
 
