@@ -29,8 +29,8 @@
 #include "state_db/async_keys_to_disk.h"
 #include "state_db/optional_value_wrapper.h"
 
-#include "persistence/rocksdb_iface.h"
-#include "persistence/accumulate_kvs_iface.h"
+//#include "persistence/rocksdb_iface.h"
+//#include "persistence/accumulate_kvs_iface.h"
 
 #include <map>
 #include <optional>
@@ -55,8 +55,8 @@ class GroundhogPersistentStateDB
 
     using metadata_t = trie::SnapshotTrieMetadataBase;
     using null_storage_t = trie::NullInterface<sizeof(AddressAndKey)>;
-    //using nonnull_storage_t = trie::SerializeDiskInterface<sizeof(AddressAndKey), TLCACHE_SIZE>;
-    using nonnull_storage_t = AccumulateKVsInterface<sizeof(AddressAndKey), TLCACHE_SIZE>;
+    using nonnull_storage_t = trie::SerializeDiskInterface<sizeof(AddressAndKey), TLCACHE_SIZE>;
+    //using nonnull_storage_t = AccumulateKVsInterface<sizeof(AddressAndKey), TLCACHE_SIZE>;
     using storage_t = typename std::conditional<PERSISTENT_STORAGE_ENABLED, nonnull_storage_t, null_storage_t>::type;
 
     using trie_t = trie::MemcacheTrie<prefix_t,
@@ -71,17 +71,17 @@ class GroundhogPersistentStateDB
 
     trie_t state_db;
 
-    RocksdbWrapper rdb;
+  //  RocksdbWrapper rdb;
 
   public:
 
     GroundhogPersistentStateDB() 
         : current_timestamp(0)
-        , state_db(current_timestamp, rdb)
-        , rdb("rdb_tmp/")
+        , state_db(current_timestamp)
+    //    , rdb("rdb_tmp/")
         {
-            rdb.clear_previous();
-            rdb.open();
+      //      rdb.clear_previous();
+        //    rdb.open();
         }
 
     std::optional<StorageObject> get_committed_value(
@@ -97,9 +97,9 @@ class GroundhogPersistentStateDB
 
     Hash hash();
 
-    RocksdbWrapper& get_rdb() {
-        return rdb;
-    }
+  //  RocksdbWrapper& get_rdb() {
+  //      return rdb;
+  //  }
 
     void set_timestamp(uint32_t ts) {
         current_timestamp = ts;

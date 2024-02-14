@@ -115,8 +115,8 @@ OBJECT_SRCS = \
 PEDERSEN_FFI_SRCS = \
 	pedersen_ffi/pedersen.cc
 
-PERSISTENCE_SRCS = \
-	persistence/rocksdb_wrapper.cc
+PERSISTENCE_SRCS =
+#	persistence/rocksdb_wrapper.cc
 
 PHASE_SRCS = \
 	phase/phases.cc
