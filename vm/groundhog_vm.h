@@ -32,6 +32,8 @@
 
 #include "state_db/async_keys_to_disk.h"
 
+#include "persistence/async_rdb_bulkload.h"
+
 
 namespace scs {
 
@@ -52,9 +54,16 @@ class AssemblyLimits;
 class GroundhogVirtualMachine : public BaseVirtualMachine<GroundhogGlobalContext, GroundhogBlockContext>
 {
 
-    AsyncKeysToDisk keys_persist;
+    //AsyncKeysToDisk keys_persist;
+    AsyncRDBBulkLoad keys_persist;
 
   public:
+
+    GroundhogVirtualMachine()
+      : BaseVirtualMachine()
+      , keys_persist(global_context.state_db.get_rdb())
+      {}
+    
     BlockHeader propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& out);
 
     std::optional<BlockHeader>

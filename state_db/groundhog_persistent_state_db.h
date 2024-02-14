@@ -30,6 +30,7 @@
 #include "state_db/optional_value_wrapper.h"
 
 #include "persistence/rocksdb_iface.h"
+#include "persistence/accumulate_kvs_iface.h"
 
 #include <map>
 #include <optional>
@@ -55,7 +56,7 @@ class GroundhogPersistentStateDB
     using metadata_t = trie::SnapshotTrieMetadataBase;
     using null_storage_t = trie::NullInterface<sizeof(AddressAndKey)>;
     //using nonnull_storage_t = trie::SerializeDiskInterface<sizeof(AddressAndKey), TLCACHE_SIZE>;
-    using nonnull_storage_t = DirectWriteRocksDBIface<sizeof(AddressAndKey)>;
+    using nonnull_storage_t = AccumulateKVsInterface<sizeof(AddressAndKey), TLCACHE_SIZE>;
     using storage_t = typename std::conditional<PERSISTENT_STORAGE_ENABLED, nonnull_storage_t, null_storage_t>::type;
 
     using trie_t = trie::MemcacheTrie<prefix_t,
@@ -96,11 +97,15 @@ class GroundhogPersistentStateDB
 
     Hash hash();
 
+    RocksdbWrapper& get_rdb() {
+        return rdb;
+    }
+
     void set_timestamp(uint32_t ts) {
         current_timestamp = ts;
     }
 
-    void log_keys(AsyncKeysToDisk& logger)
+    void log_keys(auto& logger)
     {
         logger.log_keys(state_db.get_storage(), current_timestamp);
     }
