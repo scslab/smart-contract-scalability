@@ -240,13 +240,13 @@ CC_WASMS = \
 	cpp_contracts/sisyphus_erc20.cc
 
 .cc.wasm: Makefile.am Makefile
-	wasi/wasi-sdk/bin/clang -Os -mtune=native -march=native -I./cpp_contracts/ $< -o $@ \
-		--sysroot=wasi/wasi-sdk/share/wasi-sysroot \
+	clang -Os -target wasm32-unknown-wasi -I./cpp_contracts/ $< -o $@ \
+		--sysroot=wasi/wasi-sysroot \
 		-std=gnu++2a \
 		-nostdlib++ \
 		-nostdlib \
 		-Wl,--no-entry -fno-exceptions -Wl,--allow-undefined \
-		wasi/wasi-sdk/lib/clang/16/lib/wasi/libclang_rt.builtins-wasm32.a
+		wasi/lib/wasi/libclang_rt.builtins-wasm32.a
 
 #TODO parity-wasm serialization doesn't support bulk memory ops
 # This ruins the metering (it outputs wasm in an invalid section ordering)
@@ -290,6 +290,7 @@ LDADD = $(xdrpp_LIBS) \
 	$(utility_LIBS) \
 	$(lmdb_LIBS) \
 	$(mtt_LIBS) \
+	$(rocksdb_LIBS) \
 	$(wasm_api_LIBS) \
 	$(Catch2_LIBS) \
 	$(grpcpp_LIBS) \
