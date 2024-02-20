@@ -115,9 +115,6 @@ OBJECT_SRCS = \
 PEDERSEN_FFI_SRCS = \
 	pedersen_ffi/pedersen.cc
 
-PERSISTENCE_SRCS =
-#	persistence/rocksdb_wrapper.cc
-
 PHASE_SRCS = \
 	phase/phases.cc
 
@@ -180,7 +177,6 @@ SRCS = \
 	$(METERING_FFI_SRCS) \
 	$(OBJECT_SRCS) \
 	$(PEDERSEN_FFI_SRCS) \
-	$(PERSISTENCE_SRCS) \
 	$(PHASE_SRCS) \
 	$(RPC_SRCS) \
 	$(RPC_SERVER_SRCS) \
@@ -264,6 +260,14 @@ $(CC_WASMS:.cc=.wasm) : $(wildcard cpp_contracts/sdk/*.h)
 
 grpc_DEDUP_CFLAGS = $(shell echo $(grpc_CFLAGS) | ./dedup.sh | sort | uniq | grep -v -e "-X.*" | grep -v -e "-march.*")
 grpcpp_DEDUP_CFLAGS = $(shell echo $(grpcpp_CFLAGS) | ./dedup.sh | sort | uniq | grep -v -e "-X.*" | grep -v -e "-march.*")
+
+LFI_CFLAGS = -I./lib/lfi/liblfi/
+
+LFI_LDADD = lib/lfi/liblfi/liblfi.a
+
+lib/lfi/liblfi/liblfi.a: lib/lfi/liblfi/*.c lib/lfi/liblfi/*.h lib/lfi/liblfi/*.S
+	cd lib/lfi/liblfi && \
+	knit liblfi.a
 
 AM_CPPFLAGS = \
 	$(xdrpp_CFLAGS) \
