@@ -26,33 +26,53 @@
 
 #include "xdr/transaction.h"
 
+#include "lficpp/lficpp.h"
+
 namespace scs {
 
-template<typename TransactionContext_t>
-class ThreadlocalTransactionContextStore;
-template<typename TransactionContext_t>
-class BuiltinFns;
-
-
 struct MethodInvocation;
+
+class SandboxCache {
+  std::vector<std::unique_ptr<LFIProc>> procs;
+  size_t free_ptr = 0;
+  LFIGlobalEngine& global_engine;
+  void* ctxp;
+
+public:
+
+  SandboxCache(LFIGlobalEngine& global_engine,
+    void* ctxp)
+    : procs()
+    , free_ptr(0)
+    , global_engine(global_engine)
+    , ctxp(ctxp)
+    {}
+
+  LFIProc* 
+  get_new_proc() {
+    if (free_ptr >= procs.size()) {
+      procs.emplace_back(std::make_unique<LFIProc>(ctxp, global_engine));
+    }
+    auto* out = procs[free_ptr].get();
+    free_ptr ++;
+    return out;
+  }
+
+  void reset() {
+    free_ptr = 0;
+  }
+};
 
 template<typename TransactionContext_t>
 class ExecutionContext
 {
-    wasm_api::WasmContext wasm_context;
-
-    std::map<Address, std::unique_ptr<wasm_api::WasmRuntime>> active_runtimes;
+    SandboxCache proc_cache;
 
     std::unique_ptr<TransactionContext_t> tx_context;
 
     std::unique_ptr<TransactionResults> results_of_last_tx;
 
     RpcAddressDB* addr_db;
-
-    ExecutionContext();
-
-    friend class ThreadlocalTransactionContextStore<TransactionContext_t>;
-    friend class BuiltinFns<TransactionContext_t>;
 
     // should only be used by builtin fns
     void invoke_subroutine(MethodInvocation const& invocation);
@@ -76,6 +96,8 @@ class ExecutionContext
       return *addr_db;
     }
 
+    uint64_t syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5);
+
   public:
     template<typename BlockContext, typename GlobalContext>
     TransactionStatus execute(Hash const& tx_hash,
@@ -86,7 +108,15 @@ class ExecutionContext
 
     std::vector<TransactionLog> const& get_logs();
 
+    ExecutionContext(LFIGlobalEngine& engine);
+
     ~ExecutionContext();
+
+    static uint64_t static_syscall_handler(void* self, 
+      uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5)
+    {
+      return reinterpret_cast<ExecutionContext*>(self)->syscall_handler(callno, arg0, arg1, arg2, arg3, arg4, arg5);
+    }
 };
 
 } // namespace scs

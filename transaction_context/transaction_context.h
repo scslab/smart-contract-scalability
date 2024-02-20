@@ -28,7 +28,7 @@
 
 #include "contract_db/contract_db_proxy.h"
 
-#include <wasm_api/wasm_api.h>
+#include "lficpp/lficpp.h"
 
 #include "xdr/transaction.h"
 #include "xdr/storage.h"
@@ -60,7 +60,9 @@ template<typename GlobalContext_t>
 class TransactionContext
 {
 	std::vector<MethodInvocation> invocation_stack;
-	std::vector<wasm_api::WasmRuntime*> runtime_stack;
+	std::vector<LFIProc*> runtime_stack;
+
+	std::map<Address, LFIProc*> active_runtimes;
 
 	bool committed_to_statedb = false;
 
@@ -80,6 +82,20 @@ class TransactionContext
 	const uint64_t current_block;
 
 public:
+
+	LFIProc* get_runtime_by_addr(const Address& addr) {
+		auto it = active_runtimes.find(addr);
+		if (it == active_runtimes.end())
+		{
+			return nullptr;
+		}
+		return it -> second;
+	}
+
+	void add_active_runtime(const Address& addr, LFIProc* proc)
+	{
+		active_runtimes[addr] = proc;
+	}
 
 	using StateDB_t = decltype(GlobalContext_t().state_db);
 
@@ -107,10 +123,10 @@ public:
 		return out;
 	}
 
-	wasm_api::WasmRuntime*
+	LFIProc*
 	get_current_runtime();
 
-	wasm_api::WasmRuntime const*
+	LFIProc const*
 	get_current_runtime() const
 	{
 		return const_cast<TransactionContext*>(this)->get_current_runtime();
@@ -152,7 +168,7 @@ public:
 	get_witness(uint64_t wit_idx) const;
 
 	void pop_invocation_stack();
-	void push_invocation_stack(wasm_api::WasmRuntime* runtime, MethodInvocation const& invocation);
+	void push_invocation_stack(LFIProc* runtime, MethodInvocation const& invocation);
 
 	std::unique_ptr<StorageCommitment<StateDB_t>>
 	__attribute__((warn_unused_result))
