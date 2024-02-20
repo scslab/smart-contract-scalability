@@ -100,11 +100,11 @@ HASH_SET_TEST_SRCS = \
 	hash_set/tests/test_atomic_set.cc \
 	hash_set/tests/test_hs_utils.cc
 
+LFI_SRCS = \
+	lficpp/lficpp.cc
+
 MEMPOOL_SRCS = \
 	mempool/mempool.cc
-
-METERING_FFI_SRCS = \
-	metering_ffi/metered_contract.cc
 
 OBJECT_SRCS = \
 	object/comparators.cc \
@@ -173,8 +173,8 @@ SRCS = \
 	$(DEBUG_SRCS) \
 	$(EXPERIMENTS_SRCS) \
 	$(HASH_SET_SRCS) \
+	$(LFI_SRCS) \
 	$(MEMPOOL_SRCS) \
-	$(METERING_FFI_SRCS) \
 	$(OBJECT_SRCS) \
 	$(PEDERSEN_FFI_SRCS) \
 	$(PHASE_SRCS) \
@@ -280,7 +280,8 @@ AM_CPPFLAGS = \
 	$(wasm_api_CFLAGS) \
 	$(Catch2_CFLAGS) \
 	$(grpcpp_DEDUP_CFLAGS) \
-	$(protobuf_CFLAGS)
+	$(protobuf_CFLAGS) \
+	$(LFI_CFLAGS)
 
 LDADD = $(xdrpp_LIBS) \
 	$(libsodium_LIBS) \
@@ -292,17 +293,9 @@ LDADD = $(xdrpp_LIBS) \
 	$(rocksdb_LIBS) \
 	$(wasm_api_LIBS) \
 	$(Catch2_LIBS) \
-	./metering/target/release/libinject_metering.a \
 	$(grpcpp_LIBS) \
-	$(protobuf_LIBS)
-
-metering/target/release/libinject_metering.a : metering/inject_metering/src/*.rs
-	cd metering && \
-	cargo build --release --package inject_metering
-
-pedersen/target/release/libcommitments.a : pedersen/commitments/src/*.rs
-	cd pedersen && \
-	cargo build --release --package commitments
+	$(protobuf_LIBS) \
+	$(LFI_LDADD)
 
 $(SRCS:.cc=.o) : $(XH_FILES)
 $(TESTS_CCS:.cc=.o) : $(XH_FILES)
