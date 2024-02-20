@@ -35,13 +35,13 @@
 namespace scs
 {
 
-struct GlobalContext : public utils::NonMovableOrCopyable
+struct BaseGlobalContext : public utils::NonMovableOrCopyable
 {
 	ContractDB contract_db;
 	StateDB state_db;
 	RpcAddressDB address_db;
 
-	GlobalContext() = default;
+	BaseGlobalContext() = default;
 };
 
 struct SisyphusGlobalContext : public utils::NonMovableOrCopyable
@@ -65,17 +65,17 @@ struct GroundhogGlobalContext : public utils::NonMovableOrCopyable
 template<typename T>
 class TransactionContext;
 
-typedef TransactionContext<GlobalContext> TxContext;
+typedef TransactionContext<BaseGlobalContext> TxContext;
 typedef TransactionContext<GroundhogGlobalContext> GroundhogTxContext;
 typedef TransactionContext<SisyphusGlobalContext> SisyphusTxContext;
 
-struct BlockContext : public utils::NonMovableOrCopyable
+struct BaseBlockContext : public utils::NonMovableOrCopyable
 {
 	TxSet tx_set;
 	ModifiedKeysList modified_keys_list;
 	uint64_t block_number;
 
-	BlockContext(uint64_t block_number)
+	BaseBlockContext(uint64_t block_number)
 		: tx_set()
 		, modified_keys_list()
 		, block_number(block_number)

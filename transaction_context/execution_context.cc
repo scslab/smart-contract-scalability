@@ -45,9 +45,8 @@ template class ExecutionContext<GroundhogTxContext>;
 template class ExecutionContext<SisyphusTxContext>;
 template class ExecutionContext<TxContext>;
 
-EC_DECL()::ExecutionContext()
-    : wasm_context(MAX_STACK_BYTES)
-    , active_runtimes()
+EC_DECL()::ExecutionContext(LFIGlobalEngine& engine)
+    : proc_cache(engine, static_cast<void*>(this))
     , tx_context(nullptr)
     , results_of_last_tx(nullptr)
     , addr_db(nullptr)
@@ -56,21 +55,17 @@ EC_DECL()::ExecutionContext()
 
 EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
 {
-    auto iter = active_runtimes.find(invocation.addr);
-    if (iter == active_runtimes.end()) {
+    auto* runtime = tx_context->get_runtime_by_addr(invocation.addr);
+    if (runtime == nullptr) {
         CONTRACT_INFO("creating new runtime for contract at %s",
                       debug::array_to_str(invocation.addr).c_str());
 
+        throw std::runtime_error("unimpl");
+        /*
         //auto timestamp = utils::init_time_measurement();
 
         auto runtime_instance = wasm_context.new_runtime_instance(
             tx_context -> get_contract_db_proxy().get_script(invocation.addr));
-
-
-
-       /* auto runtime_instance = wasm_context.new_runtime_instance(
-            invocation.addr,
-            static_cast<const void*>(&(tx_context->get_contract_db_proxy()))); */
 
         if (!runtime_instance) {
             throw wasm_api::HostError("cannot find target address");
@@ -81,15 +76,16 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
         active_runtimes.emplace(invocation.addr, std::move(runtime_instance));
         BuiltinFns<TransactionContext_t>::link_fns(*active_runtimes.at(invocation.addr));
 
-        //std::printf("link time: %lf\n", utils::measure_time(timestamp));
-    }
+        //std::printf("link time: %lf\n", utils::measure_time(timestamp)); */
 
-    auto* runtime = active_runtimes.at(invocation.addr).get();
+        tx_context->add_active_runtime(invocation.addr, runtime);
+    }
 
     tx_context->push_invocation_stack(runtime, invocation);
 
-    runtime->template invoke<void>(
-        invocation.get_invocable_methodname().c_str());
+    throw std::runtime_error("unimplemented");
+    //runtime->template invoke<void>(
+    //    invocation.get_invocable_methodname().c_str());
 
     tx_context->pop_invocation_stack();
 }
@@ -99,8 +95,8 @@ TransactionStatus
 ExecutionContext<TxContext>::execute(
     Hash const&,
     SignedTransaction const&,
-    GlobalContext&,
-    BlockContext&,
+    BaseGlobalContext&,
+    BaseBlockContext&,
     std::optional<NondeterministicResults>);
 
 template
@@ -188,8 +184,7 @@ EC_DECL(void)::extract_results()
 
 EC_DECL(void)::reset()
 {
-    // nothing to do to clear wasm_context
-    active_runtimes.clear();
+    proc_cache.reset();
     tx_context.reset();
     addr_db = nullptr;
 }

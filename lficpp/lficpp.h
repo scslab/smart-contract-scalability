@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <mutex>
 #include <vector>
+#include <stdexcept>
+
 
 #include <utils/non_movable.h>
 
@@ -14,9 +16,6 @@ extern "C" {
 
 namespace scs
 {
-
-
-class LFIProc;
 
 class LFIGlobalEngine : public utils::NonMovableOrCopyable
 {
@@ -31,9 +30,11 @@ public:
 		lfi_delete(lfi_engine);
 	}
 
-	LFIProc new_proc(std::vector<uint8_t> const& program_bytes, void* ctxp);
+	int
+	__attribute__((warn_unused_result))
+	new_proc(struct lfi_proc** o_proc, struct lfi_proc_info* o_proc_info, std::vector<uint8_t> const& program_bytes, void* ctxp);
 
-	void delete_proc(LFIProc& proc);
+	void delete_proc(struct lfi_proc* proc);
 };
 
 class LFIProc : public utils::NonMovableOrCopyable
@@ -42,27 +43,27 @@ class LFIProc : public utils::NonMovableOrCopyable
 
 	struct lfi_proc_info info;
 
+	void* ctxp;
+
 	LFIGlobalEngine& main_lfi;
-
-	friend class LFIGlobalEngine;
-
-	LFIProc(struct lfi_proc* proc, struct lfi_proc_info info, LFIGlobalEngine& main_lfi) 
-		: proc(proc)
-		, info(info)
-		, main_lfi(main_lfi)
-		{}
 
 public:
 
-	~LFIProc()
-	{
-		main_lfi.delete_proc(*this);
-	};
+	LFIProc(void* ctxp, LFIGlobalEngine& main_lfi) 
+		: proc(nullptr)
+		, info()
+		, ctxp(ctxp)
+		, main_lfi(main_lfi)
+		{}
 
-	void reset_program(std::vector<uint8_t> const& program_bytes);
+
+	~LFIProc();
+
+	int 
+	__attribute__((warn_unused_result))
+	set_program(std::vector<uint8_t> const& program_bytes);
 
 	void run();
-
 };
 
 }

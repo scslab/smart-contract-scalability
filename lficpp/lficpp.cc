@@ -20,37 +20,33 @@ LFIGlobalEngine::LFIGlobalEngine(lfi_syshandler handler)
 	}
 
 
-LFIProc 
-LFIGlobalEngine::new_proc(std::vector<uint8_t> const& program_bytes, void* ctxp)
+int 
+LFIGlobalEngine::new_proc(struct lfi_proc** o_proc, struct lfi_proc_info* o_proc_info, std::vector<uint8_t> const& program_bytes, void* ctxp)
 {
 	std::lock_guard lock(mtx);
 
 	int err = 0;
-	struct lfi_proc_info info;
 
-	auto* proc = lfi_add_proc(lfi_engine, const_cast<uint8_t*>(program_bytes.data()), program_bytes.size(), ctxp, &info, &err);
+	(*o_proc) = lfi_add_proc(lfi_engine, const_cast<uint8_t*>(program_bytes.data()), program_bytes.size(), ctxp, o_proc_info, &err);
 
-	if (err != 0) {
-		throw std::runtime_error("failed to start lfi proc");
-	}
-	return LFIProc(proc, info, *this);
+	return err;
 }
 
 void 
-LFIGlobalEngine::delete_proc(LFIProc& proc)
+LFIGlobalEngine::delete_proc(struct lfi_proc* proc)
 {
 	std::lock_guard lock(mtx);
-	lfi_remove_proc(lfi_engine, proc.proc);
+	lfi_remove_proc(lfi_engine, proc);
 }
 
-void 
-LFIProc::reset_program(std::vector<uint8_t> const& program_bytes)
+int 
+LFIProc::set_program(std::vector<uint8_t> const& program_bytes)
 {
-	int err = lfi_proc_exec(proc, const_cast<uint8_t*>(program_bytes.data()), program_bytes.size(), &info);
-
-	if (err != 0) {
-		throw std::runtime_error("invalid lfi program change");
+	if (proc == nullptr) {
+		return main_lfi.new_proc(&proc, &info, program_bytes, ctxp);
 	}
+
+	return lfi_proc_exec(proc, const_cast<uint8_t*>(program_bytes.data()), program_bytes.size(), &info);
 }
 
 void
@@ -58,6 +54,14 @@ LFIProc::run()
 {
 	lfi_proc_init_regs(proc, info.elfentry, reinterpret_cast<uintptr_t>(info.stack) + info.stacksize - 16);
 	lfi_proc_start(proc);
+}
+
+LFIProc::~LFIProc()
+{
+	if (proc != nullptr)
+	{
+		main_lfi.delete_proc(proc);
+	}
 }
 
 
