@@ -1,17 +1,18 @@
 #include "lficpp/lficpp.h"
 
+#include <unistd.h>
+
 namespace scs
 {
 	
 LFIGlobalEngine::LFIGlobalEngine(lfi_syshandler handler)
 	: lfi_engine(nullptr)
 	{
-		// how should I set these default options?
 		struct lfi_options opts {
-			.noverify = 1,
-			.fastyield = 0,
-			.pagesize = 0,
-			.stacksize = 0, 
+			.noverify = 1, // programs should be verified when they're registered, not at runtime
+			.fastyield = 0, // this option does nothing at the moment TODO
+			.pagesize = std::max<size_t>(getpagesize(), SIZE_MAX),
+			.stacksize = 65536, 
 			.syshandler = handler
 		};
 
