@@ -78,7 +78,7 @@ AtomicSet::try_insert(const HashSetEntry& h)
             uint32_t local = array[idx].load(std::memory_order_relaxed);
 
             // insert can be allowed to overwrite tombstones
-            if (local == 0 || local == TOMBSTONE) {
+            if (local == 0) {
                 if (array[idx].compare_exchange_strong(
                         local, alloc, std::memory_order_relaxed)) {
 

@@ -107,28 +107,6 @@ TEST_CASE("resize", "[hashset]")
     }
 }
 
-TEST_CASE("overwrite tombstones", "[hashset]")
-{
-    AtomicSet set(2);
-
-    auto good_insert
-        = [&](uint64_t i) { REQUIRE(set.try_insert(HashSetEntry(hash_xdr(i), 0))); };
-
-    auto erase
-        = [&](uint64_t i) { set.erase(HashSetEntry(hash_xdr(i), 0)); };
-
-    good_insert(0);
-    good_insert(1);
-    erase(0);
-    good_insert(0);
-    erase(0);
-    good_insert(2);
-    erase(1);
-    good_insert(3);
-    erase(2);
-    good_insert(0);
-}
-
 TEST_CASE("insert and delete", "[hashset]")
 {
     AtomicSet set(10);
