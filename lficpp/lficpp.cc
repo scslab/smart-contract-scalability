@@ -64,5 +64,12 @@ LFIProc::~LFIProc()
 	}
 }
 
+generator<LFIMessage> 
+LFIProc::run(LFIMessage const& input)
+{
+	
+}
+
+
 
 }

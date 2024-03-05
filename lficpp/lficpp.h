@@ -4,6 +4,7 @@
 #include <mutex>
 #include <vector>
 #include <stdexcept>
+#include <coroutine>
 
 
 #include <utils/non_movable.h>
@@ -37,6 +38,10 @@ public:
 	void delete_proc(struct lfi_proc* proc);
 };
 
+struct LFIMessage {
+	std::vector<uint8_t> bytes;
+};
+
 class LFIProc : public utils::NonMovableOrCopyable
 {
 	struct lfi_proc* proc;
@@ -63,7 +68,7 @@ public:
 	__attribute__((warn_unused_result))
 	set_program(std::vector<uint8_t> const& program_bytes);
 
-	void run();
+	generator<LFIMessage> run(LFIMessage const& input);
 };
 
 }
