@@ -48,8 +48,13 @@ public:
 
   LFIProc* 
   get_new_proc() {
-    if (free_ptr >= procs.size()) {
-      procs.emplace_back(std::make_unique<LFIProc>(ctxp, global_engine));
+    if (free_ptr >= procs.size())
+    {
+      std::unique_ptr<LFIProc> proc = std::make_unique<LFIProc>(ctxp, global_engine);
+      if (!(*proc)) {
+        return nullptr;
+      }
+      procs.emplace_back(std::move(proc));
     }
     auto* out = procs[free_ptr].get();
     free_ptr ++;

@@ -65,6 +65,11 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
 
         runtime = proc_cache.get_new_proc();
 
+        if (runtime == nullptr)
+        {
+            throw HostError("failed to allocate new proc");
+        }
+
         auto script = tx_context -> get_contract_db_proxy().get_script(invocation.addr);
 
         if (runtime -> set_program(script.bytes, script.len) != 0) {
