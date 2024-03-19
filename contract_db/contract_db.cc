@@ -43,49 +43,41 @@ ContractDB::assert_not_uncommitted_modifications() const
 }
 
 
-wasm_api::Script
-ContractDB::get_script_by_address(wasm_api::Hash const& addr) const
+VerifiedScriptView
+ContractDB::get_script_by_address(Address const& addr) const
 {
-    /*
-    const ContractDBProxy* proxy = static_cast<const ContractDBProxy*>(context);
-
-    if (proxy != nullptr) {
-        auto res = proxy->get_script(addr);
-
-        if (res.data) {
-            return res;
-        }
-    } */
-
     auto const* contract = addresses_to_contracts_map.get_value_nolocks(addr);
     if (contract == nullptr)
     {
-        return wasm_api::null_script;
+        return VerifiedScriptView{ .bytes = nullptr, .len = 0};
     }
 
     auto const* metered_script_out = contract -> contract.get();
 
-    if (metered_script_out == nullptr || metered_script_out -> data() == nullptr)
+    if (metered_script_out == nullptr)
     {
         throw std::runtime_error("invalid script stored within ContractDB!");
     }
 
-    return { metered_script_out -> data(), metered_script_out -> size()};
+    return metered_script_out->to_view();
 }
 
-wasm_api::Script
-ContractDB::get_script_by_hash(const wasm_api::Hash& hash) const
+VerifiedScriptView
+ContractDB::get_script_by_hash(const Hash& hash) const
 {
     auto it = hashes_to_contracts_map.find(hash);
     if (it == hashes_to_contracts_map.end()) {
         return {nullptr, 0};
     }
-    return { it->second.get()->data(), it -> second.get()->size() };
+    if (it -> second.get() == nullptr) {
+        throw std::runtime_error("invalid script stored within ContractDB");
+    }
+    return it -> second.get()->to_view();//{ it->second.get()->data(), it -> second.get()->size() };
 }
 
 void
-ContractDB::commit_contract_to_db(wasm_api::Hash const& contract_hash,
-                                  metered_contract_ptr_t new_contract)
+ContractDB::commit_contract_to_db(Hash const& contract_hash,
+                                  verified_script_ptr_t new_contract)
 {
     //std::printf("commit contract to db %s\n", debug::array_to_str(contract_hash).c_str());
     auto res = hashes_to_contracts_map.emplace(contract_hash, new_contract);
@@ -97,36 +89,30 @@ ContractDB::commit_contract_to_db(wasm_api::Hash const& contract_hash,
 }
 
 void
-ContractDB::commit_registration(wasm_api::Hash const& new_address,
-                                wasm_api::Hash const& contract_hash)
+ContractDB::commit_registration(Address const& new_address,
+                                Hash const& contract_hash)
 {
+    // throws if there's some error (with groundhog, not a sandbox)
+    // and contract_hash doesn't exist
     auto ptr = hashes_to_contracts_map.at(contract_hash);
-
-/*
-    std::printf("committing registration of contract %s to address %s\n",
-        debug::array_to_str(contract_hash).c_str(),
-        debug::array_to_str(new_address).c_str());
-*/
-
-    /*value_t const* ptr = hashes_to_contracts_map.get_value_nolocks(new_address);
-    if (ptr == nullptr)
-    {
-        throw std::runtime_error("failed to find contract in commit_registration");
-    } */
 
     if (addresses_to_contracts_map.get_value_nolocks(new_address) != nullptr)
     {
         throw std::runtime_error("double registration of a contract");
     }
 
+    // Relies on UncommittedContractsDB ensuring we never commit two things to the same address in one block
     addresses_to_contracts_map.insert(new_address, value_t(ptr));
 
+    // This is threadsafe
+    // TODO(geoff): why did I bother making persistence threadsafe
+    // when this function is only ever called in a sequential loop
     persistence.log_deploy(new_address, contract_hash);
 }
 
 bool
-ContractDB::deploy_contract_to_address(wasm_api::Hash const& addr,
-                                       wasm_api::Hash const& script_hash)
+ContractDB::deploy_contract_to_address(Address const& addr,
+                                       Hash const& script_hash)
 {
     if (!check_address_open_for_deployment(addr)) {
         return false;
@@ -146,17 +132,16 @@ ContractDB::check_committed_contract_exists(const Hash& contract_hash) const
 
 void
 ContractDB::add_new_uncommitted_contract(
-    wasm_api::Hash const& h, 
-    std::shared_ptr<const MeteredContract> new_contract,
-    std::shared_ptr<const Contract> new_unmetered_contract)
+    Hash const& h, 
+    verified_script_ptr_t new_contract)
 {
     has_uncommitted_modifications.store(true, std::memory_order_relaxed);
     uncommitted_contracts.add_new_contract(h, new_contract);
-    persistence.log_create(h, new_unmetered_contract);
+    persistence.log_create(h, new_contract);
 }
 
 bool
-ContractDB::check_address_open_for_deployment(const wasm_api::Hash& addr) const
+ContractDB::check_address_open_for_deployment(const Hash& addr) const
 {
     return addresses_to_contracts_map.get_value_nolocks(addr) == nullptr;
 //    return addresses_to_contracts_map.find(addr)

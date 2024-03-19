@@ -97,7 +97,6 @@ export ABS_TOP_BUILDDIR
 export ABS_TOP_SRCDIR
 
 AC_DEFINE_UNQUOTED([TESTS_RELDIR], ["$ac_pwd"], [top source dir: used for tests in submodules to find data files])
-AC_DEFINE_UNQUOTED([WASMAPI_TESTS_RELDIR], ["$ac_pwd/lib/wasm_api/"], [wasm api tests subfolder])
 
 export xdrpp_INTERNAL
 
@@ -106,8 +105,6 @@ export global_XDRC
 
 export xdrpp_CFLAGS
 export xdrpp_LIBS
-
-dnl AX_PKGCONFIG_SUBDIR(lib/wasm_api)
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile])

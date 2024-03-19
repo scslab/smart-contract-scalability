@@ -19,6 +19,8 @@
 
 #include "config/static_constants.h"
 
+#include "contract_db/verified_script.h"
+
 #include <utils/threadlocal_cache.h>
 
 namespace scs {
@@ -31,21 +33,21 @@ class AsyncPersistContracts : public utils::AsyncWorker
     {
         struct ContractCreate
         {
-            wasm_api::Hash const h;
-            std::shared_ptr<const Contract> unmetered_contract;
+            Hash const h;
+            verified_script_ptr_t contract;
         };
 
         struct ContractDeploy
         {
-            wasm_api::Hash const contract_addr;
-            wasm_api::Hash const contract_hash;
+            Address const contract_addr;
+            Hash const contract_hash;
         };
 
         std::vector<ContractCreate> creations;
         std::vector<ContractDeploy> deployments;
     };
 
-    std::string get_contract_filename(wasm_api::Hash const& h)
+    std::string get_contract_filename(Hash const& h)
     {
         return folder + "contracts/" + debug::array_to_str(h);
     }
@@ -69,92 +71,13 @@ class AsyncPersistContracts : public utils::AsyncWorker
 
     bool exists_work_to_do() override final { return !work_done; }
 
-    void swap_data()
-    {
-        auto& objs = cache.get_objects();
-        for (size_t i = 0; i < work_item.size(); i++) {
-            if (!objs[i]) {
-                objs[i].emplace();
-            }
-            work_item[i].creations.clear();
-            std::swap(work_item[i].creations, objs[i]->creations);
-            work_item[i].deployments.clear();
-            std::swap(work_item[i].deployments, objs[i]->deployments);
-        }
-    }
+    void swap_data();
 
-    void save_contract(ContractRoundPersistence::ContractCreate const& create)
-    {
-        auto filename = get_contract_filename(create.h);
+    void save_contract(ContractRoundPersistence::ContractCreate const& create);
 
-        FILE* f = std::fopen(filename.c_str(), "w");
+    void save_data();
 
-        if (f == nullptr) {
-            throw std::runtime_error("failed to open deployfile");
-        }
-
-        std::fwrite(create.unmetered_contract->data(),
-                    sizeof(uint8_t),
-                    create.unmetered_contract->size(),
-                    f);
-        std::fflush(f);
-        fsync(fileno(f));
-        std::fclose(f);
-    }
-
-    void save_data()
-    {
-        auto filename = get_deploy_filename(work_ts);
-
-        FILE* f = std::fopen(filename.c_str(), "w");
-
-        if (f == nullptr) {
-            throw std::runtime_error("failed to open deployfile");
-        }
-
-        for (auto const& obj : work_item) {
-            for (auto const& deploy : obj.deployments) {
-                std::fwrite(deploy.contract_addr.data(),
-                            sizeof(uint8_t),
-                            deploy.contract_addr.size(),
-                            f);
-                std::fwrite(deploy.contract_hash.data(),
-                            sizeof(uint8_t),
-                            deploy.contract_hash.size(),
-                            f);
-            }
-            for (auto const& create : obj.creations) {
-                save_contract(create);
-            }
-        }
-
-        std::fflush(f);
-
-        fsync(fileno(f));
-
-        std::fclose(f);
-    }
-
-    void run()
-    {
-        while (true) {
-            std::unique_lock lock(mtx);
-
-            if ((!done_flag) && (!exists_work_to_do())) {
-                cv.wait(lock,
-                        [this]() { return done_flag || exists_work_to_do(); });
-            }
-            if (done_flag) {
-                return;
-            }
-
-            save_data();
-
-            swap_data();
-            work_done = true;
-            cv.notify_all();
-        }
-    }
+    void run();
 
   public:
     AsyncPersistContracts(std::string folder)
@@ -175,16 +98,16 @@ class AsyncPersistContracts : public utils::AsyncWorker
         }
     }
 
-    void log_deploy(wasm_api::Hash const& contract_addr,
-                    const wasm_api::Hash& contract_hash)
+    void log_deploy(Address const& contract_addr,
+                    const Hash& contract_hash)
     {
         if constexpr (PERSISTENT_STORAGE_ENABLED) {
             cache.get().deployments.emplace_back(contract_addr, contract_hash);
         }
     }
 
-    void log_create(const wasm_api::Hash& hash,
-                    std::shared_ptr<const Contract> contract)
+    void log_create(const Hash& hash,
+                    verified_script_ptr_t contract)
     {
         if constexpr (PERSISTENT_STORAGE_ENABLED) {
             cache.get().creations.emplace_back(hash, contract);

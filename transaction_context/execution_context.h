@@ -22,8 +22,6 @@
 
 #include "transaction_context/global_context.h"
 
-#include <wasm_api/wasm_api.h>
-
 #include "xdr/transaction.h"
 
 #include "lficpp/lficpp.h"

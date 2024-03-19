@@ -67,7 +67,7 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
 
         auto script = tx_context -> get_contract_db_proxy().get_script(invocation.addr);
 
-        if (runtime -> set_program(script.data, script.len) != 0) {
+        if (runtime -> set_program(script.bytes, script.len) != 0) {
             throw std::runtime_error("program nexist at target address");
         }
 

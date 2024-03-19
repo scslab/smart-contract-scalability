@@ -22,7 +22,6 @@ CLEANFILES = *~ .*~
 
 include $(srcdir)/lib/utility/Makefile.am.fragment
 include $(srcdir)/lib/merkle_trie_toolkit/Makefile.am.fragment
-include $(srcdir)/lib/wasm_api/Makefile.am.fragment
 
 X_FILES = \
 	xdr/block.x \
@@ -78,6 +77,7 @@ CONFIG_SRCS = \
 CONTRACT_DB_SRCS = \
 	contract_db/contract_db.cc \
 	contract_db/contract_db_proxy.cc \
+	contract_db/contract_persistence.cc \
 	contract_db/contract_utils.cc \
 	contract_db/uncommitted_contracts.cc
 
@@ -187,8 +187,6 @@ SRCS = \
 	$(TRANSACTION_CONTEXT_SRCS) \
 	$(TX_BLOCK_SRCS) \
 	$(VM_SRCS) \
-	$(WASM3_SRCS) \
-	$(WASM_API_SRCS) \
 	$(utility_CCS)
 
 TEST_UTILS_SRCS = \
@@ -277,7 +275,6 @@ AM_CPPFLAGS = \
 	$(utility_CFLAGS) \
 	$(lmdb_CFLAGS) \
 	$(mtt_CFLAGS) \
-	$(wasm_api_CFLAGS) \
 	$(Catch2_CFLAGS) \
 	$(grpcpp_DEDUP_CFLAGS) \
 	$(protobuf_CFLAGS) \
@@ -291,7 +288,6 @@ LDADD = $(xdrpp_LIBS) \
 	$(lmdb_LIBS) \
 	$(mtt_LIBS) \
 	$(rocksdb_LIBS) \
-	$(wasm_api_LIBS) \
 	$(Catch2_LIBS) \
 	$(grpcpp_LIBS) \
 	$(protobuf_LIBS) \
@@ -321,8 +317,4 @@ groundhog_payment_sim_SOURCES = main/groundhog_payment_sim.cc $(SRCS)
 basic_SOURCES = main/basic.cc $(COMPLETE_SRCS)
 sisyphus_proof_size_exp_SOURCES = main/sisyphus_proof_size_exp.cc $(SRCS)
 
-clean-local:
-	cd metering && \
-	cargo clean
-	rm -f $(CC_WASMS:.cc=.wasm)
 
