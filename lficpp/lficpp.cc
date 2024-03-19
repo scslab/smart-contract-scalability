@@ -21,15 +21,11 @@ LFIGlobalEngine::LFIGlobalEngine(lfi_syshandler handler)
 
 
 int 
-LFIGlobalEngine::new_proc(struct lfi_proc** o_proc, struct lfi_proc_info* o_proc_info, std::vector<uint8_t> const& program_bytes, void* ctxp)
+LFIGlobalEngine::new_proc(struct lfi_proc** o_proc, void* ctxp)
 {
 	std::lock_guard lock(mtx);
 
-	int err = 0;
-
-	(*o_proc) = lfi_add_proc(lfi_engine, const_cast<uint8_t*>(program_bytes.data()), program_bytes.size(), ctxp, o_proc_info, &err);
-
-	return err;
+	return lfi_add_proc(lfi_engine, o_proc, ctxp);
 }
 
 void 
@@ -39,25 +35,46 @@ LFIGlobalEngine::delete_proc(struct lfi_proc* proc)
 	lfi_remove_proc(lfi_engine, proc);
 }
 
+LFIProc::LFIProc(void* ctxp, LFIGlobalEngine& main_lfi) 
+	: proc(nullptr)
+	, info()
+	, ctxp(ctxp)
+	, main_lfi(main_lfi)
+{
+	if (main_lfi.new_proc(&proc, ctxp) != 0)
+	{
+		proc = nullptr;
+	}
+}
+
 int 
 LFIProc::set_program(std::vector<uint8_t> const& program_bytes)
 {
-	if (proc == nullptr) {
-		return main_lfi.new_proc(&proc, &info, program_bytes, ctxp);
+	if (actively_running) {
+		return -1;
 	}
-
 	return lfi_proc_exec(proc, const_cast<uint8_t*>(program_bytes.data()), program_bytes.size(), &info);
 }
 
-void
+int
 LFIProc::run()
 {
+	if (actively_running) {
+		return -1;
+	}
+	actively_running = true;
 	lfi_proc_init_regs(proc, info.elfentry, reinterpret_cast<uintptr_t>(info.stack) + info.stacksize - 16);
-	lfi_proc_start(proc);
+	int code = lfi_proc_start(proc);
+	actively_running = false;
+	return code;
 }
 
 LFIProc::~LFIProc()
 {
+	if (actively_running) {
+		//impossible
+		std::terminate();
+	}
 	if (proc != nullptr)
 	{
 		main_lfi.delete_proc(proc);
