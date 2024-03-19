@@ -4,7 +4,10 @@
 #include <mutex>
 #include <vector>
 #include <stdexcept>
+<<<<<<< HEAD
 #include <coroutine>
+=======
+>>>>>>> e379ce277881bdfd5a46ba5baa8b2cb171ec4de4
 
 
 #include <utils/non_movable.h>
@@ -38,10 +41,13 @@ public:
 	void delete_proc(struct lfi_proc* proc);
 };
 
+<<<<<<< HEAD
 struct LFIMessage {
 	std::vector<uint8_t> bytes;
 };
 
+=======
+>>>>>>> e379ce277881bdfd5a46ba5baa8b2cb171ec4de4
 class LFIProc : public utils::NonMovableOrCopyable
 {
 	struct lfi_proc* proc;
@@ -68,7 +74,11 @@ public:
 	__attribute__((warn_unused_result))
 	set_program(std::vector<uint8_t> const& program_bytes);
 
+<<<<<<< HEAD
 	generator<LFIMessage> run(LFIMessage const& input);
+=======
+	void run();
+>>>>>>> e379ce277881bdfd5a46ba5baa8b2cb171ec4de4
 };
 
 }

@@ -60,16 +60,7 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
         CONTRACT_INFO("creating new runtime for contract at %s",
                       debug::array_to_str(invocation.addr).c_str());
 
-        runtime = proc_cache.get_new_proc();
-
-        auto const& program = tx_context -> get_contract_db_proxy().get_script(invocation.addr);
-
-        if (runtime -> set_program(program) != 0)
-        {
-            tx_context -> mark_invocation_error();
-            return;
-        }
-        
+        throw std::runtime_error("unimpl");
         /*
         //auto timestamp = utils::init_time_measurement();
 
