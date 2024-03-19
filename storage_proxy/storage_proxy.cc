@@ -25,7 +25,7 @@
 
 #include "storage_proxy/transaction_rewind.h"
 
-#include <wasm_api/error.h>
+#include "transaction_context/error.h"
 
 #include "object/make_delta.h"
 
@@ -80,7 +80,7 @@ PROXY_DECL::raw_memory_write(
 
 	if (!v.applicator.try_apply(delta))
 	{
-		throw wasm_api::HostError("failed to apply raw_memory_write");
+		throw HostError("failed to apply raw_memory_write");
 	}
 }
 
@@ -96,7 +96,7 @@ PROXY_DECL::nonnegative_int64_set_add(
 
 	if (!v.applicator.try_apply(delta))
 	{
-		throw wasm_api::HostError("failed to apply nonnegative_int64_set_add");
+		throw HostError("failed to apply nonnegative_int64_set_add");
 	}
 }
 
@@ -108,13 +108,13 @@ PROXY_DECL::nonnegative_int64_add(AddressAndKey const& key, int64_t delta_value)
 	auto base_value = v.applicator.get_base_nnint64_set_value();
 	if (!base_value.has_value())
 	{
-		throw wasm_api::HostError("type mismatch in nonnegative_int64_add");
+		throw HostError("type mismatch in nonnegative_int64_add");
 	}
 	auto delta = make_nonnegative_int64_set_add(*base_value, delta_value);
 
 	if (!v.applicator.try_apply(delta))
 	{
-		throw wasm_api::HostError("failed to apply nonnegative_int64_add");
+		throw HostError("failed to apply nonnegative_int64_add");
 	}
 }
 
@@ -128,7 +128,7 @@ PROXY_DECL::delete_object_last(AddressAndKey const& key)
 
 	if (!v.applicator.try_apply(delta))
 	{
-		throw wasm_api::HostError("failed to apply delete_last");
+		throw HostError("failed to apply delete_last");
 	}
 }
 
@@ -142,7 +142,7 @@ PROXY_DECL::hashset_insert(AddressAndKey const& key, Hash const& h, uint64_t thr
 
 	if (!v.applicator.try_apply(delta))
 	{
-		throw wasm_api::HostError("failed to apply hashset insert");
+		throw HostError("failed to apply hashset insert");
 	}
 }
 
@@ -156,14 +156,14 @@ PROXY_DECL::hashset_increase_limit(AddressAndKey const& key, uint32_t limit)
 
 	if (limit > UINT16_MAX)
 	{
-		throw wasm_api::HostError("limit increase too large");
+		throw HostError("limit increase too large");
 	}
 
 	auto delta = make_hash_set_increase_limit(limit);
 
 	if (!v.applicator.try_apply(delta))
 	{
-		throw wasm_api::HostError("failed to apply hashset limit increase");
+		throw HostError("failed to apply hashset limit increase");
 	}
 }
 
@@ -177,7 +177,7 @@ PROXY_DECL::hashset_clear(AddressAndKey const& key, uint64_t threshold)
 
 	if (!v.applicator.try_apply(delta))
 	{
-		throw wasm_api::HostError("failed to apply hashset clear");
+		throw HostError("failed to apply hashset clear");
 	}
 }
 
@@ -191,7 +191,7 @@ PROXY_DECL::asset_add(AddressAndKey const& key, int64_t d)
 
 	if (!v.applicator.try_apply(delta))
 	{
-		throw wasm_api::HostError("failed to apply asset add");
+		throw HostError("failed to apply asset add");
 	}
 }
 
