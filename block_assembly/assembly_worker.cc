@@ -55,9 +55,6 @@ AssemblyWorker<GlobalContext_t, BlockContext_t>::run()
             return;
         }
 
-        ThreadlocalTransactionContextStore<typename BlockContext_t::tx_context_t>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<typename BlockContext_t::tx_context_t>::get_exec_ctx();
-
         auto result = exec_ctx.execute(hash_xdr(*tx), *tx, global_context, block_context);
         if (result == TransactionStatus::SUCCESS) {
             reservation->commit();
@@ -68,7 +65,7 @@ AssemblyWorker<GlobalContext_t, BlockContext_t>::run()
     }
 }
 
-template class AssemblyWorker<GlobalContext, BlockContext>;
+template class AssemblyWorker<BaseGlobalContext, BaseBlockContext>;
 template class AssemblyWorker<GroundhogGlobalContext, GroundhogBlockContext>;
 template class AssemblyWorker<SisyphusGlobalContext, SisyphusBlockContext>;
 
@@ -86,20 +83,20 @@ AsyncAssemblyWorker<worker_t>::run()
             return;
         }
 
-        if (!worker) {
-            throw std::runtime_error("shouldn't have null worker here");
+        if (!running) {
+            throw std::runtime_error("shouldn't be not running here");
         }
 
-        worker->run();
+        worker.run();
         ThreadlocalContextStore::get_rate_limiter().free_one_slot();
 
-        worker = std::nullopt;
+        running = false;
         cv.notify_all();
     }
 }
 
 template class
-AsyncAssemblyWorker<AssemblyWorker<GlobalContext, BlockContext>>;
+AsyncAssemblyWorker<AssemblyWorker<BaseGlobalContext, BaseBlockContext>>;
 
 template class
 AsyncAssemblyWorker<AssemblyWorker<GroundhogGlobalContext, GroundhogBlockContext>>;

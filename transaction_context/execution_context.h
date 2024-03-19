@@ -67,7 +67,7 @@ public:
 };
 
 template<typename TransactionContext_t>
-class ExecutionContext
+class ExecutionContext : utils::NonMovableOrCopyable
 {
     SandboxCache proc_cache;
 
