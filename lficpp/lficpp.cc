@@ -1,5 +1,7 @@
 #include "lficpp/lficpp.h"
 
+#include <utility>
+
 #include <unistd.h>
 
 namespace scs
@@ -48,12 +50,12 @@ LFIProc::LFIProc(void* ctxp, LFIGlobalEngine& main_lfi)
 }
 
 int 
-LFIProc::set_program(std::vector<uint8_t> const& program_bytes)
+LFIProc::set_program(const uint8_t* bytes, const size_t len)
 {
 	if (actively_running) {
 		return -1;
 	}
-	return lfi_proc_exec(proc, const_cast<uint8_t*>(program_bytes.data()), program_bytes.size(), &info);
+	return lfi_proc_exec(proc, const_cast<uint8_t*>(bytes), len, &info);
 }
 
 int
@@ -67,6 +69,17 @@ LFIProc::run()
 	int code = lfi_proc_start(proc);
 	actively_running = false;
 	return code;
+}
+
+void 
+LFIProc::exit_error() {
+	if (!actively_running) {
+		std::printf("bizarre\n");
+		std::abort();
+	}
+	actively_running = false;
+	lfi_proc_exit(proc, 1);
+	std::unreachable();
 }
 
 LFIProc::~LFIProc()

@@ -19,6 +19,7 @@
 #include "transaction_context/method_invocation.h"
 #include "transaction_context/transaction_results.h"
 #include "transaction_context/transaction_context.h"
+#include "transaction_context/error.h"
 
 #include "threadlocal/threadlocal_context.h"
 
@@ -36,6 +37,8 @@
 #include "utils/defer.h"
 
 #include <utils/time.h>
+
+#include <utility>
 
 #define EC_DECL(ret) template<typename TransactionContext_t> ret ExecutionContext<TransactionContext_t>
 
@@ -60,34 +63,45 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
         CONTRACT_INFO("creating new runtime for contract at %s",
                       debug::array_to_str(invocation.addr).c_str());
 
-        throw std::runtime_error("unimpl");
-        /*
-        //auto timestamp = utils::init_time_measurement();
+        runtime = proc_cache.get_new_proc();
 
-        auto runtime_instance = wasm_context.new_runtime_instance(
-            tx_context -> get_contract_db_proxy().get_script(invocation.addr));
+        auto script = tx_context -> get_contract_db_proxy().get_script(invocation.addr);
 
-        if (!runtime_instance) {
-            throw wasm_api::HostError("cannot find target address");
+        if (runtime -> set_program(script.data, script.len) != 0) {
+            throw std::runtime_error("program nexist at target address");
         }
-
-        //std::printf("launch time: %lf\n", utils::measure_time(timestamp));
-
-        active_runtimes.emplace(invocation.addr, std::move(runtime_instance));
-        BuiltinFns<TransactionContext_t>::link_fns(*active_runtimes.at(invocation.addr));
-
-        //std::printf("link time: %lf\n", utils::measure_time(timestamp)); */
 
         tx_context->add_active_runtime(invocation.addr, runtime);
     }
 
     tx_context->push_invocation_stack(runtime, invocation);
 
-    throw std::runtime_error("unimplemented");
-    //runtime->template invoke<void>(
-    //    invocation.get_invocable_methodname().c_str());
+    // TODO: all the invocation data, set registers, etc
+    int code = runtime -> run();
+
+    if (code != 0)
+    {
+        throw HostError("invocation failed");
+    }
 
     tx_context->pop_invocation_stack();
+}
+
+EC_DECL(uint64_t)::syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5)
+{
+    try {
+
+    } catch (HostError& e) {
+        std::printf("tx failed %s\n", e.what());
+        CONTRACT_INFO("Execution error: %s", e.what());
+        tx_context -> get_current_runtime() -> exit_error();
+        std::unreachable();
+
+    } catch (...) {
+        std::printf("unrecoverable error!\n");
+        std::abort();
+    }
+    return 0;
 }
 
 template
@@ -145,7 +159,7 @@ ExecutionContext<TransactionContext_t>::execute(Hash const& tx_hash,
 
     try {
         invoke_subroutine(invocation);
-    } catch (wasm_api::HostError& e) {
+    } catch (HostError& e) {
 	    std::printf("tx failed %s\n", e.what());
 	    CONTRACT_INFO("Execution error: %s", e.what());
         return TransactionStatus::FAILURE;

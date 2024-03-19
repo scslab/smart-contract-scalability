@@ -181,7 +181,7 @@ TC_DECL::get_witness(uint64_t wit_idx) const
             return w;
         }
     }
-    throw wasm_api::HostError("witness not found");
+    throw HostError("witness not found");
 }
 
 TC_TEMPLATE

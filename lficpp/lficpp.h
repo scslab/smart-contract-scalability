@@ -63,7 +63,9 @@ public:
 
 	int 
 	__attribute__((warn_unused_result))
-	set_program(std::vector<uint8_t> const& program_bytes);
+	set_program(const uint8_t* bytes, const size_t len);
+
+	void exit_error();
 };
 
 }

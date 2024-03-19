@@ -4,18 +4,12 @@
 [submodule "merkle_trie_toolkit"]
 	path = lib/merkle_trie_toolkit
 	url = https://github.com/gramseyer/merkle_trie_toolkit.git
-[submodule "wasm_api"]
-	path = lib/wasm_api
-	url = https://github.com/gramseyer/wasm_api.git
 [submodule "m4"]
 	path = m4
 	url = https://github.com/gramseyer/m4.git
 [submodule "lib/utility"]
 	path = lib/utility
 	url = https://github.com/gramseyer/utility.git
-[submodule "wasm_libs/srcs/gmp-wasm"]
-	path = wasm_libs/srcs/gmp-wasm
-	url = https://github.com/gramseyer/gmp-wasm.git
 [submodule "lib/lfi"]
 	path = lib/lfi
 	url = https://github.com/zyedidia/lfi.git

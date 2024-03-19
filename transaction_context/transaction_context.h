@@ -77,8 +77,6 @@ class TransactionContext
 	const SignedTransaction& tx;
 	const Hash& tx_hash;
 
-	bool unrecoverable_error = false;
-
 	uint64_t gas_used;
 
 	const uint64_t current_block;
@@ -136,22 +134,6 @@ public:
 
 	const MethodInvocation& 
 	get_current_method_invocation() const;
-
-	void mark_invocation_error()
-	{
-		if (invocation_stack.size() == 0)
-		{
-			mark_transaction_error();
-		} else
-		{
-			invocation_stack.back().has_error = true;
-		}
-	}
-
-	void mark_transaction_error()
-	{
-		unrecoverable_error = true;
-	}
 
 	const Address&
 	get_self_addr() const
