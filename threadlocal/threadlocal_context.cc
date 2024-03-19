@@ -16,8 +16,6 @@
 
 #include "threadlocal/threadlocal_context.h"
 
-#include "wasm_api/wasm_api.h"
-
 #include "transaction_context/global_context.h"
 
 #include "transaction_context/transaction_context.h"
