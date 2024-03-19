@@ -29,9 +29,6 @@
 #include "state_db/async_keys_to_disk.h"
 #include "state_db/optional_value_wrapper.h"
 
-//#include "persistence/rocksdb_iface.h"
-//#include "persistence/accumulate_kvs_iface.h"
-
 #include <map>
 #include <optional>
 
@@ -70,8 +67,6 @@ class GroundhogPersistentStateDB
     uint32_t current_timestamp = 0;
 
     trie_t state_db;
-
-  //  RocksdbWrapper rdb;
 
   public:
 
