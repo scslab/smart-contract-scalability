@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 Geoffrey Ramseyer
+ * Copyright 2024 Geoffrey Ramseyer
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 #include "transaction_context/transaction_results.h"
 
-#include <wasm_api/error.h>
+#include "transaction_context/error.h"
 
 namespace scs
 {
@@ -39,7 +39,7 @@ TransactionResultsFrame::add_rpc_result(RpcResult result)
 	} 
 	else
 	{
-		throw wasm_api::HostError("added rpc result when validating");
+		throw HostError("added rpc result when validating");
 	}
 }
 
@@ -54,7 +54,7 @@ TransactionResultsFrame::get_next_rpc_result()
 	} 
 	else
 	{
-		throw wasm_api::HostError("insufficient rpc results stored");
+		throw HostError("insufficient rpc results stored");
 	}
 }
 
