@@ -17,6 +17,7 @@
  */
 
 #include "xdr/types.h"
+#include "contract_db/verified_script.h"
 
 #include <memory>
 
@@ -29,7 +30,7 @@ namespace test {
 void
 deploy_and_commit_contractdb(ContractDB& contract_db,
                              const Address& addr,
-                             std::shared_ptr<const Contract> contract);
+                             std::shared_ptr<VerifiedScript> contract);
 
 }
 } // namespace scs

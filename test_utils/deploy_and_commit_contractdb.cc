@@ -22,6 +22,7 @@
 
 #include "contract_db/contract_db.h"
 #include "contract_db/contract_db_proxy.h"
+#include "contract_db/verified_script.h"
 
 #include "storage_proxy/transaction_rewind.h"
 
@@ -32,11 +33,11 @@ namespace test {
 void
 deploy_and_commit_contractdb(ContractDB& contract_db,
                              const Address& addr,
-                             std::shared_ptr<const Contract> contract)
+                             std::shared_ptr<VerifiedScript> contract)
 {
     ContractDBProxy proxy(contract_db);
 
-    Hash h = hash_xdr(*contract);
+    Hash h = hash_vec(contract->bytes);
 
     proxy.create_contract(contract);
 
@@ -54,7 +55,7 @@ deploy_and_commit_contractdb(ContractDB& contract_db,
 
     ContractDBProxy proxy_new(contract_db);
 
-    REQUIRE(proxy_new.get_script(addr).data);
+    REQUIRE(proxy_new.get_script(addr).bytes);
 }
 
 } // namespace test
