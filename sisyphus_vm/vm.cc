@@ -52,70 +52,6 @@ SisyphusVirtualMachine::assert_initialized() const
     }
 }
 
-#if 0
-
-struct SisyphusValidateReduce
-{
-    std::atomic<bool>& found_error;
-    SisyphusGlobalContext& global_context;
-    SisyphusBlockContext& block_context;
-    Block const& txs;
-
-    void operator()(const tbb::blocked_range<std::size_t> r)
-    {
-        if (found_error)
-            return;
-
-        ThreadlocalTransactionContextStore<SisyphusTxContext>::make_ctx();
-
-        // TBB docs suggest this type of pattern (use local var until end)
-        //  optimizes better.
-        bool local_found_error = false;
-
-        for (size_t i = r.begin(); i < r.end(); i++) {
-
-            auto& exec_ctx = ThreadlocalTransactionContextStore<SisyphusTxContext>::get_exec_ctx();
-
-            auto const& txset_entry = txs.transactions[i];
-            auto const& tx = txset_entry.tx;
-
-            auto hash = hash_xdr(tx);
-
-            for (size_t j = 0; j < txset_entry.nondeterministic_results.size(); j++)
-            {
-                auto status = exec_ctx.execute(hash, tx, global_context, block_context, txset_entry.nondeterministic_results[j]);
-
-                if (status != TransactionStatus::SUCCESS) {
-                    local_found_error = true;
-                    break;
-                }
-            }
-        }
-
-        found_error = found_error || local_found_error;
-    }
-
-    // split constructor can be concurrent with operator()
-    SisyphusValidateReduce(SisyphusValidateReduce& x, tbb::split)
-        : found_error(x.found_error)
-        , global_context(x.global_context)
-        , block_context(x.block_context)
-        , txs(x.txs){};
-
-    void join(SisyphusValidateReduce& other) {}
-
-    SisyphusValidateReduce(std::atomic<bool>& found_error,
-                   SisyphusGlobalContext& global_context,
-                   SisyphusBlockContext& block_context,
-                   Block const& txs)
-        : found_error(found_error)
-        , global_context(global_context)
-        , block_context(block_context)
-        , txs(txs)
-    {}
-};
-
-#endif
 
 bool
 SisyphusVirtualMachine::validate_tx_block(Block const& txs)
@@ -209,7 +145,7 @@ SisyphusVirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_ti
     ThreadlocalContextStore::get_rate_limiter().prep_for_notify();
     ThreadlocalContextStore::enable_rpcs();
     StaticAssemblyWorkerCache<SisyphusGlobalContext, SisyphusBlockContext>::start_assembly_threads(
-        mempool, global_context, *current_block_context, limits, n_threads);
+        mempool, global_context, *current_block_context, limits, engine, n_threads);
     std::printf("start assembly threads time %lf\n", utils::measure_time(ts));
     ThreadlocalContextStore::get_rate_limiter().start_threads(n_threads);
 
@@ -289,8 +225,6 @@ SisyphusVirtualMachine::~SisyphusVirtualMachine()
     ThreadlocalContextStore::get_rate_limiter().stop_threads();
     ThreadlocalContextStore::stop_rpcs();
     StaticAssemblyWorkerCache<SisyphusGlobalContext, SisyphusBlockContext>::wait_for_stop_assembly_threads();
-    // execution context used to have dangling reference to GlobalContext without this
-    ThreadlocalContextStore::clear_entire_context<SisyphusTxContext>();
 }
 
 } // namespace scs

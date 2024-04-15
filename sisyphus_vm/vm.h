@@ -17,6 +17,7 @@
  */
 
 #include "transaction_context/global_context.h"
+#include "transaction_context/execution_context.h"
 
 #include <memory>
 #include <vector>
@@ -29,6 +30,8 @@
 #include "mempool/mempool.h"
 
 #include "state_db/async_keys_to_disk.h"
+
+#include "lficpp/lficpp.h"
 
 namespace scs {
 
@@ -51,6 +54,8 @@ class SisyphusVirtualMachine : public utils::NonMovableOrCopyable
     std::unique_ptr<SisyphusBlockContext> current_block_context;
     Mempool mempool;
 
+    LFIGlobalEngine engine;
+
     Hash prev_block_hash;
 
     AsyncKeysToDisk keys_persist;
@@ -63,7 +68,19 @@ class SisyphusVirtualMachine : public utils::NonMovableOrCopyable
 
     BlockHeader make_block_header();
 
+    using TransactionContext_t = TransactionContext<SisyphusGlobalContext>;
+
   public:
+
+    SisyphusVirtualMachine()
+      : global_context()
+      , current_block_context()
+      , mempool()
+      , engine(&ExecutionContext<TransactionContext_t>::static_syscall_handler)
+      , prev_block_hash()
+      , keys_persist()
+      {}
+
     void init_default_genesis();
 
     std::optional<BlockHeader>
