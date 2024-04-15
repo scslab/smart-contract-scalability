@@ -49,7 +49,7 @@ make_create_transactions(const char* erc20_contract)
     auto wallet
         = load_wasm_from_file("cpp_contracts/payment_experiment/payment.wasm");
 
-    auto make_tx = [](std::shared_ptr<const Contract> contract) -> TxSetEntry {
+    auto make_tx = [](std::shared_ptr<VerifiedScript> contract) -> TxSetEntry {
         struct calldata_create
         {
             uint32_t idx;
@@ -64,7 +64,7 @@ make_create_transactions(const char* erc20_contract)
         stx.tx.invocation = invocation;
         stx.tx.gas_limit = 1'000'000 + gas_limit;
 
-        stx.tx.contracts_to_deploy.push_back(*contract);
+        stx.tx.contracts_to_deploy.push_back(contract->to_tx_contract());
 
         return make_txset_entry(stx);
     };
@@ -79,7 +79,7 @@ make_deploy_erc20_transaction(const char* erc20_contract)
 {
     auto c = load_wasm_from_file(erc20_contract);
 
-    Hash h = hash_xdr(*c);
+    Hash h = hash_vec(c->bytes);
 
     struct calldata_Deploy
     {
@@ -183,10 +183,10 @@ PaymentExperiment::make_accounts_and_mints(const char* erc20_contract)
     std::vector<TxSetEntry> accounts_out;
     std::vector<TxSetEntry> mints_out;
 
-    Hash wallet_contract_hash = hash_xdr(
-        *load_wasm_from_file("cpp_contracts/payment_experiment/payment.wasm"));
+    Hash wallet_contract_hash = hash_vec(
+        load_wasm_from_file("cpp_contracts/payment_experiment/payment.wasm")->bytes);
     Hash token_contract_hash
-        = hash_xdr(*load_wasm_from_file(erc20_contract));
+        = hash_vec(load_wasm_from_file(erc20_contract)->bytes);
 
     Address token_addr = compute_contract_deploy_address(
         DEPLOYER_ADDRESS, token_contract_hash, UINT64_MAX);
@@ -211,8 +211,8 @@ PaymentExperiment::get_active_key_set()
 {
     std::vector<AddressAndKey> keys;
     keys.resize(num_accounts * 5);
-    Hash wallet_contract_hash = hash_xdr(
-        *load_wasm_from_file("cpp_contracts/payment_experiment/payment.wasm"));
+    Hash wallet_contract_hash = hash_vec(
+        load_wasm_from_file("cpp_contracts/payment_experiment/payment.wasm")->bytes);
 
     InvariantKey pkaddr = make_static_key(1);
     InvariantKey replayaddr = make_static_key(0);
@@ -221,7 +221,7 @@ PaymentExperiment::get_active_key_set()
     const char* erc20_contract = (SisyphusStateDB::USE_ASSETS == 1) ? "cpp_contracts/sisyphus_erc20.wasm" : "cpp_contracts/erc20.wasm"; 
 
     Hash token_contract_hash
-        = hash_xdr(*load_wasm_from_file(erc20_contract));
+        = hash_vec(load_wasm_from_file(erc20_contract)->bytes);
 
     Address token_deploy_addr = compute_contract_deploy_address(
         DEPLOYER_ADDRESS, token_contract_hash, UINT64_MAX);

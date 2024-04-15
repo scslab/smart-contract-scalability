@@ -26,6 +26,12 @@ struct VerifiedScript
     Hash hash() const {
         return hash_vec(bytes);
     }
+
+    Contract to_tx_contract() {
+        Contract out;
+        out.insert(out.end(), bytes.begin(), bytes.end());
+        return out;
+    }
 };
 
 using verified_script_ptr_t = std::shared_ptr<VerifiedScript>;
