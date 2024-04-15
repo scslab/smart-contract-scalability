@@ -37,7 +37,7 @@ namespace scs {
 
 #define VM(ret) template<typename GlobalContext_t, typename BlockContext_t> ret BaseVirtualMachine<GlobalContext_t, BlockContext_t>
 
-template class BaseVirtualMachine<GlobalContext, BlockContext>;
+template class BaseVirtualMachine<BaseGlobalContext, BaseBlockContext>;
 template class BaseVirtualMachine<GroundhogGlobalContext, GroundhogBlockContext>;
 
 VM(void)::init_default_genesis()
@@ -130,8 +130,9 @@ VM()::~BaseVirtualMachine()
     ThreadlocalContextStore::get_rate_limiter().stop_threads();
     ThreadlocalContextStore::stop_rpcs();
     StaticAssemblyWorkerCache<GlobalContext_t, BlockContext_t>::wait_for_stop_assembly_threads();
+    
     // execution context used to have dangling reference to GlobalContext without this
-    ThreadlocalContextStore::clear_entire_context<typename BlockContext::tx_context_t>();
+    //ThreadlocalContextStore::clear_entire_context<typename BlockContext::tx_context_t>();
 }
 
 } // namespace scs

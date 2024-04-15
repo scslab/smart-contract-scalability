@@ -19,15 +19,15 @@
 namespace scs
 {
 
-class GlobalContext;
-struct BlockContext;
+class BaseGlobalContext;
+struct BaseBlockContext;
 class GroundhogGlobalContext;
 struct GroundhogBlockContext;
 class SisyphusGlobalContext;
 struct SisyphusBlockContext;
 
-void phase_finish_block(GlobalContext& global_structures, BlockContext& block_structures);
-void phase_undo_block(GlobalContext& global_structures, BlockContext& block_structures);
+void phase_finish_block(BaseGlobalContext& global_structures, BaseBlockContext& block_structures);
+void phase_undo_block(BaseGlobalContext& global_structures, BaseBlockContext& block_structures);
 
 void phase_finish_block(GroundhogGlobalContext& global_structures, GroundhogBlockContext& block_structures);
 void phase_undo_block(GroundhogGlobalContext& global_structures, GroundhogBlockContext& block_structures);

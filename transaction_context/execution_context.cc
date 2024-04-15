@@ -101,7 +101,6 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1
         CONTRACT_INFO("Execution error: %s", e.what());
         tx_context -> get_current_runtime() -> exit_error();
         std::unreachable();
-
     } catch (...) {
         std::printf("unrecoverable error!\n");
         std::abort();

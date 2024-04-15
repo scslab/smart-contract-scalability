@@ -32,7 +32,7 @@
 namespace scs
 {
 
-void phase_finish_block(GlobalContext& global_structures, BlockContext& block_structures)
+void phase_finish_block(BaseGlobalContext& global_structures, BaseBlockContext& block_structures)
 {
 	auto ts = utils::init_time_measurement();
 	tbb::task_group g;
@@ -51,7 +51,7 @@ void phase_finish_block(GlobalContext& global_structures, BlockContext& block_st
 	std::printf("post block tlcs clear %lf\n", utils::measure_time(ts));
 }
 
-void phase_undo_block(GlobalContext& global_structures, BlockContext& block_structures)
+void phase_undo_block(BaseGlobalContext& global_structures, BaseBlockContext& block_structures)
 {
 	block_structures.modified_keys_list.merge_logs();
 

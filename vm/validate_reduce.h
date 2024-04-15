@@ -25,16 +25,17 @@ struct ValidateReduce
         if (found_error)
             return;
 
-        ThreadlocalTransactionContextStore<TxContext_t>::make_ctx();
+        //ThreadlocalTransactionContextStore<TxContext_t>::make_ctx();
 
         // TBB docs suggest this type of pattern (use local var until end)
         //  optimizes better.
         bool local_found_error = false;
 
-        for (size_t i = r.begin(); i < r.end(); i++) {
+        throw std::runtime_error("unimpl");
 
-            auto& exec_ctx = ThreadlocalTransactionContextStore<
-                TxContext_t>::get_exec_ctx();
+        /*
+
+        for (size_t i = r.begin(); i < r.end(); i++) {
 
             auto const& txset_entry = txs.transactions[i];
             auto const& tx = txset_entry.tx;
@@ -55,7 +56,9 @@ struct ValidateReduce
                     break;
                 }
             }
-        }
+        } 
+
+        */
 
         found_error = found_error || local_found_error;
     }
