@@ -19,10 +19,11 @@
 #include <cstdio>
 
 #include "xdr/types.h"
+#include "contract_db/verified_script.h"
 
 namespace scs {
 
-[[maybe_unused]] std::shared_ptr<Contract> static load_wasm_from_file(
+[[maybe_unused]] std::shared_ptr<VerifiedScript> static load_wasm_from_file(
     const char* filename)
 {
     FILE* f = std::fopen(filename, "r");
@@ -31,7 +32,7 @@ namespace scs {
         throw std::runtime_error("failed to load wasm file");
     }
 
-    auto contents = std::make_shared<Contract>();
+    std::vector<uint8_t> contents;
 
     const int BUF_SIZE = 65536;
     char buf[BUF_SIZE];
@@ -40,12 +41,12 @@ namespace scs {
     while (count != 0) {
         count = std::fread(buf, sizeof(char), BUF_SIZE, f);
         if (count > 0) {
-            contents->insert(contents->end(), buf, buf + count);
+            contents.insert(contents.end(), buf, buf + count);
         }
     }
     std::fclose(f);
 
-    return contents;
+    return std::make_shared<VerifiedScript>(contents);
 }
 
 } // namespace scs

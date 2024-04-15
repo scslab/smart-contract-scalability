@@ -18,6 +18,7 @@
 
 #include "contract_db/contract_db.h"
 #include "contract_db/contract_db_proxy.h"
+#include "contract_db/verified_script.h"
 
 #include "storage_proxy/transaction_rewind.h"
 
@@ -38,7 +39,7 @@ make_address(uint64_t a, uint64_t b, uint64_t c, uint64_t d)
 
 void
 install_contract(ContractDBProxy& db,
-                 std::shared_ptr<const Contract> contract,
+                 std::shared_ptr<VerifiedScript> contract,
                  const Address& addr)
 {
     auto h = db.create_contract(contract);
