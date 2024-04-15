@@ -83,7 +83,6 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
 
     // TODO: all the invocation data, set registers, etc
     int code = runtime -> run();
-
     if (code != 0)
     {
         throw HostError("invocation failed");
@@ -92,20 +91,36 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
     tx_context->pop_invocation_stack();
 }
 
+enum {
+    SYS_EXIT  = 500,
+    SYS_WRITE = 501,
+};
+
 EC_DECL(uint64_t)::syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5)
 {
+    int64_t ret = -1;
     try {
-
+        switch (callno) {
+        case SYS_EXIT:
+            tx_context->get_current_runtime()->exit(arg0);
+            break;
+        case SYS_WRITE:
+            ret = write(1, (const char*) tx_context->get_current_runtime()->addr(arg0), (size_t) arg1);
+            break;
+        default:
+            std::printf("invalid syscall: %ld\n", callno);
+            std::abort();
+        }
     } catch (HostError& e) {
         std::printf("tx failed %s\n", e.what());
         CONTRACT_INFO("Execution error: %s", e.what());
-        tx_context -> get_current_runtime() -> exit_error();
+        tx_context -> get_current_runtime() -> exit(1);
         std::unreachable();
     } catch (...) {
         std::printf("unrecoverable error!\n");
         std::abort();
     }
-    return 0;
+    return (uint64_t) ret;
 }
 
 template

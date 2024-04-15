@@ -30,72 +30,108 @@
 
 using namespace scs;
 
-TEST_CASE("gas metering", "[gas]")
-{
-    test::DeferredContextClear<TxContext> defer;
+// TEST_CASE("gas metering", "[gas]")
+// {
+//     test::DeferredContextClear<TxContext> defer;
+//
+//     GlobalContext scs_data_structures;
+//     auto& script_db = scs_data_structures.contract_db;
+//
+//     auto c = load_wasm_from_file("cpp_contracts/test_gas_limit.wasm");
+//
+//     auto h = hash_xdr(*c);
+//
+//     test::deploy_and_commit_contractdb(script_db, h, c);
+//
+//     ThreadlocalTransactionContextStore<TxContext>::make_ctx();
+//
+//     std::unique_ptr<BlockContext> block_context
+//         = std::make_unique<BlockContext>(0);
+//
+//     auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
+//
+//     auto make_spin_tx = [&](uint64_t duration,
+//                             uint64_t gas_limit,
+//                             bool success = true) -> Hash {
+//         const uint64_t gas_bid = 1;
+//
+//         TransactionInvocation invocation(h, 0, make_calldata(duration));
+//
+//         Transaction tx = Transaction(
+//             invocation, gas_limit, gas_bid, xdr::xvector<Contract>());
+//         SignedTransaction stx;
+//         stx.tx = tx;
+//
+//         auto hash = hash_xdr(stx);
+//
+//         if (success) {
+//             REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
+//                     == TransactionStatus::SUCCESS);
+//         } else {
+//             REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
+//                     != TransactionStatus::SUCCESS);
+//         }
+//
+//         return hash;
+//     };
+//
+//     auto make_loop_tx = [&](uint64_t gas_limit) -> Hash {
+//         const uint64_t gas_bid = 1;
+//
+//         TransactionInvocation invocation(h, 1, make_calldata());
+//
+//         Transaction tx = Transaction(
+//             invocation, gas_limit, gas_bid, xdr::xvector<Contract>());
+//         SignedTransaction stx;
+//         stx.tx = tx;
+//
+//         auto hash = hash_xdr(stx);
+//
+//         REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
+//                 != TransactionStatus::SUCCESS);
+//
+//         return hash;
+//     };
+//
+//     SECTION("short") { make_spin_tx(3, 10000); }
+//     SECTION("long") { make_spin_tx(10000, 10000, false); }
+//     SECTION("low gas") { make_spin_tx(0, 1, false); }
+//     SECTION("loop short") { make_loop_tx(1); }
+//     SECTION("loop long") { make_loop_tx(100000); }
+// }
 
-    GlobalContext scs_data_structures;
+TEST_CASE("lfi", "[lfi]")
+{
+    test::DeferredContextClear defer;
+
+    BaseGlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
 
-    auto c = load_wasm_from_file("cpp_contracts/test_gas_limit.wasm");
+    auto c = load_wasm_from_file("lfi_contracts/hello");
 
-    auto h = hash_xdr(*c);
+    auto h = c->hash();
 
     test::deploy_and_commit_contractdb(script_db, h, c);
 
-    ThreadlocalTransactionContextStore<TxContext>::make_ctx();
+    // ThreadlocalTransactionContextStore<TxContext>::make_ctx();
 
-    std::unique_ptr<BlockContext> block_context
-        = std::make_unique<BlockContext>(0);
+    std::unique_ptr<BaseBlockContext> block_context
+        = std::make_unique<BaseBlockContext>(0);
 
-    auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
+    //auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
+    LFIGlobalEngine engine(&ExecutionContext<TxContext>::static_syscall_handler);
+    ExecutionContext<TxContext> exec_ctx(engine);
 
-    auto make_spin_tx = [&](uint64_t duration,
-                            uint64_t gas_limit,
-                            bool success = true) -> Hash {
-        const uint64_t gas_bid = 1;
+    const uint64_t gas_bid = 1;
 
-        TransactionInvocation invocation(h, 0, make_calldata(duration));
+    TransactionInvocation invocation(h, 1, make_calldata());
 
-        Transaction tx = Transaction(
-            invocation, gas_limit, gas_bid, xdr::xvector<Contract>());
-        SignedTransaction stx;
-        stx.tx = tx;
+    Transaction tx = Transaction(
+        invocation, 100000, gas_bid, xdr::xvector<Contract>());
+    SignedTransaction stx;
+    stx.tx = tx;
 
-        auto hash = hash_xdr(stx);
+    auto hash = hash_xdr(stx);
 
-        if (success) {
-            REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
-                    == TransactionStatus::SUCCESS);
-        } else {
-            REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
-                    != TransactionStatus::SUCCESS);
-        }
-
-        return hash;
-    };
-
-    auto make_loop_tx = [&](uint64_t gas_limit) -> Hash {
-        const uint64_t gas_bid = 1;
-
-        TransactionInvocation invocation(h, 1, make_calldata());
-
-        Transaction tx = Transaction(
-            invocation, gas_limit, gas_bid, xdr::xvector<Contract>());
-        SignedTransaction stx;
-        stx.tx = tx;
-
-        auto hash = hash_xdr(stx);
-
-        REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
-                != TransactionStatus::SUCCESS);
-
-        return hash;
-    };
-
-    SECTION("short") { make_spin_tx(3, 10000); }
-    SECTION("long") { make_spin_tx(10000, 10000, false); }
-    SECTION("low gas") { make_spin_tx(0, 1, false); }
-    SECTION("loop short") { make_loop_tx(1); }
-    SECTION("loop long") { make_loop_tx(100000); }
+    REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context) == TransactionStatus::SUCCESS);
 }

@@ -21,8 +21,6 @@
 
 #include <sodium.h>
 
-#include "pedersen_ffi/pedersen.h"
-
 namespace scs {
 
 Hash current_pedersen_random_seed;

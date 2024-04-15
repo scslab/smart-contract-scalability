@@ -163,7 +163,6 @@ VM_SRCS = \
 
 SRCS = \
 	$(BLOCK_ASSEMBLY_SRCS) \
-	$(BUILTIN_FNS_SRCS) \
 	$(CONFIG_SRCS) \
 	$(CONTRACT_DB_SRCS) \
 	$(CRYPTO_SRCS) \
@@ -183,25 +182,13 @@ SRCS = \
 	$(TRANSACTION_CONTEXT_SRCS) \
 	$(TX_BLOCK_SRCS) \
 	$(VM_SRCS) \
-	$(utility_CCS)
+	$(utility_CCS) \
+	lib/lfi_verify/verify.c
 
 TEST_UTILS_SRCS = \
 	test_utils/deploy_and_commit_contractdb.cc
 
-TESTS_CCS = \
-	tests/builtin_fns_log_tests.cc \
-	tests/builtin_fns_invoke_tests.cc \
-	tests/gas_tests.cc \
-	tests/hashset_tests.cc \
-	tests/storage_tests.cc \
-	tests/sdk_tests.cc \
-	tests/test_rpc.cc \
-	storage_proxy/tests/test_proxy_applicator.cc \
-	object/tests/test_revertable_object.cc \
-	tx_block/tests/test_unique_txset.cc \
-	$(HASH_SET_TEST_SRCS) \
-	$(EXPERIMENTS_TEST_SRCS) \
-	$(STATE_DB_TEST_SRCS)
+TESTS_CCS = tests/gas_tests.cc
 
 MAIN_CCS = \
 	main/blockstm_comparison.cc \

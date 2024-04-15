@@ -47,6 +47,8 @@ class LFIProc : public utils::NonMovableOrCopyable
 
 	bool actively_running = false;
 
+    uint64_t base = 0;
+
 public:
 
 	LFIProc(void* ctxp, LFIGlobalEngine& main_lfi);
@@ -65,7 +67,9 @@ public:
 	__attribute__((warn_unused_result))
 	set_program(const uint8_t* bytes, const size_t len);
 
-	void exit_error();
+    void exit(int code);
+
+    uint64_t addr(uint64_t addr);
 };
 
 }
