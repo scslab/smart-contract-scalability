@@ -17,6 +17,7 @@
  */
 
 #include "transaction_context/global_context.h"
+#include "transaction_context/execution_context.h"
 
 #include <memory>
 #include <vector>
@@ -39,6 +40,9 @@ class BaseVirtualMachine : public utils::NonMovableOrCopyable
     GlobalContext_t global_context;
     std::unique_ptr<BlockContext_t> current_block_context;
     Mempool mempool;
+    LFIGlobalEngine engine;
+
+    using TransactionContext_t = TransactionContext<GlobalContext_t>;
 
     Hash prev_block_hash;
 
@@ -49,6 +53,12 @@ class BaseVirtualMachine : public utils::NonMovableOrCopyable
     void advance_block_number();
 
     BlockHeader make_block_header();
+
+    BaseVirtualMachine() 
+      : global_context()
+      , current_block_context()
+      , mempool()
+      , engine(&ExecutionContext<TransactionContext_t>::static_syscall_handler) {}
 
   public:
     void init_default_genesis();

@@ -46,7 +46,7 @@ class AssemblyLimits;
  * Groundhog version, no persistence
  */
 
-class VirtualMachine : public BaseVirtualMachine<GlobalContext, BlockContext>
+class VirtualMachine : public BaseVirtualMachine<BaseGlobalContext, BaseBlockContext>
 {
 
   public:
