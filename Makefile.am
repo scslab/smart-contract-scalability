@@ -112,9 +112,6 @@ OBJECT_SRCS = \
 	object/object_defaults.cc \
 	object/revertable_object.cc
 
-PEDERSEN_FFI_SRCS = \
-	pedersen_ffi/pedersen.cc
-
 PHASE_SRCS = \
 	phase/phases.cc
 
@@ -176,7 +173,6 @@ SRCS = \
 	$(LFI_SRCS) \
 	$(MEMPOOL_SRCS) \
 	$(OBJECT_SRCS) \
-	$(PEDERSEN_FFI_SRCS) \
 	$(PHASE_SRCS) \
 	$(RPC_SRCS) \
 	$(RPC_SERVER_SRCS) \
