@@ -75,6 +75,7 @@ LFIProc::run()
 	}
 	actively_running = true;
 	lfi_proc_init_regs(proc, info.elfentry, reinterpret_cast<uintptr_t>(info.stack) + info.stacksize - 16);
+    brkbase = info.lastva;
 	int code = lfi_proc_start(proc);
 	actively_running = false;
 	return code;

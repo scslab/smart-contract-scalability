@@ -41,6 +41,7 @@
 #include <utility>
 
 #include <signal.h>
+#include <sys/mman.h>
 
 #define EC_DECL(ret) template<typename TransactionContext_t> ret ExecutionContext<TransactionContext_t>
 
@@ -125,17 +126,35 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1
 {
     int64_t ret = -1;
     std::printf("SYSCALL: %ld\n", callno);
+    LFIProc* p = tx_context->get_current_runtime();
     try {
         switch (callno) {
         case SYS_EXIT:
-            tx_context->get_current_runtime()->exit(arg0);
+            p->exit(arg0);
             break;
         case SYS_WRITE:
             arg2 = arg2 > WRITE_MAX ? WRITE_MAX : arg2;
-            ret = write(1, (const char*) tx_context->get_current_runtime()->addr(arg1), (size_t) arg2);
+            ret = write(1, (const char*) p->addr(arg1), (size_t) arg2);
             break;
-        case SYS_SBRK:
+        case SYS_SBRK: {
+            size_t incr = arg0;
+            uintptr_t brkp = p->brkbase + p->brksize;
+            if (brkp + incr < p->base + (4ULL * 1024 * 1024 * 1024)) {
+                void* map;
+                if (p->brksize == 0) {
+                    map = mmap((void*) p->brkbase, p->brksize + incr, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
+                } else {
+                    map = mremap((void*) p->brkbase, p->brksize, p->brksize + incr, 0);
+                }
+                if (map == (void*) -1) {
+                    perror("sbrk: mmap");
+                    std::abort();
+                }
+                p->brksize += incr;
+            }
+            ret = brkp;
             break;
+        }
         case SYS_LSEEK:
             break;
         case SYS_READ:
