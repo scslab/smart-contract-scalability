@@ -119,6 +119,9 @@ enum {
     SYS_READ  = 504,
     SYS_CLOSE = 505,
 
+    GROUNDHOG_GET_CALLDATA = 600,
+    GROUNDHOG_GET_CALLDATA_LEN = 601,
+
     WRITE_MAX = 1024,
 };
 
@@ -161,6 +164,24 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1
             break;
         case SYS_CLOSE:
             break;
+        case GROUNDHOG_GET_CALLDATA: {
+            // arg0: in buffer offset
+            // arg1: slice start
+            // arg2: slide end
+            if (arg1 >= arg2) {
+                ret = -1;
+                break;
+            }
+            auto const& calldata = tx_context -> get_current_method_invocation().calldata;
+            std::memcpy(reinterpret_cast<void*>(p->addr(arg0)), calldata.data(), arg2 - arg1);
+
+            ret = tx_context -> get_current_method_invocation().method_name;
+            break;
+        }
+        case GROUNDHOG_GET_CALLDATA_LEN: {
+            ret = tx_context -> get_current_method_invocation().calldata.size();
+            break;
+        }
         default:
             std::printf("invalid syscall: %ld\n", callno);
             std::abort();

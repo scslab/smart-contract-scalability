@@ -3,6 +3,7 @@
 #include <utility>
 
 #include <unistd.h>
+#include <sys/mman.h>
 
 namespace scs
 {

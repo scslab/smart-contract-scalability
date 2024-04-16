@@ -9,3 +9,7 @@ int write(int fd, void* buf, size_t size) {
 }
 
 void _exit(int);
+
+// returns method name
+uint32_t calldata(void* offset);
+uint64_t calldata_len();
