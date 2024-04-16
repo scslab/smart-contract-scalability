@@ -14,7 +14,7 @@ LFIGlobalEngine::LFIGlobalEngine(lfi_syshandler handler)
 		struct lfi_options opts {
 			.noverify = 1, // programs should be verified when they're registered, not at runtime
 			.fastyield = 0, // this option does nothing at the moment TODO
-			.pagesize = getpagesize(),
+			.pagesize = (size_t) getpagesize(),
 			.stacksize = 65536, 
 			.syshandler = handler
 		};
