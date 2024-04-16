@@ -120,7 +120,7 @@ TEST_CASE("lfi", "[lfi]")
 
     const uint64_t gas_bid = 1;
 
-    TransactionInvocation invocation(h, 1, make_calldata((uint64_t)100));
+    TransactionInvocation invocation(h, 1, make_calldata('a', 'b', 'c', '\0'));
 
     Transaction tx = Transaction(
         invocation, 100000, gas_bid, xdr::xvector<Contract>());

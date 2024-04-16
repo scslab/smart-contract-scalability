@@ -134,7 +134,7 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
     tx_context->push_invocation_stack(runtime, invocation);
 
     // TODO: all the invocation data, set registers, etc
-    int code = runtime -> run();
+    int code = runtime -> run(invocation.method_name, invocation.calldata);
     if (code != 0)
     {
         throw HostError("invocation failed");

@@ -12,5 +12,4 @@ syscall sbrk    502
 syscall lseek   503
 syscall read    504
 syscall close   505
-syscall calldata      600
-syscall calldata_len  601
+

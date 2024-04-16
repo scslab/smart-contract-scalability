@@ -4,6 +4,7 @@
 
 #include <unistd.h>
 #include <sys/mman.h>
+#include <cstring>
 
 namespace scs
 {
@@ -70,18 +71,34 @@ LFIProc::set_program(const uint8_t* bytes, const size_t len)
 	return lfi_proc_exec(proc, const_cast<uint8_t*>(bytes), len, &info);
 }
 
+uint32_t sandboxaddr(uintptr_t realaddr) {
+	return realaddr & 0xFFFF'FFFF;
+}
+
 int
-LFIProc::run()
+LFIProc::run(uint32_t method, std::vector<uint8_t> const& calldata)
 {
 	if (actively_running) {
 		return -1;
 	}
-	actively_running = true;
 	lfi_proc_init_regs(proc, info.elfentry, reinterpret_cast<uintptr_t>(info.stack) + info.stacksize - 16);
 
-    brkbase = info.lastva;
-    brksize = 0;
+	brkbase = info.lastva;
+	brksize = 0;
 
+	struct lfi_regs* regs = lfi_proc_get_regs(proc);
+	regs -> x0 = method;
+	
+	if (sbrk(calldata.size()) == static_cast<uintptr_t>(-1)) {
+		return -1;
+	}
+
+	std::memcpy((void*)brkbase, calldata.data(), calldata.size());
+
+	regs -> x1 = sandboxaddr(brkbase);
+	regs -> x2 = calldata.size();
+
+	actively_running = true;
 	int code = lfi_proc_start(proc);
 
 	if (brksize != 0)

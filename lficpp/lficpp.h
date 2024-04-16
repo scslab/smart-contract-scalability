@@ -63,7 +63,7 @@ public:
 
 	int
 	__attribute__((warn_unused_result))
-	run();
+	run(uint32_t method, std::vector<uint8_t> const& calldata);
 
 	int 
 	__attribute__((warn_unused_result))
