@@ -74,6 +74,9 @@ public:
     uint64_t addr(uint64_t addr);
 
     uintptr_t sbrk(uint32_t incr);
+
+    bool is_writable(uintptr_t p, uint32_t size) const;
+    bool is_readable(uintptr_t p, uint32_t size) const;
 };
 
 }

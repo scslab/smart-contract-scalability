@@ -123,7 +123,7 @@ uintptr_t
 LFIProc::sbrk(uint32_t incr)
 {
 	uintptr_t brkp = brkbase + brksize;
-    if (brkp + incr < p->base + (4ULL * 1024 * 1024 * 1024)) {
+    if (brkp + incr < base + (4ULL * 1024 * 1024 * 1024)) {
         void* map;
         if (brksize == 0) {
             map = mmap((void*) brkbase, brksize + incr, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
@@ -142,5 +142,23 @@ LFIProc::sbrk(uint32_t incr)
 
     return brkp;
 }
+
+bool 
+LFIProc::is_writable(uintptr_t p, uint32_t size) const
+{
+	if (p < brkbase) {
+		return false;
+	}
+	if (p + size >= brkbase + brksize) {
+		return false;
+	}
+	return true;
+}
+
+bool
+LFIProc::is_readable(uint64_t p, uint32_t size) const {
+	return is_writable(p, size);
+}
+
 
 }
