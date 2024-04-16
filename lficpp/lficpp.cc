@@ -14,13 +14,14 @@ LFIGlobalEngine::LFIGlobalEngine(lfi_syshandler handler)
 		struct lfi_options opts {
 			.noverify = 1, // programs should be verified when they're registered, not at runtime
 			.fastyield = 0, // this option does nothing at the moment TODO
-			.pagesize = getpagesize(),
+			.pagesize = (size_t) getpagesize(),
 			.stacksize = 65536, 
 			.syshandler = handler
 		};
 
 		lfi_engine = lfi_new(opts);
 
+	std::printf("add vaspaces\n");
         lfi_auto_add_vaspaces(lfi_engine);
 	}
 
@@ -48,6 +49,7 @@ LFIProc::LFIProc(void* ctxp, LFIGlobalEngine& main_lfi)
 {
 	if (main_lfi.new_proc(&proc, ctxp) != 0)
 	{
+		std::printf("wtf\n");
 		proc = nullptr;
 	} else {
         base = lfi_proc_base(proc);

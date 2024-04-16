@@ -1,5 +1,6 @@
 #include <string.h>
 #include <errno.h>
+#include <stdint.h>
 
 int _write(int, void*, size_t);
 
@@ -10,6 +11,3 @@ int write(int fd, void* buf, size_t size) {
 
 void _exit(int);
 
-// returns method name
-uint32_t calldata(void* offset);
-uint64_t calldata_len();
