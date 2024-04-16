@@ -113,18 +113,14 @@ TEST_CASE("lfi", "[lfi]")
 
     test::deploy_and_commit_contractdb(script_db, h, c);
 
-    // ThreadlocalTransactionContextStore<TxContext>::make_ctx();
-
     std::unique_ptr<BaseBlockContext> block_context
         = std::make_unique<BaseBlockContext>(0);
 
-    //auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
-    LFIGlobalEngine engine(&ExecutionContext<TxContext>::static_syscall_handler);
-    ExecutionContext<TxContext> exec_ctx(engine);
+    ExecutionContext<TxContext> exec_ctx(scs_data_structures.engine);
 
     const uint64_t gas_bid = 1;
 
-    TransactionInvocation invocation(h, 1, make_calldata());
+    TransactionInvocation invocation(h, 1, make_calldata((uint64_t)100));
 
     Transaction tx = Transaction(
         invocation, 100000, gas_bid, xdr::xvector<Contract>());
@@ -135,3 +131,5 @@ TEST_CASE("lfi", "[lfi]")
 
     REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context) == TransactionStatus::SUCCESS);
 }
+
+

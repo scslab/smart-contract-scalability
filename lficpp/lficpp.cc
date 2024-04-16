@@ -21,6 +21,7 @@ LFIGlobalEngine::LFIGlobalEngine(lfi_syshandler handler)
 
 		lfi_engine = lfi_new(opts);
 
+	std::printf("add vaspaces\n");
         lfi_auto_add_vaspaces(lfi_engine);
 	}
 
@@ -48,6 +49,7 @@ LFIProc::LFIProc(void* ctxp, LFIGlobalEngine& main_lfi)
 {
 	if (main_lfi.new_proc(&proc, ctxp) != 0)
 	{
+		std::printf("wtf\n");
 		proc = nullptr;
 	} else {
         base = lfi_proc_base(proc);
