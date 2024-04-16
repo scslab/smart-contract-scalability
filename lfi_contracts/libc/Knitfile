@@ -1,0 +1,12 @@
+cc := /opt/lfi/toolchain/bin/lfi-clang
+
+return b{
+    $ libsyscalls.a: syscall.S.o syscall.c.o crt0.c.o
+        ar rcs $output $input
+    $ syscall.S.o: syscall.S
+        $cc -c $input -o $output
+    $ syscall.c.o: syscall.c
+        $cc -c $input -o $output -O2
+    $ crt0.c.o: crt0.c
+        $cc -c $input -o $output -O2
+}

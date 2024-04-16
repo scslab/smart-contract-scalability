@@ -40,7 +40,26 @@
 
 #include <utility>
 
+#include <signal.h>
+
 #define EC_DECL(ret) template<typename TransactionContext_t> ret ExecutionContext<TransactionContext_t>
+
+void signal_handler(int sig, siginfo_t* si, void* context) {
+    ucontext_t* uctx = (ucontext_t*) context;
+    uint64_t saved = lfi_signal_start(uctx->uc_mcontext.regs[21]);
+    std::printf("received signal, pc: %llx\n", uctx->uc_mcontext.pc);
+    std::abort();
+    lfi_signal_end(saved);
+}
+
+void signal_init() {
+    struct sigaction act;
+    act.sa_sigaction = &signal_handler;
+    act.sa_flags = SA_SIGINFO;
+    if (sigaction(SIGSEGV, &act, NULL) != 0) {
+        perror("sigaction");
+    }
+}
 
 namespace scs {
 
@@ -94,18 +113,34 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
 enum {
     SYS_EXIT  = 500,
     SYS_WRITE = 501,
+    SYS_SBRK  = 502,
+    SYS_LSEEK = 503,
+    SYS_READ  = 504,
+    SYS_CLOSE = 505,
+
+    WRITE_MAX = 1024,
 };
 
 EC_DECL(uint64_t)::syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5)
 {
     int64_t ret = -1;
+    std::printf("SYSCALL: %ld\n", callno);
     try {
         switch (callno) {
         case SYS_EXIT:
             tx_context->get_current_runtime()->exit(arg0);
             break;
         case SYS_WRITE:
-            ret = write(1, (const char*) tx_context->get_current_runtime()->addr(arg0), (size_t) arg1);
+            arg2 = arg2 > WRITE_MAX ? WRITE_MAX : arg2;
+            ret = write(1, (const char*) tx_context->get_current_runtime()->addr(arg1), (size_t) arg2);
+            break;
+        case SYS_SBRK:
+            break;
+        case SYS_LSEEK:
+            break;
+        case SYS_READ:
+            break;
+        case SYS_CLOSE:
             break;
         default:
             std::printf("invalid syscall: %ld\n", callno);

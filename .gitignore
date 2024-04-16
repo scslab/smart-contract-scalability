@@ -44,3 +44,7 @@ sisyphus_payment_sim
 
 #test wasm
 */tests/wat/*.wasm
+
+*.lfi
+.knit
+*.a

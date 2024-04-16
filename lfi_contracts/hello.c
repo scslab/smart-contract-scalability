@@ -1,9 +1,11 @@
-#include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
 
-void write(const char*, size_t);
-void exit(int);
-
-void _start() {
-    write("hello\n", 7);
-    exit(0);
+int cmain() {
+    int* p = malloc(10);
+    write(1, "hi\n", 3);
+    *p = 10;
+    printf("hello %p\n", p);
+    return 0;
 }

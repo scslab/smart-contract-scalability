@@ -26,6 +26,8 @@
 
 #include "lficpp/lficpp.h"
 
+void __attribute__((constructor)) signal_init();
+
 namespace scs {
 
 struct MethodInvocation;

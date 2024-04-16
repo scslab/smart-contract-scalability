@@ -13,3 +13,6 @@
 [submodule "lib/lfi"]
 	path = lib/lfi
 	url = https://github.com/zyedidia/lfi.git
+[submodule "lfi_contracts/libc/picolibc"]
+	path = lfi_contracts/libc/picolibc
+	url = https://github.com/zyedidia/picolibc

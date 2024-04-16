@@ -107,7 +107,7 @@ TEST_CASE("lfi", "[lfi]")
     BaseGlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
 
-    auto c = load_wasm_from_file("lfi_contracts/hello");
+    auto c = load_wasm_from_file("lfi_contracts/hello.lfi");
 
     auto h = c->hash();
 
