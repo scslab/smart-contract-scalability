@@ -172,26 +172,7 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1
             ret = write(1, (const char*) p->addr(arg1), (size_t) arg2);
             break;
         case SYS_SBRK: {
-            ret = p -> sbrk(incr);
-
-            /*
-            size_t incr = arg0;
-            uintptr_t brkp = p->brkbase + p->brksize;
-            if (brkp + incr < p->base + (4ULL * 1024 * 1024 * 1024)) {
-                void* map;
-                if (p->brksize == 0) {
-                    map = mmap((void*) p->brkbase, p->brksize + incr, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
-                } else {
-                    map = mremap((void*) p->brkbase, p->brksize, p->brksize + incr, 0);
-                }
-                if (map == (void*) -1) {
-                    perror("sbrk: mmap");
-                    std::abort();
-                }
-                p->brksize += incr;
-            }
-            ret = brkp; */
-
+            ret = p -> sbrk(arg0);
             break;
         }
         case SYS_LSEEK:
@@ -200,7 +181,6 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1
             break;
         case SYS_CLOSE:
             break;
-        }
         default:
             std::printf("invalid syscall: %ld\n", callno);
             std::abort();

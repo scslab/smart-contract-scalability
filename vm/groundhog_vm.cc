@@ -37,7 +37,6 @@
 
 namespace scs {
 
-
 std::optional<BlockHeader>
 GroundhogVirtualMachine::try_exec_tx_block(Block const& txs)
 {
@@ -50,7 +49,6 @@ GroundhogVirtualMachine::try_exec_tx_block(Block const& txs)
     }
     return out;
 }
-
 
 BlockHeader
 GroundhogVirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& block_out)
