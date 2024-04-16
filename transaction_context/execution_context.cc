@@ -140,6 +140,9 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1
             ret = write(1, (const char*) p->addr(arg1), (size_t) arg2);
             break;
         case SYS_SBRK: {
+            ret = p -> sbrk(incr);
+
+            /*
             size_t incr = arg0;
             uintptr_t brkp = p->brkbase + p->brksize;
             if (brkp + incr < p->base + (4ULL * 1024 * 1024 * 1024)) {
@@ -155,7 +158,8 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1
                 }
                 p->brksize += incr;
             }
-            ret = brkp;
+            ret = brkp; */
+
             break;
         }
         case SYS_LSEEK:
@@ -163,23 +167,6 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1
         case SYS_READ:
             break;
         case SYS_CLOSE:
-            break;
-        case GROUNDHOG_GET_CALLDATA: {
-            // arg0: in buffer offset
-            // arg1: slice start
-            // arg2: slide end
-            if (arg1 >= arg2) {
-                ret = -1;
-                break;
-            }
-            auto const& calldata = tx_context -> get_current_method_invocation().calldata;
-            std::memcpy(reinterpret_cast<void*>(p->addr(arg0)), calldata.data(), arg2 - arg1);
-
-            ret = tx_context -> get_current_method_invocation().method_name;
-            break;
-        }
-        case GROUNDHOG_GET_CALLDATA_LEN: {
-            ret = tx_context -> get_current_method_invocation().calldata.size();
             break;
         }
         default:
