@@ -75,8 +75,20 @@ LFIProc::run()
 	}
 	actively_running = true;
 	lfi_proc_init_regs(proc, info.elfentry, reinterpret_cast<uintptr_t>(info.stack) + info.stacksize - 16);
+
     brkbase = info.lastva;
+    brksize = 0;
+
 	int code = lfi_proc_start(proc);
+
+	if (brksize != 0)
+	{
+		if (munmap((void*) brkbase, brksize) != 0) {
+			std::printf("cleanup failed\n");
+			std::abort();
+		}
+	}
+
 	actively_running = false;
 	return code;
 }
