@@ -45,12 +45,12 @@ class AssemblyWorker
 
 public:
 
-	AssemblyWorker(Mempool& mempool, GlobalContext_t& global_context, BlockContext_t& block_context, AssemblyLimits& limits, LFIGlobalEngine& engine)
+	AssemblyWorker(Mempool& mempool, GlobalContext_t& global_context, BlockContext_t& block_context, AssemblyLimits& limits)
 		: mempool(mempool)
 		, global_context(global_context)
 		, block_context(block_context)
 		, limits(limits)
-		, exec_ctx(engine)
+		, exec_ctx(global_context.engine)
 		{
 		}
 
@@ -110,12 +110,12 @@ StaticAssemblyWorkerCache
 
 public:
 
-	static void start_assembly_threads(Mempool& mp, GlobalContext_t& gc, BlockContext_t& bc, AssemblyLimits& limits, LFIGlobalEngine& engine, uint32_t n_threads)
+	static void start_assembly_threads(Mempool& mp, GlobalContext_t& gc, BlockContext_t& bc, AssemblyLimits& limits, uint32_t n_threads)
 	{
 		std::lock_guard lock(mtx);
 		while(workers.size() < n_threads)
 		{
-			workers.push_back(std::make_unique<AsyncAssemblyWorker<worker_t>>(mp, gc, bc, limits, engine));
+			workers.push_back(std::make_unique<AsyncAssemblyWorker<worker_t>>(mp, gc, bc, limits));
 		}
 
 		for (uint32_t i = 0; i < n_threads; i++)

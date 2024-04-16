@@ -43,7 +43,7 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
 	auto ts = utils::init_time_measurement();
     ThreadlocalContextStore::get_rate_limiter().prep_for_notify();
     ThreadlocalContextStore::enable_rpcs();
-    StaticAssemblyWorkerCache<BaseGlobalContext, BaseBlockContext>::start_assembly_threads(mempool, global_context, *current_block_context, limits, engine, n_threads);
+    StaticAssemblyWorkerCache<BaseGlobalContext, BaseBlockContext>::start_assembly_threads(mempool, global_context, *current_block_context, limits, n_threads);
     std::printf("start assembly threads time %lf\n", utils::measure_time(ts));
     ThreadlocalContextStore::get_rate_limiter().start_threads(n_threads);
 

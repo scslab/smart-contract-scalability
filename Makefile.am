@@ -147,6 +147,7 @@ THREADLOCAL_SRCS = \
 
 TRANSACTION_CONTEXT_SRCS = \
 	transaction_context/execution_context.cc \
+	transaction_context/global_context.cc \
 	transaction_context/method_invocation.cc \
 	transaction_context/transaction_context.cc \
 	transaction_context/transaction_results.cc

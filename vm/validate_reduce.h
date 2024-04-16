@@ -18,6 +18,10 @@ struct ValidateReduce
     BlockContext_t& block_context;
     Block const& txs;
 
+    using TransactionContext_t = typename BlockContext_t::tx_context_t;
+
+    utils::ThreadlocalCache<ExecutionContext<TransactionContext_t>, TLCACHE_SIZE>& execs;
+
     using TxContext_t = typename BlockContext_t::tx_context_t;
 
     void operator()(const tbb::blocked_range<std::size_t> r)
@@ -31,9 +35,7 @@ struct ValidateReduce
         //  optimizes better.
         bool local_found_error = false;
 
-        throw std::runtime_error("unimpl");
-
-        /*
+        auto& exec_ctx = execs.get(global_context.engine);
 
         for (size_t i = r.begin(); i < r.end(); i++) {
 
@@ -58,8 +60,6 @@ struct ValidateReduce
             }
         } 
 
-        */
-
         found_error = found_error || local_found_error;
     }
 
@@ -68,18 +68,21 @@ struct ValidateReduce
         : found_error(x.found_error)
         , global_context(x.global_context)
         , block_context(x.block_context)
-        , txs(x.txs){};
+        , txs(x.txs)
+        , execs(x.execs) {};
 
     void join(ValidateReduce& other) {}
 
     ValidateReduce(std::atomic<bool>& found_error,
                    GlobalContext_t& global_context,
                    BlockContext_t& block_context,
-                   Block const& txs)
+                   Block const& txs,
+                   utils::ThreadlocalCache<ExecutionContext<TransactionContext_t>, TLCACHE_SIZE>& execs)
         : found_error(found_error)
         , global_context(global_context)
         , block_context(block_context)
         , txs(txs)
+        , execs(execs)
     {}
 };
 

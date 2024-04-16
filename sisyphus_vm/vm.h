@@ -54,11 +54,13 @@ class SisyphusVirtualMachine : public utils::NonMovableOrCopyable
     std::unique_ptr<SisyphusBlockContext> current_block_context;
     Mempool mempool;
 
-    LFIGlobalEngine engine;
-
     Hash prev_block_hash;
 
     AsyncKeysToDisk keys_persist;
+
+    using TransactionContext_t = SisyphusBlockContext::tx_context_t;
+
+    utils::ThreadlocalCache<ExecutionContext<TransactionContext_t>, TLCACHE_SIZE> executors;
 
     void assert_initialized() const;
 
@@ -68,7 +70,6 @@ class SisyphusVirtualMachine : public utils::NonMovableOrCopyable
 
     BlockHeader make_block_header();
 
-    using TransactionContext_t = TransactionContext<SisyphusGlobalContext>;
 
   public:
 
@@ -76,9 +77,9 @@ class SisyphusVirtualMachine : public utils::NonMovableOrCopyable
       : global_context()
       , current_block_context()
       , mempool()
-      , engine(&ExecutionContext<TransactionContext_t>::static_syscall_handler)
       , prev_block_hash()
       , keys_persist()
+      , executors()
       {}
 
     void init_default_genesis();

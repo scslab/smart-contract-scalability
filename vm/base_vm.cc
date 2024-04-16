@@ -59,7 +59,7 @@ VM(bool)::validate_tx_block(Block const& txs)
     std::atomic<bool> found_error = false;
 
     ValidateReduce reduce(
-        found_error, global_context, *current_block_context, txs);
+        found_error, global_context, *current_block_context, txs, executors);
 
     tbb::parallel_reduce(tbb::blocked_range<size_t>(0, txs.transactions.size()), reduce);
 

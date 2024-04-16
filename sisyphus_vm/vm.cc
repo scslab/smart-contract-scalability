@@ -59,7 +59,7 @@ SisyphusVirtualMachine::validate_tx_block(Block const& txs)
     std::atomic<bool> found_error = false;
 
     ValidateReduce reduce(
-        found_error, global_context, *current_block_context, txs);
+        found_error, global_context, *current_block_context, txs, executors);
 
     tbb::parallel_reduce(tbb::blocked_range<size_t>(0, txs.transactions.size()), reduce);
 
@@ -145,7 +145,7 @@ SisyphusVirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_ti
     ThreadlocalContextStore::get_rate_limiter().prep_for_notify();
     ThreadlocalContextStore::enable_rpcs();
     StaticAssemblyWorkerCache<SisyphusGlobalContext, SisyphusBlockContext>::start_assembly_threads(
-        mempool, global_context, *current_block_context, limits, engine, n_threads);
+        mempool, global_context, *current_block_context, limits, n_threads);
     std::printf("start assembly threads time %lf\n", utils::measure_time(ts));
     ThreadlocalContextStore::get_rate_limiter().start_threads(n_threads);
 

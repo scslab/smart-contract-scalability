@@ -29,6 +29,8 @@
 
 #include "mempool/mempool.h"
 
+#include "utils/threadlocal_cache.h"
+
 namespace scs {
 
 class AssemblyLimits;
@@ -36,13 +38,16 @@ class AssemblyLimits;
 template<typename GlobalContext_t, typename BlockContext_t>
 class BaseVirtualMachine : public utils::NonMovableOrCopyable
 {
+  public:
+    using TransactionContext_t = typename BlockContext_t::tx_context_t;
+
+  private:
+    utils::ThreadlocalCache<ExecutionContext<TransactionContext_t>, TLCACHE_SIZE> executors;
+
   protected:
     GlobalContext_t global_context;
     std::unique_ptr<BlockContext_t> current_block_context;
     Mempool mempool;
-    LFIGlobalEngine engine;
-
-    using TransactionContext_t = TransactionContext<GlobalContext_t>;
 
     Hash prev_block_hash;
 
@@ -55,10 +60,11 @@ class BaseVirtualMachine : public utils::NonMovableOrCopyable
     BlockHeader make_block_header();
 
     BaseVirtualMachine() 
-      : global_context()
+      : executors()
+      , global_context()
       , current_block_context()
       , mempool()
-      , engine(&ExecutionContext<TransactionContext_t>::static_syscall_handler) {}
+      , prev_block_hash() {}
 
   public:
     void init_default_genesis();
