@@ -117,4 +117,28 @@ LFIProc::~LFIProc()
 	}
 }
 
+uintptr_t
+LFIProc::sbrk(uint32_t incr)
+{
+	uintptr_t brkp = brkbase + brksize;
+    if (brkp + incr < p->base + (4ULL * 1024 * 1024 * 1024)) {
+        void* map;
+        if (brksize == 0) {
+            map = mmap((void*) brkbase, brksize + incr, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
+        } else {
+            map = mremap((void*) brkbase, brksize, brksize + incr, 0);
+        }
+        if (map == (void*) -1) {
+            perror("sbrk: mmap");
+            std::abort();
+        }
+        brksize += incr;
+    } else
+    {
+    	brkp = -1;
+    }
+
+    return brkp;
+}
+
 }

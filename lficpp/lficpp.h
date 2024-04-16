@@ -47,12 +47,11 @@ class LFIProc : public utils::NonMovableOrCopyable
 
 	bool actively_running = false;
 
-public:
-
-    uint64_t base = 0;
-
     uint64_t brkbase = 0;
     size_t brksize = 0;
+    uint64_t base = 0;
+
+public:
 
 	LFIProc(void* ctxp, LFIGlobalEngine& main_lfi);
 
@@ -73,6 +72,8 @@ public:
     void exit(int code);
 
     uint64_t addr(uint64_t addr);
+
+    uintptr_t sbrk(uint32_t incr);
 };
 
 }
