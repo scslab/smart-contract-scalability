@@ -342,7 +342,7 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
 
                 auto write_bytes = load_bytestring(arg1, arg2);
                 tx_context->storage_proxy.raw_memory_write(
-                    storage_key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>(data));
+                    storage_key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>(write_bytes.begin(), write_bytes.end()));
                 ret = 0;
                 break;
             }
@@ -369,11 +369,11 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                     throw HostError("invalid write region in raw mem get");
                 }
 
-                uint32_t write_len = std::min(out_max_len, res->body.raw_memory_storage().size());
+                uint32_t write_len = std::min<uint32_t>(out_max_len, res->body.raw_memory_storage().data.size());
 
                 std::memcpy(
                     reinterpret_cast<uint8_t*>(p->addr(arg1)),
-                    res->body.raw_memory_storage().size(),
+                    res->body.raw_memory_storage().data.data(),
                     write_len);
                 ret = write_len;
                 break;
@@ -385,16 +385,67 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                 auto const& res = tx_context -> storage_proxy.get(storage_key);
 
                 if (!res) {
-                    ret = 0;
+                    ret = -1;
                     break;
                 }
 
                 if (res -> body.type() != ObjectType::RAW_MEMORY){
                     throw HostError("type mismatch in raw mem get");
                 }
-
+                ret = res->body.raw_memory_storage().data.size();
+                break;
             }
+            case LFIHOG_DELETE_KEY_LAST:
+                break;
 
+            case LFIHOG_NNINT_SET_ADD:{
+                // arg0: key offset
+                // arg1: set value
+                // arg2: delta
+
+                int64_t set_value = arg1;
+                int64_t delta = arg2;
+
+                auto storage_key = load_storage_key(arg0);
+
+                tx_context -> storage_proxy.nonnegative_int64_set_add(storage_key, set_value, delta);
+                ret = 0;
+                break;
+            }
+            case LFIHOG_NNINT_ADD: {
+                // arg0: key offset
+                // arg1: delta
+                int64_t delta = arg1;
+
+                auto storage_key = load_storage_key(arg0);
+
+                tx_context -> storage_proxy.nonnegative_int64_add(storage_key, delta);
+                ret = 0;
+                break;
+            }
+            case LFIHOG_NNINT_GET: {
+                //arg0: key offset
+                auto storage_key = load_storage_key(arg0);
+                auto const& res = tx_context -> storage_proxy.get(storage_key);
+
+                if (res -> body.type() != ObjectType::NONNEGATIVE_INT64){
+                    throw HostError("type mismatch in int get");
+                }
+
+                ret = res -> body.nonnegative_int64();
+                break;
+            }
+            /*LFIHOG_HS_INSERT = 615,
+            LFIHOG_HS_INC_LIMIT = 616,
+            LFIHOG_HS_CLEAR = 617,
+            LFIHOG_HS_GET_SIZE = 618,
+            LFIHOG_HS_GET_MAX_SIZE = 619,
+            LFIHOG_HS_GET_INDEX_OF = 620,
+            LFIHOG_HS_GET_INDEX = 621,
+            LFIHOG_CONTRACT_CREATE = 622,
+            LFIHOG_CONTRACT_DEPLOY = 623,
+            LFIHOG_WITNESS_GET = 624,
+            LFIHOG_WITNESS_GET_LEN = 625 */
             default:
                 std::printf("invalid syscall: %ld\n", callno);
                 p->exit(-1);
