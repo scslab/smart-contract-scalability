@@ -148,6 +148,19 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
         return tx_context->get_storage_key(key);
     };
 
+    auto load_bytestring = [this](uint64_t offset, uint32_t len) -> std::vector<uint8_t> {
+        auto* p = tx_context -> get_current_runtime();
+        if (!p->is_readable(p->addr(offset), len))
+        {
+            p->exit(-1);
+            std::unreachable();
+        }
+        std::vector<uint8_t> out;
+        out.insert(out.end(),
+            p->addr(offset), p->addr(offset + len));
+        return out;
+    };
+
     LFIProc* p = tx_context->get_current_runtime();
 
     try {
@@ -320,6 +333,66 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                 auto res = tx_context->storage_proxy.get(storage_key);
                 ret = (res.has_value())? 1 : 0;
                 break;
+            }
+            case LFIHOG_RAW_MEM_SET: {
+                //arg0: key addr
+                //arg1: mem buf
+                //arg2: mem len
+                auto storage_key = load_storage_key(arg0);
+
+                auto write_bytes = load_bytestring(arg1, arg2);
+                tx_context->storage_proxy.raw_memory_write(
+                    storage_key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>(data));
+                ret = 0;
+                break;
+            }
+            case LFIHOG_RAW_MEM_GET:{
+                //arg0: key addr
+                //arg1: out buf
+                //arg2: out max len
+                auto storage_key = load_storage_key(arg0);
+
+                auto const& res = tx_context -> storage_proxy.get(storage_key);
+
+                if (!res) {
+                    ret = 0;
+                    break;
+                }
+
+                if (res -> body.type() != ObjectType::RAW_MEMORY){
+                    throw HostError("type mismatch in raw mem get");
+                }
+
+                uint32_t out_max_len = arg2;
+                if (!p->is_writable(p->addr(arg1), out_max_len))
+                {
+                    throw HostError("invalid write region in raw mem get");
+                }
+
+                uint32_t write_len = std::min(out_max_len, res->body.raw_memory_storage().size());
+
+                std::memcpy(
+                    reinterpret_cast<uint8_t*>(p->addr(arg1)),
+                    res->body.raw_memory_storage().size(),
+                    write_len);
+                ret = write_len;
+                break;
+            }
+            case LFIHOG_RAW_MEM_GET_LEN: {
+                //arg0: key addr
+                auto storage_key = load_storage_key(arg0);
+
+                auto const& res = tx_context -> storage_proxy.get(storage_key);
+
+                if (!res) {
+                    ret = 0;
+                    break;
+                }
+
+                if (res -> body.type() != ObjectType::RAW_MEMORY){
+                    throw HostError("type mismatch in raw mem get");
+                }
+
             }
 
             default:

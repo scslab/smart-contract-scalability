@@ -25,7 +25,8 @@ uint8_t lfihog_has_key(const uint8_t* key_buf /* 32 bytes */);
 void lfihog_raw_mem_set(const uint8_t* key_buf /* 32 bytes */, uint8_t* mem_offset, uint32_t mem_len);
 // returns amount of data written
 uint32_t lfihog_raw_mem_get(const uint8_t* key_buf /* 32 bytes*/, uint8_t* buffer_offset, uint8_t max_len);
-uint32_t lfihog_raw_mem_get_len(const uint8_t* key_buf /* 32 bytes */);
+//returns -1 if key nexist
+int32_t lfihog_raw_mem_get_len(const uint8_t* key_buf /* 32 bytes */);
 
 void lfihog_delete_key_last(const uint8_t* key_buf /* 32 bytes */);
 
