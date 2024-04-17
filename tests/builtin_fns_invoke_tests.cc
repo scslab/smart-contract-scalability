@@ -76,6 +76,7 @@ TEST_CASE("test invoke", "[builtin]")
 
     SECTION("msg sender redirect")
     {
+	printf("msg sender redirect\n");
         struct calldata_t
         {
             Address callee;
@@ -101,6 +102,7 @@ TEST_CASE("test invoke", "[builtin]")
 
     SECTION("msg sender self fails on base call")
     {
+	printf("self fails on base call\n");
         TransactionInvocation invocation(h1, 3, xdr::opaque_vec<>());
 
         auto [h, tx] = make_tx(invocation);
@@ -150,7 +152,7 @@ TEST_CASE("test invoke", "[builtin]")
 
     SECTION("invoke insufficient calldata")
     {
-        TransactionInvocation invocation(h1, 1, xdr::opaque_vec<>());
+        TransactionInvocation invocation(h2, 1, xdr::opaque_vec<>());
 
         auto [h, tx] = make_tx(invocation);
         exec_fail(h, tx);

@@ -16,5 +16,6 @@ int cmain(uint32_t method, uint8_t* ptr, uint32_t len)
 		*((uint32_t*)(ptr + 32)), 
 		ptr + 36,
 		len - 36, NULL, 0);
+	return 0;
 }
 

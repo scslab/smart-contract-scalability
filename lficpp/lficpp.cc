@@ -50,7 +50,6 @@ LFIProc::LFIProc(void* ctxp, LFIGlobalEngine& main_lfi)
 {
 	if (main_lfi.new_proc(&proc, ctxp) != 0)
 	{
-		std::printf("wtf\n");
 		proc = nullptr;
 	} else {
         base = lfi_proc_base(proc);
@@ -66,6 +65,13 @@ int
 LFIProc::set_program(const uint8_t* bytes, const size_t len)
 {
 	if (actively_running) {
+		return -1;
+	}
+	if (len == 0) {
+		if (bytes != NULL) {
+			perror("invalid contract in db");
+			std::abort();
+		}
 		return -1;
 	}
 	return lfi_proc_exec(proc, const_cast<uint8_t*>(bytes), len, &info);
@@ -170,7 +176,7 @@ LFIProc::is_writable(uintptr_t p, uint32_t size) const
 	if (p < brkbase) {
 		return false;
 	}
-	if (p + size >= brkbase + brksize) {
+	if (p + size > brkbase + brksize) {
 		return false;
 	}
 	return true;

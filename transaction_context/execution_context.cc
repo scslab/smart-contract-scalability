@@ -79,7 +79,7 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
         auto script = tx_context -> get_contract_db_proxy().get_script(invocation.addr);
 
         if (runtime -> set_program(script.bytes, script.len) != 0) {
-            throw std::runtime_error("program nexist at target address");
+            throw HostError("program nexist at target address");
         }
 
         tx_context->add_active_runtime(invocation.addr, runtime);
@@ -89,12 +89,12 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
 
     // TODO: all the invocation data, set registers, etc
     int code = runtime -> run(invocation.method_name, invocation.calldata);
+    tx_context -> pop_invocation_stack();
+
     if (code != 0)
     {
         throw HostError("invocation failed");
     }
-
-    tx_context->pop_invocation_stack();
 }
 
 enum {
@@ -107,6 +107,7 @@ enum {
 
     LFIHOG_LOG = 600,
     LFIHOG_INVOKE=601,
+    LFIHOG_SENDER=602,
 
     WRITE_MAX = 1024,
 };
@@ -120,7 +121,7 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1
         switch (callno) {
         case SYS_EXIT:
             p->exit(arg0);
-            break;
+	    std::unreachable();
         case SYS_WRITE:
             arg2 = arg2 > WRITE_MAX ? WRITE_MAX : arg2;
             ret = write(1, (const char*) p->addr(arg1), (size_t) arg2);
@@ -150,8 +151,8 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1
 
                 tx_context->tx_results->add_log(log);
             } else {
-		ret = -1;
-		break;
+		p -> exit(-1);
+		std::unreachable();
 	    }
             ret = 0;
             break;
@@ -176,17 +177,21 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1
             {
                 std::memcpy(address.data(), reinterpret_cast<uint8_t*>(p->addr(addr)), 32);                
             } else {
-                ret = -1;
+		p -> exit(-1);
+		std::unreachable();
                 break;
             }
-
-            if (p -> is_readable(p->addr(calldata_addr), calldata_len))
+	    
+	    if (calldata_len > 0)
+	    {
+        if (p -> is_readable(p->addr(calldata_addr), calldata_len))
             {
                 calldata.insert(
                     calldata.end(),
                     reinterpret_cast<uint8_t*>(p->addr(calldata_addr)),
                     reinterpret_cast<uint8_t*>(p->addr(calldata_addr + calldata_len)));
             }
+	    }
 
             invoke_subroutine(MethodInvocation(address, method, std::move(calldata)));
 
@@ -207,9 +212,29 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1
             ret = 0;
             break;
         }
+	case LFIHOG_SENDER:
+	{
+		//arg 0: buffer addr (32 bytes)
+		if (!p->is_writable(p->addr(arg0), 32))
+		{
+			p->exit(-1);
+			std::unreachable();
+		}
+		auto const& sender = tx_context -> get_msg_sender();
+
+		std::memcpy(
+			reinterpret_cast<uint8_t*>(p->addr(arg0)),
+			sender.data(),
+			sender.size());
+		static_assert(sender.size() == 32, "mismatch");
+
+		ret = 0;
+		break;
+	}
         default:
             std::printf("invalid syscall: %ld\n", callno);
-            std::abort();
+            p->exit(-1);
+	    std::unreachable();
         }
     } catch (HostError& e) {
         std::printf("tx failed %s\n", e.what());
