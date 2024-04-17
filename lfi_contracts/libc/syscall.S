@@ -13,3 +13,6 @@ syscall lseek   503
 syscall read    504
 syscall close   505
 
+syscall lfihog_log 600
+syscall lfihog_invoke 601
+

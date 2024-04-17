@@ -2,7 +2,8 @@ cc := /opt/lfi/toolchain/bin/lfi-clang
 libclang := /opt/lfi/toolchain/compiler-rt/lib/linux/libclang_rt.builtins-aarch64.a
 
 return b{
-    $ hello.lfi: hello.o
+    $ all:VB:hello.lfi test_calldata.lfi
+    $ %.lfi: %.o
         $cc -Llibc -Llibc/build/install/lib -lc -lsyscalls $input -o $output -nostdlib $libclang
     $ %.o: %.c
         $cc -Ilibc -Ilib/build/install/include -O2 $input -o $output -c -nostdlib

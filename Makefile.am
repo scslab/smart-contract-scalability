@@ -101,7 +101,8 @@ HASH_SET_TEST_SRCS = \
 	hash_set/tests/test_hs_utils.cc
 
 LFI_SRCS = \
-	lficpp/lficpp.cc
+	lficpp/lficpp.cc \
+	lficpp/signal_handler.cc
 
 MEMPOOL_SRCS = \
 	mempool/mempool.cc
@@ -189,7 +190,9 @@ SRCS = \
 TEST_UTILS_SRCS = \
 	test_utils/deploy_and_commit_contractdb.cc
 
-TESTS_CCS = tests/gas_tests.cc
+TESTS_CCS = \
+	tests/gas_tests.cc \
+	tests/invoke_tests.cc
 
 MAIN_CCS = \
 	main/blockstm_comparison.cc \

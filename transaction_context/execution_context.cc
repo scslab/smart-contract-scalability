@@ -40,59 +40,11 @@
 
 #include <utility>
 
-#include <signal.h>
 #include <sys/mman.h>
 
+#include "lficpp/signal_handler.h"
+
 #define EC_DECL(ret) template<typename TransactionContext_t> ret ExecutionContext<TransactionContext_t>
-
-static void signal_trap_handler(int sig, siginfo_t* si, void* context) {
-    // TODO: check if the signal arrived while a LFI process was executing, by
-    // checking if the PC is inside a sandbox. Currently we assume this is the
-    // case, meaning that if Groundhog itself causes a SIGSEGV, this will
-    // behave badly.
-    ucontext_t* uctx = (ucontext_t*) context;
-    uint64_t saved = lfi_signal_start(uctx->uc_mcontext.regs[21]);
-    struct lfi_proc* proc = lfi_sys_proc(uctx->uc_mcontext.regs[21]);
-    std::printf("received signal, pc: %llx\n", uctx->uc_mcontext.pc);
-
-    lfi_proc_exit(proc, sig);
-
-    // unreachable
-    std::abort();
-    lfi_signal_end(saved);
-}
-
-static void signal_register(int sig) {
-    struct sigaction act;
-    act.sa_sigaction = &signal_trap_handler;
-    act.sa_flags = SA_SIGINFO | SA_ONSTACK;
-    sigemptyset(&act.sa_mask);
-    if (sigaction(sig, &act, NULL) != 0) {
-        perror("sigaction");
-        std::abort();
-    }
-}
-
-void signal_init() {
-    stack_t ss;
-    ss.ss_sp = malloc(SIGSTKSZ);
-    if (ss.ss_sp == NULL) {
-        perror("malloc");
-        std::abort();
-    }
-    ss.ss_size = SIGSTKSZ;
-    ss.ss_flags = 0;
-    if (sigaltstack(&ss, NULL) == -1) {
-        perror("sigaltstack");
-        std::abort();
-    }
-
-    signal_register(SIGSEGV);
-    signal_register(SIGILL);
-    signal_register(SIGTRAP);
-    signal_register(SIGFPE);
-    signal_register(SIGBUS);
-}
 
 namespace scs {
 
@@ -105,7 +57,9 @@ EC_DECL()::ExecutionContext(LFIGlobalEngine& engine)
     , tx_context(nullptr)
     , results_of_last_tx(nullptr)
     , addr_db(nullptr)
-{}
+{
+    signal_init();
+}
 
 
 EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
@@ -151,8 +105,8 @@ enum {
     SYS_READ  = 504,
     SYS_CLOSE = 505,
 
-    GROUNDHOG_GET_CALLDATA = 600,
-    GROUNDHOG_GET_CALLDATA_LEN = 601,
+    LFIHOG_LOG = 600,
+    LFIHOG_INVOKE=601,
 
     WRITE_MAX = 1024,
 };
@@ -181,6 +135,69 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1
             break;
         case SYS_CLOSE:
             break;
+        case LFIHOG_LOG:{
+            // arg0: ptr
+            // arg1: len
+            uintptr_t ptr = arg0;
+            uint32_t len = arg1;
+            if (p -> is_readable(p->addr(ptr), len))
+            {
+                tx_context->tx_results->add_log(TransactionLog(p->addr(ptr), p->addr(ptr + len)));
+            }
+            ret = 0;
+            break;
+        }
+        case LFIHOG_INVOKE:{
+            // arg0: address
+            // arg1: method
+            // arg2: calldata_ptr
+            // arg3: calldata_len
+            // arg4
+            uintptr_t addr = arg0;
+            uint32_t method = arg1;
+            uintptr_t calldata_addr = arg2;
+            uint32_t calldata_len = arg3;
+            uintptr_t return_addr = arg4;
+            uint32_t return_len = arg5;
+
+            Address address;
+            std::vector<uint8_t> calldata;
+
+            if (p -> is_readable(p->addr(addr), 32))
+            {
+                std::memcpy(address.data(), reinterpret_cast<uint8_t*>(p->addr(addr)), 32);                
+            } else {
+                ret = -1;
+                break;
+            }
+
+            if (p -> is_readable(p->addr(calldata_addr), calldata_len))
+            {
+                calldata.insert(
+                    calldata.end(),
+                    reinterpret_cast<uint8_t*>(p->addr(calldata_addr)),
+                    reinterpret_cast<uint8_t*>(p->addr(calldata_addr + calldata_len)));
+            }
+
+            invoke_subroutine(MethodInvocation(address, method, std::move(calldata)));
+
+            return_len = std::min<uint32_t>(return_len, tx_context->return_buf.size());
+
+            if (return_len > 0)
+            {
+                if (p -> is_writable(p->addr(return_addr), return_len))
+                {
+                    std::memcpy(
+                        reinterpret_cast<uint8_t*>(p->addr(return_addr)), 
+                        reinterpret_cast<uint8_t*>(tx_context->return_buf.data()), 
+                        return_len);
+                }
+            }
+
+            tx_context->return_buf.clear();
+            ret = 0;
+            break;
+        }
         default:
             std::printf("invalid syscall: %ld\n", callno);
             std::abort();
