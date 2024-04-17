@@ -79,4 +79,6 @@ public:
     bool is_readable(uintptr_t p, uint32_t size) const;
 };
 
+uint32_t sandboxaddr(uintptr_t p);
+
 }

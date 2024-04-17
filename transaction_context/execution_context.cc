@@ -126,7 +126,7 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1
             ret = write(1, (const char*) p->addr(arg1), (size_t) arg2);
             break;
         case SYS_SBRK: {
-            ret = p -> sbrk(arg0);
+            ret = sandboxaddr(p -> sbrk(arg0));
             break;
         }
         case SYS_LSEEK:
