@@ -11,7 +11,10 @@ int cmain(uint32_t method, uint8_t* ptr, uint32_t len)
 		return -1;
 	}
 
-	lfihog_invoke(ptr,
-		*((uint32_t*)(ptr + 32)), len - 36);
+	lfihog_invoke(
+		ptr,
+		*((uint32_t*)(ptr + 32)), 
+		ptr + 36,
+		len - 36, NULL, 0);
 }
 

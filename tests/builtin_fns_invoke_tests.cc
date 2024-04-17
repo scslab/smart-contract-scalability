@@ -36,22 +36,22 @@ TEST_CASE("test invoke", "[builtin]")
 {
     test::DeferredContextClear defer;
 
-    GlobalContext scs_data_structures;
+    BaseGlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
 
     auto c1 = load_wasm_from_file("lfi_contracts/test_log.lfi");
-    auto h1 = hash_xdr(*c1);
+    auto h1 = c1 -> hash();
 
     auto c2
         = load_wasm_from_file("lfi_contracts/test_redirect_call.lfi");
-    auto h2 = hash_xdr(*c2);
+    auto h2 = c2 -> hash();
 
     test::deploy_and_commit_contractdb(script_db, h1, c1);
     test::deploy_and_commit_contractdb(script_db, h2, c2);
 
     ExecutionContext<TxContext> exec_ctx(scs_data_structures.engine);
 
-    BlockContext block_context(0);
+    BaseBlockContext block_context(0);
 
     auto exec_success = [&](const Hash& tx_hash, const SignedTransaction& tx) {
         REQUIRE(exec_ctx.execute(tx_hash, tx, scs_data_structures, block_context)
@@ -84,7 +84,7 @@ TEST_CASE("test invoke", "[builtin]")
 
         calldata_t data{ .callee = h1, .method = 3 };
 
-        TransactionInvocation invocation(h2, 0, xdr::opaque_vec<>());
+        TransactionInvocation invocation(h2, 0, make_calldata(data));
 
         auto [h, tx] = make_tx(invocation);
         exec_success(h, tx);
