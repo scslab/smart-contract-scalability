@@ -15,11 +15,11 @@
  */
 
 #include "transaction_context/execution_context.h"
+#include "transaction_context/error.h"
 #include "transaction_context/global_context.h"
 #include "transaction_context/method_invocation.h"
-#include "transaction_context/transaction_results.h"
 #include "transaction_context/transaction_context.h"
-#include "transaction_context/error.h"
+#include "transaction_context/transaction_results.h"
 
 #include "threadlocal/threadlocal_context.h"
 
@@ -44,7 +44,9 @@
 
 #include "lficpp/signal_handler.h"
 
-#define EC_DECL(ret) template<typename TransactionContext_t> ret ExecutionContext<TransactionContext_t>
+#define EC_DECL(ret)                                                           \
+    template<typename TransactionContext_t>                                    \
+    ret ExecutionContext<TransactionContext_t>
 
 namespace scs {
 
@@ -61,7 +63,6 @@ EC_DECL()::ExecutionContext(LFIGlobalEngine& engine)
     signal_init();
 }
 
-
 EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
 {
     auto* runtime = tx_context->get_runtime_by_addr(invocation.addr);
@@ -71,14 +72,14 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
 
         runtime = proc_cache.get_new_proc();
 
-        if (runtime == nullptr)
-        {
+        if (runtime == nullptr) {
             throw HostError("failed to allocate new proc");
         }
 
-        auto script = tx_context -> get_contract_db_proxy().get_script(invocation.addr);
+        auto script
+            = tx_context->get_contract_db_proxy().get_script(invocation.addr);
 
-        if (runtime -> set_program(script.bytes, script.len) != 0) {
+        if (runtime->set_program(script.bytes, script.len) != 0) {
             throw HostError("program nexist at target address");
         }
 
@@ -88,177 +89,228 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
     tx_context->push_invocation_stack(runtime, invocation);
 
     // TODO: all the invocation data, set registers, etc
-    int code = runtime -> run(invocation.method_name, invocation.calldata);
-    tx_context -> pop_invocation_stack();
+    int code = runtime->run(invocation.method_name, invocation.calldata);
+    tx_context->pop_invocation_stack();
 
-    if (code != 0)
-    {
+    if (code != 0) {
         throw HostError("invocation failed");
     }
 }
 
-enum {
-    SYS_EXIT  = 500,
+enum
+{
+    SYS_EXIT = 500,
     SYS_WRITE = 501,
-    SYS_SBRK  = 502,
+    SYS_SBRK = 502,
     SYS_LSEEK = 503,
-    SYS_READ  = 504,
+    SYS_READ = 504,
     SYS_CLOSE = 505,
 
     LFIHOG_LOG = 600,
-    LFIHOG_INVOKE=601,
-    LFIHOG_SENDER=602,
+    LFIHOG_INVOKE = 601,
+    LFIHOG_SENDER = 602,
+    LFIHOG_SELF_ADDR = 603,
+    LFIHOG_SRC_TX_HASH = 604,
+    LFIHOG_INVOKED_TX_HASH = 605,
 
     WRITE_MAX = 1024,
 };
 
-EC_DECL(uint64_t)::syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5)
+EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
+                                   uint64_t arg0,
+                                   uint64_t arg1,
+                                   uint64_t arg2,
+                                   uint64_t arg3,
+                                   uint64_t arg4,
+                                   uint64_t arg5)
 {
     int64_t ret = -1;
     std::printf("SYSCALL: %ld\n", callno);
     LFIProc* p = tx_context->get_current_runtime();
     try {
         switch (callno) {
-        case SYS_EXIT:
-            p->exit(arg0);
-	    std::unreachable();
-        case SYS_WRITE:
-            arg2 = arg2 > WRITE_MAX ? WRITE_MAX : arg2;
-            ret = write(1, (const char*) p->addr(arg1), (size_t) arg2);
-            break;
-        case SYS_SBRK: {
-            ret = sandboxaddr(p -> sbrk(arg0));
-            break;
-        }
-        case SYS_LSEEK:
-            break;
-        case SYS_READ:
-            break;
-        case SYS_CLOSE:
-            break;
-        case LFIHOG_LOG:{
-            // arg0: ptr
-            // arg1: len
-            uintptr_t ptr = arg0;
-            uint32_t len = arg1;
-            
-	    if (p -> is_readable(p->addr(ptr), len))
-            {
-		TransactionLog log;
-		log.insert(log.end(),
-				reinterpret_cast<uint8_t*>(p->addr(ptr)),
-				reinterpret_cast<uint8_t*>(p->addr(ptr + len)));
-
-                tx_context->tx_results->add_log(log);
-            } else {
-		p -> exit(-1);
-		std::unreachable();
-	    }
-            ret = 0;
-            break;
-        }
-        case LFIHOG_INVOKE:{
-            // arg0: address
-            // arg1: method
-            // arg2: calldata_ptr
-            // arg3: calldata_len
-            // arg4
-            uintptr_t addr = arg0;
-            uint32_t method = arg1;
-            uintptr_t calldata_addr = arg2;
-            uint32_t calldata_len = arg3;
-            uintptr_t return_addr = arg4;
-            uint32_t return_len = arg5;
-
-            Address address;
-            std::vector<uint8_t> calldata;
-
-            if (p -> is_readable(p->addr(addr), 32))
-            {
-                std::memcpy(address.data(), reinterpret_cast<uint8_t*>(p->addr(addr)), 32);                
-            } else {
-		p -> exit(-1);
-		std::unreachable();
+            case SYS_EXIT:
+                p->exit(arg0);
+                std::unreachable();
+            case SYS_WRITE:
+                arg2 = arg2 > WRITE_MAX ? WRITE_MAX : arg2;
+                ret = write(1, (const char*)p->addr(arg1), (size_t)arg2);
+                break;
+            case SYS_SBRK: {
+                ret = sandboxaddr(p->sbrk(arg0));
                 break;
             }
-	    
-	    if (calldata_len > 0)
-	    {
-        if (p -> is_readable(p->addr(calldata_addr), calldata_len))
-            {
-                calldata.insert(
-                    calldata.end(),
-                    reinterpret_cast<uint8_t*>(p->addr(calldata_addr)),
-                    reinterpret_cast<uint8_t*>(p->addr(calldata_addr + calldata_len)));
-            }
-	    }
+            case SYS_LSEEK:
+                break;
+            case SYS_READ:
+                break;
+            case SYS_CLOSE:
+                break;
+            case LFIHOG_LOG: {
+                // arg0: ptr
+                // arg1: len
+                uintptr_t ptr = arg0;
+                uint32_t len = arg1;
 
-            invoke_subroutine(MethodInvocation(address, method, std::move(calldata)));
+                if (p->is_readable(p->addr(ptr), len)) {
+                    TransactionLog log;
+                    log.insert(log.end(),
+                               reinterpret_cast<uint8_t*>(p->addr(ptr)),
+                               reinterpret_cast<uint8_t*>(p->addr(ptr + len)));
 
-            return_len = std::min<uint32_t>(return_len, tx_context->return_buf.size());
-
-            if (return_len > 0)
-            {
-                if (p -> is_writable(p->addr(return_addr), return_len))
-                {
-                    std::memcpy(
-                        reinterpret_cast<uint8_t*>(p->addr(return_addr)), 
-                        reinterpret_cast<uint8_t*>(tx_context->return_buf.data()), 
-                        return_len);
+                    tx_context->tx_results->add_log(log);
+                } else {
+                    p->exit(-1);
+                    std::unreachable();
                 }
+                ret = 0;
+                break;
             }
+            case LFIHOG_INVOKE: {
+                // arg0: address
+                // arg1: method
+                // arg2: calldata_ptr
+                // arg3: calldata_len
+                // arg4
+                uintptr_t addr = arg0;
+                uint32_t method = arg1;
+                uintptr_t calldata_addr = arg2;
+                uint32_t calldata_len = arg3;
+                uintptr_t return_addr = arg4;
+                uint32_t return_len = arg5;
 
-            tx_context->return_buf.clear();
-            ret = 0;
-            break;
-        }
-	case LFIHOG_SENDER:
-	{
-		//arg 0: buffer addr (32 bytes)
-		if (!p->is_writable(p->addr(arg0), 32))
-		{
-			p->exit(-1);
-			std::unreachable();
-		}
-		auto const& sender = tx_context -> get_msg_sender();
+                Address address;
+                std::vector<uint8_t> calldata;
 
-		std::memcpy(
-			reinterpret_cast<uint8_t*>(p->addr(arg0)),
-			sender.data(),
-			sender.size());
-		static_assert(sender.size() == 32, "mismatch");
+                if (p->is_readable(p->addr(addr), 32)) {
+                    std::memcpy(address.data(),
+                                reinterpret_cast<uint8_t*>(p->addr(addr)),
+                                32);
+                } else {
+                    p->exit(-1);
+                    std::unreachable();
+                    break;
+                }
 
-		ret = 0;
-		break;
-	}
-        default:
-            std::printf("invalid syscall: %ld\n", callno);
-            p->exit(-1);
-	    std::unreachable();
+                if (calldata_len > 0) {
+                    if (p->is_readable(p->addr(calldata_addr), calldata_len)) {
+                        calldata.insert(
+                            calldata.end(),
+                            reinterpret_cast<uint8_t*>(p->addr(calldata_addr)),
+                            reinterpret_cast<uint8_t*>(
+                                p->addr(calldata_addr + calldata_len)));
+                    }
+                }
+
+                invoke_subroutine(
+                    MethodInvocation(address, method, std::move(calldata)));
+
+                return_len = std::min<uint32_t>(return_len,
+                                                tx_context->return_buf.size());
+
+                if (return_len > 0) {
+                    if (p->is_writable(p->addr(return_addr), return_len)) {
+                        std::memcpy(
+                            reinterpret_cast<uint8_t*>(p->addr(return_addr)),
+                            reinterpret_cast<uint8_t*>(
+                                tx_context->return_buf.data()),
+                            return_len);
+                    }
+                }
+
+                tx_context->return_buf.clear();
+                ret = 0;
+                break;
+            }
+            case LFIHOG_SENDER: {
+                // arg 0: buffer addr (32 bytes)
+                if (!p->is_writable(p->addr(arg0), 32)) {
+                    p->exit(-1);
+                    std::unreachable();
+                }
+                auto const& sender = tx_context->get_msg_sender();
+
+                std::memcpy(reinterpret_cast<uint8_t*>(p->addr(arg0)),
+                            sender.data(),
+                            sender.size());
+                static_assert(sender.size() == 32, "mismatch");
+
+                ret = 0;
+                break;
+            }
+            case LFIHOG_SELF_ADDR: {
+                // arg 0: buffer addr (32 bytes)
+                if (!p->is_writable(p->addr(arg0), 32)) {
+                    p->exit(-1);
+                    std::unreachable();
+                }
+                auto const& buf = tx_context->get_self_addr();
+
+                std::memcpy(reinterpret_cast<uint8_t*>(p->addr(arg0)),
+                            buf.data(),
+                            buf.size());
+                static_assert(buf.size() == 32, "mismatch");
+
+                ret = 0;
+                break;
+            }
+            case LFIHOG_SRC_TX_HASH: {
+                // arg 0: buffer addr (32 bytes)
+                if (!p->is_writable(p->addr(arg0), 32)) {
+                    p->exit(-1);
+                    std::unreachable();
+                }
+                auto const& buf = tx_context->get_src_tx_hash();
+
+                std::memcpy(reinterpret_cast<uint8_t*>(p->addr(arg0)),
+                            buf.data(),
+                            buf.size());
+                static_assert(buf.size() == 32, "mismatch");
+
+                ret = 0;
+                break;
+            }
+            case LFIHOG_INVOKED_TX_HASH: {
+                // arg 0: buffer addr (32 bytes)
+                if (!p->is_writable(p->addr(arg0), 32)) {
+                    p->exit(-1);
+                    std::unreachable();
+                }
+                auto const& buf = tx_context->get_invoked_tx_hash();
+
+                std::memcpy(reinterpret_cast<uint8_t*>(p->addr(arg0)),
+                            buf.data(),
+                            buf.size());
+                static_assert(buf.size() == 32, "mismatch");
+
+                ret = 0;
+                break;
+            }
+            default:
+                std::printf("invalid syscall: %ld\n", callno);
+                p->exit(-1);
+                std::unreachable();
         }
     } catch (HostError& e) {
         std::printf("tx failed %s\n", e.what());
         CONTRACT_INFO("Execution error: %s", e.what());
-        tx_context -> get_current_runtime() -> exit(1);
+        tx_context->get_current_runtime()->exit(1);
         std::unreachable();
     } catch (...) {
         std::printf("unrecoverable error!\n");
         std::abort();
     }
-    return (uint64_t) ret;
+    return (uint64_t)ret;
 }
 
-template
-TransactionStatus
-ExecutionContext<TxContext>::execute(
-    Hash const&,
-    SignedTransaction const&,
-    BaseGlobalContext&,
-    BaseBlockContext&,
-    std::optional<NondeterministicResults>);
+template TransactionStatus
+ExecutionContext<TxContext>::execute(Hash const&,
+                                     SignedTransaction const&,
+                                     BaseGlobalContext&,
+                                     BaseBlockContext&,
+                                     std::optional<NondeterministicResults>);
 
-template
-TransactionStatus
+template TransactionStatus
 ExecutionContext<GroundhogTxContext>::execute(
     Hash const&,
     SignedTransaction const&,
@@ -266,8 +318,7 @@ ExecutionContext<GroundhogTxContext>::execute(
     GroundhogBlockContext&,
     std::optional<NondeterministicResults>);
 
-template
-TransactionStatus
+template TransactionStatus
 ExecutionContext<SisyphusTxContext>::execute(
     Hash const&,
     SignedTransaction const&,
@@ -275,15 +326,15 @@ ExecutionContext<SisyphusTxContext>::execute(
     SisyphusBlockContext&,
     std::optional<NondeterministicResults>);
 
-
 template<typename TransactionContext_t>
 template<typename BlockContext_t, typename GlobalContext_t>
 TransactionStatus
-ExecutionContext<TransactionContext_t>::execute(Hash const& tx_hash,
-                          SignedTransaction const& tx,
-                          GlobalContext_t& scs_data_structures,
-                          BlockContext_t& block_context,
-                          std::optional<NondeterministicResults> nondeterministic_res)
+ExecutionContext<TransactionContext_t>::execute(
+    Hash const& tx_hash,
+    SignedTransaction const& tx,
+    GlobalContext_t& scs_data_structures,
+    BlockContext_t& block_context,
+    std::optional<NondeterministicResults> nondeterministic_res)
 {
     if (tx_context) {
         throw std::runtime_error("one execution at one time");
@@ -293,8 +344,12 @@ ExecutionContext<TransactionContext_t>::execute(Hash const& tx_hash,
 
     MethodInvocation invocation(tx.tx.invocation);
 
-    tx_context = std::make_unique<TransactionContext_t>(
-        tx, tx_hash, scs_data_structures, block_context.block_number, nondeterministic_res);
+    tx_context
+        = std::make_unique<TransactionContext_t>(tx,
+                                                 tx_hash,
+                                                 scs_data_structures,
+                                                 block_context.block_number,
+                                                 nondeterministic_res);
 
     defer d{ [this]() {
         extract_results();
@@ -304,33 +359,33 @@ ExecutionContext<TransactionContext_t>::execute(Hash const& tx_hash,
     try {
         invoke_subroutine(invocation);
     } catch (HostError& e) {
-	    std::printf("tx failed %s\n", e.what());
-	    CONTRACT_INFO("Execution error: %s", e.what());
+        std::printf("tx failed %s\n", e.what());
+        CONTRACT_INFO("Execution error: %s", e.what());
         return TransactionStatus::FAILURE;
     } catch (...) {
         std::printf("unrecoverable error!\n");
         std::abort();
     }
 
-    auto storage_commitment = tx_context -> push_storage_deltas();
+    auto storage_commitment = tx_context->push_storage_deltas();
 
-    if (!storage_commitment)
-    {
+    if (!storage_commitment) {
         return TransactionStatus::FAILURE;
     }
 
-    if (!tx_context -> tx_results -> validating_check_all_rpc_results_used())
-    {
+    if (!tx_context->tx_results->validating_check_all_rpc_results_used()) {
         return TransactionStatus::FAILURE;
     }
 
     // cannot be rewound -- this forms the threshold for commit
-    if (!block_context.tx_set.try_add_transaction(tx_hash, tx, tx_context -> tx_results->get_results().ndeterministic_results))
-    {
+    if (!block_context.tx_set.try_add_transaction(
+            tx_hash,
+            tx,
+            tx_context->tx_results->get_results().ndeterministic_results)) {
         return TransactionStatus::FAILURE;
     }
 
-    storage_commitment -> commit(block_context.modified_keys_list);
+    storage_commitment->commit(block_context.modified_keys_list);
 
     return TransactionStatus::SUCCESS;
 }
@@ -357,12 +412,11 @@ EC_DECL(std::vector<TransactionLog> const&)::get_logs()
 
 EC_DECL()::~ExecutionContext()
 {
-  if (tx_context)
-  {
-    std::printf("cannot destroy without unwinding inflight tx\n");
-    std::fflush(stdout);
-    std::terminate();
-  }
+    if (tx_context) {
+        std::printf("cannot destroy without unwinding inflight tx\n");
+        std::fflush(stdout);
+        std::terminate();
+    }
 }
 
 } // namespace scs

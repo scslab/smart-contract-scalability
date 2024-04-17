@@ -16,4 +16,8 @@ syscall close   505
 syscall lfihog_log 600
 syscall lfihog_invoke 601
 syscall lfihog_sender 602
+syscall lfihog_self_addr 603
+syscall lfihog_src_tx_hash 604
+syscall lfihog_invoked_tx_hash 605
+
 
