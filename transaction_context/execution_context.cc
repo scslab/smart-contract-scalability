@@ -35,6 +35,8 @@
 
 #include "transaction_context/global_context.h"
 
+#include "contract_db/contract_utils.h"
+
 #include "utils/defer.h"
 
 #include <utils/time.h>
@@ -579,19 +581,88 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                 ret =  hs[arg1].index;
                 break;
             }
-            /*
-            LFIHOG_CONTRACT_CREATE = 622,
-            LFIHOG_CONTRACT_DEPLOY = 623,
-            LFIHOG_WITNESS_GET = 624,
-            LFIHOG_WITNESS_GET_LEN = 625 */
+            case LFIHOG_CONTRACT_CREATE: {
+                // arg0: contract index
+                // arg1: hash out
+                uint64_t num_contracts = tx_context->get_num_deployable_contracts();
 
-//void lfihog_contract_create(uint32_t contract_index, uint8_t* hash_out /* out_len = 32 */);
-//void lfihog_contract_deploy(const uint8_t* contract_hash /* 32 bytes */, uint64_t nonce, uint8_t* out_addr_offset /* 32 bytes */);
+                if (arg0 >= num_contracts) {
+                    throw HostError("invalid createable contract addr");
+                }
 
-// returns written data amount
-//uint32_t lfihog_witness_get(uint64_t witness_index, uint8_t* out_offset, uint32_t max_len)
-//uint32_t lfihog_witness_get_len(uint64_t witness_index);
+                std::shared_ptr<VerifiedScript> contract = std::make_shared<VerifiedScript>(
+                    tx_context -> get_deployable_contract(arg0));
 
+                // Here's where the LFI verifier should run
+                std::printf("WARNING: the LFI Verifier isn't implemented yet @zyedidia\n");
+
+                Hash h = tx_context -> contract_db_proxy.create_contract(contract);
+
+                if (!p->is_writable(p->addr(arg1), h.size()))
+                {
+                    p->exit(-1);
+                    std::unreachable();
+                }
+
+                std::memcpy(
+                    reinterpret_cast<uint8_t*>(p->addr(arg1)),
+                    h.data(),
+                    h.size());
+                ret = 0;
+                break;
+            }
+            case LFIHOG_CONTRACT_DEPLOY: {
+                // arg0: contract hash
+                // arg1: nonce
+                // arg2: out addr offset
+
+                auto hash = load_hash(arg0);
+
+                auto deploy_addr = compute_contract_deploy_address(tx_context-> get_self_addr(), hash, arg1);
+
+                if (!tx_context -> contract_db_proxy.deploy_contract(deploy_addr, hash)) {
+                    throw HostError("failed to deploy contract");
+                }
+
+                if (!p->is_writable(p->addr(arg2), deploy_addr.size()))
+                {
+                    p->exit(-1);
+                    std::unreachable();
+                }
+
+                std::memcpy(
+                    reinterpret_cast<uint8_t*>(p->addr(arg2)),
+                    deploy_addr.data(),
+                    deploy_addr.size());
+                ret = 0;
+                break;
+            }   
+            case LFIHOG_WITNESS_GET: {
+                // arg0: witness index
+                // arg1: out offset
+                // arg2: max write len
+                uint32_t max_write_len = arg2;
+
+                auto const& wit = tx_context->get_witness(arg0).value;
+                max_write_len = std::min<uint32_t>(max_write_len, wit.size());
+
+                if (!p->is_writable(p->addr(arg1), max_write_len))
+                {
+                    p->exit(-1);
+                    std::unreachable();
+                }
+                std::memcpy(
+                    reinterpret_cast<uint8_t*>(p->addr(arg1)),
+                    wit.data(),
+                    max_write_len);
+                ret = max_write_len;
+                break;
+            }
+            case LFIHOG_WITNESS_GET_LEN: {
+                // arg0: witness index
+                ret = tx_context -> get_witness(arg0).value.size();
+                break;
+            }
             default:
                 std::printf("invalid syscall: %ld\n", callno);
                 p->exit(-1);
