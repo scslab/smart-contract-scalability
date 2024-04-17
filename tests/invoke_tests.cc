@@ -76,7 +76,7 @@ TEST_CASE("lfi calldata", "[lfi]")
     }
 }
 
-/*
+
 TEST_CASE("lfi invoke", "[lfi]")
 {
     test::DeferredContextClear defer;
@@ -103,8 +103,27 @@ TEST_CASE("lfi invoke", "[lfi]")
 
     TransactionInvocation invocation(h1, method, make_calldata(h2));
 
+    Transaction tx = Transaction(
+		            invocation, 100000, gas_bid, xdr::xvector<Contract>());
+        SignedTransaction stx;
+	    stx.tx = tx;
 
+	 auto hash = hash_xdr(stx);
 
-} */
+		    REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context) == TransactionStatus::SUCCESS);
 
+	 auto const& logs = exec_ctx.get_logs();
+
+		REQUIRE(logs.size() == 2);
+
+	uint32_t expect_method = 0xAABBCCDD; // set inside test_invoke.lfi
+
+	if (logs.size() == 2) {
+		REQUIRE(logs[0].size() == 4);
+		REQUIRE(memcmp(logs[0].data(), reinterpret_cast<const uint8_t*>(&expect_method), 4) == 0);
+		REQUIRE(logs[1].size() == 14);
+		REQUIRE(strncmp(reinterpret_cast<const char*>(logs[1].data()), "inside invoke", 14) == 0);
+	}
+
+}
 
