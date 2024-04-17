@@ -20,6 +20,7 @@
 #include "transaction_context/method_invocation.h"
 #include "transaction_context/transaction_context.h"
 #include "transaction_context/transaction_results.h"
+#include "transaction_context/syscall_enum.h"
 
 #include "threadlocal/threadlocal_context.h"
 
@@ -97,6 +98,7 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
     }
 }
 
+/*
 enum
 {
     SYS_EXIT = 500,
@@ -112,9 +114,14 @@ enum
     LFIHOG_SELF_ADDR = 603,
     LFIHOG_SRC_TX_HASH = 604,
     LFIHOG_INVOKED_TX_HASH = 605,
+    LFIHOG_BLOCK_NUMBER = 606,
+
+    LFIHOG_HAS_KEY = 607,
 
     WRITE_MAX = 1024,
-};
+}; */
+
+constexpr uint32_t WRITE_MAX = 1024;
 
 EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                                    uint64_t arg0,
@@ -129,22 +136,22 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
     LFIProc* p = tx_context->get_current_runtime();
     try {
         switch (callno) {
-            case SYS_EXIT:
+            case _EXIT:
                 p->exit(arg0);
                 std::unreachable();
-            case SYS_WRITE:
+            case _WRITE:
                 arg2 = arg2 > WRITE_MAX ? WRITE_MAX : arg2;
                 ret = write(1, (const char*)p->addr(arg1), (size_t)arg2);
                 break;
-            case SYS_SBRK: {
+            case SBRK: {
                 ret = sandboxaddr(p->sbrk(arg0));
                 break;
             }
-            case SYS_LSEEK:
+            case LSEEK:
                 break;
-            case SYS_READ:
+            case READ:
                 break;
-            case SYS_CLOSE:
+            case CLOSE:
                 break;
             case LFIHOG_LOG: {
                 // arg0: ptr
@@ -171,7 +178,8 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                 // arg1: method
                 // arg2: calldata_ptr
                 // arg3: calldata_len
-                // arg4
+                // arg4: return_ptr
+                // arg5: return_len
                 uintptr_t addr = arg0;
                 uint32_t method = arg1;
                 uintptr_t calldata_addr = arg2;
@@ -284,6 +292,10 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                 static_assert(buf.size() == 32, "mismatch");
 
                 ret = 0;
+                break;
+            }
+            case LFIHOG_BLOCK_NUMBER: {
+                ret = tx_context -> get_block_number();
                 break;
             }
             default:
