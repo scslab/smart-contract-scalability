@@ -133,7 +133,23 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
 {
     int64_t ret = -1;
     std::printf("SYSCALL: %ld\n", callno);
+
+    auto load_storage_key = [this](uint64_t addr) -> AddressAndKey {
+        auto* p = tx_context -> get_current_runtime();
+
+        if (!p->is_readable(p->addr(addr), 32)) {
+            p->exit(-1);
+            std::unreachable();
+        }
+        InvariantKey key;
+        std::memcpy(key.data(),
+                    reinterpret_cast<const uint8_t*>(p->addr(addr)),
+                    32);
+        return tx_context->get_storage_key(key);
+    };
+
     LFIProc* p = tx_context->get_current_runtime();
+
     try {
         switch (callno) {
             case _EXIT:
@@ -298,6 +314,14 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                 ret = tx_context -> get_block_number();
                 break;
             }
+            case LFIHOG_HAS_KEY: {
+                // arg0: key addr (32 bytes)
+                auto storage_key = load_storage_key(arg0);
+                auto res = tx_context->storage_proxy.get(storage_key);
+                ret = (res.has_value())? 1 : 0;
+                break;
+            }
+
             default:
                 std::printf("invalid syscall: %ld\n", callno);
                 p->exit(-1);
