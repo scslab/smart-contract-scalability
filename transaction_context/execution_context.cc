@@ -594,20 +594,24 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                     tx_context -> get_deployable_contract(arg0));
 
                 // Here's where the LFI verifier should run
-                std::printf("WARNING: the LFI Verifier isn't implemented yet @zyedidia\n");
+                std::printf("WARNING: the LFI Verifier is not implemented yet @zyedidia\n");
 
                 Hash h = tx_context -> contract_db_proxy.create_contract(contract);
 
-                if (!p->is_writable(p->addr(arg1), h.size()))
+                // if hash_out is not NULL
+                if (arg1 != 0)
                 {
-                    p->exit(-1);
-                    std::unreachable();
-                }
+                    if (!p->is_writable(p->addr(arg1), h.size()))
+                    {
+                        p->exit(-1);
+                        std::unreachable();
+                    }
 
-                std::memcpy(
-                    reinterpret_cast<uint8_t*>(p->addr(arg1)),
-                    h.data(),
-                    h.size());
+                    std::memcpy(
+                        reinterpret_cast<uint8_t*>(p->addr(arg1)),
+                        h.data(),
+                        h.size());
+                }
                 ret = 0;
                 break;
             }
@@ -624,16 +628,20 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                     throw HostError("failed to deploy contract");
                 }
 
-                if (!p->is_writable(p->addr(arg2), deploy_addr.size()))
+                // if deployed addr out is not NULL
+                if (arg2 != 0)
                 {
-                    p->exit(-1);
-                    std::unreachable();
-                }
+                    if (!p->is_writable(p->addr(arg2), deploy_addr.size()))
+                    {
+                        p->exit(-1);
+                        std::unreachable();
+                    }
 
-                std::memcpy(
-                    reinterpret_cast<uint8_t*>(p->addr(arg2)),
-                    deploy_addr.data(),
-                    deploy_addr.size());
+                    std::memcpy(
+                        reinterpret_cast<uint8_t*>(p->addr(arg2)),
+                        deploy_addr.data(),
+                        deploy_addr.size());
+                }
                 ret = 0;
                 break;
             }   
