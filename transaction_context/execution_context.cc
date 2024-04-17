@@ -148,6 +148,20 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
         return tx_context->get_storage_key(key);
     };
 
+    auto load_hash = [this](uint64_t addr) -> Hash {
+        auto* p = tx_context -> get_current_runtime();
+
+        if (!p->is_readable(p->addr(addr), 32)) {
+            p->exit(-1);
+            std::unreachable();
+        }
+        Hash h;
+        std::memcpy(h.data(),
+                    reinterpret_cast<const uint8_t*>(p->addr(addr)),
+                    32);
+        return h;
+    };
+
     auto load_bytestring = [this](uint64_t offset, uint32_t len) -> std::vector<uint8_t> {
         auto* p = tx_context -> get_current_runtime();
         if (!p->is_readable(p->addr(offset), len))
@@ -395,8 +409,14 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                 ret = res->body.raw_memory_storage().data.size();
                 break;
             }
-            case LFIHOG_DELETE_KEY_LAST:
+            case LFIHOG_DELETE_KEY_LAST:{
+                //arg0 : key addr
+                auto storage_key = load_storage_key(arg0);
+
+                tx_context -> storage_proxy.delete_object_last(storage_key);
+                ret = 0;
                 break;
+            }
 
             case LFIHOG_NNINT_SET_ADD:{
                 // arg0: key offset
@@ -435,17 +455,143 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                 ret = res -> body.nonnegative_int64();
                 break;
             }
-            /*LFIHOG_HS_INSERT = 615,
-            LFIHOG_HS_INC_LIMIT = 616,
-            LFIHOG_HS_CLEAR = 617,
-            LFIHOG_HS_GET_SIZE = 618,
-            LFIHOG_HS_GET_MAX_SIZE = 619,
-            LFIHOG_HS_GET_INDEX_OF = 620,
-            LFIHOG_HS_GET_INDEX = 621,
+            case LFIHOG_HS_INSERT: {
+                // arg0: key offset
+                // arg1: hash offset
+                // arg2: threshold
+                auto storage_key = load_storage_key(arg0);
+                auto hash = load_hash(arg1);
+                uint64_t threshold = arg2;
+
+                tx_context -> storage_proxy.hashset_insert(
+                    storage_key, hash, threshold);
+                ret = 0;
+                break;
+            }
+            case LFIHOG_HS_INC_LIMIT: {
+                // arg0: key offset
+                // arg1: inc amount
+                uint32_t inc_amount = arg1;
+                auto storage_key = load_storage_key(arg0);
+
+                tx_context -> storage_proxy.hashset_increase_limit(storage_key, inc_amount);
+                ret = 0;
+                break;
+            }
+            case LFIHOG_HS_CLEAR: {
+                // arg0: key offset
+                // arg1: threshold
+                auto storage_key = load_storage_key(arg0);
+                tx_context -> storage_proxy.hashset_clear(storage_key, arg1);
+                ret = 0;
+                break; 
+            }
+            case LFIHOG_HS_GET_SIZE: {
+                // arg0: key offset
+                auto storage_key = load_storage_key(arg0);
+                auto const& res = tx_context -> storage_proxy.get(storage_key);
+
+                if (!res) {
+                    ret = 0;
+                    break;
+                }
+                if (res -> body.type() != ObjectType::HASH_SET)
+                {
+                    throw HostError("invalid obj type in hs get size");
+                }
+                ret = res -> body.hash_set().hashes.size();
+                break;
+            }
+            case LFIHOG_HS_GET_MAX_SIZE: {
+                // arg0: key offset
+                auto storage_key = load_storage_key(arg0);
+                auto const& res = tx_context -> storage_proxy.get(storage_key);
+
+                if (!res) {
+                    ret = 0;
+                    break;
+                }
+                if (res -> body.type() != ObjectType::HASH_SET)
+                {
+                    throw HostError("invalid obj type in hs get size");
+                }
+                ret = res -> body.hash_set().max_size;
+                break;
+            }
+            case LFIHOG_HS_GET_INDEX_OF: {
+                // arg0: key offset
+                // arg1: threshold
+                auto storage_key = load_storage_key(arg0);
+                auto const& res = tx_context -> storage_proxy.get(storage_key);
+
+                if (!res) {
+                    ret = -1;
+                    break;
+                }
+
+                if (res -> body.type() != ObjectType::HASH_SET) {
+                    throw HostError("invalid obj type in hs_get_index_of");
+                }
+
+                auto const& entries = res->body.hash_set().hashes;
+                for (auto i = 0u; i < entries.size(); i++) {
+                    if (entries[i].index == arg1) {
+                        ret = i;
+                        break;
+                    }
+                }
+                ret = -1;
+                break;
+            }
+            case LFIHOG_HS_GET_INDEX: {
+                // arg0: key offset
+                // arg1: index
+                // arg2: output offset
+                auto storage_key = load_storage_key(arg0);
+                auto const& res = tx_context -> storage_proxy.get(storage_key);
+
+                if (!res) {
+                    ret = -1;
+                    break;
+                }
+
+                if (res -> body.type() != ObjectType::HASH_SET) {
+                    throw HostError("invalid obj type in hs_get_index_of");
+                }
+
+                auto const& hs = res->body.hash_set().hashes;
+
+                if (hs.size() <= arg1) {
+                    throw HostError("invalid hashset index");
+                }
+
+                if (!(p->is_writable(p->addr(arg2), 32)))
+                {
+                    p -> exit(-1);
+                    std::unreachable();
+                }
+
+                std::memcpy(
+                    reinterpret_cast<uint8_t*>(p->addr(arg2)),
+                    hs[arg1].hash.data(),
+                    Hash::size());
+
+                ret =  hs[arg1].index;
+                break;
+            }
+            /*
             LFIHOG_CONTRACT_CREATE = 622,
             LFIHOG_CONTRACT_DEPLOY = 623,
             LFIHOG_WITNESS_GET = 624,
             LFIHOG_WITNESS_GET_LEN = 625 */
+
+//void lfihog_contract_create(uint32_t contract_index, uint8_t* hash_out /* out_len = 32 */);
+//void lfihog_contract_deploy(const uint8_t* contract_hash /* 32 bytes */, uint64_t nonce, uint8_t* out_addr_offset /* 32 bytes */);
+
+// returns written data amount
+//uint32_t lfihog_witness_get(uint64_t witness_index, uint8_t* out_offset, uint32_t max_len)
+//uint32_t lfihog_witness_get_len(uint64_t witness_index);
+
             default:
                 std::printf("invalid syscall: %ld\n", callno);
                 p->exit(-1);

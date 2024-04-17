@@ -34,7 +34,7 @@ void lfihog_nnint_set_add(const uint8_t* key_buf /* 32 bytes */, int64_t set_amo
 void lfihog_nnint_add(const uint8_t* key_buf /* 32 bytes */, int64_t delta);
 int64_t lfihog_nnint_get(const uint8_t* key_buf /* 32 bytes */);
 
-void lfihog_hs_insert(const uint8_t* key_buf /* 32 bytes */, uint8_t* hash_buf /* 32 bytes */, uint64_t threshold);
+void lfihog_hs_insert(const uint8_t* key_buf /* 32 bytes */, const uint8_t* hash_buf /* 32 bytes */, uint64_t threshold);
 void lfihog_hs_inc_limit(const uint8_t* key_buf /* 32 bytes */, uint32_t inc_amount);
 void lfihog_hs_clear(const uint8_t* key_buf /* 32 bytes */, uint64_t threshold);
 uint32_t lfihog_hs_get_size(const uint8_t* key_buf /* 32 bytes */);
@@ -43,9 +43,9 @@ uint32_t lfihog_hs_get_max_size(const uint8_t* key_buf /* 32 bytes */);
 /**
  * if two things with same threshold, 
  * returns lowest index.
- * If none, returns UINT32_MAX
+ * If none, returns -1
  **/
-uint32_t lfihog_hs_get_index_of(const uint8_t* key_buf /* 32 bytes */, uint64_t threshold);
+int32_t lfihog_hs_get_index_of(const uint8_t* key_buf /* 32 bytes */, uint64_t threshold);
 // returns the associated threshold
 uint64_t lfihog_hs_get_index(const uint8_t* key_buf /* 32 bytes */, uint32_t index, uint8_t* output_buffer /* 32 bytes */);
 
