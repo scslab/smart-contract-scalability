@@ -4,6 +4,14 @@
 #include <cstdint>
 #include <signal.h>
 
+
+extern "C" {
+
+#include "lfi.h"
+
+}
+
+
 namespace scs
 {
 

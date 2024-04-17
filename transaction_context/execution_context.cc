@@ -140,10 +140,19 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1
             // arg1: len
             uintptr_t ptr = arg0;
             uint32_t len = arg1;
-            if (p -> is_readable(p->addr(ptr), len))
+            
+	    if (p -> is_readable(p->addr(ptr), len))
             {
-                tx_context->tx_results->add_log(TransactionLog(p->addr(ptr), p->addr(ptr + len)));
-            }
+		TransactionLog log;
+		log.insert(log.end(),
+				reinterpret_cast<uint8_t*>(p->addr(ptr)),
+				reinterpret_cast<uint8_t*>(p->addr(ptr + len)));
+
+                tx_context->tx_results->add_log(log);
+            } else {
+		ret = -1;
+		break;
+	    }
             ret = 0;
             break;
         }

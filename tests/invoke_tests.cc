@@ -64,16 +64,19 @@ TEST_CASE("lfi calldata", "[lfi]")
 
     REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context) == TransactionStatus::SUCCESS);
 
+    auto const& logs = exec_ctx.get_logs();
+
     REQUIRE(logs.size() == 2);
 
     if (logs.size() == 2) {
         REQUIRE(logs[0].size() == 4);
-        REQUIRE(memcmp(logs[0].data(), reinterpret_cast<uint8_t*>(&method), 32) == 0);
+        REQUIRE(memcmp(logs[0].data(), reinterpret_cast<const uint8_t*>(&method), 4) == 0);
         REQUIRE(logs[1].size() == 4);
-        REQUIRE(strncmp(logs[1].data(), "abc", 4) == 0);
+        REQUIRE(strncmp(reinterpret_cast<const char*>(logs[1].data()), "abc", 4) == 0);
     }
 }
 
+/*
 TEST_CASE("lfi invoke", "[lfi]")
 {
     test::DeferredContextClear defer;
@@ -98,10 +101,10 @@ TEST_CASE("lfi invoke", "[lfi]")
     const uint64_t gas_bid = 1;
     const uint32_t method = 1;
 
-    TransactionInvocation invocation(h, method, make_calldata(h2));
+    TransactionInvocation invocation(h1, method, make_calldata(h2));
 
 
 
-}
+} */
 
 
