@@ -15,4 +15,5 @@ syscall close   505
 
 syscall lfihog_log 600
 syscall lfihog_invoke 601
+syscall lfihog_sender 602
 

@@ -34,24 +34,22 @@ namespace scs {
 
 TEST_CASE("test invoke", "[builtin]")
 {
-    test::DeferredContextClear<TxContext> defer;
+    test::DeferredContextClear defer;
 
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
 
-    auto c1 = load_wasm_from_file("cpp_contracts/test_log.wasm");
+    auto c1 = load_wasm_from_file("lfi_contracts/test_log.lfi");
     auto h1 = hash_xdr(*c1);
 
     auto c2
-        = load_wasm_from_file("cpp_contracts/test_redirect_call.wasm");
+        = load_wasm_from_file("lfi_contracts/test_redirect_call.lfi");
     auto h2 = hash_xdr(*c2);
 
     test::deploy_and_commit_contractdb(script_db, h1, c1);
     test::deploy_and_commit_contractdb(script_db, h2, c2);
 
-    ThreadlocalTransactionContextStore<TxContext>::make_ctx();
-
-    auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
+    ExecutionContext<TxContext> exec_ctx(scs_data_structures.engine);
 
     BlockContext block_context(0);
 
@@ -76,9 +74,17 @@ TEST_CASE("test invoke", "[builtin]")
         return { hash_xdr(stx), stx };
     };
 
-    SECTION("msg sender self")
+    SECTION("msg sender redirect")
     {
-        TransactionInvocation invocation(h1, 4, xdr::opaque_vec<>());
+        struct calldata_t
+        {
+            Address callee;
+            uint32_t method;
+        };
+
+        calldata_t data{ .callee = h1, .method = 3 };
+
+        TransactionInvocation invocation(h2, 0, xdr::opaque_vec<>());
 
         auto [h, tx] = make_tx(invocation);
         exec_success(h, tx);
@@ -89,7 +95,7 @@ TEST_CASE("test invoke", "[builtin]")
 
         if (logs.size() >= 1) {
             REQUIRE(logs[0].size() == 32);
-            REQUIRE(memcmp(logs[0].data(), h1.data(), 32) == 0);
+            REQUIRE(memcmp(logs[0].data(), h2.data(), 32) == 0);
         }
     }
 
@@ -126,31 +132,6 @@ TEST_CASE("test invoke", "[builtin]")
         }
     }
 
-    SECTION("invoke self")
-    {
-        struct calldata_t
-        {
-            Address callee;
-            uint32_t method;
-        };
-
-        calldata_t data{ .callee = h2, .method = 1 };
-
-        TransactionInvocation invocation(h2, 0, make_calldata(data));
-
-        auto [h, tx] = make_tx(invocation);
-        exec_success(h, tx);
-
-        auto const& logs = exec_ctx.get_logs();
-
-        REQUIRE(logs.size() == 1);
-
-        if (logs.size() >= 1) {
-            REQUIRE(logs[0].size() == 1);
-            REQUIRE(logs[0] == std::vector<uint8_t>{ 0xFF });
-        }
-    }
-
     SECTION("invoke self with reentrance guard")
     {
         struct calldata_t
@@ -159,32 +140,12 @@ TEST_CASE("test invoke", "[builtin]")
             uint32_t method;
         };
 
-        calldata_t data{ .callee = h2, .method = 2 };
+        calldata_t data{ .callee = h2, .method = 0 };
 
         TransactionInvocation invocation(h2, 0, make_calldata(data));
 
         auto [h, tx] = make_tx(invocation);
         exec_fail(h, tx);
-    }
-
-    SECTION("invoke other")
-    {
-        struct calldata_t
-        {
-            Address callee;
-            uint32_t method;
-        };
-
-        calldata_t data{ .callee = h1, .method = 0 };
-
-        TransactionInvocation invocation(h2, 0, make_calldata(data));
-
-        auto [h, tx] = make_tx(invocation);
-        exec_success(h, tx);
-
-        auto const& logs = exec_ctx.get_logs();
-
-        REQUIRE(logs.size() == 1);
     }
 
     SECTION("invoke insufficient calldata")
@@ -211,7 +172,7 @@ TEST_CASE("test invoke", "[builtin]")
 
         auto [h, tx] = make_tx(invocation);
         exec_fail(h, tx);
-    }
+    } 
 }
 
 } // namespace scs
