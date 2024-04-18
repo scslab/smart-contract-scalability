@@ -30,6 +30,17 @@ namespace scs {
 
 const uint64_t gas_limit = 100000;
 
+const char* payment_contract = "lfi_contracts/payment.lfi";
+
+// from lfi_contracts/erc20.lfi
+enum {
+    	ERC20_CTOR = 0,
+     	ERC20_MINT = 1,
+     	ERC20_TRANSFERFROM = 2,
+     	ERC20_ALLOWANCEDELTA = 3,
+     	ERC20_BALANCEOF = 4
+};
+
 PaymentExperiment::PaymentExperiment(size_t num_accounts, uint16_t hs_size_inc)
     : num_accounts(num_accounts)
     , hs_size_inc(hs_size_inc)
@@ -47,7 +58,7 @@ make_create_transactions(const char* erc20_contract)
 {
     auto erc20 = load_wasm_from_file(erc20_contract);
     auto wallet
-        = load_wasm_from_file("cpp_contracts/payment_experiment/payment.wasm");
+        = load_wasm_from_file(payment_contract);
 
     auto make_tx = [](std::shared_ptr<VerifiedScript> contract) -> TxSetEntry {
         struct calldata_create
@@ -134,7 +145,7 @@ PaymentExperiment::make_deploy_wallet_transaction(
 
     calldata_DeployAndInitialize data{ .contract_hash = wallet_contract_hash,
                                        .nonce = idx,
-                                       .ctor_method = 0,
+                                       .ctor_method = ERC20_CTOR,
                                        .ctor_calldata_size
                                        = sizeof(calldata_init) };
 
@@ -168,7 +179,7 @@ make_mint_transaction(Address const& wallet_addr,
 
     auto calldata = make_calldata(data);
 
-    TransactionInvocation invocation(token_addr, 2, calldata);
+    TransactionInvocation invocation(token_addr, ERC20_MINT, calldata);
 
     SignedTransaction stx;
     stx.tx.invocation = invocation;
@@ -183,8 +194,8 @@ PaymentExperiment::make_accounts_and_mints(const char* erc20_contract)
     std::vector<TxSetEntry> accounts_out;
     std::vector<TxSetEntry> mints_out;
 
-    Hash wallet_contract_hash = hash_vec(
-        load_wasm_from_file("cpp_contracts/payment_experiment/payment.wasm")->bytes);
+    Hash wallet_contract_hash = 
+        load_wasm_from_file(payment_contract)->hash();
     Hash token_contract_hash
         = hash_vec(load_wasm_from_file(erc20_contract)->bytes);
 
@@ -211,14 +222,14 @@ PaymentExperiment::get_active_key_set()
 {
     std::vector<AddressAndKey> keys;
     keys.resize(num_accounts * 5);
-    Hash wallet_contract_hash = hash_vec(
-        load_wasm_from_file("cpp_contracts/payment_experiment/payment.wasm")->bytes);
+    Hash wallet_contract_hash = 
+        load_wasm_from_file(payment_contract)->hash();
 
     InvariantKey pkaddr = make_static_key(1);
     InvariantKey replayaddr = make_static_key(0);
     InvariantKey token_addr = make_static_key(0, 2);
 
-    const char* erc20_contract = (SisyphusStateDB::USE_ASSETS == 1) ? "cpp_contracts/sisyphus_erc20.wasm" : "cpp_contracts/erc20.wasm"; 
+    const char* erc20_contract = (SisyphusStateDB::USE_ASSETS == 1) ? "cpp_contracts/sisyphus_erc20.wasm" : "lfi_contracts/erc20.lfi"; 
 
     Hash token_contract_hash
         = hash_vec(load_wasm_from_file(erc20_contract)->bytes);
@@ -313,7 +324,7 @@ PaymentExperiment::make_random_payment(uint64_t expiration_time,
                                 .expiration = expiration_time };
 
     TransactionInvocation invocation(
-        src.wallet_address, 1, make_calldata(calldata));
+        src.wallet_address, ERC20_TRANSFERFROM, make_calldata(calldata));
 
     SignedTransaction stx;
     stx.tx.invocation = invocation;
@@ -338,7 +349,7 @@ PaymentExperiment::prepare_vm()
 
     vm->init_default_genesis();
 
-    if (!vm->try_exec_tx_block(make_create_transactions("cpp_contracts/erc20.wasm"))) {
+    if (!vm->try_exec_tx_block(make_create_transactions("lfi_contracts/erc20.lfi"))) {
         return nullptr;
     }
 
@@ -346,7 +357,7 @@ PaymentExperiment::prepare_vm()
 
     Block deploy_erc20;
     deploy_erc20.transactions
-        = { make_deploy_erc20_transaction("cpp_contracts/erc20.wasm") };
+        = { make_deploy_erc20_transaction("lfi_contracts/erc20.lfi") };
 
     if (!vm->try_exec_tx_block(deploy_erc20)) {
         return nullptr;
@@ -354,7 +365,7 @@ PaymentExperiment::prepare_vm()
 
     std::printf("made deploy erc20\n");
 
-    auto [wallet_txs, mint_txs] = make_accounts_and_mints("cpp_contracts/erc20.wasm");
+    auto [wallet_txs, mint_txs] = make_accounts_and_mints("lfi_contracts/erc20.lfi");
 
     const size_t batch_exec_size = 100'000;
     for (size_t i = 0; i < (wallet_txs.size() / batch_exec_size) + 1; i++) {

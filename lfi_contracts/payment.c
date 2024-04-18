@@ -8,6 +8,8 @@
 
 #include "utils.h"
 
+#include <ed25519.h>
+
 struct calldata_init
 {
     uint8_t token[32];
@@ -41,7 +43,7 @@ void toplevel_init(const uint8_t* token, const uint8_t* pk, uint16_t size_increa
 	memset(buf, 0, 32);
 	memcpy(buf, token_addr, strlen(token_addr));
 
-	if (lfihog_has_key(token_addr))
+	if (lfihog_has_key(buf))
 	{
 		exit(-1);
 	}
@@ -106,7 +108,7 @@ toplevel_transfer(const uint8_t* to, int64_t amount, uint64_t expiration_time)
     memcpy(buf, pk_addr, strlen(pk_addr));
     lfihog_raw_mem_get(buf, pk, 32);
 
-    lfihog_get_witness(0, signature, 64);
+    lfihog_witness_get(0, signature, 64);
 
     if (ed25519_verify(signature, invoked_hash, 32, pk) != 1)
     {
@@ -147,16 +149,17 @@ int cmain(uint32_t method, uint8_t* ptr, uint32_t len)
 {
 	switch(method)
 	{
-	case 0:
+	case 0: {
 		struct calldata_init* p = (struct calldata_init*)(ptr);
 		toplevel_init(p->token, p->pk, p->size_increase);
 		return 0;
-	case 1:
+	}
+	case 1: {
 		struct calldata_transfer* p = (struct calldata_transfer*)(ptr);
 		// nonce unused
 		toplevel_transfer(p->to, p->amount, p->expiration_time);
 		return 0;
-
+	}
 
 
 	default:

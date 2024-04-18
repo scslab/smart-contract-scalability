@@ -149,8 +149,11 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
             std::unreachable();
         }
         std::vector<uint8_t> out;
+	//out.resize(len);
+	//std::memcpy(out.data(), p->addr(offset), len);
         out.insert(out.end(),
-            p->addr(offset), p->addr(offset + len));
+            reinterpret_cast<uint8_t*>(p->addr(offset)), 
+	    reinterpret_cast<uint8_t*>(p->addr(offset + len)));
         return out;
     };
 
@@ -332,8 +335,8 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                 //arg1: mem buf
                 //arg2: mem len
                 auto storage_key = load_storage_key(arg0);
-
                 auto write_bytes = load_bytestring(arg1, arg2);
+
                 tx_context->storage_proxy.raw_memory_write(
                     storage_key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>(write_bytes.begin(), write_bytes.end()));
                 ret = 0;
@@ -664,9 +667,13 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
         CONTRACT_INFO("Execution error: %s", e.what());
         tx_context->get_current_runtime()->exit(1);
         std::unreachable();
-    } catch (...) {
-        std::printf("unrecoverable error!\n");
+    } catch (std::exception const& e) {
+        std::printf("unrecoverable error! %s\n", e.what());
         std::abort();
+    }
+    catch (...) {
+	    std::printf("impossible!\n");
+	    std::abort();
     }
     return (uint64_t)ret;
 }
