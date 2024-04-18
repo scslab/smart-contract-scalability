@@ -3,7 +3,7 @@
 mkdir -p build
 cd build
 
-export CC=/opt/lfi/toolchain/bin/lfi-clang
+export CC=/opt/lfi/groundhog-toolchain/bin/lfi-clang
 export CFLAGS="-DBUFSIZ=8192"
 
 meson setup --cross-file ../lfi.txt \

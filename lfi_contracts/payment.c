@@ -96,7 +96,6 @@ toplevel_transfer(const uint8_t* to, int64_t amount, uint64_t expiration_time)
 
     if (expiration_time < cur_block_number)
     {
-	printf("stale tx\n");
     	exit(-1);
     }
     lfihog_hs_clear(buf, cur_block_number);
@@ -132,7 +131,6 @@ toplevel_transfer(const uint8_t* to, int64_t amount, uint64_t expiration_time)
 
     lfihog_self_addr(self);
 
-    printf("got all the way to starting transferFrom\n");
     Ierc20_transferFrom(token, self, to, amount);
 
     free(self);
@@ -147,7 +145,6 @@ toplevel_transfer(const uint8_t* to, int64_t amount, uint64_t expiration_time)
 
 int cmain(uint32_t method, uint8_t* ptr, uint32_t len)
 {
-	printf("call method %u with calldata len %u\n", method, len);
 	switch(method)
 	{
 	case 0: {

@@ -1,4 +1,4 @@
-cc := /opt/lfi/toolchain/bin/lfi-clang
+cc := /opt/lfi/groundhog-toolchain/bin/lfi-clang
 
 return b{
     $ libsyscalls.a: syscall.S.o syscall.c.o crt0.c.o

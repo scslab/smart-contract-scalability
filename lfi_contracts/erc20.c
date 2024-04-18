@@ -51,7 +51,6 @@ void transfer(const uint8_t* from, const uint8_t* to, const int64_t amount)
 		exit(-1);
 	}
 
-	printf("doing balance delta\n");
 	uint8_t* buf = malloc(32);
 
 	calculate_balance_key(from, buf);
@@ -65,7 +64,6 @@ void transfer(const uint8_t* from, const uint8_t* to, const int64_t amount)
 
 void allowance_delta(const uint8_t* owner, const uint8_t* auth, const int64_t amount)
 {
-	printf("doing allowance delta\n");
 	uint8_t* buf = malloc(32);
 	calculate_allowance_key(owner, auth, buf);
 	lfihog_nnint_add(buf, amount);

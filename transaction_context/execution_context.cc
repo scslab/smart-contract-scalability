@@ -111,7 +111,6 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                                    uint64_t arg5)
 {
     int64_t ret = -1;
-    std::printf("SYSCALL: %ld\n", callno);
 
     auto load_storage_key = [this](uint64_t addr) -> AddressAndKey {
         auto* p = tx_context -> get_current_runtime();
