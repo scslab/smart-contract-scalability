@@ -32,7 +32,7 @@ namespace scs {
 
 template<typename GlobalContext_t, typename BlockContext_t>
 void
-AssemblyWorker<GlobalContext_t, BlockContext_t>::run()
+AssemblyWorker<GlobalContext_t, BlockContext_t>::run(BlockContext_t& block_context, AssemblyLimits& limits)
 {
     auto& limiter = ThreadlocalContextStore::get_rate_limiter();
 
@@ -83,14 +83,15 @@ AsyncAssemblyWorker<worker_t>::run()
             return;
         }
 
-        if (!running) {
+        if ((!current_block_context) || (!limits)) {
             throw std::runtime_error("shouldn't be not running here");
         }
 
-        worker.run();
+        worker->run(*current_block_context, *limits);
         ThreadlocalContextStore::get_rate_limiter().free_one_slot();
 
-        running = false;
+        current_block_context = nullptr;
+        limits = nullptr;
         cv.notify_all();
     }
 }

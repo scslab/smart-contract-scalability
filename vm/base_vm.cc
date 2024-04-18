@@ -129,10 +129,6 @@ VM()::~BaseVirtualMachine()
 {
     ThreadlocalContextStore::get_rate_limiter().stop_threads();
     ThreadlocalContextStore::stop_rpcs();
-    StaticAssemblyWorkerCache<GlobalContext_t, BlockContext_t>::wait_for_stop_assembly_threads();
-    
-    // execution context used to have dangling reference to GlobalContext without this
-    //ThreadlocalContextStore::clear_entire_context<typename BlockContext::tx_context_t>();
 }
 
 } // namespace scs

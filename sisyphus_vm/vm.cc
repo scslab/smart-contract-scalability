@@ -144,8 +144,8 @@ SisyphusVirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_ti
 	auto ts = utils::init_time_measurement();
     ThreadlocalContextStore::get_rate_limiter().prep_for_notify();
     ThreadlocalContextStore::enable_rpcs();
-    StaticAssemblyWorkerCache<SisyphusGlobalContext, SisyphusBlockContext>::start_assembly_threads(
-        mempool, global_context, *current_block_context, limits, n_threads);
+    assembly_worker_cache.start_assembly_threads(
+        current_block_context.get(), &limits, n_threads);
     std::printf("start assembly threads time %lf\n", utils::measure_time(ts));
     ThreadlocalContextStore::get_rate_limiter().start_threads(n_threads);
 
@@ -161,7 +161,7 @@ SisyphusVirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_ti
     ThreadlocalContextStore::stop_rpcs();
 
     std::printf("stop time %lf\n", utils::measure_time(ts));
-    StaticAssemblyWorkerCache<SisyphusGlobalContext, SisyphusBlockContext>::wait_for_stop_assembly_threads();
+    assembly_worker_cache.wait_for_stop_assembly_threads();
     std::printf("done join assembly threads %lf\n", utils::measure_time(ts));
 
     BlockHeader out;
@@ -224,7 +224,6 @@ SisyphusVirtualMachine::~SisyphusVirtualMachine()
 {
     ThreadlocalContextStore::get_rate_limiter().stop_threads();
     ThreadlocalContextStore::stop_rpcs();
-    StaticAssemblyWorkerCache<SisyphusGlobalContext, SisyphusBlockContext>::wait_for_stop_assembly_threads();
 }
 
 } // namespace scs

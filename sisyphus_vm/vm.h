@@ -33,6 +33,8 @@
 
 #include "lficpp/lficpp.h"
 
+#include "block_assembly/assembly_worker.h"
+
 namespace scs {
 
 class AssemblyLimits;
@@ -53,6 +55,8 @@ class SisyphusVirtualMachine : public utils::NonMovableOrCopyable
     SisyphusGlobalContext global_context;
     std::unique_ptr<SisyphusBlockContext> current_block_context;
     Mempool mempool;
+    AssemblyWorkerCache<SisyphusGlobalContext, SisyphusBlockContext> assembly_worker_cache;
+
 
     Hash prev_block_hash;
 
@@ -77,6 +81,7 @@ class SisyphusVirtualMachine : public utils::NonMovableOrCopyable
       : global_context()
       , current_block_context()
       , mempool()
+      , assembly_worker_cache(mempool, global_context)
       , prev_block_hash()
       , keys_persist()
       , executors()

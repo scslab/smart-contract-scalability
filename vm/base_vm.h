@@ -31,6 +31,8 @@
 
 #include "utils/threadlocal_cache.h"
 
+#include "block_assembly/assembly_worker.h"
+
 namespace scs {
 
 class AssemblyLimits;
@@ -48,6 +50,7 @@ class BaseVirtualMachine : public utils::NonMovableOrCopyable
     GlobalContext_t global_context;
     std::unique_ptr<BlockContext_t> current_block_context;
     Mempool mempool;
+    AssemblyWorkerCache<GlobalContext_t, BlockContext_t> assembly_worker_cache;
 
     Hash prev_block_hash;
 
@@ -64,6 +67,7 @@ class BaseVirtualMachine : public utils::NonMovableOrCopyable
       , global_context()
       , current_block_context()
       , mempool()
+      , assembly_worker_cache(mempool, global_context)
       , prev_block_hash() {}
 
   public:
