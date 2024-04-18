@@ -53,7 +53,7 @@ void lfihog_contract_create(uint32_t contract_index, uint8_t* hash_out /* out_le
 void lfihog_contract_deploy(const uint8_t* contract_hash /* 32 bytes */, uint64_t nonce, uint8_t* out_addr_offset /* 32 bytes */);
 
 // returns written data amount
-uint32_t lfihog_witness_get(uint64_t witness_index, uint8_t* out_offset, uint32_t max_len)
+uint32_t lfihog_witness_get(uint64_t witness_index, uint8_t* out_offset, uint32_t max_len);
 uint32_t lfihog_witness_get_len(uint64_t witness_index);
 
 #endif

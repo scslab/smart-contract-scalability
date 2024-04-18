@@ -30,20 +30,20 @@ int cmain(uint32_t method, uint8_t* ptr, uint32_t len) {
 	{
 	case 0:
 	{
-		calldata_DeployAndInitialize* c = reinterpret_cast<calldata_DeployAndInitialize*>(ptr);
+		struct calldata_DeployAndInitialize* c = (struct calldata_DeployAndInitialize*)(ptr);
 
 		uint8_t* deploy_addr = malloc(32);
 
 		lfihog_contract_deploy(&(c->contract_hash[0]), c->nonce, deploy_addr);
 
-		uint8_t* child_calldata = ptr + sizeof(calldata_DeployAndInitialize);
-		uint32_t child_calldata_len = len - sizeof(calldata_DeployAndInitialize);
+		uint8_t* child_calldata = ptr + sizeof(struct calldata_DeployAndInitialize);
+		uint32_t child_calldata_len = len - sizeof(struct calldata_DeployAndInitialize);
 
 		lfihog_invoke(deploy_addr, c->ctor_method, child_calldata, child_calldata_len, NULL, 0);
 		break;
 	}
 	case 1:{
-		calldata_Deploy* c = reinterpret_cast<calldata_Deploy*>(ptr);
+		struct calldata_Deploy* c = (struct calldata_Deploy*)(ptr);
 
 		uint8_t* deploy_addr = malloc(32);
 
@@ -51,7 +51,7 @@ int cmain(uint32_t method, uint8_t* ptr, uint32_t len) {
 		break;
 	}
 	case 2:{
-		calldata_Create* c = reinterpret_cast<calldata_Create*>(ptr);
+		struct calldata_Create* c = (struct calldata_Create*)(ptr);
 		lfihog_contract_create(c->contract_idx, NULL);
 		break;
 	}
