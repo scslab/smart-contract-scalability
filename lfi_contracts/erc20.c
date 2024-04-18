@@ -51,19 +51,24 @@ void transfer(const uint8_t* from, const uint8_t* to, const int64_t amount)
 		exit(-1);
 	}
 
-	uint8_t buf[32];
+	uint8_t* buf = malloc(32);
+
 	calculate_balance_key(from, buf);
 	lfihog_nnint_add(buf, -amount);
 
 	calculate_balance_key(to, buf);
 	lfihog_nnint_add(buf, amount);
+
+    free(buf);
 }
 
 void allowance_delta(const uint8_t* owner, const uint8_t* auth, const int64_t amount)
 {
-	uint8_t buf[32];
+	uint8_t* buf = malloc(32);
 	calculate_allowance_key(owner, auth, buf);
 	lfihog_nnint_add(buf, amount);
+
+    free(buf);
 }
 
 void toplevel_transferFrom(const uint8_t* owner, const uint8_t* to, const int64_t amount)
@@ -81,7 +86,7 @@ toplevel_mint(const uint8_t* to, const int64_t amount)
     if (amount < 0) {
         exit(-1);
     }
-    uint8_t buf[32];
+    uint8_t* buf = malloc(32);
     calculate_balance_key(to, buf);
     lfihog_nnint_add(buf, amount);
 
@@ -91,15 +96,20 @@ toplevel_mint(const uint8_t* to, const int64_t amount)
 
     memcpy(buf, total_supply_storage_key, strlen(total_supply_storage_key));
     lfihog_nnint_add(buf, amount);
+
+    free(buf);
 }
 
 void toplevel_ctor(const uint8_t* owner)
 {
-    uint8_t buf[32];
+    uint8_t* buf = malloc(32);
+
     const char* owner_key = "owner key";
     memcpy(buf, owner_key, strlen(owner_key));
 
     lfihog_raw_mem_set(buf, owner, 32);
+
+    free(buf);
 }
 
 void toplevel_allowancedelta(const uint8_t* authorized, int64_t amount)
@@ -114,13 +124,16 @@ void toplevel_allowancedelta(const uint8_t* authorized, int64_t amount)
 
 void toplevel_balanceOf(const uint8_t* addr)
 {
-    uint8_t buf[32];
+    uint8_t *buf = malloc(32);
     calculate_balance_key(addr, buf);
 
     int64_t* balance = malloc(sizeof(int64_t));
     *balance = lfihog_nnint_get(buf);
 
     lfihog_return((uint8_t*)(balance), sizeof(int64_t));
+
+    free(balance);
+    free(buf);
 }
 
 int cmain(uint32_t method, uint8_t* ptr, uint32_t len)
