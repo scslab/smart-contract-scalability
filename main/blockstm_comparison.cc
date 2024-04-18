@@ -115,8 +115,8 @@ main(int argc, const char** argv)
 
     std::vector<exp_res> overall_results;
 
-    bool short_stuff = false;
-	bool long_stuff = true;
+    bool short_stuff = true;
+	bool long_stuff = false;
     if (short_stuff)
     {
 

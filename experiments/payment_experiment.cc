@@ -30,6 +30,8 @@ namespace scs {
 
 const uint64_t gas_limit = 100000;
 
+const char* payment_contract = "lfi_contracts/payment.lfi";
+
 PaymentExperiment::PaymentExperiment(size_t num_accounts, uint16_t hs_size_inc)
     : num_accounts(num_accounts)
     , hs_size_inc(hs_size_inc)
@@ -47,7 +49,7 @@ make_create_transactions(const char* erc20_contract)
 {
     auto erc20 = load_wasm_from_file(erc20_contract);
     auto wallet
-        = load_wasm_from_file("cpp_contracts/payment_experiment/payment.wasm");
+        = load_wasm_from_file(payment_contract);
 
     auto make_tx = [](std::shared_ptr<VerifiedScript> contract) -> TxSetEntry {
         struct calldata_create
@@ -183,8 +185,8 @@ PaymentExperiment::make_accounts_and_mints(const char* erc20_contract)
     std::vector<TxSetEntry> accounts_out;
     std::vector<TxSetEntry> mints_out;
 
-    Hash wallet_contract_hash = hash_vec(
-        load_wasm_from_file("cpp_contracts/payment_experiment/payment.wasm")->bytes);
+    Hash wallet_contract_hash = 
+        load_wasm_from_file(payment_contract)->hash();
     Hash token_contract_hash
         = hash_vec(load_wasm_from_file(erc20_contract)->bytes);
 
@@ -211,14 +213,14 @@ PaymentExperiment::get_active_key_set()
 {
     std::vector<AddressAndKey> keys;
     keys.resize(num_accounts * 5);
-    Hash wallet_contract_hash = hash_vec(
-        load_wasm_from_file("cpp_contracts/payment_experiment/payment.wasm")->bytes);
+    Hash wallet_contract_hash = 
+        load_wasm_from_file(payment_contract)->hash();
 
     InvariantKey pkaddr = make_static_key(1);
     InvariantKey replayaddr = make_static_key(0);
     InvariantKey token_addr = make_static_key(0, 2);
 
-    const char* erc20_contract = (SisyphusStateDB::USE_ASSETS == 1) ? "cpp_contracts/sisyphus_erc20.wasm" : "cpp_contracts/erc20.wasm"; 
+    const char* erc20_contract = (SisyphusStateDB::USE_ASSETS == 1) ? "cpp_contracts/sisyphus_erc20.wasm" : "lfi_contracts/erc20.lfi"; 
 
     Hash token_contract_hash
         = hash_vec(load_wasm_from_file(erc20_contract)->bytes);
