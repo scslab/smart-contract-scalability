@@ -199,7 +199,10 @@ TEST_UTILS_SRCS = \
 TESTS_CCS = \
 	tests/builtin_fns_invoke_tests.cc \
 	tests/gas_tests.cc \
-	tests/invoke_tests.cc
+	tests/invoke_tests.cc \
+	$(HASH_SET_TEST_SRCS) \
+	$(STATE_DB_TEST_SRCS) \
+	storage_proxy/tests/test_proxy_applicator.cc
 
 MAIN_CCS = \
 	main/blockstm_comparison.cc \

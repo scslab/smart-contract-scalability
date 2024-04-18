@@ -48,9 +48,7 @@ TC_DECL::TransactionContext(SignedTransaction const& tx,
     , tx_results(results ? new TransactionResultsFrame(*results) : new TransactionResultsFrame())
     , storage_proxy(global_context.state_db)
     , contract_db_proxy(global_context.contract_db)
-{
-	std::printf("finished init\n");
-}
+{}
 
 TC_TEMPLATE
 LFIProc*
