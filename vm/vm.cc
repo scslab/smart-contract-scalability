@@ -133,7 +133,7 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
 	auto ts = utils::init_time_measurement();
     ThreadlocalContextStore::get_rate_limiter().prep_for_notify();
     ThreadlocalContextStore::enable_rpcs();
-    StaticAssemblyWorkerCache<GlobalContext, BlockContext>::start_assembly_threads(mempool, global_context, *current_block_context, limits, n_threads);
+    worker_cache.start_assembly_threads(current_block_context.get(), &limits, n_threads);
     std::printf("start assembly threads time %lf\n", utils::measure_time(ts));
     ThreadlocalContextStore::get_rate_limiter().start_threads(n_threads);
 
@@ -149,7 +149,7 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
     ThreadlocalContextStore::stop_rpcs();
 
     std::printf("stop time %lf\n", utils::measure_time(ts));
-    StaticAssemblyWorkerCache<GlobalContext, BlockContext>::wait_for_stop_assembly_threads();
+    worker_cache.wait_for_stop_assembly_threads();
     std::printf("done join assembly threads %lf\n", utils::measure_time(ts));
 
     BlockHeader out;

@@ -29,6 +29,7 @@
 #include "mempool/mempool.h"
 
 #include "state_db/async_keys_to_disk.h"
+#include "block_assembly/assembly_worker.h"
 
 namespace scs {
 
@@ -51,6 +52,7 @@ class SisyphusVirtualMachine : public utils::NonMovableOrCopyable
     std::unique_ptr<SisyphusBlockContext> current_block_context;
     Mempool mempool;
 
+    AssemblyWorkerCache<SisyphusGlobalContext, SisyphusBlockContext> worker_cache;
     Hash prev_block_hash;
 
     AsyncKeysToDisk keys_persist;
@@ -64,6 +66,12 @@ class SisyphusVirtualMachine : public utils::NonMovableOrCopyable
     BlockHeader make_block_header();
 
   public:
+    SisyphusVirtualMachine()
+	    :global_context()
+	    , current_block_context()
+	     , mempool()
+	     , worker_cache(mempool, global_context)
+	{}
     void init_default_genesis();
 
     std::optional<BlockHeader>

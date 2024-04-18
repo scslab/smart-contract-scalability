@@ -49,8 +49,6 @@ class ExecutionContext
 
     RpcAddressDB* addr_db;
 
-    ExecutionContext();
-
     friend class ThreadlocalTransactionContextStore<TransactionContext_t>;
     friend class BuiltinFns<TransactionContext_t>;
 
@@ -77,6 +75,8 @@ class ExecutionContext
     }
 
   public:
+    ExecutionContext();
+
     template<typename BlockContext, typename GlobalContext>
     TransactionStatus execute(Hash const& tx_hash,
                               SignedTransaction const& tx,

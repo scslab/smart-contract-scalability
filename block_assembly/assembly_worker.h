@@ -25,41 +25,46 @@
 
 #include <utils/async_worker.h>
 
+#include "transaction_context/execution_context.h"
+
 namespace scs
 {
 
 class AssemblyLimits;
 class Mempool;
+class LFIGlobalEngine;
 
 template<typename GlobalContext_t, typename BlockContext_t>
 class AssemblyWorker
 {
 	Mempool& mempool;
 	GlobalContext_t& global_context;
-	BlockContext_t& block_context;
-	AssemblyLimits& limits;
+	ExecutionContext<TransactionContext<GlobalContext_t>> exec_ctx;
 
 public:
 
-	AssemblyWorker(Mempool& mempool, GlobalContext_t& global_context, BlockContext_t& block_context, AssemblyLimits& limits)
+	AssemblyWorker(Mempool& mempool, GlobalContext_t& global_context)
 		: mempool(mempool)
 		, global_context(global_context)
-		, block_context(block_context)
-		, limits(limits)
+		, exec_ctx()
 		{
 		}
 
-	void run();
+	void run(BlockContext_t& block_context, AssemblyLimits& limits);
+
+	using bc_t = BlockContext_t;
 };
 
 template<typename worker_t>
 class AsyncAssemblyWorker : public utils::AsyncWorker
 {
-	std::optional<worker_t> worker;
+	std::unique_ptr<worker_t> worker;
+	typename worker_t::bc_t* current_block_context = nullptr;
+	AssemblyLimits* limits = nullptr;
 
 	bool exists_work_to_do() override final
 	{
-		return worker.has_value();
+		return (current_block_context!= nullptr) && (limits != nullptr);
 	}
 
 	void run();
@@ -80,11 +85,23 @@ public:
 		terminate_worker();
 	}
 
-	void start_worker(worker_t w)
+	template<typename... Args>
+	void start_worker(typename worker_t::bc_t* cbt, AssemblyLimits* l, Args& ...args)
 	{
 		std::lock_guard lock(mtx);
-		worker.emplace(w);
+		if (!worker)
+		{
+			worker = std::make_unique<worker_t>(args...);
+		}
+		current_block_context = cbt;
+		limits = l;
 		cv.notify_all();
+	}
+	void clear_worker()
+	{
+		std::lock_guard lock(mtx);
+		limits = nullptr;
+		current_block_context = nullptr;
 	}
 
 	using AsyncWorker::wait_for_async_task;
@@ -92,20 +109,25 @@ public:
 
 template<typename GlobalContext_t, typename BlockContext_t>
 class
-StaticAssemblyWorkerCache 
+AssemblyWorkerCache 
 {
 	using worker_t = AssemblyWorker<GlobalContext_t, BlockContext_t>;
 
-	inline static std::vector<std::unique_ptr<AsyncAssemblyWorker<worker_t>>> workers;
-	inline static std::mutex mtx;
+	std::vector<std::unique_ptr<AsyncAssemblyWorker<worker_t>>> workers;
 
-	StaticAssemblyWorkerCache() = delete;
+	Mempool& mempool;
+	GlobalContext_t& global_context;
 
 public:
 
-	static void start_assembly_threads(Mempool& mp, GlobalContext_t& gc, BlockContext_t& bc, AssemblyLimits& limits, uint32_t n_threads)
+	AssemblyWorkerCache(Mempool& mp, GlobalContext_t& gc)
+		: workers()
+		, mempool(mp)
+		, global_context(gc)
+		{}
+
+	void start_assembly_threads(BlockContext_t* current_block_context, AssemblyLimits* limits, uint32_t n_threads)
 	{
-		std::lock_guard lock(mtx);
 		while(workers.size() < n_threads)
 		{
 			workers.push_back(std::make_unique<AsyncAssemblyWorker<worker_t>>());
@@ -113,19 +135,23 @@ public:
 
 		for (uint32_t i = 0; i < n_threads; i++)
 		{
-			workers[i] -> start_worker(worker_t(mp, gc, bc, limits));
+			workers[i] -> start_worker(current_block_context, limits, mempool, global_context);
 		}
 	}
 
-	static void
+	void
 	wait_for_stop_assembly_threads()
 	{
-		std::lock_guard lock(mtx);
-
 		for (auto& worker : workers)
 		{
 			worker -> wait_for_async_task();
+			worker -> clear_worker();
 		}
+	}
+
+	~AssemblyWorkerCache()
+	{
+		wait_for_stop_assembly_threads();
 	}
 };
 

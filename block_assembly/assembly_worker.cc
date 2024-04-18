@@ -32,7 +32,7 @@ namespace scs {
 
 template<typename GlobalContext_t, typename BlockContext_t>
 void
-AssemblyWorker<GlobalContext_t, BlockContext_t>::run()
+AssemblyWorker<GlobalContext_t, BlockContext_t>::run(BlockContext_t& block_context, AssemblyLimits& limits)
 {
     auto& limiter = ThreadlocalContextStore::get_rate_limiter();
 
@@ -54,9 +54,6 @@ AssemblyWorker<GlobalContext_t, BlockContext_t>::run()
             limits.notify_done();
             return;
         }
-
-        ThreadlocalTransactionContextStore<typename BlockContext_t::tx_context_t>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<typename BlockContext_t::tx_context_t>::get_exec_ctx();
 
         auto result = exec_ctx.execute(hash_xdr(*tx), *tx, global_context, block_context);
         if (result == TransactionStatus::SUCCESS) {
@@ -83,17 +80,18 @@ AsyncAssemblyWorker<worker_t>::run()
                     [this]() { return done_flag || exists_work_to_do(); });
         }
         if (done_flag) {
-            return;
+		return;
         }
 
-        if (!worker) {
-            throw std::runtime_error("shouldn't have null worker here");
+        if ((!current_block_context) || (!limits)) {
+		throw std::runtime_error("shouldn't be not running here");
         }
 
-        worker->run();
+        worker->run(*current_block_context, *limits);
         ThreadlocalContextStore::get_rate_limiter().free_one_slot();
 
-        worker = std::nullopt;
+        current_block_context = nullptr;
+        limits = nullptr;
         cv.notify_all();
     }
 }

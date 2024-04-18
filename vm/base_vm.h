@@ -27,6 +27,7 @@
 #include <utils/non_movable.h>
 
 #include "mempool/mempool.h"
+#include "block_assembly/assembly_worker.h"
 
 namespace scs {
 
@@ -40,6 +41,8 @@ class BaseVirtualMachine : public utils::NonMovableOrCopyable
     std::unique_ptr<BlockContext_t> current_block_context;
     Mempool mempool;
 
+    AssemblyWorkerCache<GlobalContext_t, BlockContext_t> worker_cache;
+
     Hash prev_block_hash;
 
     void assert_initialized() const;
@@ -51,6 +54,14 @@ class BaseVirtualMachine : public utils::NonMovableOrCopyable
     BlockHeader make_block_header();
 
   public:
+    BaseVirtualMachine()
+	    : global_context()
+	    , current_block_context()
+	      , mempool()
+	      , worker_cache(mempool, global_context)
+	      , prev_block_hash()
+	{}
+    
     void init_default_genesis();
 
     std::optional<BlockHeader>
