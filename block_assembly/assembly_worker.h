@@ -104,7 +104,59 @@ public:
 		current_block_context = nullptr;
 	}
 
+	void totally_clear_worker()
+	{
+		std::lock_guard lock(mtx);
+		worker = nullptr;
+		limits = nullptr;
+		current_block_context = nullptr;
+	}
+
 	using AsyncWorker::wait_for_async_task;
+};
+
+template<typename GlobalContext_t, typename BlockContext_t>
+class
+StaticAsyncWorkerCache
+{
+	using async_worker_t = AsyncAssemblyWorker<AssemblyWorker<GlobalContext_t, BlockContext_t>>;
+
+	inline static std::vector<std::unique_ptr<async_worker_t>> workers;
+
+public:
+
+	static void resize(uint32_t i)
+	{
+		while (workers.size() < i) {
+			workers.push_back(std::make_unique<async_worker_t>());
+		}
+	}
+
+	static async_worker_t& get_worker(uint32_t i)
+	{
+		return *workers.at(i);
+	}
+
+
+	static void
+	wait_for_stop_assembly_threads()
+	{
+		for (auto& worker : workers)
+		{
+			worker->wait_for_async_task();
+			worker->clear_worker();
+		}
+	}
+
+	static void
+	total_reset()
+	{
+		for (auto& worker : workers)
+		{
+			worker->wait_for_async_task();
+			worker->totally_clear_worker();
+		}
+	}
 };
 
 template<typename GlobalContext_t, typename BlockContext_t>
@@ -113,45 +165,35 @@ AssemblyWorkerCache
 {
 	using worker_t = AssemblyWorker<GlobalContext_t, BlockContext_t>;
 
-	std::vector<std::unique_ptr<AsyncAssemblyWorker<worker_t>>> workers;
-
 	Mempool& mempool;
 	GlobalContext_t& global_context;
 
 public:
 
 	AssemblyWorkerCache(Mempool& mp, GlobalContext_t& gc)
-		: workers()
-		, mempool(mp)
+		: mempool(mp)
 		, global_context(gc)
 		{}
 
 	void start_assembly_threads(BlockContext_t* current_block_context, AssemblyLimits* limits, uint32_t n_threads)
 	{
-		while(workers.size() < n_threads)
-		{
-			workers.push_back(std::make_unique<AsyncAssemblyWorker<worker_t>>());
-		}
+		StaticAsyncWorkerCache<GlobalContext_t, BlockContext_t>::resize(n_threads);
 
 		for (uint32_t i = 0; i < n_threads; i++)
 		{
-			workers[i] -> start_worker(current_block_context, limits, mempool, global_context);
+			StaticAsyncWorkerCache<GlobalContext_t, BlockContext_t>::get_worker(i).start_worker(current_block_context, limits, mempool, global_context);
 		}
 	}
 
 	void
 	wait_for_stop_assembly_threads()
 	{
-		for (auto& worker : workers)
-		{
-			worker -> wait_for_async_task();
-			worker -> clear_worker();
-		}
+		StaticAsyncWorkerCache<GlobalContext_t, BlockContext_t>::wait_for_stop_assembly_threads();
 	}
 
 	~AssemblyWorkerCache()
 	{
-		wait_for_stop_assembly_threads();
+		StaticAsyncWorkerCache<GlobalContext_t, BlockContext_t>::total_reset();
 	}
 };
 
