@@ -36,6 +36,7 @@
 
 namespace scs {
 
+/*
 void
 SisyphusVirtualMachine::init_default_genesis()
 {
@@ -159,11 +160,51 @@ SisyphusVirtualMachine::make_block_header()
     g1.wait();
     g2.wait();
     return out;
-}
+} */
 
 std::optional<BlockHeader>
 SisyphusVirtualMachine::try_exec_tx_block(Block const& block)
 {
+    // BaseVirtualMachine::try_exec_tx_block
+    /*assert_initialized();
+
+    auto res = validate_tx_block(block);
+
+    // TBB joins all the threads it uses
+
+    if (!res) {
+        phase_undo_block(global_context, *current_block_context);
+        advance_block_number();
+        return std::nullopt;
+    } 
+
+    phase_finish_block(global_context, *current_block_context);
+
+    // now time for hashing a block header
+    BlockHeader out = make_block_header();
+
+    prev_block_hash = hash_xdr(out);
+
+    advance_block_number();
+    return out; */
+
+    auto out = BaseVirtualMachine::try_exec_tx_block(block);
+
+    if (!out) {
+
+        // It should be the case (and it is for our current implementation of the memcache trie)
+        // that a no-op block doesn't log anything to storage.
+        // (This is true because we don't call compute_hash() unless we commit to the block).
+        // A more complicated eviction policy might push things to storage.
+        // It's not wrong if that happens, but we just don't want the in-memory buffer to 
+        // build up too much.
+        global_context.state_db.set_timestamp(current_block_context -> block_number);
+        
+        return std::nullopt;
+    }
+
+/*
+
     assert_initialized();
 
     auto res = validate_tx_block(block);
@@ -193,6 +234,7 @@ SisyphusVirtualMachine::try_exec_tx_block(Block const& block)
     prev_block_hash = hash_xdr(out);
 
     advance_block_number();
+    */
 
     auto ts = utils::init_time_measurement();
     global_context.state_db.log_keys(keys_persist);
@@ -278,6 +320,7 @@ SisyphusVirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_ti
     return out;
 }
 
+/*
 uint64_t 
 SisyphusVirtualMachine::get_current_block_number() const
 {
@@ -291,5 +334,6 @@ SisyphusVirtualMachine::~SisyphusVirtualMachine()
     // execution context used to have dangling reference to GlobalContext without this
     ThreadlocalContextStore::clear_entire_context<SisyphusTxContext>();
 }
+*/
 
 } // namespace scs
