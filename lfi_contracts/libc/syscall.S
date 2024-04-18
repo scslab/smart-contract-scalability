@@ -48,3 +48,5 @@ syscall lfihog_contract_deploy 623
 syscall lfihog_witness_get 624
 syscall lfihog_witness_get_len 625
 
+syscall lfihog_return 626
+

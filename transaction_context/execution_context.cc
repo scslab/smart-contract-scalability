@@ -100,29 +100,6 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
     }
 }
 
-/*
-enum
-{
-    SYS_EXIT = 500,
-    SYS_WRITE = 501,
-    SYS_SBRK = 502,
-    SYS_LSEEK = 503,
-    SYS_READ = 504,
-    SYS_CLOSE = 505,
-
-    LFIHOG_LOG = 600,
-    LFIHOG_INVOKE = 601,
-    LFIHOG_SENDER = 602,
-    LFIHOG_SELF_ADDR = 603,
-    LFIHOG_SRC_TX_HASH = 604,
-    LFIHOG_INVOKED_TX_HASH = 605,
-    LFIHOG_BLOCK_NUMBER = 606,
-
-    LFIHOG_HAS_KEY = 607,
-
-    WRITE_MAX = 1024,
-}; */
-
 constexpr uint32_t WRITE_MAX = 1024;
 
 EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
@@ -669,6 +646,12 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
             case LFIHOG_WITNESS_GET_LEN: {
                 // arg0: witness index
                 ret = tx_context -> get_witness(arg0).value.size();
+                break;
+            }
+            case LFIHOG_RETURN: {
+                // arg0: return buf
+                // arg1: return len
+                tx_context -> return_buf = load_bytestring(arg0, arg1);
                 break;
             }
             default:
