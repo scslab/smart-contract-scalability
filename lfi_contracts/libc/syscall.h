@@ -56,5 +56,7 @@ void lfihog_contract_deploy(const uint8_t* contract_hash /* 32 bytes */, uint64_
 uint32_t lfihog_witness_get(uint64_t witness_index, uint8_t* out_offset, uint32_t max_len);
 uint32_t lfihog_witness_get_len(uint64_t witness_index);
 
+void lfihog_return(const uint8_t* return_buf, uint32_t return_len);
+
 #endif
 
