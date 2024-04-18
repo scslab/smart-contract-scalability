@@ -17,6 +17,9 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <syscall.h>
 
 enum {
     ERC20_CTOR = 0,
@@ -24,7 +27,7 @@ enum {
 	ERC20_TRANSFERFROM = 2,
 	ERC20_ALLOWANCEDELTA = 3,
 	ERC20_BALANCEOF = 4
-}
+};
 
 struct calldata_ctor
 {
@@ -62,7 +65,7 @@ void Ierc20_transferFrom(const uint8_t* erc20_addr, const uint8_t* from, const u
     memcpy(p->from, from, 32);
     memcpy(p->to, to, 32);
     p->amount = amount;
-    lfihog_invoke(erc20_addr, ERC20_TRANSFERFROM, p, sizeof(struct calldata_transferFrom));
+    lfihog_invoke(erc20_addr, ERC20_TRANSFERFROM, (uint8_t*)p, sizeof(struct calldata_transferFrom), NULL, 0);
     free(p);
 }
 
@@ -71,7 +74,7 @@ void Ierc20_allowanceDelta(const uint8_t* erc20_addr, const uint8_t* auth, int64
     struct calldata_allowanceDelta* p = malloc(sizeof(struct calldata_allowanceDelta));
     memcpy(p->account, auth, 32);
     p->amount = amount;
-    lfihog_invoke(erc20_addr, ERC20_ALLOWANCEDELTA, p, sizeof(struct calldata_allowanceDelta));
+    lfihog_invoke(erc20_addr, ERC20_ALLOWANCEDELTA, (uint8_t*) p, sizeof(struct calldata_allowanceDelta), NULL, 0);
     free(p);
 }
 
@@ -80,17 +83,17 @@ void Ierc20_mint(const uint8_t* erc20_addr, const uint8_t* recipient, int64_t am
     struct calldata_mint* p = malloc(sizeof(struct calldata_mint));
     memcpy(p->recipient, recipient, 32);
     p->amount = amount;
-    lfihog_invoke(erc20_addr, ERC20_MINT, p, sizeof(struct calldata_mint));
+    lfihog_invoke(erc20_addr, ERC20_MINT, (uint8_t*) p, sizeof(struct calldata_mint), NULL, 0);
     free(p);
 }
 
 int64_t Ierc20_balanceOf(const uint8_t* erc20_addr, const uint8_t* addr)
 {
     struct calldata_balanceOf* p = malloc(sizeof(struct calldata_balanceOf));
-    memcpy(p->account, account, 32);
+    memcpy(p->account, addr, 32);
     int64_t out;
     int64_t* buf = malloc(8);
-    lfihog_invoke(erc20_addr, ERC20_MINT, p, sizeof(struct calldata_balanceOf), (uint8_t*)buf, 8);
+    lfihog_invoke(erc20_addr, ERC20_BALANCEOF, (uint8_t*) p, sizeof(struct calldata_balanceOf), (uint8_t*)buf, 8);
     out = *buf;
     free(p);
     free(buf);

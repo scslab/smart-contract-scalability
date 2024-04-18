@@ -6,8 +6,6 @@
 #include <stdint.h>
 #include <syscall.h>
 
-#include "utils.h"
-
 #include <sodium.h>
 
 
@@ -27,8 +25,8 @@ void calculate_allowance_key(const uint8_t* owner,
 		const uint8_t* auth,
 		uint8_t* addr_out)
 {
-	std::memcpy(allowance_key_buf, owner, 32);
-	std::memcpy(allowance_key_buf + 32, auth, 32);
+	memcpy(allowance_key_buf, owner, 32);
+	memcpy(allowance_key_buf + 32, auth, 32);
 	if (crypto_generichash(addr_out, 32,
 				allowance_key_buf, 64,
 				NULL, 0) != 0)
@@ -62,9 +60,9 @@ void toplevel_transferFrom(const uint8_t* owner, const uint8_t* to, const int64_
 {
 	uint8_t* sender_buf = malloc(32);
 	lfihog_sender(sender_buf);
-	allowance_delta(owner, sender, -amount);
+	allowance_delta(owner, sender_buf, -amount);
 	transfer(owner, to, amount);
-    free(sender_buf);
+    	free(sender_buf);
 }
 
 void
