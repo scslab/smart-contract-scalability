@@ -6,17 +6,23 @@
 #include <stdint.h>
 #include <syscall.h>
 
-#include <sodium.h>
+#include <sha512.h>
 
+uint8_t sha512_buf[64];
 
 void calculate_balance_key(const uint8_t* addr, uint8_t* addr_out)
 {
-	if (crypto_generichash(addr_out, 32,
-				addr, 32,
-				NULL, 0) != 0)
+//	if (crypto_generichash(addr_out, 32,
+//				addr, 32,
+//				NULL, 0) != 0)
+//	{
+//		exit(-1);
+//	}
+	if (sha512(addr, 32, sha512_buf) != 0)
 	{
 		exit(-1);
 	}
+	memcpy(addr_out, sha512_buf, 32);
 }
 
 uint8_t allowance_key_buf[64];
@@ -27,12 +33,16 @@ void calculate_allowance_key(const uint8_t* owner,
 {
 	memcpy(allowance_key_buf, owner, 32);
 	memcpy(allowance_key_buf + 32, auth, 32);
-	if (crypto_generichash(addr_out, 32,
-				allowance_key_buf, 64,
-				NULL, 0) != 0)
-	{
+//	if (crypto_generichash(addr_out, 32,
+//				allowance_key_buf, 64,
+//				NULL, 0) != 0)
+//	{
+//		exit(-1);
+//	}
+	if (sha512(allowance_key_buf, 64, sha512_buf) != 0) {
 		exit(-1);
 	}
+	memcpy(addr_out, sha512_buf, 32);
 }
 
 void transfer(const uint8_t* from, const uint8_t* to, const int64_t amount)
@@ -115,10 +125,6 @@ void toplevel_balanceOf(const uint8_t* addr)
 
 int cmain(uint32_t method, uint8_t* ptr, uint32_t len)
 {
-	if (sodium_init() == -1) {
-		return -1;
-	}
-
 	switch(method)
 	{
         case ERC20_CTOR:
