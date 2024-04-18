@@ -151,7 +151,6 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
         std::vector<uint8_t> out;
 	//out.resize(len);
 	//std::memcpy(out.data(), p->addr(offset), len);
-	std::printf("start addr %p end %p\n", p->addr(offset), p->addr(offset + len));
         out.insert(out.end(),
             reinterpret_cast<uint8_t*>(p->addr(offset)), 
 	    reinterpret_cast<uint8_t*>(p->addr(offset + len)));
