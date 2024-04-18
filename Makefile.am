@@ -153,7 +153,8 @@ TRANSACTION_CONTEXT_SRCS = \
 	transaction_context/transaction_context.cc \
 	transaction_context/transaction_results.cc
 
-transaction_context/syscall_enum.h : lfi_contracts/libc/syscall.S lfi_contracts/libc/enum_import_gen.sh
+# this file also depends on syscall.S but including that explicit dependency makes Make try and rebuild it incorrectly
+transaction_context/syscall_enum.h : lfi_contracts/libc/enum_import_gen.sh
 	./lfi_contracts/libc/enum_import_gen.sh > transaction_context/syscall_enum.h
 
 transaction_context/execution_context.cc : transaction_context/syscall_enum.h
