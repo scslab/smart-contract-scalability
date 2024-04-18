@@ -80,11 +80,11 @@ AsyncAssemblyWorker<worker_t>::run()
                     [this]() { return done_flag || exists_work_to_do(); });
         }
         if (done_flag) {
-            return;
+		return;
         }
 
         if ((!current_block_context) || (!limits)) {
-            throw std::runtime_error("shouldn't be not running here");
+		throw std::runtime_error("shouldn't be not running here");
         }
 
         worker->run(*current_block_context, *limits);

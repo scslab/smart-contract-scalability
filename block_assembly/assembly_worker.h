@@ -59,12 +59,12 @@ template<typename worker_t>
 class AsyncAssemblyWorker : public utils::AsyncWorker
 {
 	std::unique_ptr<worker_t> worker;
-	typename worker_t::bc_t* current_block_context;
-	AssemblyLimits* limits;
+	typename worker_t::bc_t* current_block_context = nullptr;
+	AssemblyLimits* limits = nullptr;
 
 	bool exists_work_to_do() override final
 	{
-		return !!current_block_context;
+		return (current_block_context!= nullptr) && (limits != nullptr);
 	}
 
 	void run();
@@ -96,6 +96,12 @@ public:
 		current_block_context = cbt;
 		limits = l;
 		cv.notify_all();
+	}
+	void clear_worker()
+	{
+		std::lock_guard lock(mtx);
+		limits = nullptr;
+		current_block_context = nullptr;
 	}
 
 	using AsyncWorker::wait_for_async_task;
@@ -139,6 +145,7 @@ public:
 		for (auto& worker : workers)
 		{
 			worker -> wait_for_async_task();
+			worker -> clear_worker();
 		}
 	}
 
