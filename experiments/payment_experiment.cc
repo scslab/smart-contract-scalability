@@ -145,7 +145,7 @@ PaymentExperiment::make_deploy_wallet_transaction(
 
     calldata_DeployAndInitialize data{ .contract_hash = wallet_contract_hash,
                                        .nonce = idx,
-                                       .ctor_method = ERC20_CTOR,
+                                       .ctor_method = 0, // wallet contract ctor method is 0
                                        .ctor_calldata_size
                                        = sizeof(calldata_init) };
 
@@ -324,7 +324,7 @@ PaymentExperiment::make_random_payment(uint64_t expiration_time,
                                 .expiration = expiration_time };
 
     TransactionInvocation invocation(
-        src.wallet_address, ERC20_TRANSFERFROM, make_calldata(calldata));
+        src.wallet_address, 1, make_calldata(calldata));
 
     SignedTransaction stx;
     stx.tx.invocation = invocation;

@@ -32,7 +32,6 @@ const char* replay_addr = "replay addr";
 
 void toplevel_init(const uint8_t* token, const uint8_t* pk, uint16_t size_increase)
 {
-
 	uint8_t* buf = malloc(32);
 	memset(buf, 0, 32);
 
@@ -55,7 +54,7 @@ void toplevel_init(const uint8_t* token, const uint8_t* pk, uint16_t size_increa
 
 	lfihog_raw_mem_set(buf, pk, 32);
 
-	lfihog_sender(buf);
+	lfihog_self_addr(buf);
 
 	Ierc20_allowanceDelta(token, buf, INT64_MAX);
 
@@ -68,8 +67,6 @@ void toplevel_init(const uint8_t* token, const uint8_t* pk, uint16_t size_increa
 void
 toplevel_transfer(const uint8_t* to, int64_t amount, uint64_t expiration_time)
 {
-
-
     uint8_t* buf = malloc(32);
     uint8_t* signature = malloc(64);
     uint8_t* pk = malloc(32);
@@ -99,6 +96,7 @@ toplevel_transfer(const uint8_t* to, int64_t amount, uint64_t expiration_time)
 
     if (expiration_time < cur_block_number)
     {
+	printf("stale tx\n");
     	exit(-1);
     }
     lfihog_hs_clear(buf, cur_block_number);
@@ -112,6 +110,7 @@ toplevel_transfer(const uint8_t* to, int64_t amount, uint64_t expiration_time)
 
     if (ed25519_verify(signature, invoked_hash, 32, pk) != 1)
     {
+	printf("sig verify failed!!!!!!!!\n");
     	exit(-1);
     }
 
@@ -127,12 +126,13 @@ toplevel_transfer(const uint8_t* to, int64_t amount, uint64_t expiration_time)
 	} 
 	*/
 
-	memset(buf, 0, 32);
+    memset(buf, 0, 32);
     memcpy(buf, token_addr, strlen(token_addr));
     lfihog_raw_mem_get(buf, token, 32);
 
     lfihog_self_addr(self);
 
+    printf("got all the way to starting transferFrom\n");
     Ierc20_transferFrom(token, self, to, amount);
 
     free(self);
@@ -147,6 +147,7 @@ toplevel_transfer(const uint8_t* to, int64_t amount, uint64_t expiration_time)
 
 int cmain(uint32_t method, uint8_t* ptr, uint32_t len)
 {
+	printf("call method %u with calldata len %u\n", method, len);
 	switch(method)
 	{
 	case 0: {
