@@ -28,7 +28,11 @@
 
 namespace scs {
 
-const uint64_t gas_limit = 100000;
+
+const uint64_t gas_limit = 10'000'000;
+
+// wasmsig needs A LOT of gas
+const char* payment_contract = "cpp_contracts/payment_experiment/payment_wasmsig.wasm";
 
 PaymentExperiment::PaymentExperiment(size_t num_accounts, uint16_t hs_size_inc)
     : num_accounts(num_accounts)
@@ -47,7 +51,7 @@ make_create_transactions(const char* erc20_contract)
 {
     auto erc20 = load_wasm_from_file(erc20_contract);
     auto wallet
-        = load_wasm_from_file("cpp_contracts/payment_experiment/payment.wasm");
+        = load_wasm_from_file(payment_contract);
 
     auto make_tx = [](std::shared_ptr<const Contract> contract) -> TxSetEntry {
         struct calldata_create
@@ -62,7 +66,7 @@ make_create_transactions(const char* erc20_contract)
 
         SignedTransaction stx;
         stx.tx.invocation = invocation;
-        stx.tx.gas_limit = 1'000'000 + gas_limit;
+        stx.tx.gas_limit = 5'000'000 + gas_limit;
 
         stx.tx.contracts_to_deploy.push_back(*contract);
 
@@ -184,7 +188,7 @@ PaymentExperiment::make_accounts_and_mints(const char* erc20_contract)
     std::vector<TxSetEntry> mints_out;
 
     Hash wallet_contract_hash = hash_xdr(
-        *load_wasm_from_file("cpp_contracts/payment_experiment/payment.wasm"));
+        *load_wasm_from_file(payment_contract));
     Hash token_contract_hash
         = hash_xdr(*load_wasm_from_file(erc20_contract));
 
@@ -212,7 +216,7 @@ PaymentExperiment::get_active_key_set()
     std::vector<AddressAndKey> keys;
     keys.resize(num_accounts * 5);
     Hash wallet_contract_hash = hash_xdr(
-        *load_wasm_from_file("cpp_contracts/payment_experiment/payment.wasm"));
+        *load_wasm_from_file(payment_contract));
 
     InvariantKey pkaddr = make_static_key(1);
     InvariantKey replayaddr = make_static_key(0);
