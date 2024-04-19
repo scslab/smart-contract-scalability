@@ -222,6 +222,10 @@ MAIN_CCS = \
 .wat.wasm:
 	wat2wasm -o $@ $<
 
+wasm_ed25519/libed25519.a:
+	cd wasm_ed25519 &&\
+	make libed25519.a
+
 CC_WASMS = \
 	cpp_contracts/erc20.cc \
 	cpp_contracts/erc721.cc \
@@ -237,6 +241,7 @@ CC_WASMS = \
 	cpp_contracts/genesis/deploy.cc \
 	cpp_contracts/atomic_swap.cc \
 	cpp_contracts/payment_experiment/payment.cc \
+	cpp_contracts/payment_experiment/payment_wasmsig.cc \
 	cpp_contracts/payment_channel.cc \
 	cpp_contracts/public_auction.cc \
 	cpp_contracts/0x.cc \
@@ -244,13 +249,15 @@ CC_WASMS = \
 	cpp_contracts/sisyphus_erc20.cc
 
 .cc.wasm: Makefile.am Makefile
-	clang -Os -target wasm32-unknown-wasi -I./cpp_contracts/ $< -o $@ \
+	clang++ -O3 -target wasm32-unknown-wasi -I./cpp_contracts/ $< -o $@ \
 		--sysroot=wasi/wasi-sysroot \
 		-std=gnu++2a \
 		-nostdlib++ \
 		-nostdlib \
 		-Wl,--no-entry -fno-exceptions -Wl,--allow-undefined \
-		wasi/lib/wasi/libclang_rt.builtins-wasm32.a
+		wasi/lib/wasi/libclang_rt.builtins-wasm32.a \
+		wasm_ed25519/libed25519.a \
+		-I./wasm_ed25519/ed25519/src/
 
 #TODO parity-wasm serialization doesn't support bulk memory ops
 # This ruins the metering (it outputs wasm in an invalid section ordering)

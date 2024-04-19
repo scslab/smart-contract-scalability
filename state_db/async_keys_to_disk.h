@@ -11,8 +11,8 @@
 
 #include "config/static_constants.h"
 
-#include "persistence/rocksdb_iface.h"
-#include "persistence/accumulate_kvs_iface.h"
+//#include "persistence/rocksdb_iface.h"
+//#include "persistence/accumulate_kvs_iface.h"
 
 namespace scs {
 
@@ -94,8 +94,8 @@ class AsyncKeysToDisk : public utils::AsyncWorker
         cv.notify_all();
     }
 
-    void log_keys(DirectWriteRocksDBIface<sizeof(AddressAndKey)> const& rdb, uint32_t timestamp)
-    {}
+  //  void log_keys(DirectWriteRocksDBIface<sizeof(AddressAndKey)> const& rdb, uint32_t timestamp)
+  //  {}
 
     void log_keys(trie::NullInterface<sizeof(AddressAndKey)>& iface, uint32_t timestamp)
     {}
