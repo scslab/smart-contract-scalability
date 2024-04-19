@@ -17,21 +17,33 @@ LFIGlobalEngine::LFIGlobalEngine(lfi_syshandler handler)
 			.fastyield = 0, // this option does nothing at the moment TODO
 			.pagesize = (size_t) getpagesize(),
 			.stacksize = 65536, 
-			.syshandler = handler
+			.syshandler = handler,
+			.gas = 1'000'000,
+			.poc = 1
 		};
 
 		lfi_engine = lfi_new(opts);
 
-	std::printf("add vaspaces\n");
-        lfi_auto_add_vaspaces(lfi_engine);
+		std::printf("add vaspaces\n");
+        lfi_auto_add_vaspaces(lfi_engine,  8ULL * 1024  * 1024 * 1024 * 1024);
 	}
+
+LFIGlobalEngine::~LFIGlobalEngine() {
+	lfi_delete(lfi_engine);
+	if (active_proc_count != 0)
+	{
+		std::printf("invalid lfi engine shutdown!");
+		std::fflush(stdout);
+		std::terminate();
+	}
+}
 
 
 int 
 LFIGlobalEngine::new_proc(struct lfi_proc** o_proc, void* ctxp)
 {
 	std::lock_guard lock(mtx);
-
+	active_proc_count++;
 	return lfi_add_proc(lfi_engine, o_proc, ctxp);
 }
 
@@ -40,6 +52,7 @@ LFIGlobalEngine::delete_proc(struct lfi_proc* proc)
 {
 	std::lock_guard lock(mtx);
 	lfi_remove_proc(lfi_engine, proc);
+	active_proc_count--;
 }
 
 LFIProc::LFIProc(void* ctxp, LFIGlobalEngine& main_lfi) 

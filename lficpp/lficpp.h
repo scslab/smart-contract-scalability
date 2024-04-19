@@ -18,15 +18,13 @@ namespace scs
 class LFIGlobalEngine : public utils::NonMovableOrCopyable
 {
 	std::mutex mtx;
-
 	struct lfi* lfi_engine;
+	uint32_t active_proc_count = 0;
 
 public:
 	LFIGlobalEngine(lfi_syshandler handler);
 
-	~LFIGlobalEngine() {
-		lfi_delete(lfi_engine);
-	}
+	~LFIGlobalEngine();
 
 	int
 	__attribute__((warn_unused_result))

@@ -43,8 +43,6 @@ class BaseVirtualMachine : public utils::NonMovableOrCopyable
   public:
     using TransactionContext_t = typename BlockContext_t::tx_context_t;
 
-  private:
-    utils::ThreadlocalCache<ExecutionContext<TransactionContext_t>, TLCACHE_SIZE> executors;
 
   protected:
     GlobalContext_t global_context;
@@ -54,6 +52,10 @@ class BaseVirtualMachine : public utils::NonMovableOrCopyable
 
     Hash prev_block_hash;
 
+  private:
+    utils::ThreadlocalCache<ExecutionContext<TransactionContext_t>, TLCACHE_SIZE> executors;
+
+  protected:
     void assert_initialized() const;
 
     bool validate_tx_block(Block const& txs);
@@ -63,12 +65,12 @@ class BaseVirtualMachine : public utils::NonMovableOrCopyable
     BlockHeader make_block_header();
 
     BaseVirtualMachine() 
-      : executors()
-      , global_context()
+      : global_context()
       , current_block_context()
       , mempool()
       , assembly_worker_cache(mempool, global_context)
-      , prev_block_hash() {}
+      , prev_block_hash()
+      , executors() {}
 
   public:
     void init_default_genesis();
