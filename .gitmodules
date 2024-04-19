@@ -16,3 +16,6 @@
 [submodule "wasm_libs/srcs/gmp-wasm"]
 	path = wasm_libs/srcs/gmp-wasm
 	url = https://github.com/gramseyer/gmp-wasm.git
+[submodule "wasm_ed25519/ed25519"]
+	path = wasm_ed25519/ed25519
+	url = https://github.com/orlp/ed25519.git
