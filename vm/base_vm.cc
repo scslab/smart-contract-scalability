@@ -39,6 +39,7 @@ namespace scs {
 
 template class BaseVirtualMachine<GlobalContext, BlockContext>;
 template class BaseVirtualMachine<GroundhogGlobalContext, GroundhogBlockContext>;
+template class BaseVirtualMachine<SisyphusGlobalContext, SisyphusBlockContext>;
 
 VM(void)::init_default_genesis()
 {
