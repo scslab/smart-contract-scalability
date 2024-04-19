@@ -4,7 +4,7 @@ libclang := /opt/lfi/toolchain/compiler-rt/lib/linux/libclang_rt.builtins-aarch6
 return b{
     $ all:VB:hello.lfi test_calldata.lfi test_invoke.lfi test_log.lfi test_redirect_call.lfi deployer.lfi erc20.lfi payment.lfi
     $ %.lfi: %.o
-        $cc -Llibc -Llibc/build/install/lib -lc -lsyscalls $input -o $output -nostdlib $libclang /opt/lfi/libed25519/lib/libed25519.a
+        $cc -Llibc -Llibc/build/install/lib -lc -lsyscalls $input -o $output -nostdlib $libclang /opt/lfi/libed25519/lib/libed25519.a -Wl,--gc-sections -Tld.ld
     $ %.o: %.c
         $cc -Ilibc -Ilib/build/install/include -O2 $input -o $output -c -nostdlib -I/opt/lfi/libed25519/include
 }
