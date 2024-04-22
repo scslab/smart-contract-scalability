@@ -6,5 +6,5 @@ return b{
     $ %.lfi: %.o
         $cc -Llibc -Llibc/build/install/lib -lc -lsyscalls $input -o $output -nostdlib $libclang /opt/lfi/libed25519/lib/libed25519.a -Wl,--gc-sections -Tld.ld
     $ %.o: %.c
-        $cc -Ilibc -Ilib/build/install/include -Oz $input -o $output -c -nostdlib -I/opt/lfi/libed25519/include
+        $cc -Ilibc -Ilib/build/install/include -O3 $input -o $output -c -nostdlib -I/opt/lfi/libed25519/include
 }

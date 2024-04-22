@@ -302,9 +302,6 @@ bin_PROGRAMS = \
 	groundhog_payment_sim \
 	sisyphus_proof_size_exp
 
-vm/genesis.o: $(CC_WASMS:.cc=.wasm)
-main/test.o : $(CC_WASMS:.cc=.wasm) $(WASM_API_TEST_WASMS)
-
 COMPLETE_SRCS = $(SRCS) $(TESTS_CCS) $(TEST_UTILS_SRCS)
 
 test_SOURCES = main/test.cc $(COMPLETE_SRCS) $(utility_TEST_CCS) $(mtt_TEST_CCS) $(WASM_API_TEST_CCS)

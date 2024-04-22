@@ -26,7 +26,7 @@
 #include "mtt/memcached_snapshot_trie/durable_interface.h"
 #include "mtt/memcached_snapshot_trie/null_interface.h"
 
-#include "state_db/async_keys_to_disk.h"
+//#include "state_db/async_keys_to_disk.h"
 #include "state_db/optional_value_wrapper.h"
 
 #include <map>
@@ -111,7 +111,7 @@ class SisyphusStateDB
         current_timestamp = ts;
     }
 
-    void log_keys(AsyncKeysToDisk& logger)
+    void log_keys(auto& logger)
     {
         logger.log_keys(state_db.get_storage(), current_timestamp);
     }

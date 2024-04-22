@@ -26,7 +26,7 @@
 
 #include "lficpp/lficpp.h"
 
-void __attribute__((constructor)) signal_init();
+#include <utils/time.h>
 
 namespace scs {
 
@@ -78,6 +78,8 @@ class ExecutionContext : utils::NonMovableOrCopyable
     std::unique_ptr<TransactionResults> results_of_last_tx;
 
     RpcAddressDB* addr_db;
+
+    utils::detail::time_point basept;
 
     // should only be used by builtin fns
     void invoke_subroutine(MethodInvocation const& invocation);

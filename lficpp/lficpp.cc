@@ -15,7 +15,7 @@ LFIGlobalEngine::LFIGlobalEngine(lfi_syshandler handler)
 		struct lfi_options opts {
 			.noverify = 1, // programs should be verified when they're registered, not at runtime
 			.fastyield = 0, // this option does nothing at the moment TODO
-			.pagesize = (size_t) getpagesize(),
+			.pagesize = 16 * 1024,
 			.stacksize = 65536, 
 			.syshandler = handler,
 			.gas = 1'000'000,
@@ -104,6 +104,7 @@ LFIProc::run(uint32_t method, std::vector<uint8_t> const& calldata)
 
 	brkbase = info.lastva;
 	brksize = 0;
+	brkfull = info.extradata;
 
 	struct lfi_regs* regs = lfi_proc_get_regs(proc);
 	regs -> x0 = method;
@@ -120,7 +121,7 @@ LFIProc::run(uint32_t method, std::vector<uint8_t> const& calldata)
 	actively_running = true;
 	int code = lfi_proc_start(proc);
 
-	if (brksize != 0)
+	if (brksize != 0 && brksize > brkfull)
 	{
 		if (munmap((void*) brkbase, brksize) != 0) {
 			std::printf("cleanup failed\n");
@@ -140,7 +141,7 @@ LFIProc::exit(int code) {
 	}
 	actively_running = false;
 	lfi_proc_exit(proc, code);
-	std::unreachable();
+//	unreachable();
 }
 
 LFIProc::~LFIProc()
@@ -164,10 +165,10 @@ LFIProc::sbrk(uint32_t incr)
 		return brkp;
 	}
 	if (brkp + incr < base + (4ULL * 1024 * 1024 * 1024)) {
-        void* map;
-        if (brksize == 0) {
+        void* map = NULL;
+        if (brksize == 0 && brkfull == 0) {
             map = mmap((void*) brkbase, brksize + incr, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
-        } else {
+        } else if (brksize + incr > brkfull) {
             map = mremap((void*) brkbase, brksize, brksize + incr, 0);
         }
         if (map == (void*) -1) {

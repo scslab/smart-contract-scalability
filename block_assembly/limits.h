@@ -34,7 +34,7 @@ class AssemblyLimits
     std::atomic<int64_t> max_txs;
     std::atomic<int64_t> overall_gas_limit;
 
-    const uint64_t gas_limit_per_tx = 1'000'000;
+    const uint64_t gas_limit_per_tx = 10'000'000;
 
     void undo_tx_reservation(uint64_t gas)
     {

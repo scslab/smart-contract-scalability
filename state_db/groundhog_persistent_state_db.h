@@ -26,7 +26,7 @@
 #include "mtt/memcached_snapshot_trie/durable_interface.h"
 #include "mtt/memcached_snapshot_trie/null_interface.h"
 
-#include "state_db/async_keys_to_disk.h"
+//#include "state_db/async_keys_to_disk.h"
 #include "state_db/optional_value_wrapper.h"
 
 #include <map>

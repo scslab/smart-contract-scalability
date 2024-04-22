@@ -91,8 +91,8 @@ int
 main(int argc, const char** argv)
 {
     std::vector<uint32_t> accts = { 2, 10, 100, 1000, 10'000 };
-    std::vector<uint32_t> batches = {100, 1'000,  10'000, 100'000 };
-    std::vector<uint32_t> nthreads = { 1, 2, 4, 8, 16, 32, 64, 96 };
+    std::vector<uint32_t> batches = {100, 1000, 10000, 100'000 };
+    std::vector<uint32_t> nthreads = {1, 2, 4,  8, 16, 32, 64 };
     std::vector<uint32_t> big_accts = {  100'000,  1'000'000 , 10'000'000  };
     struct exp_res
     {
@@ -116,7 +116,7 @@ main(int argc, const char** argv)
     std::vector<exp_res> overall_results;
 
     bool short_stuff = true;
-	bool long_stuff = false;
+	bool long_stuff = true;
     if (short_stuff)
     {
 
@@ -124,8 +124,8 @@ main(int argc, const char** argv)
         for (auto batch : batches) {
             for (auto nthread : nthreads) {
                 std::printf("start %lu %lu %lu\n", acct, batch, nthread);
-                uint32_t trials = 25;
-                // 20 trials, 5 warmup
+                uint32_t trials = 15;
+                // 10 trials, 5 warmup
                 auto results = run_experiment(acct, batch, nthread, trials, UINT16_MAX);
                 double res = 0;
                 for (size_t i = 5; i < trials; i++) {
@@ -148,8 +148,8 @@ main(int argc, const char** argv)
         for (auto nthread : nthreads) {
             uint32_t batch = 100'000;
             std::printf("start %lu %lu %lu\n", acct, batch, nthread);
-            uint32_t trials = 25;
-            // 20 trials, 5 warmup
+            uint32_t trials = 10;
+            // 5 trials, 5 warmup
 	    uint16_t boost = 0;
             auto results = run_experiment(acct, batch, nthread, trials, boost);
             double res = 0;

@@ -28,6 +28,10 @@
 
 #include "crypto/hash.h"
 
+#include <utils/threadlocal_cache.h>
+
+#include <utils/time.h>
+
 namespace scs {
 
 template<typename GlobalContext_t, typename BlockContext_t>
@@ -36,12 +40,17 @@ AssemblyWorker<GlobalContext_t, BlockContext_t>::run(BlockContext_t& block_conte
 {
     auto& limiter = ThreadlocalContextStore::get_rate_limiter();
 
+	using namespace std::chrono_literals;
+
     while (true) {
+	    auto ts = utils::init_time_measurement();
+
         bool is_shutdown = limiter.wait_for_opening();
 
         if (is_shutdown) {
             return;
         }
+	auto t1 = utils::measure_time(ts);
 
         auto tx = mempool.get_new_tx();
         if (!tx) {
@@ -50,10 +59,12 @@ AssemblyWorker<GlobalContext_t, BlockContext_t>::run(BlockContext_t& block_conte
         }
 
         auto reservation = limits.reserve_tx(*tx);
-        if (!reservation) {
+       	if (!reservation) {
             limits.notify_done();
             return;
         }
+
+	auto t2 = utils::measure_time(ts);
 
         auto result = exec_ctx.execute(hash_xdr(*tx), *tx, global_context, block_context);
         if (result == TransactionStatus::SUCCESS) {
@@ -62,6 +73,8 @@ AssemblyWorker<GlobalContext_t, BlockContext_t>::run(BlockContext_t& block_conte
     	else {
     		std::printf("tx failed\n");
     	}
+	auto t3 = utils::measure_time(ts);
+//	std::printf("duration t1 %f t2 %f t3 %f tid %u\n", t1, t2, t3, utils::ThreadlocalIdentifier::get());
     }
 }
 

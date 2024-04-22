@@ -23,9 +23,9 @@ static void signal_trap_handler(int sig, siginfo_t* si, void* context) {
     // case, meaning that if Groundhog itself causes a SIGSEGV, this will
     // behave badly.
     ucontext_t* uctx = (ucontext_t*) context;
+    std::printf("received signal, pc: %llx, si_addr: %llx\n", uctx->uc_mcontext.pc, si->si_addr);
     uint64_t saved = lfi_signal_start(uctx->uc_mcontext.regs[21]);
     struct lfi_proc* proc = lfi_sys_proc(uctx->uc_mcontext.regs[21]);
-    std::printf("received signal, pc: %llx\n", uctx->uc_mcontext.pc);
 
     lfi_proc_exit(proc, sig);
 

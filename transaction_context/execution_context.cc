@@ -51,6 +51,17 @@
     template<typename TransactionContext_t>                                    \
     ret ExecutionContext<TransactionContext_t>
 
+#if __cpp_lib_unreachable > 202202L
+void unreachable() {
+	std::unreachable();
+}
+#else
+void unreachable() {
+	perror("unreachable!");
+	std::abort();
+}
+#endif
+
 namespace scs {
 
 template class ExecutionContext<GroundhogTxContext>;
@@ -68,6 +79,7 @@ EC_DECL()::ExecutionContext(LFIGlobalEngine& engine)
 
 EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
 {
+    //std::printf("start invoke_subroutine %lf\n", utils::measure_time_from_basept(basept));
     auto* runtime = tx_context->get_runtime_by_addr(invocation.addr);
     if (runtime == nullptr) {
         CONTRACT_INFO("creating new runtime for contract at %s",
@@ -82,6 +94,7 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
         auto script
             = tx_context->get_contract_db_proxy().get_script(invocation.addr);
 
+	auto ts = utils::init_time_measurement();
         if (runtime->set_program(script.bytes, script.len) != 0) {
             throw HostError("program nexist at target address");
         }
@@ -91,13 +104,18 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
 
     tx_context->push_invocation_stack(runtime, invocation);
 
-    // TODO: all the invocation data, set registers, etc
+    //std::printf("start runtime->run %lf\n", utils::measure_time_from_basept(basept));
+    //auto s = utils::init_time_measurement();
+    //int code;
+    //for (int i = 0; i < 100000; i++) {
     int code = runtime->run(invocation.method_name, invocation.calldata);
+    //}
+    //std::printf("overall runtime = %lf\n", utils::measure_time_from_basept(s));
     tx_context->pop_invocation_stack();
-
     if (code != 0) {
         throw HostError("invocation failed");
     }
+    //std::printf("end invoke_subroutine %lf\n", utils::measure_time_from_basept(basept));
 }
 
 constexpr uint32_t WRITE_MAX = 1024;
@@ -112,12 +130,13 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
 {
     int64_t ret = -1;
 
+//    std::printf("syscall handle entry syscall %lu time %lf\n", callno, utils::measure_time_from_basept(basept));
     auto load_storage_key = [this](uint64_t addr) -> AddressAndKey {
         auto* p = tx_context -> get_current_runtime();
 
         if (!p->is_readable(p->addr(addr), 32)) {
             p->exit(-1);
-            std::unreachable();
+            unreachable();
         }
         InvariantKey key;
         std::memcpy(key.data(),
@@ -131,7 +150,7 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
 
         if (!p->is_readable(p->addr(addr), 32)) {
             p->exit(-1);
-            std::unreachable();
+            unreachable();
         }
         Hash h;
         std::memcpy(h.data(),
@@ -145,7 +164,7 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
         if (!p->is_readable(p->addr(offset), len))
         {
             p->exit(-1);
-            std::unreachable();
+            unreachable();
         }
         std::vector<uint8_t> out;
 	//out.resize(len);
@@ -162,7 +181,7 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
         switch (callno) {
             case _EXIT:
                 p->exit(arg0);
-                std::unreachable();
+                unreachable();
             case _WRITE:
                 arg2 = arg2 > WRITE_MAX ? WRITE_MAX : arg2;
                 ret = write(1, (const char*)p->addr(arg1), (size_t)arg2);
@@ -192,7 +211,7 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                     tx_context->tx_results->add_log(log);
                 } else {
                     p->exit(-1);
-                    std::unreachable();
+                    unreachable();
                 }
                 ret = 0;
                 break;
@@ -220,7 +239,7 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                                 32);
                 } else {
                     p->exit(-1);
-                    std::unreachable();
+                    unreachable();
                     break;
                 }
 
@@ -258,7 +277,7 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                 // arg 0: buffer addr (32 bytes)
                 if (!p->is_writable(p->addr(arg0), 32)) {
                     p->exit(-1);
-                    std::unreachable();
+                    unreachable();
                 }
                 auto const& sender = tx_context->get_msg_sender();
 
@@ -274,7 +293,7 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                 // arg 0: buffer addr (32 bytes)
                 if (!p->is_writable(p->addr(arg0), 32)) {
                     p->exit(-1);
-                    std::unreachable();
+                    unreachable();
                 }
                 auto const& buf = tx_context->get_self_addr();
 
@@ -290,7 +309,7 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                 // arg 0: buffer addr (32 bytes)
                 if (!p->is_writable(p->addr(arg0), 32)) {
                     p->exit(-1);
-                    std::unreachable();
+                    unreachable();
                 }
                 auto const& buf = tx_context->get_src_tx_hash();
 
@@ -306,7 +325,7 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                 // arg 0: buffer addr (32 bytes)
                 if (!p->is_writable(p->addr(arg0), 32)) {
                     p->exit(-1);
-                    std::unreachable();
+                    unreachable();
                 }
                 auto const& buf = tx_context->get_invoked_tx_hash();
 
@@ -549,7 +568,7 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                 if (!(p->is_writable(p->addr(arg2), 32)))
                 {
                     p -> exit(-1);
-                    std::unreachable();
+                    unreachable();
                 }
 
                 std::memcpy(
@@ -583,7 +602,7 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                     if (!p->is_writable(p->addr(arg1), h.size()))
                     {
                         p->exit(-1);
-                        std::unreachable();
+                        unreachable();
                     }
 
                     std::memcpy(
@@ -613,7 +632,7 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                     if (!p->is_writable(p->addr(arg2), deploy_addr.size()))
                     {
                         p->exit(-1);
-                        std::unreachable();
+                        unreachable();
                     }
 
                     std::memcpy(
@@ -636,7 +655,7 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                 if (!p->is_writable(p->addr(arg1), max_write_len))
                 {
                     p->exit(-1);
-                    std::unreachable();
+                    unreachable();
                 }
                 std::memcpy(
                     reinterpret_cast<uint8_t*>(p->addr(arg1)),
@@ -659,13 +678,13 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
             default:
                 std::printf("invalid syscall: %ld\n", callno);
                 p->exit(-1);
-                std::unreachable();
+                unreachable();
         }
     } catch (HostError& e) {
         std::printf("tx failed %s\n", e.what());
         CONTRACT_INFO("Execution error: %s", e.what());
         tx_context->get_current_runtime()->exit(1);
-        std::unreachable();
+        unreachable();
     } catch (std::exception const& e) {
         std::printf("unrecoverable error! %s\n", e.what());
         std::abort();
@@ -716,6 +735,8 @@ ExecutionContext<TransactionContext_t>::execute(
 
     addr_db = &scs_data_structures.address_db;
 
+    basept = utils::init_time_measurement();
+
     MethodInvocation invocation(tx.tx.invocation);
 
     tx_context
@@ -748,7 +769,7 @@ ExecutionContext<TransactionContext_t>::execute(
     }
 
     if (!tx_context->tx_results->validating_check_all_rpc_results_used()) {
-        return TransactionStatus::FAILURE;
+	    return TransactionStatus::FAILURE;
     }
 
     // cannot be rewound -- this forms the threshold for commit
@@ -756,11 +777,14 @@ ExecutionContext<TransactionContext_t>::execute(
             tx_hash,
             tx,
             tx_context->tx_results->get_results().ndeterministic_results)) {
-        return TransactionStatus::FAILURE;
+        
+	    std::printf("c\n");
+	    return TransactionStatus::FAILURE;
     }
 
     storage_commitment->commit(block_context.modified_keys_list);
 
+    //std::printf("commit time %lf\n", utils::measure_time_from_basept(basept));
     return TransactionStatus::SUCCESS;
 }
 
