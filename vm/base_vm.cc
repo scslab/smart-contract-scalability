@@ -60,7 +60,7 @@ VM(bool)::validate_tx_block(Block const& txs)
     std::atomic<bool> found_error = false;
 
     ValidateReduce reduce(
-        found_error, global_context, *current_block_context, txs);
+        found_error, global_context, *current_block_context, txs, executors);
 
     tbb::parallel_reduce(tbb::blocked_range<size_t>(0, txs.transactions.size()), reduce);
 
@@ -131,8 +131,8 @@ VM()::~BaseVirtualMachine()
     ThreadlocalContextStore::get_rate_limiter().stop_threads();
     ThreadlocalContextStore::stop_rpcs();
     worker_cache.wait_for_stop_assembly_threads();
-    // execution context used to have dangling reference to GlobalContext without this
-    ThreadlocalContextStore::clear_entire_context<typename BlockContext::tx_context_t>();
+
+    ThreadlocalContextStore::clear_entire_context();
 }
 
 } // namespace scs

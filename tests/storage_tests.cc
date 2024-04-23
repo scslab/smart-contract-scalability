@@ -40,7 +40,7 @@ using xdr::operator==;
 
 TEST_CASE("hashset insert", "[storage]")
 {
-    test::DeferredContextClear<TxContext> defer;
+    test::DeferredContextClear defer;
 
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -63,6 +63,8 @@ TEST_CASE("hashset insert", "[storage]")
         uint64_t value;
     };
 
+    ExecutionContext<TxContext> exec_ctx;
+
     auto make_insert_tx = [&](
                            InvariantKey const& key,
                            uint64_t value,
@@ -83,9 +85,6 @@ TEST_CASE("hashset insert", "[storage]")
         stx.tx = tx;
 
         auto hash = hash_xdr(stx);
-
-        ThreadlocalTransactionContextStore<TxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
         if (success) {
             REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
@@ -151,7 +150,7 @@ TEST_CASE("hashset insert", "[storage]")
 
 TEST_CASE("int64 storage write", "[storage]")
 {
-    test::DeferredContextClear<TxContext> defer;
+    test::DeferredContextClear defer;
 
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -178,6 +177,8 @@ TEST_CASE("int64 storage write", "[storage]")
         uint64_t value;
     };
 
+    ExecutionContext<TxContext> exec_ctx;
+
     auto make_set_add_tx = [&](InvariantKey const& key,
                                int64_t set,
                                int64_t add,
@@ -198,9 +199,6 @@ TEST_CASE("int64 storage write", "[storage]")
         SignedTransaction stx;
         stx.tx = tx;
         auto hash = hash_xdr(stx);
-
-        ThreadlocalTransactionContextStore<TxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
         if (success) {
             REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
@@ -231,12 +229,7 @@ TEST_CASE("int64 storage write", "[storage]")
         SignedTransaction stx;
         stx.tx = tx;
 
-        ThreadlocalTransactionContextStore<TxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
-
-
         auto hash = hash_xdr(stx);
-        // auto hash = tx_block->insert_tx(tx);
 
         if (success) {
             REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
@@ -403,7 +396,7 @@ TEST_CASE("int64 storage write", "[storage]")
 
 TEST_CASE("raw mem storage write", "[storage]")
 {
-    test::DeferredContextClear<TxContext> defer; // must be first -- must destruct RpcAddressDB
+    test::DeferredContextClear defer; // must be first -- must destruct RpcAddressDB
     // before clearing timeouts (rpc pollset callbacks might have timeout& refs)
 
     GlobalContext scs_data_structures;
@@ -465,17 +458,16 @@ TEST_CASE("raw mem storage write", "[storage]")
         return out;
     };
 
+    ExecutionContext<TxContext> exec_ctx;
+
+
     auto exec_success = [&](const Hash& tx_hash, const SignedTransaction& tx) {
-        ThreadlocalTransactionContextStore<TxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
         REQUIRE(exec_ctx.execute(tx_hash, tx, scs_data_structures, *block_context)
                 == TransactionStatus::SUCCESS);
     };
 
     auto exec_fail = [&](const Hash& tx_hash, const SignedTransaction& tx) {
-        ThreadlocalTransactionContextStore<TxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
         REQUIRE(exec_ctx.execute(tx_hash, tx, scs_data_structures, *block_context)
                 != TransactionStatus::SUCCESS);
@@ -523,7 +515,6 @@ TEST_CASE("raw mem storage write", "[storage]")
             auto [tx_hash, tx] = make_transaction(invocation);
 
             exec_success(tx_hash, tx);
-            auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
             auto const& logs = exec_ctx.get_logs();
             REQUIRE(logs.size() == 1);
@@ -689,8 +680,6 @@ TEST_CASE("raw mem storage write", "[storage]")
 
         exec_success(tx_hash, tx);
         {
-            auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
-
             auto const& logs = exec_ctx.get_logs();
             REQUIRE(logs.size() == 2);
             REQUIRE(logs[0]
@@ -727,7 +716,6 @@ TEST_CASE("raw mem storage write", "[storage]")
         exec_success(tx_hash, tx);
 
         {
-            auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
             auto const& logs = exec_ctx.get_logs();
             REQUIRE(logs.size() == 1);

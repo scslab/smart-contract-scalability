@@ -39,36 +39,6 @@
 
 namespace scs {
 
-template<typename TransactionContext_t>
-class ExecutionContext;
-
-template<typename TransactionContext_t>
-class ThreadlocalTransactionContextStore
-{
-    using ptr_t = std::unique_ptr<ExecutionContext<TransactionContext_t>>;
-    inline static utils::ThreadlocalCache<ptr_t, TLCACHE_SIZE> cache;
-public:
-
-    static auto& get_exec_ctx()
-    {
-        return *(cache.get());
-    }
-
-    template<typename... Args>
-    static void make_ctx(Args&... args)
-    {
-            auto& ctx = cache.get();
-        if (!ctx) {
-            ctx = std::unique_ptr<ExecutionContext<TransactionContext_t>>(new ExecutionContext<TransactionContext_t>(args...));
-        }
-    }
-
-    static void clear()
-    {
-        cache.clear();
-    }
-};
-
 class ThreadlocalContextStore
 {
     struct context_t
@@ -148,24 +118,19 @@ class ThreadlocalContextStore
         // in the old post_block_clear caused a 7-8ms delay when it was a no-op (??? optimizer shenanigans, perhaps)
     }
 
-
-    template<typename TransactionContext_t>
     static void clear_entire_context()
     {
         cache.clear();
         hash_allocator.reset();
-
-        ThreadlocalTransactionContextStore<TransactionContext_t>::clear();
     }
 };
 
 namespace test {
 
-template<typename TransactionContext_t>
 struct DeferredContextClear
 {
     ~DeferredContextClear() { 
-        ThreadlocalContextStore::clear_entire_context<TransactionContext_t>();
+        ThreadlocalContextStore::clear_entire_context();
     }
 };
 

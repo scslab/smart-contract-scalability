@@ -39,6 +39,7 @@ class AssemblyWorker
 {
 	Mempool& mempool;
 	GlobalContext_t& global_context;
+	ExecutionContext<TransactionContext<GlobalContext_t>> exec_ctx;
 
 	using TxContext_t = typename BlockContext_t::tx_context_t;
 
