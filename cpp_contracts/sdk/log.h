@@ -19,6 +19,7 @@
 #include "sdk/macros.h"
 #include "sdk/alloc.h"
 #include "sdk/concepts.h"
+#include "sdk/syscall.h"
 
 #include <string.h>
 
@@ -27,35 +28,25 @@
 namespace sdk
 {
 
-namespace detail
-{
-
-BUILTIN("log")
-void log(uint32_t offset, uint32_t len);
-
-BUILTIN("print_debug")
-void print_debug(uint32_t offset, uint32_t len);
-
-BUILTIN("print_c_str")
-void print_c_str(uint32_t offset, uint32_t len);
-
-} /* detail */
-
 template<TriviallyCopyable T>
 void log(T const& val)
 {
-	detail::log(sdk::to_offset(&val), sizeof(T));
+	detail::builtin_syscall(SYSCALLS::LOG,
+		to_offset(&val), sizeof(T),
+		0, 0, 0, 0);
+}
+
+void print(const char* str, uint32_t len)
+{
+	detail::builtin_syscall(SYSCALLS::WRITE,
+		sdk::to_offset(str), len, 0, 0, 0, 0);
 }
 
 template<TriviallyCopyable T>
 void print_debug(T const& val)
 {
-	detail::print_debug(sdk::to_offset(&val), sizeof(T));
-}
-
-void print(const char* str, uint32_t len)
-{
-	detail::print_c_str(sdk::to_offset(str), len);
+	detail::builtin_syscall(SYSCALLS::WRITE_BYTES,
+		to_offset(&val), sizeof(T), 0, 0, 0, 0);
 }
 
 void print(const char* str)

@@ -20,18 +20,12 @@
 #include "sdk/alloc.h"
 #include "sdk/concepts.h"
 
+#include "sdk/syscall.h"
+
 #include <type_traits>
 
 namespace sdk
 {
-
-namespace detail
-{
-
-BUILTIN("get_calldata")
-void get_calldata(uint32_t offset, uint32_t start_offset, uint32_t end_offset);
-
-} /* detail */
 
 template<TriviallyCopyable T>
 T get_calldata()
@@ -42,17 +36,23 @@ T get_calldata()
 	}
 	
 	T out;
-	detail::get_calldata(to_offset(&out), 0, sizeof(T));
+	detail::builtin_syscall(SYSCALLS::GET_CALLDATA,
+		to_offset(&out), 0, sizeof(T), 0, 0, 0);
 	return out;
 }
 
 void
 get_calldata_slice(uint8_t* out, uint32_t start_offset, uint32_t end_offset)
 {
-	detail::get_calldata(to_offset(out), start_offset, end_offset);
+	detail::builtin_syscall(SYSCALLS::GET_CALLDATA,
+		to_offset(out), start_offset, end_offset, 0, 0, 0);
 }
 
-BUILTIN("get_calldata_len")
-uint32_t get_calldata_len();
+
+uint32_t get_calldata_len()
+{
+	return detail::builtin_syscall(SYSCALLS::GET_CALLDATA_LEN,
+		0, 0, 0, 0, 0, 0);
+}
 
 } /* sdk */
