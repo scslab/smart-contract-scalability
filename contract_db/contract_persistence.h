@@ -31,21 +31,21 @@ class AsyncPersistContracts : public utils::AsyncWorker
     {
         struct ContractCreate
         {
-            wasm_api::Hash const h;
+            Hash const h;
             std::shared_ptr<const Contract> unmetered_contract;
         };
 
         struct ContractDeploy
         {
-            wasm_api::Hash const contract_addr;
-            wasm_api::Hash const contract_hash;
+            Address const contract_addr;
+            Hash const contract_hash;
         };
 
         std::vector<ContractCreate> creations;
         std::vector<ContractDeploy> deployments;
     };
 
-    std::string get_contract_filename(wasm_api::Hash const& h)
+    std::string get_contract_filename(Hash const& h)
     {
         return folder + "contracts/" + debug::array_to_str(h);
     }
@@ -175,15 +175,15 @@ class AsyncPersistContracts : public utils::AsyncWorker
         }
     }
 
-    void log_deploy(wasm_api::Hash const& contract_addr,
-                    const wasm_api::Hash& contract_hash)
+    void log_deploy(Address const& contract_addr,
+                    Hash const& contract_hash)
     {
         if constexpr (PERSISTENT_STORAGE_ENABLED) {
             cache.get().deployments.emplace_back(contract_addr, contract_hash);
         }
     }
 
-    void log_create(const wasm_api::Hash& hash,
+    void log_create(Hash const& hash,
                     std::shared_ptr<const Contract> contract)
     {
         if constexpr (PERSISTENT_STORAGE_ENABLED) {

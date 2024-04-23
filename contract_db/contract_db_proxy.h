@@ -26,8 +26,6 @@
 #include <memory>
 #include <optional>
 
-#include <wasm_api/wasm_api.h>
-
 namespace scs {
 
 class ContractDB;
@@ -35,16 +33,16 @@ class TransactionRewind;
 
 class ContractCreateClosure : public utils::NonCopyable
 {
-    wasm_api::Hash h;
-    std::shared_ptr<const MeteredContract> contract;
+    Hash h;
+    metered_contract_ptr_t contract;
     std::shared_ptr<const Contract> unmetered_contract;
     ContractDB& contract_db;
 
     bool do_create = false;
 
   public:
-    ContractCreateClosure(wasm_api::Hash h, 
-                          std::shared_ptr<const MeteredContract> contract,
+    ContractCreateClosure(Hash const& h, 
+                          metered_contract_ptr_t contract,
                           std::shared_ptr<const Contract> unmetered_contract,
                           ContractDB& contract_db);
 
@@ -57,13 +55,13 @@ class ContractCreateClosure : public utils::NonCopyable
 
 class ContractDeployClosure : public utils::NonCopyable
 {
-    const wasm_api::Hash& deploy_address;
+    const Address& deploy_address;
     ContractDB& contract_db;
 
     bool undo_deploy = true;
 
   public:
-    ContractDeployClosure(const wasm_api::Hash& deploy_address,
+    ContractDeployClosure(const Address& deploy_address,
                           ContractDB& contract_db);
 
     ContractDeployClosure(ContractDeployClosure&& other);
@@ -77,19 +75,19 @@ class ContractDBProxy
 {
     ContractDB& contract_db;
 
-    std::map<wasm_api::Hash, std::pair<std::shared_ptr<const MeteredContract>, std::shared_ptr<const Contract>>> new_contracts;
+    std::map<Hash, std::pair<metered_contract_ptr_t, std::shared_ptr<const Contract>>> new_contracts;
 
-    std::map<wasm_api::Hash, wasm_api::Hash> new_deployments;
+    std::map<Address, Hash> new_deployments;
 
     bool check_contract_exists(const Hash& contract_hash) const;
 
     std::optional<ContractDeployClosure> __attribute__((warn_unused_result))
-    push_deploy_contract(const wasm_api::Hash& deploy_address,
-                         const wasm_api::Hash& contract_hash);
+    push_deploy_contract(const Address& deploy_address,
+                         const Hash& contract_hash);
 
     ContractCreateClosure __attribute__((warn_unused_result))
-    push_create_contract(wasm_api::Hash const& h, 
-      std::pair<std::shared_ptr<const MeteredContract>, std::shared_ptr<const Contract>> const& contract);
+    push_create_contract(Hash const& h, 
+      std::pair<metered_contract_ptr_t, std::shared_ptr<const Contract>> const& contract);
 
     bool is_committed = false;
     void assert_not_committed() const;
@@ -109,8 +107,8 @@ class ContractDBProxy
 
     bool push_updates_to_db(TransactionRewind& rewind);
 
-    wasm_api::Script
-    get_script(const wasm_api::Hash& address) const;
+    RunnableScriptView
+    get_script(const Address& address) const;
 };
 
 } // namespace scs

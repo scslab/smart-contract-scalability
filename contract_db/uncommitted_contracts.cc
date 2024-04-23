@@ -23,8 +23,8 @@ namespace scs {
 
 bool
 UncommittedContracts::deploy_contract_to_address(
-    wasm_api::Hash const& addr,
-    wasm_api::Hash const& script_hash)
+    Address const& addr,
+    Hash const& script_hash)
 {
     std::lock_guard lock(mtx);
 
@@ -35,7 +35,7 @@ UncommittedContracts::deploy_contract_to_address(
 
 void
 UncommittedContracts::undo_deploy_contract_to_address(
-    wasm_api::Hash const& addr)
+    Address const& addr)
 {
     std::lock_guard lock(mtx);
 
@@ -44,8 +44,8 @@ UncommittedContracts::undo_deploy_contract_to_address(
 
 void
 UncommittedContracts::add_new_contract(
-    wasm_api::Hash const& h,
-    std::shared_ptr<const MeteredContract> new_contract)
+    Hash const& h,
+    metered_contract_ptr_t new_contract)
 {
     std::lock_guard lock(mtx);
 

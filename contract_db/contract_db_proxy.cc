@@ -27,8 +27,8 @@
 namespace scs {
 
 ContractCreateClosure::ContractCreateClosure(
-    wasm_api::Hash h, 
-    std::shared_ptr<const MeteredContract> contract,
+    Hash const& h, 
+    metered_contract_ptr_t contract,
     std::shared_ptr<const Contract> unmetered_contract,
     ContractDB& contract_db)
     : h(h)
@@ -61,7 +61,7 @@ ContractCreateClosure::~ContractCreateClosure()
 }
 
 ContractDeployClosure::ContractDeployClosure(
-    const wasm_api::Hash& deploy_address,
+    const Address& deploy_address,
     ContractDB& contract_db)
     : deploy_address(deploy_address)
     , contract_db(contract_db)
@@ -121,8 +121,8 @@ ContractDBProxy::deploy_contract(const Address& deploy_address,
 }
 
 std::optional<ContractDeployClosure>
-ContractDBProxy::push_deploy_contract(const wasm_api::Hash& deploy_address,
-                                      const wasm_api::Hash& contract_hash)
+ContractDBProxy::push_deploy_contract(const Address& deploy_address,
+                                      const Hash& contract_hash)
 {
     if (!contract_db.deploy_contract_to_address(deploy_address,
                                                 contract_hash)) {
@@ -142,7 +142,7 @@ ContractDBProxy::create_contract(std::shared_ptr<const Contract> contract)
 
 ContractCreateClosure
 ContractDBProxy::push_create_contract(
-    wasm_api::Hash const& h, std::pair<std::shared_ptr<const MeteredContract>, std::shared_ptr<const Contract>> const& contract)
+    Hash const& h, std::pair<metered_contract_ptr_t, std::shared_ptr<const Contract>> const& contract)
 {
     return ContractCreateClosure(h, contract.first, contract.second, contract_db);
 }
@@ -168,8 +168,8 @@ ContractDBProxy::push_updates_to_db(TransactionRewind& rewind)
     return true;
 }
 
-wasm_api::Script
-ContractDBProxy::get_script(const wasm_api::Hash& address) const
+RunnableScriptView
+ContractDBProxy::get_script(const Address& address) const
 {
     auto it = new_deployments.find(address);
 
@@ -183,7 +183,7 @@ ContractDBProxy::get_script(const wasm_api::Hash& address) const
     if (s_it == new_contracts.end()) {
         return contract_db.get_script_by_hash(script_hash);
     }
-    return {s_it->second.first->data(), s_it -> second.first -> size() };
+    return s_it-> second.first->to_view();//{s_it->second.first->data(), s_it -> second.first -> size() };
 }
 
 void
