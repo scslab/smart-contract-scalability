@@ -80,14 +80,20 @@ AsyncAssemblyWorker<worker_t>::run()
                     [this]() { return done_flag || exists_work_to_do(); });
         }
         if (done_flag) {
-		return;
+		  return;
         }
 
         if ((!current_block_context) || (!limits)) {
 		throw std::runtime_error("shouldn't be not running here");
         }
 
+        if (initial_slot)
+        {
+            ThreadlocalContextStore::get_rate_limiter().claim_one_slot();
+        }
+
         worker->run(*current_block_context, *limits);
+        // idempotent, so calling this without a slot is safe
         ThreadlocalContextStore::get_rate_limiter().free_one_slot();
 
         current_block_context = nullptr;

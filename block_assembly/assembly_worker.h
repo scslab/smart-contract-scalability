@@ -27,12 +27,12 @@
 
 #include "transaction_context/execution_context.h"
 
+
 namespace scs
 {
 
 class AssemblyLimits;
 class Mempool;
-class LFIGlobalEngine;
 
 template<typename GlobalContext_t, typename BlockContext_t>
 class AssemblyWorker
@@ -62,6 +62,7 @@ class AsyncAssemblyWorker : public utils::AsyncWorker
 	std::unique_ptr<worker_t> worker;
 	typename worker_t::bc_t* current_block_context = nullptr;
 	AssemblyLimits* limits = nullptr;
+	bool initial_slot = false;
 
 	bool exists_work_to_do() override final
 	{
@@ -87,7 +88,7 @@ public:
 	}
 
 	template<typename... Args>
-	void start_worker(typename worker_t::bc_t* cbt, AssemblyLimits* l, Args& ...args)
+	void start_worker(typename worker_t::bc_t* cbt, AssemblyLimits* l, bool i_slot, Args& ...args)
 	{
 		std::lock_guard lock(mtx);
 		if (!worker)
@@ -96,13 +97,16 @@ public:
 		}
 		current_block_context = cbt;
 		limits = l;
+		initial_slot = i_slot;
 		cv.notify_all();
 	}
+	
 	void clear_worker()
 	{
 		std::lock_guard lock(mtx);
 		limits = nullptr;
 		current_block_context = nullptr;
+		initial_slot = false;
 	}
 
 	void totally_clear_worker()
@@ -182,7 +186,8 @@ public:
 
 		for (uint32_t i = 0; i < n_threads; i++)
 		{
-			StaticAsyncWorkerCache<GlobalContext_t, BlockContext_t>::get_worker(i).start_worker(current_block_context, limits, mempool, global_context);
+			StaticAsyncWorkerCache<GlobalContext_t, BlockContext_t>::get_worker(i)
+				.start_worker(current_block_context, limits, true, mempool, global_context);
 		}
 	}
 

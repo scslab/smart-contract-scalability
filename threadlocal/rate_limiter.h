@@ -41,8 +41,6 @@ class RateLimiter
 
     //   std::condition_variable join_cond;
 
-    void claim_one_slot();
-
     void shutdown()
     {
         _shutdown = true;
@@ -69,6 +67,7 @@ class RateLimiter
 
     void notify();
 
+    void claim_one_slot();
     void free_one_slot();
 
     void start_threads(uint64_t max_active);
