@@ -19,6 +19,7 @@
 #include "transaction_context/method_invocation.h"
 #include "transaction_context/transaction_results.h"
 #include "transaction_context/transaction_context.h"
+#include "transaction_context/error.h"
 
 #include "threadlocal/threadlocal_context.h"
 
@@ -74,7 +75,7 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
             reinterpret_cast<void*>(this));
 
         if (!runtime_instance) {
-            throw wasm_api::HostError("cannot find target address");
+            throw HostError("cannot find target address");
         }
 
         runtime_instance -> template link_fn<&ExecutionContext<TransactionContext_t>::static_syscall_handler>("scs", "syscall");
@@ -279,7 +280,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     switch(static_cast<SYSCALLS>(callno))
     {
     case EXIT:
-        throw wasm_api::HostError("sys exit unimplemented in Wasm3");
+        throw HostError("sys exit unimplemented in Wasm3");
     case WRITE:
     {
         // arg0: str offset
@@ -419,7 +420,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         auto storage_key = load_storage_key(arg0);
 
         if (mem_len > RAW_MEMORY_MAX_LEN) {
-            throw wasm_api::HostError("mem write too long");
+            throw HostError("mem write too long");
         }
 
         auto data
@@ -449,7 +450,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         }
 
         if (res->body.type() != ObjectType::RAW_MEMORY) {
-            throw wasm_api::HostError("type mismatch in raw mem get");
+            throw HostError("type mismatch in raw mem get");
         }
 
         uint32_t max_write_len = std::min<uint32_t>(res->body.raw_memory_storage().data.size(), output_max_len);
@@ -474,7 +475,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         }
 
         if (res->body.type() != ObjectType::RAW_MEMORY) {
-            throw wasm_api::HostError("type mismatch in raw mem get");
+            throw HostError("type mismatch in raw mem get");
         }
 
         ret = res->body.raw_memory_storage().data.size();
@@ -539,7 +540,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         }
 
         if (res->body.type() != ObjectType::NONNEGATIVE_INT64) {
-            throw wasm_api::HostError("type mismatch in raw mem get");
+            throw HostError("type mismatch in raw mem get");
         }
         ret = res->body.nonnegative_int64();
         break;
@@ -593,7 +594,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
 
         if (res.has_value()) {
             if (res->body.type() != ObjectType::HASH_SET) {
-                throw wasm_api::HostError("type mismatch in hashset get_size");
+                throw HostError("type mismatch in hashset get_size");
             }
             ret = res -> body.hash_set().hashes.size();
             break;
@@ -610,7 +611,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
 
         if (res.has_value()) {
             if (res->body.type() != ObjectType::HASH_SET) {
-                throw wasm_api::HostError("type mismatch in hashset get_max_size");
+                throw HostError("type mismatch in hashset get_max_size");
             }
             ret = res -> body.hash_set().max_size;
             break;
@@ -627,11 +628,11 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         auto res = tx_ctx.storage_proxy.get(storage_key);
 
         if (!res.has_value()) {
-            throw wasm_api::HostError("key nexist (no hashset)");
+            throw HostError("key nexist (no hashset)");
         }
 
         if (res->body.type() != ObjectType::HASH_SET) {
-            throw wasm_api::HostError("type mismatch in hashset get_index_of");
+            throw HostError("type mismatch in hashset get_index_of");
         }
 
         auto const& entries = res->body.hash_set().hashes;
@@ -647,7 +648,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
             }
         }
         if (!found) {
-            throw wasm_api::HostError("key nexist (not found)");
+            throw HostError("key nexist (not found)");
         }
         break;
     }
@@ -661,15 +662,15 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         auto res = tx_ctx.storage_proxy.get(storage_key);
 
         if (!res.has_value()) {
-            throw wasm_api::HostError("key nexist (no hashset)");
+            throw HostError("key nexist (no hashset)");
         }
 
         if (res->body.type() != ObjectType::HASH_SET) {
-            throw wasm_api::HostError("type mismatch in hashset get_index_of_index");
+            throw HostError("type mismatch in hashset get_index_of_index");
         }
 
         if (res->body.hash_set().hashes.size() <= arg1) {
-            throw wasm_api::HostError("invalid hashset index");
+            throw HostError("invalid hashset index");
         }
 
         write_to_memory(
@@ -686,7 +687,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
 
         uint32_t num_contracts = tx_ctx.get_num_deployable_contracts();
         if (num_contracts <= contract_idx) {
-            throw wasm_api::HostError("Invalid deployable contract access");
+            throw HostError("Invalid deployable contract access");
         }
 
         std::shared_ptr<const Contract> contract = std::make_shared<const Contract>(
@@ -711,7 +712,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         auto deploy_addr = compute_contract_deploy_address(tx_ctx.get_self_addr(), contract_hash, arg1);
 
         if (!tx_ctx.contract_db_proxy.deploy_contract(deploy_addr, contract_hash)) {
-            throw wasm_api::HostError("failed to deploy contract");
+            throw HostError("failed to deploy contract");
         }
 
         write_to_memory(deploy_addr, arg2, deploy_addr.size());
@@ -756,7 +757,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         slice_end = std::min<uint32_t>(slice_end, calldata.size());
 
         if (slice_end <= slice_start) {
-            throw wasm_api::HostError("invalid calldata params");
+            throw HostError("invalid calldata params");
         }
 
         tx_ctx.consume_gas(
@@ -834,7 +835,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     }
 
     default:
-        throw wasm_api::HostError(std::string("invalid syscall no: ") + std::to_string(callno));
+        throw HostError(std::string("invalid syscall no: ") + std::to_string(callno));
     }
     return ret;
 }

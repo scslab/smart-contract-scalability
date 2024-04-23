@@ -21,7 +21,7 @@
 
 #include "crypto/hash.h"
 
-#include <wasm_api/error.h>
+#include "transaction_context/error.h"
 
 namespace scs {
 
@@ -106,8 +106,7 @@ const Address&
 TC_DECL::get_msg_sender() const
 {
     if (invocation_stack.size() <= 1) {
-        throw wasm_api::HostError("no sender on root tx");
-        //return tx.sender;
+        throw HostError("no sender on root tx");
     }
     return invocation_stack[invocation_stack.size() - 2].addr;
 }
@@ -181,7 +180,7 @@ TC_DECL::get_witness(uint64_t wit_idx) const
             return w;
         }
     }
-    throw wasm_api::HostError("witness not found");
+    throw HostError("witness not found");
 }
 
 TC_TEMPLATE
@@ -191,14 +190,14 @@ TC_DECL::consume_gas(uint64_t consumed_gas)
     //std::printf("consume gas %" PRIu64 " += %" PRIu64 " of %" PRIu64 "\n", gas_used, consumed_gas, tx.tx.gas_limit);
     if (__builtin_add_overflow_p(gas_used, consumed_gas, static_cast<uint64_t>(0)))
     {
-        throw wasm_api::HostError("gas consumption overflow");
+        throw HostError("gas consumption overflow");
     }
 
     gas_used += consumed_gas;
 
     if (gas_used >= tx.tx.gas_limit)
     {
-        throw wasm_api::HostError("gas limit reached");
+        throw HostError("gas limit reached");
     }
 }
 
