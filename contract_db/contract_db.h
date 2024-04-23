@@ -23,8 +23,6 @@
 #include <map>
 #include <memory>
 
-#include <wasm_api/wasm_api.h>
-
 #include "contract_db/uncommitted_contracts.h"
 
 #include <utils/non_movable.h>
@@ -40,13 +38,6 @@ namespace scs {
 class ContractDB
     : public utils::NonMovableOrCopyable
 {
-
-    static_assert(
-        sizeof(wasm_api::Hash) == sizeof(Address),
-        "mismatch between addresses in scs and addresses in wasm api");
-
-    using metered_contract_ptr_t = std::shared_ptr<const MeteredContract>;
-
     struct value_struct
     {
         metered_contract_ptr_t contract;
@@ -64,12 +55,13 @@ class ContractDB
         {
             if (contract)
             {
-                buf.insert(buf.end(), contract->data(), contract->data() + contract->size());
+                auto view = contract->to_view();
+                buf.insert(buf.end(), view.data, view.data + view.len);
             }
         }
     };
 
-    using prefix_t = trie::ByteArrayPrefix<sizeof(wasm_api::Hash)>;
+    using prefix_t = trie::ByteArrayPrefix<sizeof(Hash)>;
     using metadata_t
         = trie::CombinedMetadata<trie::SizeMixin>;
     using value_t
@@ -79,7 +71,7 @@ class ContractDB
         = trie::MerkleTrie<prefix_t, value_t, metadata_t>;
 
     contract_map_t addresses_to_contracts_map;
-    std::map<wasm_api::Hash, metered_contract_ptr_t> hashes_to_contracts_map;
+    std::map<Hash, metered_contract_ptr_t> hashes_to_contracts_map;
 
     UncommittedContracts uncommitted_contracts;
 
@@ -91,40 +83,40 @@ class ContractDB
 
     friend class UncommittedContracts;
 
-    void commit_contract_to_db(wasm_api::Hash const& contract_hash,
+    void commit_contract_to_db(Hash const& contract_hash,
                                metered_contract_ptr_t new_contract);
 
-    void commit_registration(wasm_api::Hash const& new_address,
-                             wasm_api::Hash const& contract_hash);
+    void commit_registration(Address const& new_address,
+                             Hash const& contract_hash);
 
     friend class ContractCreateClosure;
     friend class ContractDeployClosure;
     friend class ContractDBProxy;
 
-    void undo_deploy_contract_to_address(wasm_api::Hash const& addr)
+    void undo_deploy_contract_to_address(Address const& addr)
     {
         uncommitted_contracts.undo_deploy_contract_to_address(addr);
     }
 
     bool __attribute__((warn_unused_result))
-    deploy_contract_to_address(wasm_api::Hash const& addr,
-                               wasm_api::Hash const& script_hash);
+    deploy_contract_to_address(Address const& addr,
+                               Hash const& script_hash);
 
     void add_new_uncommitted_contract(
-        wasm_api::Hash const& h,
-        std::shared_ptr<const MeteredContract> new_contract,
+        Hash const& h,
+        metered_contract_ptr_t new_contract,
         std::shared_ptr<const Contract> new_unmetered_contract);
 
-    wasm_api::Script get_script_by_hash(const wasm_api::Hash& hash) const;
+    RunnableScriptView get_script_by_hash(const Hash& hash) const;
 
-    wasm_api::Script get_script_by_address(
-        wasm_api::Hash const& addr) const;
+    RunnableScriptView get_script_by_address(
+        Address const& addr) const;
 
 
   public:
     ContractDB();
 
-    bool check_address_open_for_deployment(const wasm_api::Hash& addr) const;
+    bool check_address_open_for_deployment(const Address& addr) const;
 
     bool check_committed_contract_exists(const Hash& contract_hash) const;
 

@@ -15,6 +15,7 @@
  */
 
 #include "metering_ffi/metered_contract.h"
+#include "crypto/hash.h"
 
 namespace scs {
 
@@ -50,6 +51,21 @@ MeteredContract::~MeteredContract()
     if (base.data != nullptr) {
         detail::free_metered_contract(base);
     }
+}
+
+
+RunnableScriptView 
+MeteredContract::to_view() const
+{
+    return RunnableScriptView(base.data, base.len);
+}
+
+Hash
+MeteredContract::hash() const
+{
+    Hash out;
+    hash_raw(base.data, base.len, out.data());
+    return out;
 }
 
 } // namespace scs

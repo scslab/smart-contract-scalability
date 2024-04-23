@@ -43,7 +43,6 @@ class ExecutionContext : public utils::NonMovableOrCopyable
 
     RpcAddressDB* addr_db;
 
-    // should only be used by builtin fns
     void invoke_subroutine(MethodInvocation const& invocation);
 
     auto& get_transaction_context()

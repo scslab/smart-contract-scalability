@@ -66,8 +66,11 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
 
         //auto timestamp = utils::init_time_measurement();
 
+        auto script = tx_context->get_contract_db_proxy().get_script(invocation.addr);
+        wasm_api::Script s {.data = script.data, .len = script.len};
+
         auto runtime_instance = wasm_context.new_runtime_instance(
-            tx_context -> get_contract_db_proxy().get_script(invocation.addr),
+            s,
             reinterpret_cast<void*>(this));
 
         if (!runtime_instance) {
