@@ -49,20 +49,10 @@ class AssemblyLimits;
  * 
  * Sisyphus version
  */
-class SisyphusVirtualMachine : public BaseVirtualMachine<SisyphusGlobalContext, SisyphusBlockContext> //public utils::NonMovableOrCopyable
+class SisyphusVirtualMachine : public BaseVirtualMachine<SisyphusGlobalContext, SisyphusBlockContext>
 {
-    //SisyphusGlobalContext global_context;
-    //std::unique_ptr<SisyphusBlockContext> current_block_context;
-    //Mempool mempool;
-    //AssemblyWorkerCache<SisyphusGlobalContext, SisyphusBlockContext> assembly_worker_cache;
-
-    //Hash prev_block_hash;
 
     AsyncKeysToDisk keys_persist;
-
-    //using TransactionContext_t = SisyphusBlockContext::tx_context_t;
-
-    //utils::ThreadlocalCache<ExecutionContext<TransactionContext_t>, TLCACHE_SIZE> executors;
 
   public:
     SisyphusVirtualMachine()
@@ -75,32 +65,6 @@ class SisyphusVirtualMachine : public BaseVirtualMachine<SisyphusGlobalContext, 
 
     BlockHeader propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& out, ModIndexLog& out_modlog,
       std::unique_ptr<SisyphusBlockContext>* extract_block_context = nullptr);
-
-/*
-    SisyphusVirtualMachine()
-      : global_context()
-      , current_block_context()
-      , mempool()
-      , assembly_worker_cache(mempool, global_context)
-      , prev_block_hash()
-      , keys_persist()
-      , executors()
-      {}
-
->>>>>>> Stashed changes
-    void init_default_genesis();
-
-    std::optional<BlockHeader>
-    try_exec_tx_block(Block const& txs);
-
-    Mempool& get_mempool() {
-      return mempool;
-    }
-
-    BlockHeader propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& out, ModIndexLog& out_modlog,
-      std::unique_ptr<SisyphusBlockContext>* extract_block_context = nullptr);
-
-    uint64_t get_current_block_number() const; */
 
     const auto& get_global_context() const {
       return global_context;  

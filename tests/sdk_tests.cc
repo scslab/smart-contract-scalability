@@ -38,7 +38,7 @@ using namespace scs;
 
 TEST_CASE("replay cache", "[sdk]")
 {
-    test::DeferredContextClear<TxContext> defer;
+    test::DeferredContextClear defer;
 
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -58,6 +58,9 @@ TEST_CASE("replay cache", "[sdk]")
         uint64_t nonce; // ignored in the contract
     };
 
+    ExecutionContext<TxContext> exec_ctx;
+
+
     auto make_replay_tx = [&](uint64_t nonce,
                         uint64_t expiry_time,
                            bool success = true) -> Hash {
@@ -76,9 +79,6 @@ TEST_CASE("replay cache", "[sdk]")
             invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());
         SignedTransaction stx;
         stx.tx = tx;
-
-        ThreadlocalTransactionContextStore<TxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
         auto hash = hash_xdr(stx);
 
@@ -148,7 +148,7 @@ TEST_CASE("replay cache", "[sdk]")
 
 TEST_CASE("semaphore", "[sdk]")
 {
-    test::DeferredContextClear<TxContext> defer;
+    test::DeferredContextClear defer;
 
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -165,6 +165,8 @@ TEST_CASE("semaphore", "[sdk]")
     struct calldata_0
     {
     };
+
+    ExecutionContext<TxContext> exec_ctx;
 
     auto make_semaphore_tx = [&](bool success = true) -> Hash {
 
@@ -183,9 +185,6 @@ TEST_CASE("semaphore", "[sdk]")
 
         auto hash = hash_xdr(stx);
       
-        ThreadlocalTransactionContextStore<TxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
-
         if (success) {
             REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
                     == TransactionStatus::SUCCESS);
@@ -216,9 +215,6 @@ TEST_CASE("semaphore", "[sdk]")
         
         auto hash = hash_xdr(stx);
 
-        ThreadlocalTransactionContextStore<TxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
-
         if (success) {
             REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
                     == TransactionStatus::SUCCESS);
@@ -248,9 +244,6 @@ TEST_CASE("semaphore", "[sdk]")
         stx.tx = tx;
         
         auto hash = hash_xdr(stx);
-
-        ThreadlocalTransactionContextStore<TxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
         if (success) {
             REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)

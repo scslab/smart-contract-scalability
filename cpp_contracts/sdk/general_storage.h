@@ -27,20 +27,11 @@
 namespace sdk
 {
 
-namespace detail
-{
-
-BUILTIN("has_key")
-uint32_t 
-has_key(
-	uint32_t key_offset);
-
-} // namespace detail
-
 bool
 has_key(const StorageKey& key)
 {
-	return detail::has_key(to_offset(&key)) != 0;
+	return detail::builtin_syscall(SYSCALLS::HAS_KEY, 
+		to_offset(&key), 0, 0, 0, 0, 0) != 0;
 }
 
 }

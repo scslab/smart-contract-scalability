@@ -28,16 +28,10 @@
 
 namespace scs {
 
-template<typename TransactionContext_t>
-class ThreadlocalTransactionContextStore;
-template<typename TransactionContext_t>
-class BuiltinFns;
-
-
 struct MethodInvocation;
 
 template<typename TransactionContext_t>
-class ExecutionContext
+class ExecutionContext : public utils::NonMovableOrCopyable
 {
     wasm_api::WasmContext wasm_context;
 
@@ -49,9 +43,6 @@ class ExecutionContext
 
     RpcAddressDB* addr_db;
 
-    friend class ThreadlocalTransactionContextStore<TransactionContext_t>;
-    friend class BuiltinFns<TransactionContext_t>;
-
     // should only be used by builtin fns
     void invoke_subroutine(MethodInvocation const& invocation);
 
@@ -62,6 +53,72 @@ class ExecutionContext
             "can't get ctx outside of active tx execution");
       }
       return *tx_context;
+    }
+
+    int64_t syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5);
+
+    static 
+    int64_t static_syscall_handler(void* self, uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5)
+    {
+      if (self == nullptr) {
+        throw std::runtime_error("cannot invoke static syscall on nullptr self");
+      }
+      return reinterpret_cast<ExecutionContext*>(self) -> syscall_handler(callno, arg0, arg1, arg2, arg3, arg4, arg5);
+    }
+
+    void gas_handler(uint64_t gas);
+
+    static
+    void static_gas_handler(void* self, uint64_t gas)
+    {
+      if (self == nullptr) {
+        throw std::runtime_error("cannot invoke static syscall on nullptr self");
+      }
+      reinterpret_cast<ExecutionContext*>(self) -> gas_handler(gas);
+    }
+
+    int32_t env_memcmp(uint32_t lhs, uint32_t rhs, uint32_t sz);
+    uint32_t env_memset(uint32_t ptr, uint32_t val, uint32_t len);
+    uint32_t env_memcpy(uint32_t dst, uint32_t src, uint32_t len);
+    uint32_t env_strnlen( uint32_t ptr, uint32_t max_len);
+
+    static
+    int32_t 
+    static_env_memcmp(void* self, uint32_t lhs, uint32_t rhs, uint32_t sz) {
+      if (self == nullptr) {
+        throw std::runtime_error("invalid self ptr in env");
+      }
+      return reinterpret_cast<ExecutionContext*>(self) -> env_memcmp(lhs, rhs, sz);
+    }
+
+    static
+    uint32_t 
+    static_env_memset(void* self, uint32_t ptr, uint32_t val, uint32_t len)
+    { 
+      if (self == nullptr) {
+        throw std::runtime_error("invalid self ptr in env");
+      }
+      return reinterpret_cast<ExecutionContext*>(self) -> env_memset(ptr, val, len);
+    }
+
+    static
+    uint32_t
+    static_env_memcpy(void* self, uint32_t dst, uint32_t src, uint32_t len)
+    {
+      if (self == nullptr) {
+        throw std::runtime_error("invalid self ptr in env");
+      }
+      return reinterpret_cast<ExecutionContext*>(self) -> env_memcpy(dst, src, len);
+    }
+
+    static
+    uint32_t
+    static_env_strnlen(void* self, uint32_t ptr, uint32_t max_len)
+    {
+      if (self == nullptr) {
+        throw std::runtime_error("invalid self ptr in env");
+      }
+      return reinterpret_cast<ExecutionContext*>(self) -> env_strnlen(ptr, max_len);
     }
 
     void extract_results();

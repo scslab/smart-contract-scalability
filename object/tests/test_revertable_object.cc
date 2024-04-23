@@ -39,6 +39,8 @@ const static raw_mem_val val2 = { 0x01, 0x03, 0x05, 0x07 };
 
 TEST_CASE("revert object from empty", "[object]")
 {
+    test::DeferredContextClear defer;
+
     RevertableObject object;
 
     SECTION("nothing")
@@ -204,6 +206,8 @@ TEST_CASE("revert object from empty", "[object]")
 
 TEST_CASE("revert object from nonempty", "[object]")
 {
+    test::DeferredContextClear defer;
+
     StorageObject o;
     o.body.type(ObjectType::NONNEGATIVE_INT64);
     o.body.nonnegative_int64() = 30;
@@ -316,7 +320,7 @@ TEST_CASE("revert object from nonempty", "[object]")
 
 TEST_CASE("hashset from empty", "[object]")
 {
-    test::DeferredContextClear<GroundhogTxContext> defer;
+    test::DeferredContextClear defer;
 
     RevertableObject object;
 
@@ -451,7 +455,7 @@ TEST_CASE("hashset from empty", "[object]")
 
 TEST_CASE("hashset from nonempty", "[object]")
 {
-    test::DeferredContextClear<GroundhogTxContext> defer;
+    test::DeferredContextClear defer;
 
     StorageObject base_obj;
     base_obj.body.type(ObjectType::HASH_SET);
@@ -502,6 +506,8 @@ TEST_CASE("hashset from nonempty", "[object]")
 
 TEST_CASE("hashset from nonempty with thresholds", "[object]")
 {
+    test::DeferredContextClear defer;
+
     StorageObject base_obj;
     base_obj.body.type(ObjectType::HASH_SET);
     base_obj.body.hash_set().max_size = 4;
@@ -560,6 +566,8 @@ TEST_CASE("hashset from nonempty with thresholds", "[object]")
 
 TEST_CASE("asset object from empty", "[object]")
 {
+    test::DeferredContextClear defer;
+
     RevertableObject object;
 
     auto good_add_and_commit = [&](int64_t d) {
@@ -614,6 +622,8 @@ TEST_CASE("asset object from empty", "[object]")
 
 TEST_CASE("asset object from empty intermingled commits", "[object]")
 {
+    test::DeferredContextClear defer;
+
     RevertableObject object;
 
     auto good_add = [&](int64_t d)
@@ -690,7 +700,8 @@ TEST_CASE("asset object from empty intermingled commits", "[object]")
 }
 
 TEST_CASE("asset object from nonempty", "[object]")
-{
+{    
+    test::DeferredContextClear defer;
     StorageObject base_obj;
     base_obj.body.type(ObjectType::KNOWN_SUPPLY_ASSET);
     base_obj.body.asset().amount = 100;
@@ -746,6 +757,8 @@ TEST_CASE("asset object from nonempty", "[object]")
 
 TEST_CASE("hashset size limit increases respected", "[object]")
 {
+    test::DeferredContextClear defer;
+
     RevertableObject object;
 
     auto make_insert = [](uint64_t i) {

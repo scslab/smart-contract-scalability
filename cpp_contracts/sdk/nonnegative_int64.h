@@ -28,69 +28,44 @@
 namespace sdk
 {
 
-namespace detail
-{
-
-BUILTIN("nn_int64_set_add")
-void
-nonnegative_int64_set_add(
-	uint32_t key_offset,
-	/* key_len = 32 */
-	int64_t set_value,
-	int64_t delta);
-
-BUILTIN("nn_int64_add")
-void
-nonnegative_int64_add(
-	uint32_t key_offset,
-	/* key_len = 32 */
-	int64_t delta);
-
-BUILTIN("nn_int64_get")
-uint32_t 
-nonnegative_int64_get(
-	uint32_t key_offset,
-	/* key_len = 32 */
-	uint32_t output_offset
-	/* output_len = 8 */);
-} /* detail */
 
 // creates if doesn't already exist
 void
 int64_add(StorageKey const& key, int64_t delta)
 {
-	detail::nonnegative_int64_add(
+	detail::builtin_syscall(SYSCALLS::NNINT_ADD,
 		to_offset(&key),
-		delta);
+		delta,
+		0, 0, 0, 0);
 }
 
 void 
 int64_set_add(StorageKey const& key, int64_t set_value, int64_t delta)
 {
-	detail::nonnegative_int64_set_add(
+	detail::builtin_syscall(SYSCALLS::NNINT_SET_ADD,
 		to_offset(&key),
 		set_value,
-		delta);
+		delta,
+		0, 0, 0);
 }
 
 void 
 int64_set(StorageKey const& key, int64_t set_value)
 {
-	detail::nonnegative_int64_set_add(
+	detail::builtin_syscall(SYSCALLS::NNINT_SET_ADD,
 		to_offset(&key),
 		set_value,
-		0);
+		0 /* delta */,
+		0, 0, 0);
 }
 
 // returns 0 in default case where it does not exist
 int64_t
 int64_get(StorageKey const& key)
 {
-	int64_t res = 0;
-	detail::nonnegative_int64_get(
+	return detail::builtin_syscall(SYSCALLS::NNINT_GET,
 		to_offset(&key),
-		to_offset(&res));
-	return res;
+		0, 0, 0, 0, 0);
 }
 
 class NNInt64

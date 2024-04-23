@@ -47,6 +47,14 @@ RateLimiter::slowpath_wait_for_opening()
     };
 
     if (!done()) {
+        // Potential bug: Waiting here leads to a potential deadlock.
+        // (Basically, the main thread needs to wait until
+        // all threads have launched and either have a slot
+        // or are waiting on this cv before the main thread can call shutdown.
+        // Otherwise, one thread might miss the shutdown signal.
+        // Regardless, the synchronization has been reworked so that
+        // in the non-RPC versions, this codepath should never trigger.
+        std::abort();
         wake_cond.wait(lock, done);
     }
     return claim_or_shutdown();
@@ -125,6 +133,8 @@ RateLimiter::claim_one_slot()
 void
 RateLimiter::stop_threads()
 {
+    // TODO: perhaps this fixes the deadlock discussed above.
+    std::lock_guard lock(mtx);
     shutdown();
     max_active_threads = 0;
 

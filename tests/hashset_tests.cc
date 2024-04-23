@@ -34,7 +34,7 @@ using namespace scs;
 
 TEST_CASE("hashset manipulation test contract", "[sdk][hashset]")
 {
-    test::DeferredContextClear<TxContext> defer;
+    test::DeferredContextClear defer;
 
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -48,11 +48,11 @@ TEST_CASE("hashset manipulation test contract", "[sdk][hashset]")
     std::unique_ptr<BlockContext> block_context
         = std::make_unique<BlockContext>(0);
 
+    ExecutionContext<TxContext> exec_ctx;
+
+
 
     auto make_tx = [&](uint32_t round, bool success = true) -> Hash {
-
-        ThreadlocalTransactionContextStore<TxContext>::make_ctx();
-        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
 
         const uint64_t gas_bid = 1;
 

@@ -43,7 +43,7 @@ using xdr::operator==;
 
 TEST_CASE("simulated echo rpc", "[rpc]")
 {
-	test::DeferredContextClear<TxContext> defer;
+	test::DeferredContextClear defer;
 
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -54,9 +54,7 @@ TEST_CASE("simulated echo rpc", "[rpc]")
 
     test::deploy_and_commit_contractdb(script_db, h, c);
 
-    ThreadlocalTransactionContextStore<TxContext>::make_ctx();
-
-    auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
+    ExecutionContext<TxContext> exec_ctx;
 
     std::unique_ptr<BlockContext> block_context
         = std::make_unique<BlockContext>(0);
@@ -188,7 +186,7 @@ TEST_CASE("simulated echo rpc", "[rpc]")
 
 TEST_CASE("test ensure ndet results all consumed", "[rpc]")
 {
-    test::DeferredContextClear<TxContext> defer;
+    test::DeferredContextClear defer;
 
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -198,9 +196,7 @@ TEST_CASE("test ensure ndet results all consumed", "[rpc]")
 
     test::deploy_and_commit_contractdb(script_db, h1, c1);
 
-    ThreadlocalTransactionContextStore<TxContext>::make_ctx();
-
-    auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
+    ExecutionContext<TxContext> exec_ctx;
 
     BlockContext block_context(0);
 

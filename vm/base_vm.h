@@ -45,6 +45,13 @@ class BaseVirtualMachine : public utils::NonMovableOrCopyable
 
     Hash prev_block_hash;
 
+    using TransactionContext_t = typename BlockContext_t::tx_context_t;
+
+  private:
+    utils::ThreadlocalCache<ExecutionContext<TransactionContext_t>, TLCACHE_SIZE> executors;
+
+  protected:
+
     void assert_initialized() const;
 
     bool validate_tx_block(Block const& txs);
@@ -60,6 +67,7 @@ class BaseVirtualMachine : public utils::NonMovableOrCopyable
 	      , mempool()
 	      , worker_cache(mempool, global_context)
 	      , prev_block_hash()
+        , executors()
 	{}
     
     void init_default_genesis();

@@ -37,95 +37,6 @@
 
 namespace scs {
 
-#if 0
-
-void
-VirtualMachine::init_default_genesis()
-{
-    install_genesis_contracts(global_context.contract_db);
-    current_block_context = std::make_unique<BlockContext>(0);
-}
-
-void
-VirtualMachine::assert_initialized() const
-{
-    if (!current_block_context)
-    {
-        throw std::runtime_error("uninitialized");
-    }
-}
-
-bool
-VirtualMachine::validate_tx_block(Block const& txs)
-{
-    std::atomic<bool> found_error = false;
-
-    ValidateReduce reduce(
-        found_error, global_context, *current_block_context, txs);
-
-    tbb::parallel_reduce(tbb::blocked_range<size_t>(0, txs.transactions.size()), reduce);
-
-    return !found_error;
-}
-
-
-void
-VirtualMachine::advance_block_number()
-{
-    current_block_context -> reset_context(
-        current_block_context -> block_number + 1);
-}
-
-BlockHeader
-VirtualMachine::make_block_header() 
-{
-    BlockHeader out;
-
-    tbb::task_group g1, g2;
-
-    out.block_number = current_block_context -> block_number;
-    out.prev_header_hash = prev_block_hash;
-    g1.run([&] () {
-   	 out.tx_set_hash = current_block_context -> tx_set.hash();
-	 });
-    
-    g2.run([&] () {
-		    out.modified_keys_hash = current_block_context -> modified_keys_list.hash();
-		    });
-    out.state_db_hash = global_context.state_db.hash();
-    out.contract_db_hash = global_context.contract_db.hash();
-    g1.wait();
-    g2.wait();
-    return out;
-}
-
-std::optional<BlockHeader>
-VirtualMachine::try_exec_tx_block(Block const& block)
-{
-    assert_initialized();
-
-    auto res = validate_tx_block(block);
-
-    // TBB joins all the threads it uses
-
-    if (!res) {
-        phase_undo_block(global_context, *current_block_context);
-        advance_block_number();
-        return std::nullopt;
-    } 
-
-    phase_finish_block(global_context, *current_block_context);
-
-    // now time for hashing a block header
-    BlockHeader out = make_block_header();
-
-    prev_block_hash = hash_xdr(out);
-
-    advance_block_number();
-    return out;
-}
-
-#endif
 
 BlockHeader
 VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& block_out)
@@ -133,9 +44,10 @@ VirtualMachine::propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, u
 	auto ts = utils::init_time_measurement();
     ThreadlocalContextStore::get_rate_limiter().prep_for_notify();
     ThreadlocalContextStore::enable_rpcs();
+    ThreadlocalContextStore::get_rate_limiter().start_threads(n_threads);
+
     worker_cache.start_assembly_threads(current_block_context.get(), &limits, n_threads);
     std::printf("start assembly threads time %lf\n", utils::measure_time(ts));
-    ThreadlocalContextStore::get_rate_limiter().start_threads(n_threads);
 
     using namespace std::chrono_literals;
 	

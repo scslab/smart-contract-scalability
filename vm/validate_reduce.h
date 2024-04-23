@@ -6,7 +6,8 @@
 #include <tbb/blocked_range.h>
 
 #include "transaction_context/execution_context.h"
-#include "threadlocal/threadlocal_context.h"
+
+#include <utils/threadlocal_cache.h>
 
 namespace scs {
 
@@ -18,6 +19,10 @@ struct ValidateReduce
     BlockContext_t& block_context;
     Block const& txs;
 
+    using TransactionContext_t = typename BlockContext_t::tx_context_t;
+
+    utils::ThreadlocalCache<ExecutionContext<TransactionContext_t>, TLCACHE_SIZE>& execs;
+
     using TxContext_t = typename BlockContext_t::tx_context_t;
 
     void operator()(const tbb::blocked_range<std::size_t> r)
@@ -25,16 +30,13 @@ struct ValidateReduce
         if (found_error)
             return;
 
-        ThreadlocalTransactionContextStore<TxContext_t>::make_ctx();
-
         // TBB docs suggest this type of pattern (use local var until end)
         //  optimizes better.
         bool local_found_error = false;
 
-        for (size_t i = r.begin(); i < r.end(); i++) {
+        auto& exec_ctx = execs.get();
 
-            auto& exec_ctx = ThreadlocalTransactionContextStore<
-                TxContext_t>::get_exec_ctx();
+        for (size_t i = r.begin(); i < r.end(); i++) {
 
             auto const& txset_entry = txs.transactions[i];
             auto const& tx = txset_entry.tx;
@@ -55,7 +57,7 @@ struct ValidateReduce
                     break;
                 }
             }
-        }
+        } 
 
         found_error = found_error || local_found_error;
     }
@@ -65,18 +67,21 @@ struct ValidateReduce
         : found_error(x.found_error)
         , global_context(x.global_context)
         , block_context(x.block_context)
-        , txs(x.txs){};
+        , txs(x.txs)
+        , execs(x.execs) {};
 
     void join(ValidateReduce& other) {}
 
     ValidateReduce(std::atomic<bool>& found_error,
                    GlobalContext_t& global_context,
                    BlockContext_t& block_context,
-                   Block const& txs)
+                   Block const& txs,
+                   utils::ThreadlocalCache<ExecutionContext<TransactionContext_t>, TLCACHE_SIZE>& execs)
         : found_error(found_error)
         , global_context(global_context)
         , block_context(block_context)
         , txs(txs)
+        , execs(execs)
     {}
 };
 

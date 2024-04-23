@@ -30,7 +30,7 @@ namespace scs {
 
 TEST_CASE("test log", "[builtin]")
 {
-    test::DeferredContextClear<TxContext> defer;
+    test::DeferredContextClear defer;
     
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
@@ -40,9 +40,7 @@ TEST_CASE("test log", "[builtin]")
 
     test::deploy_and_commit_contractdb(script_db, h, c);
 
-    ThreadlocalTransactionContextStore<TxContext>::make_ctx();
-
-    auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext>::get_exec_ctx();
+    ExecutionContext<TxContext> exec_ctx;
 
     BlockContext block_context(0);
 

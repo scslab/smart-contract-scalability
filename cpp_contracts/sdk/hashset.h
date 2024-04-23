@@ -22,83 +22,23 @@
 #include "sdk/types.h"
 #include "sdk/concepts.h"
 
+#include "sdk/syscall.h"
+
 #include <cstdint>
 #include <optional>
 
 namespace sdk
 {
 
-namespace detail
-{
-
-BUILTIN("hashset_insert")
-void
-hashset_insert(
-	uint32_t key_offset,
-	/* key_len = 32 */
-	uint32_t hash_offset,
-	/* hash_len = 32 */
-	uint64_t threshold);
-
-BUILTIN("hashset_increase_limit")
-void
-hashset_increase_limit(
-	uint32_t key_offset,
-	/* key_len = 32 */
-	uint32_t limit_increase);
-
-BUILTIN("hashset_clear")
-void
-hashset_clear(
-	uint32_t key_offset
-	/* key_len = 32 */,
-	uint64_t threshold);
-
-BUILTIN("hashset_get_size")
-uint32_t hashset_get_size(
-	uint32_t key_offset
-	/* key_len = 32 */);
-
-BUILTIN("hashset_get_max_size")
-uint32_t
-hashset_get_max_size(
-	uint32_t key_offset
-	/* key_len = 32 */);
-
-/**
- *  if two things with same threshold, 
- * returns lowest index.
- * If none, returns UINT32_MAX
- **/
-BUILTIN("hashset_get_index_of")
-uint32_t
-hashset_get_index_of(
-	uint32_t key_offset,
-	/* key_len = 32 */
-	uint64_t threshold);
-
-// get the index'th item in the hashset
-BUILTIN("hashset_get_index")
-uint64_t
-hashset_get_index(
-	uint32_t key_offset,
-	/* key_len = 32 */
-	uint32_t output_offset,
-	/* output_len = 32 */
-	uint32_t index);
-
-
-} /* detail */
-
 void hashset_insert(
 	StorageKey const& key,
 	Hash const& hash,
 	uint64_t threshold)
 {
-	detail::hashset_insert(
+	detail::builtin_syscall(SYSCALLS::HS_INSERT,
 		to_offset(&key), 
 		to_offset(&hash),
-		threshold);
+		threshold, 0, 0, 0);
 }
 
 void
@@ -106,9 +46,10 @@ hashset_increase_limit(
 	StorageKey const& key,
 	uint16_t limit_increase)
 {
-	detail::hashset_increase_limit(
+	detail::builtin_syscall(SYSCALLS::HS_INC_LIMIT,
 		to_offset(&key),
-		limit_increase);
+		limit_increase,
+		0, 0, 0, 0);
 }
 
 void
@@ -116,23 +57,27 @@ hashset_clear(
 	StorageKey const& key,
 	uint64_t threshold)
 {
-	detail::hashset_clear(
+	detail::builtin_syscall(SYSCALLS::HS_CLEAR,
 		to_offset(&key),
-		threshold);
+		threshold, 0, 0, 0, 0);
 }
 
 uint32_t
 hashset_get_size(
 	StorageKey const& key)
 {
-	return detail::hashset_get_size(to_offset(&key));
+	return detail::builtin_syscall(SYSCALLS::HS_GET_SIZE,
+		to_offset(&key),
+		0, 0, 0, 0, 0);
 }
 
 uint32_t
 hashset_get_max_size(
 	StorageKey const& key)
 {
-	return detail::hashset_get_max_size(to_offset(&key));
+	return detail::builtin_syscall(SYSCALLS::HS_GET_MAX_SIZE,
+		to_offset(&key),
+		0, 0, 0, 0, 0);
 }
 
 /**
@@ -145,9 +90,10 @@ hashset_get_index_of(
 	StorageKey const& key,
 	uint64_t threshold)
 {
-	return detail::hashset_get_index_of(
+	return detail::builtin_syscall(SYSCALLS::HS_GET_INDEX_OF,
 		to_offset(&key),
-		threshold);
+		threshold,
+		0, 0, 0, 0);
 }
 
 std::pair<uint64_t, Hash>
@@ -156,10 +102,11 @@ hashset_get_index(
 	uint32_t index)
 {
 	Hash out;
-	uint64_t threshold = detail::hashset_get_index(
+	uint64_t threshold = detail::builtin_syscall(SYSCALLS::HS_GET_INDEX,
 		to_offset(&key),
+		index,
 		to_offset(&out),
-		index);
+		0, 0, 0);
 	return {threshold, out};
 }
 

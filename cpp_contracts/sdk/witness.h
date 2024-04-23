@@ -16,11 +16,11 @@
 
 #pragma once
 
-#include "sdk/macros.h"
 #include "sdk/concepts.h"
 #include "sdk/alloc.h"
 #include "sdk/types.h"
 #include "sdk/concepts.h"
+#include "sdk/syscall.h"
 
 #include <cstdint>
 #include <optional>
@@ -28,30 +28,21 @@
 namespace sdk
 {
 
-namespace detail
-{
-
-BUILTIN("get_witness")
-void
-get_witness(
-	uint64_t wit_idx,
-	uint32_t out_offset,
-	uint32_t max_len);
-
-} // namespace detail
-
 template<TriviallyCopyable T>
 T get_witness(uint64_t witness)
 {
 	T out;
-	detail::get_witness(witness, to_offset(&out), sizeof(T));
+	detail::builtin_syscall(SYSCALLS::WITNESS_GET,
+		witness, to_offset(&out), sizeof(T),
+		0, 0, 0);
 	return out;
 }
 
-BUILTIN("get_witness_len")
-uint32_t
-get_witness_len(
-	uint64_t wit_idx);
+uint32_t get_witness_len(uint64_t wit_idx)
+{
+	return detail::builtin_syscall(SYSCALLS::WITNESS_GET_LEN,
+		wit_idx, 0, 0, 0, 0, 0);
+}
 
 } // namespace sdk
 

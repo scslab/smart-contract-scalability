@@ -36,8 +36,6 @@ AssemblyWorker<GlobalContext_t, BlockContext_t>::run(BlockContext_t& block_conte
 {
     auto& limiter = ThreadlocalContextStore::get_rate_limiter();
 
-    ThreadlocalTransactionContextStore<TxContext_t>::make_ctx();
-
     while (true) {
         bool is_shutdown = limiter.wait_for_opening();
 
@@ -56,8 +54,6 @@ AssemblyWorker<GlobalContext_t, BlockContext_t>::run(BlockContext_t& block_conte
             limits.notify_done();
             return;
         }
-
-        auto& exec_ctx = ThreadlocalTransactionContextStore<TxContext_t>::get_exec_ctx();
 
         auto result = exec_ctx.execute(hash_xdr(*tx), *tx, global_context, block_context);
         if (result == TransactionStatus::SUCCESS) {
@@ -84,14 +80,20 @@ AsyncAssemblyWorker<worker_t>::run()
                     [this]() { return done_flag || exists_work_to_do(); });
         }
         if (done_flag) {
-		return;
+		  return;
         }
 
         if ((!current_block_context) || (!limits)) {
 		throw std::runtime_error("shouldn't be not running here");
         }
 
+        if (initial_slot)
+        {
+            ThreadlocalContextStore::get_rate_limiter().claim_one_slot();
+        }
+
         worker->run(*current_block_context, *limits);
+        // idempotent, so calling this without a slot is safe
         ThreadlocalContextStore::get_rate_limiter().free_one_slot();
 
         current_block_context = nullptr;
