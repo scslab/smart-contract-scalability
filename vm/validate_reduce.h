@@ -34,7 +34,7 @@ struct ValidateReduce
         //  optimizes better.
         bool local_found_error = false;
 
-        auto& exec_ctx = execs.get();
+        auto& exec_ctx = execs.get(global_context.engine);
 
         for (size_t i = r.begin(); i < r.end(); i++) {
 

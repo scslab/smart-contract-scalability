@@ -48,6 +48,7 @@ public:
 	AssemblyWorker(Mempool& mempool, GlobalContext_t& global_context)
 		: mempool(mempool)
 		, global_context(global_context)
+		, exec_ctx(global_context.engine)
 		{
 		}
 

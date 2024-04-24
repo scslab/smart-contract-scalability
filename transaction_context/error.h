@@ -17,16 +17,15 @@
  */
 
 #include <stdexcept>
-#include <wasm_api/error.h>
 
 namespace scs
 {
 
 // calls to builtin fns from the sandbox should
 // throw HostError
-struct HostError : public wasm_api::HostError
+struct HostError : public std::runtime_error
 {
-	using wasm_api::HostError::HostError;
+	using std::runtime_error::runtime_error;
 };
 
 } /* scs */
