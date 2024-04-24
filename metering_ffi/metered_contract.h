@@ -23,6 +23,8 @@
 
 #include "xdr/types.h"
 
+#include "contract_db/runnable_script.h"
+
 namespace scs {
 
 namespace detail {
@@ -37,18 +39,6 @@ struct metered_contract
 
 } // namespace detail
 
-struct RunnableScriptView
-{
-    uint8_t* data;
-    uint32_t len;
-
-    operator bool() {
-        return data == nullptr;
-    }
-};
-
-constexpr static RunnableScriptView null_script {.data = nullptr, .len = 0};
-
 class MeteredContract : public utils::NonMovableOrCopyable
 {
     detail::metered_contract base;
@@ -58,9 +48,7 @@ class MeteredContract : public utils::NonMovableOrCopyable
 
     ~MeteredContract();
 
-    operator bool() const {
-        return base.data != nullptr;
-    }
+    operator bool() const { return base.data != nullptr; }
 
     RunnableScriptView to_view() const;
     Hash hash() const;

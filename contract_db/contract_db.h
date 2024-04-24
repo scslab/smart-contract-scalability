@@ -32,6 +32,7 @@
 #include "metering_ffi/metered_contract.h"
 
 #include "contract_db/contract_persistence.h"
+#include "contract_db/runnable_script.h"
 
 namespace scs {
 
