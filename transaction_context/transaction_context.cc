@@ -51,7 +51,7 @@ TC_DECL::TransactionContext(SignedTransaction const& tx,
 {}
 
 TC_TEMPLATE
-wasm_api::WasmRuntime*
+LFIProc*
 TC_DECL::get_current_runtime()
 {
     if (runtime_stack.size() == 0) {
@@ -78,7 +78,7 @@ TC_DECL::pop_invocation_stack()
 
 TC_TEMPLATE
 void
-TC_DECL::push_invocation_stack(wasm_api::WasmRuntime* runtime,
+TC_DECL::push_invocation_stack(LFIProc* runtime,
                                           MethodInvocation const& invocation)
 {
     invocation_stack.push_back(invocation);
