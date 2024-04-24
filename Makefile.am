@@ -137,6 +137,7 @@ THREADLOCAL_SRCS = \
 
 TRANSACTION_CONTEXT_SRCS = \
 	transaction_context/execution_context.cc \
+	transaction_context/global_context.cc \
 	transaction_context/method_invocation.cc \
 	transaction_context/transaction_context.cc \
 	transaction_context/transaction_results.cc
@@ -160,9 +161,7 @@ SRCS = \
 	$(EXPERIMENTS_SRCS) \
 	$(HASH_SET_SRCS) \
 	$(MEMPOOL_SRCS) \
-	$(METERING_FFI_SRCS) \
 	$(OBJECT_SRCS) \
-	$(PEDERSEN_FFI_SRCS) \
 	$(PERSISTENCE_SRCS) \
 	$(PHASE_SRCS) \
 	$(RPC_SRCS) \
@@ -287,14 +286,6 @@ lib/lfi/liblfi/liblfi.a: lib/lfi/liblfi/*.c lib/lfi/liblfi/*.h
 	cd lib/lfi/liblfi && \
 	knit liblfi.a
 
-metering/target/release/libinject_metering.a : metering/inject_metering/src/*.rs
-	cd metering && \
-	cargo build --release --package inject_metering
-
-pedersen/target/release/libcommitments.a : pedersen/commitments/src/*.rs
-	cd pedersen && \
-	cargo build --release --package commitments
-
 $(SRCS:.cc=.o) : $(XH_FILES)
 $(TESTS_CCS:.cc=.o) : $(XH_FILES)
 $(MAIN_CCS:.cc=.o) : $(XH_FILES)
@@ -306,9 +297,6 @@ bin_PROGRAMS = \
 	sisyphus_payment_sim \
 	groundhog_payment_sim \
 	sisyphus_proof_size_exp
-
-vm/genesis.o: $(CC_WASMS:.cc=.wasm)
-main/test.o : $(CC_WASMS:.cc=.wasm) $(WASM_API_TEST_WASMS)
 
 COMPLETE_SRCS = $(SRCS) $(TESTS_CCS) $(TEST_UTILS_SRCS)
 
