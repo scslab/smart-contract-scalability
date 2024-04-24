@@ -56,22 +56,6 @@ BLOCK_ASSEMBLY_SRCS = \
 	block_assembly/assembly_worker.cc \
 	block_assembly/limits.cc
 
-BUILTIN_FNS_SRCS = \
-	builtin_fns/asset.cc \
-	builtin_fns/builtin_fns.cc \
-	builtin_fns/contract.cc \
-	builtin_fns/crypto.cc \
-	builtin_fns/delete.cc \
-	builtin_fns/env.cc \
-	builtin_fns/general_storage.cc \
-	builtin_fns/hashset.cc \
-	builtin_fns/int64.cc \
-	builtin_fns/logging.cc \
-	builtin_fns/raw_memory.cc \
-	builtin_fns/rpc.cc \
-	builtin_fns/runtime.cc \
-	builtin_fns/witness.cc
-
 CONFIG_SRCS = \
 	config/print_configs.cc
 
@@ -282,7 +266,8 @@ AM_CPPFLAGS = \
 	$(wasm_api_CFLAGS) \
 	$(Catch2_CFLAGS) \
 	$(grpcpp_DEDUP_CFLAGS) \
-	$(protobuf_CFLAGS)
+	$(protobuf_CFLAGS) \
+	-I./lib/lfi/liblfi/
 
 LDADD = $(xdrpp_LIBS) \
 	$(libsodium_LIBS) \
@@ -294,9 +279,13 @@ LDADD = $(xdrpp_LIBS) \
 	$(rocksdb_LIBS) \
 	$(wasm_api_LIBS) \
 	$(Catch2_LIBS) \
-	./metering/target/release/libinject_metering.a \
+	./lib/lfi/liblfi.a \
 	$(grpcpp_LIBS) \
 	$(protobuf_LIBS)
+
+lib/lfi/liblfi/liblfi.a: lib/lfi/liblfi/*.c lib/lfi/liblfi/*.h
+	cd lib/lfi/liblfi && \
+	knit liblfi.a
 
 metering/target/release/libinject_metering.a : metering/inject_metering/src/*.rs
 	cd metering && \

@@ -5,6 +5,10 @@
 #include <vector>
 #include <stdexcept>
 #include <utils/non_movable.h>
+#include <memory>
+
+#include "xdr/types.h"
+#include "contract_db/runnable_script.h"
 
 extern "C" {
 
@@ -65,7 +69,7 @@ public:
 
 	int 
 	__attribute__((warn_unused_result))
-	set_program(const uint8_t* bytes, const size_t len);
+	set_program(RunnableScriptView const& script);
 
     void exit(int code);
 
@@ -78,5 +82,18 @@ public:
 };
 
 uint32_t sandboxaddr(uintptr_t p);
+
+class LFIContract : public utils::NonMovableOrCopyable
+{
+    std::shared_ptr<const Contract> base;
+
+  public:
+    LFIContract(std::shared_ptr<const Contract> unmetered);
+
+    operator bool() const { return (bool) base; }
+
+    RunnableScriptView to_view() const;
+    Hash hash() const;
+};
 
 }
