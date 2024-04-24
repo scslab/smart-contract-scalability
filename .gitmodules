@@ -4,9 +4,6 @@
 [submodule "merkle_trie_toolkit"]
 	path = lib/merkle_trie_toolkit
 	url = https://github.com/gramseyer/merkle_trie_toolkit.git
-[submodule "wasm_api"]
-	path = lib/wasm_api
-	url = https://github.com/gramseyer/wasm_api.git
 [submodule "m4"]
 	path = m4
 	url = https://github.com/gramseyer/m4.git
@@ -19,3 +16,9 @@
 [submodule "wasm_ed25519/ed25519"]
 	path = wasm_ed25519/ed25519
 	url = https://github.com/orlp/ed25519.git
+[submodule "lib/lfi"]
+	path = lib/lfi
+	url = https://github.com/zyedidia/lfi.git
+[submodule "lfi_contracts/libc/picolibc"]
+	path = lfi_contracts/libc/picolibc
+	url = https://github.com/zyedidia/picolibc.git
