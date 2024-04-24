@@ -135,6 +135,8 @@ ContractDBProxy::push_deploy_contract(const Address& deploy_address,
 Hash
 ContractDBProxy::create_contract(std::shared_ptr<const Contract> contract)
 {
+    // This is where gas metering, or verification, or whatever other checks
+    // on new contracts should take place
     Hash h = hash_xdr(*contract);
     new_contracts[h] = std::make_pair(std::make_shared<const MeteredContract>(contract), contract);
     return h;
