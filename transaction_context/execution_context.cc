@@ -33,13 +33,16 @@
 
 #include "transaction_context/global_context.h"
 
-#include "utils/defer.h"
+#include <utils/defer.h>
+#include <utils/compat.h>
 
 #include <utils/time.h>
 
 #include "common/syscall_nos.h"
 #include "builtin_fns/gas_costs.h"
 #include "contract_db/contract_utils.h"
+
+#include "lficpp/signal_handler.h"
 
 #define EC_DECL(ret) template<typename TransactionContext_t> ret ExecutionContext<TransactionContext_t>
 
@@ -49,8 +52,8 @@ template class ExecutionContext<GroundhogTxContext>;
 template class ExecutionContext<SisyphusTxContext>;
 template class ExecutionContext<TxContext>;
 
-EC_DECL()::ExecutionContext()
-    : wasm_context(MAX_STACK_BYTES)
+EC_DECL()::ExecutionContext(LFIGlobalEngine& engine)
+    : sandbox_cache(engine, reinterpret_cast<void*>(this))
     , active_runtimes()
     , tx_context(nullptr)
     , results_of_last_tx(nullptr)
@@ -68,39 +71,37 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
         //auto timestamp = utils::init_time_measurement();
 
         auto script = tx_context->get_contract_db_proxy().get_script(invocation.addr);
-        wasm_api::Script s {.data = script.data, .len = script.len};
-
-        auto runtime_instance = wasm_context.new_runtime_instance(
-            s,
-            reinterpret_cast<void*>(this));
-
-        if (!runtime_instance) {
+        if (!script) {
             throw HostError("cannot find target address");
         }
 
-        runtime_instance -> template link_fn<&ExecutionContext<TransactionContext_t>::static_syscall_handler>("scs", "syscall");
-        runtime_instance -> template link_fn<&ExecutionContext<TransactionContext_t>::static_gas_handler>("scs", "gas");
+        auto* proc = sandbox_cache.get_new_proc();
+        if (!proc) {
+            throw std::runtime_error("cannot get new proc");
+        }
 
-        runtime_instance -> template link_env<&ExecutionContext<TransactionContext_t>::static_env_memcmp>("memcmp");
-        runtime_instance -> template link_env<&ExecutionContext<TransactionContext_t>::static_env_memset>("memset");
-        runtime_instance -> template link_env<&ExecutionContext<TransactionContext_t>::static_env_memcpy>("memcpy");
-        runtime_instance -> template link_env<&ExecutionContext<TransactionContext_t>::static_env_strnlen>("strnlen");
+        if (!proc->set_program(script)) {
+            throw std::runtime_error("failed to set program");
+        }
 
         //std::printf("launch time: %lf\n", utils::measure_time(timestamp));
 
-        active_runtimes.emplace(invocation.addr, std::move(runtime_instance));
+        active_runtimes.emplace(invocation.addr, proc);
 
         //std::printf("link time: %lf\n", utils::measure_time(timestamp));
     }
 
-    auto* runtime = active_runtimes.at(invocation.addr).get();
+    auto* runtime = active_runtimes.at(invocation.addr);
 
     tx_context->push_invocation_stack(runtime, invocation);
 
-    runtime->template invoke<void>(
-        invocation.get_invocable_methodname().c_str());
-
+    int errorcode = runtime->run(invocation.method_name, invocation.calldata);
+    
     tx_context->pop_invocation_stack();
+
+    if (errorcode != 0) {
+        throw HostError("invocation failed\n");
+    }
 }
 
 template
@@ -143,6 +144,8 @@ ExecutionContext<TransactionContext_t>::execute(Hash const& tx_hash,
     if (tx_context) {
         throw std::runtime_error("one execution at one time");
     }
+    // idempotent
+    signal_init();
 
     addr_db = &scs_data_structures.address_db;
 
@@ -158,7 +161,7 @@ ExecutionContext<TransactionContext_t>::execute(Hash const& tx_hash,
 
     try {
         invoke_subroutine(invocation);
-    } catch (wasm_api::HostError& e) {
+    } catch (HostError& e) {
 	    std::printf("tx failed %s\n", e.what());
 	    CONTRACT_INFO("Execution error: %s", e.what());
         return TransactionStatus::FAILURE;
@@ -197,7 +200,7 @@ EC_DECL(void)::extract_results()
 
 EC_DECL(void)::reset()
 {
-    // nothing to do to clear wasm_context
+    sandbox_cache.reset();
     active_runtimes.clear();
     tx_context.reset();
     addr_db = nullptr;
@@ -219,40 +222,26 @@ EC_DECL()::~ExecutionContext()
     std::fflush(stdout);
     std::terminate();
   }
-}
-
-EC_DECL(int32_t)::env_memcmp(uint32_t lhs, uint32_t rhs, uint32_t sz)
+} 
+EC_DECL(uint64_t)::static_syscall_handler(void* self, uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5)
 {
-    tx_context -> consume_gas(gas_memcmp(sz));
-    return tx_context -> get_current_runtime()->memcmp(lhs, rhs, sz);
+  if (self == nullptr) {
+    std::abort();
+    // "cannot invoke static syscall on nullptr self"
+  }
+  try {
+    return reinterpret_cast<ExecutionContext*>(self) -> syscall_handler(callno, arg0, arg1, arg2, arg3, arg4, arg5);
+  } catch (HostError& e) {
+    std::printf("syscall failed: %s\n", e.what());
+    reinterpret_cast<ExecutionContext*>(self) -> get_transaction_context().get_current_runtime() -> exit(-1);
+    unreachable();
+  } catch(...) {
+    std::printf("system error\n");
+    std::abort();
+  }
 }
 
-
-EC_DECL(uint32_t)::env_memset(uint32_t ptr, uint32_t val, uint32_t len)
-{
-    tx_context -> consume_gas(gas_memset(len));
-    return tx_context -> get_current_runtime()->memset(ptr, val, len);
-}
-
-
-EC_DECL(uint32_t)::env_memcpy( uint32_t dst, uint32_t src, uint32_t len)
-{
-    tx_context -> consume_gas(gas_memcpy(len));
-    return tx_context -> get_current_runtime()->safe_memcpy(dst, src, len);
-}
-
-EC_DECL(uint32_t)::env_strnlen(uint32_t ptr, uint32_t max_len)
-{
-    tx_context -> consume_gas(gas_strnlen(max_len));
-    return tx_context -> get_current_runtime()->safe_strlen(ptr, max_len);
-}
-
-EC_DECL(void)::gas_handler(uint64_t gas)
-{
-    syscall_handler(SYSCALLS::GAS, gas, 0, 0, 0, 0, 0);
-}
-
-EC_DECL(int64_t)::
+EC_DECL(uint64_t)::
 syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5)
 {
     uint64_t ret = -1;
@@ -260,11 +249,29 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     auto& runtime = *tx_ctx.get_current_runtime();
 
     auto load_from_memory = [&runtime]<typename T>(uint32_t offset, uint32_t len) -> T {
-        return runtime.template load_from_memory<T>(offset, len);
+
+        if (!runtime.is_readable(runtime.addr(offset), len)) {
+            runtime.exit(-1);
+            unreachable();
+        }
+        T out;
+        out.insert(out.end(),
+                   reinterpret_cast<uint8_t*>(runtime.addr(offset)),
+                   reinterpret_cast<uint8_t*>(runtime.addr(offset + len)));
+
+        return out;
     };
 
     auto load_from_memory_constsize = [&runtime]<typename T>(uint32_t offset) -> T {
-        return runtime.template load_from_memory_to_const_size_buf<T>(offset);
+        if (!runtime.is_readable(runtime.addr(offset), sizeof(T))) {
+            runtime.exit(-1);
+            unreachable();
+        }
+        T out;
+        std::memcpy(out.data(),
+            reinterpret_cast<uint8_t*>(runtime.addr(offset)),
+            sizeof(T));
+        return out;
     };
 
     auto load_storage_key = [&] (uint32_t offset) -> AddressAndKey {
@@ -274,13 +281,36 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
 
     auto write_to_memory = [&runtime]<typename T>(T const& buf, uint32_t offset, uint32_t len)
     {
-        runtime.template write_to_memory(buf, offset, len);
+        if (!runtime.is_writable(runtime.addr(offset), len)) {
+            runtime.exit(-1);
+        }
+        if (len > buf.size()) {
+            runtime.exit(-1);
+        }
+        std::memcpy(
+            reinterpret_cast<uint8_t*>(runtime.addr(offset)),
+            buf.data(),
+            len);
+    };
+
+    auto write_slice_to_memory = [&runtime](const uint8_t* src, uint32_t offset, uint32_t len)
+    {
+        if (!runtime.is_writable(runtime.addr(offset), len)) {
+            runtime.exit(-1);
+        }
+        std::memcpy(
+            reinterpret_cast<uint8_t*>(runtime.addr(offset)),
+            src,
+            len);
     };
 
     switch(static_cast<SYSCALLS>(callno))
     {
     case EXIT:
-        throw HostError("sys exit unimplemented in Wasm3");
+        // arg0: exit code
+        runtime.exit(arg0);
+        unreachable();
+
     case WRITE:
     {
         // arg0: str offset
@@ -731,7 +761,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
 
         uint32_t write_len = std::min<uint32_t>(wit.value.size(), arg2);
 
-        runtime.write_to_memory(wit.value, arg1, write_len);
+        write_to_memory(wit.value, arg1, write_len);
         ret = wit.value.size();
         break;
     }
@@ -762,9 +792,11 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
 
         tx_ctx.consume_gas(
             gas_get_calldata(slice_end - slice_start));
+
+        write_slice_to_memory(calldata.data() + slice_start, offset, slice_end-slice_start);
         
-        tx_ctx.get_current_runtime()->write_slice_to_memory(
-            calldata, offset, slice_start, slice_end);
+        //tx_ctx.get_current_runtime()->write_slice_to_memory(
+        //    calldata, offset, slice_start, slice_end);
         ret = 0;
         break;
     }

@@ -30,6 +30,8 @@
 #include "tx_block/unique_tx_set.h"
 #include "tx_block/tx_set.h"
 
+#include "lficpp/lficpp.h"
+
 #include <utils/non_movable.h>
 
 namespace scs
@@ -41,7 +43,9 @@ struct GlobalContext : public utils::NonMovableOrCopyable
 	StateDB state_db;
 	RpcAddressDB address_db;
 
-	GlobalContext() = default;
+	LFIGlobalEngine engine;
+
+	GlobalContext();
 };
 
 struct SisyphusGlobalContext : public utils::NonMovableOrCopyable
@@ -50,7 +54,9 @@ struct SisyphusGlobalContext : public utils::NonMovableOrCopyable
 	SisyphusStateDB state_db;
 	RpcAddressDB address_db;
 
-	SisyphusGlobalContext() = default;
+	LFIGlobalEngine engine;
+
+	SisyphusGlobalContext();
 };
 
 struct GroundhogGlobalContext : public utils::NonMovableOrCopyable
@@ -59,7 +65,9 @@ struct GroundhogGlobalContext : public utils::NonMovableOrCopyable
 	GroundhogPersistentStateDB state_db;
 	RpcAddressDB address_db;
 
-	GroundhogGlobalContext() = default;
+	LFIGlobalEngine engine;
+
+	GroundhogGlobalContext();
 };
 
 template<typename T>
