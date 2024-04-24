@@ -6,6 +6,8 @@
 #include <sys/mman.h>
 #include <cstring>
 
+#include "crypto/hash.h"
+
 namespace scs
 {
 	
@@ -75,19 +77,19 @@ LFIProc::addr(uint64_t a) {
 }
 
 int 
-LFIProc::set_program(const uint8_t* bytes, const size_t len)
+LFIProc::set_program(RunnableScriptView const& script)
 {
 	if (actively_running) {
 		return -1;
 	}
-	if (len == 0) {
-		if (bytes != NULL) {
+	if (script.len == 0) {
+		if (script.data != NULL) {
 			perror("invalid contract in db");
 			std::abort();
 		}
 		return -1;
 	}
-	return lfi_proc_exec(proc, const_cast<uint8_t*>(bytes), len, &info);
+	return lfi_proc_exec(proc, const_cast<uint8_t*>(script.data), script.len, &info);
 }
 
 uint32_t sandboxaddr(uintptr_t realaddr) {
@@ -201,4 +203,23 @@ LFIProc::is_readable(uint64_t p, uint32_t size) const {
 }
 
 
+LFIContract::LFIContract(std::shared_ptr<const Contract> unmetered)
+	: base(unmetered)
+	{
+		std::printf("VERIFIER UNIMPLEMENTED: TODO(zyedidia)\n");
+	}
+
+RunnableScriptView 
+LFIContract::to_view() const
+{
+    return RunnableScriptView(base->data(), base->size());
+}
+
+Hash
+LFIContract::hash() const
+{
+    Hash out;
+    hash_raw(base->data(), base->size(), out.data());
+    return out;
+}
 }

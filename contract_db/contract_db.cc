@@ -74,7 +74,7 @@ ContractDB::get_script_by_hash(const Hash& hash) const
 
 void
 ContractDB::commit_contract_to_db(Hash const& contract_hash,
-                                  metered_contract_ptr_t new_contract)
+                                  verified_contract_ptr_t new_contract)
 {
     auto res = hashes_to_contracts_map.emplace(contract_hash, new_contract);
 
@@ -123,7 +123,7 @@ ContractDB::check_committed_contract_exists(const Hash& contract_hash) const
 void
 ContractDB::add_new_uncommitted_contract(
     Hash const& h, 
-    metered_contract_ptr_t new_contract,
+    verified_contract_ptr_t new_contract,
     std::shared_ptr<const Contract> new_unmetered_contract)
 {
     has_uncommitted_modifications.store(true, std::memory_order_relaxed);

@@ -28,7 +28,7 @@ namespace scs {
 
 ContractCreateClosure::ContractCreateClosure(
     Hash const& h, 
-    metered_contract_ptr_t contract,
+    verified_contract_ptr_t contract,
     std::shared_ptr<const Contract> unmetered_contract,
     ContractDB& contract_db)
     : h(h)
@@ -101,11 +101,6 @@ bool
 ContractDBProxy::deploy_contract(const Address& deploy_address,
                                  const Hash& contract_hash)
 {
-/*
-    std::printf("attempting to deploy contract hash %s to address %s\n",
-        debug::array_to_str(contract_hash).c_str(),
-        debug::array_to_str(deploy_address).c_str());
-*/
     if (!check_contract_exists(contract_hash)) {
         return false;
     }
@@ -138,13 +133,15 @@ ContractDBProxy::create_contract(std::shared_ptr<const Contract> contract)
     // This is where gas metering, or verification, or whatever other checks
     // on new contracts should take place
     Hash h = hash_xdr(*contract);
-    new_contracts[h] = std::make_pair(std::make_shared<const MeteredContract>(contract), contract);
+
+    // implicitly run verifier in ctor
+    new_contracts[h] = std::make_pair(std::make_shared<const LFIContract>(contract), contract);
     return h;
 }
 
 ContractCreateClosure
 ContractDBProxy::push_create_contract(
-    Hash const& h, std::pair<metered_contract_ptr_t, std::shared_ptr<const Contract>> const& contract)
+    Hash const& h, std::pair<verified_contract_ptr_t, std::shared_ptr<const Contract>> const& contract)
 {
     return ContractCreateClosure(h, contract.first, contract.second, contract_db);
 }
@@ -185,7 +182,7 @@ ContractDBProxy::get_script(const Address& address) const
     if (s_it == new_contracts.end()) {
         return contract_db.get_script_by_hash(script_hash);
     }
-    return s_it-> second.first->to_view();//{s_it->second.first->data(), s_it -> second.first -> size() };
+    return s_it-> second.first->to_view();
 }
 
 void

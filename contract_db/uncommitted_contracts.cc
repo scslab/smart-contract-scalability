@@ -45,7 +45,7 @@ UncommittedContracts::undo_deploy_contract_to_address(
 void
 UncommittedContracts::add_new_contract(
     Hash const& h,
-    metered_contract_ptr_t new_contract)
+    verified_contract_ptr_t new_contract)
 {
     std::lock_guard lock(mtx);
 
