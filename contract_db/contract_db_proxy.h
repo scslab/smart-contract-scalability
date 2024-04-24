@@ -18,9 +18,8 @@
 
 #include <utils/non_movable.h>
 
-#include "metering_ffi/metered_contract.h"
-
 #include "xdr/types.h"
+#include "contract_db/types.h"
 
 #include <map>
 #include <memory>
@@ -34,7 +33,7 @@ class TransactionRewind;
 class ContractCreateClosure : public utils::NonCopyable
 {
     Hash h;
-    metered_contract_ptr_t contract;
+    verified_contract_ptr_t contract;
     std::shared_ptr<const Contract> unmetered_contract;
     ContractDB& contract_db;
 
@@ -42,7 +41,7 @@ class ContractCreateClosure : public utils::NonCopyable
 
   public:
     ContractCreateClosure(Hash const& h, 
-                          metered_contract_ptr_t contract,
+                          verified_contract_ptr_t contract,
                           std::shared_ptr<const Contract> unmetered_contract,
                           ContractDB& contract_db);
 
@@ -75,7 +74,7 @@ class ContractDBProxy
 {
     ContractDB& contract_db;
 
-    std::map<Hash, std::pair<metered_contract_ptr_t, std::shared_ptr<const Contract>>> new_contracts;
+    std::map<Hash, std::pair<verified_contract_ptr_t, std::shared_ptr<const Contract>>> new_contracts;
 
     std::map<Address, Hash> new_deployments;
 
@@ -87,7 +86,7 @@ class ContractDBProxy
 
     ContractCreateClosure __attribute__((warn_unused_result))
     push_create_contract(Hash const& h, 
-      std::pair<metered_contract_ptr_t, std::shared_ptr<const Contract>> const& contract);
+      std::pair<verified_contract_ptr_t, std::shared_ptr<const Contract>> const& contract);
 
     bool is_committed = false;
     void assert_not_committed() const;
