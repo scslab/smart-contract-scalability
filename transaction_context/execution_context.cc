@@ -322,7 +322,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         log.push_back('\0');
 
         std::printf("print: %s\n", log.data());
-        ret = 0;
+        ret = log.size();
         break;
     }
     case WRITE_BYTES:
@@ -333,8 +333,15 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // disable if not in debug mode
         auto log = load_from_memory.template operator()<std::vector<uint8_t>>(arg0, arg1);
 
-        std::printf("print: %s\n", debug::array_to_str(log).c_str());
-        ret = 0;
+        std::string write = debug::array_to_str(log);
+
+        std::printf("print: %s\n",write.c_str());
+        ret = write.size();
+        break;
+    }
+    case SBRK:
+    {
+        ret = sandboxaddr(runtime.sbrk(arg0));
         break;
     }
     case LOG:
