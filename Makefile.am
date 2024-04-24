@@ -22,7 +22,6 @@ CLEANFILES = *~ .*~
 
 include $(srcdir)/lib/utility/Makefile.am.fragment
 include $(srcdir)/lib/merkle_trie_toolkit/Makefile.am.fragment
-include $(srcdir)/lib/wasm_api/Makefile.am.fragment
 
 X_FILES = \
 	xdr/block.x \
@@ -208,39 +207,6 @@ wasm_ed25519/libed25519.a:
 	cd wasm_ed25519 &&\
 	make libed25519.a
 
-CC_WASMS = \
-	cpp_contracts/erc20.cc \
-	cpp_contracts/erc721.cc \
-	cpp_contracts/test_hashset.cc \
-	cpp_contracts/test_hashset_manipulation.cc \
-	cpp_contracts/test_gas_limit.cc \
-	cpp_contracts/test_log.cc \
-	cpp_contracts/test_nn_int64.cc \
-	cpp_contracts/test_redirect_call.cc \
-	cpp_contracts/test_raw_memory.cc \
-	cpp_contracts/test_rpc.cc \
-	cpp_contracts/test_sdk.cc \
-	cpp_contracts/genesis/deploy.cc \
-	cpp_contracts/atomic_swap.cc \
-	cpp_contracts/payment_experiment/payment.cc \
-	cpp_contracts/payment_experiment/payment_wasmsig.cc \
-	cpp_contracts/payment_channel.cc \
-	cpp_contracts/public_auction.cc \
-	cpp_contracts/0x.cc \
-	cpp_contracts/cfmm.cc \
-	cpp_contracts/sisyphus_erc20.cc
-
-.cc.wasm: Makefile.am Makefile
-	clang++ -O3 -target wasm32-unknown-wasi -I./cpp_contracts/ $< -o $@ \
-		--sysroot=wasi/wasi-sysroot \
-		-std=gnu++2a \
-		-nostdlib++ \
-		-nostdlib \
-		-Wl,--no-entry -fno-exceptions -Wl,--allow-undefined \
-		wasi/lib/wasi/libclang_rt.builtins-wasm32.a \
-		wasm_ed25519/libed25519.a \
-		-I./wasm_ed25519/ed25519/src/
-
 #TODO parity-wasm serialization doesn't support bulk memory ops
 # This ruins the metering (it outputs wasm in an invalid section ordering)
 # Could fix if I care
@@ -278,7 +244,7 @@ LDADD = $(xdrpp_LIBS) \
 	$(rocksdb_LIBS) \
 	$(wasm_api_LIBS) \
 	$(Catch2_LIBS) \
-	./lib/lfi/liblfi.a \
+	./lib/lfi/liblfi/liblfi.a \
 	$(grpcpp_LIBS) \
 	$(protobuf_LIBS)
 
@@ -300,7 +266,7 @@ bin_PROGRAMS = \
 
 COMPLETE_SRCS = $(SRCS) $(TESTS_CCS) $(TEST_UTILS_SRCS)
 
-test_SOURCES = main/test.cc $(COMPLETE_SRCS) $(utility_TEST_CCS) $(mtt_TEST_CCS) $(WASM_API_TEST_CCS)
+test_SOURCES = main/test.cc $(COMPLETE_SRCS) $(utility_TEST_CCS) $(mtt_TEST_CCS)
 blockstm_comparison_SOURCES = main/blockstm_comparison.cc $(SRCS)
 sisyphus_payment_sim_SOURCES = main/sisyphus_payment_sim.cc $(SRCS)
 groundhog_payment_sim_SOURCES = main/groundhog_payment_sim.cc $(SRCS)

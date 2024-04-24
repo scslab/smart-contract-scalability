@@ -29,8 +29,6 @@
 
 #include <mtt/trie/merkle_trie.h>
 
-#include "metering_ffi/metered_contract.h"
-
 #include "contract_db/contract_persistence.h"
 #include "contract_db/runnable_script.h"
 #include "contract_db/types.h"

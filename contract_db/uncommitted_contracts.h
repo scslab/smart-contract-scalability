@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-#include "metering_ffi/metered_contract.h"
-
 #include "xdr/storage.h"
 #include "xdr/storage_delta.h"
 #include "xdr/types.h"
