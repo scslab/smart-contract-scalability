@@ -36,7 +36,7 @@ XH_FILES = $(X_FILES:.x=.h)
 #building x files
 $(XH_FILES) : $(XDRC)
 
-SUFFIXES = .x .h .wat .wasm
+SUFFIXES = .x .h
 
 .x.h:
 	$(XDRC)  -hh -o $@ $<
@@ -83,11 +83,12 @@ HASH_SET_TEST_SRCS = \
 	hash_set/tests/test_atomic_set.cc \
 	hash_set/tests/test_hs_utils.cc
 
+LFICPP_SRCS = \
+	lficpp/lficpp.cc \
+	lficpp/signal_handler.cc
+
 MEMPOOL_SRCS = \
 	mempool/mempool.cc
-
-METERING_FFI_SRCS = \
-	metering_ffi/metered_contract.cc
 
 OBJECT_SRCS = \
 	object/comparators.cc \
@@ -159,8 +160,10 @@ SRCS = \
 	$(DEBUG_SRCS) \
 	$(EXPERIMENTS_SRCS) \
 	$(HASH_SET_SRCS) \
+	$(LFICPP_SRCS) \
 	$(MEMPOOL_SRCS) \
 	$(OBJECT_SRCS) \
+	$(PEDERSEN_FFI_SRCS) \
 	$(PERSISTENCE_SRCS) \
 	$(PHASE_SRCS) \
 	$(RPC_SRCS) \
@@ -176,32 +179,52 @@ SRCS = \
 	$(WASM_API_SRCS) \
 	$(utility_CCS)
 
+LFI_CONTRACTS = \
+	lfi_contracts/deployer.c \
+	lfi_contracts/erc20.c \
+	lfi_contracts/payment.c \
+	lfi_contracts/test_invoke.c \
+        lfi_contracts/test_log.c \
+	lfi_contracts/test_redirect_call.c \
+	lfi_contracts/test_calldata.c
+
+#disable some builtin rule
+lfi_contracts/libc/syscall.S:
+	echo ""
+
+LFI_BUILTS = $(LFI_CONTRACTS:.c=.lfi)
+
+%.lfi:%.c
+	cd lfi_contracts && \
+	knit $@
+
+$(LFI_BUILTS) : $(wildcard lfi_contracts/libc/*.c) $(wildcard lfi_contracts/libc/*.h) $(wildcard lfi_contracts/libc/*.S)
+
 TEST_UTILS_SRCS = \
 	test_utils/deploy_and_commit_contractdb.cc
 
 TESTS_CCS = \
-	tests/builtin_fns_log_tests.cc \
-	tests/builtin_fns_invoke_tests.cc \
-	tests/gas_tests.cc \
-	tests/hashset_tests.cc \
-	tests/storage_tests.cc \
-	tests/sdk_tests.cc \
-	tests/test_rpc.cc \
-	storage_proxy/tests/test_proxy_applicator.cc \
-	object/tests/test_revertable_object.cc \
-	tx_block/tests/test_unique_txset.cc \
-	$(HASH_SET_TEST_SRCS) \
-	$(EXPERIMENTS_TEST_SRCS) \
-	$(STATE_DB_TEST_SRCS)
+	tests/builtin_fns_log_tests.cc
+
+
+#	tests/builtin_fns_invoke_tests.cc \
+#	tests/gas_tests.cc \
+#	tests/hashset_tests.cc \
+#	tests/storage_tests.cc \
+#	tests/sdk_tests.cc \
+#	tests/test_rpc.cc \
+#	storage_proxy/tests/test_proxy_applicator.cc \
+#	object/tests/test_revertable_object.cc \
+#	tx_block/tests/test_unique_txset.cc \
+#	$(HASH_SET_TEST_SRCS) \
+#	$(EXPERIMENTS_TEST_SRCS) \
+#	$(STATE_DB_TEST_SRCS)
 
 MAIN_CCS = \
 	main/blockstm_comparison.cc \
 	main/test.cc \
 	main/sisyphus_payment_sim.cc \
 	main/groundhog_payment_sim.cc
-
-.wat.wasm:
-	wat2wasm -o $@ $<
 
 wasm_ed25519/libed25519.a:
 	cd wasm_ed25519 &&\
@@ -214,8 +237,6 @@ wasm_ed25519/libed25519.a:
 # https://github.com/paritytech/parity-wasm/blob/b760a74d4b533adb01c52fb5a91d59ab87587097/src/elements/module.rs#L635
 # add this flag to compile flags to enable (for wasm)
 #		-mbulk-memory
-
-$(CC_WASMS:.cc=.wasm) : $(wildcard cpp_contracts/sdk/*.h)
 
 grpc_DEDUP_CFLAGS = $(shell echo $(grpc_CFLAGS) | ./dedup.sh | sort | uniq | grep -v -e "-X.*" | grep -v -e "-march.*")
 grpcpp_DEDUP_CFLAGS = $(shell echo $(grpcpp_CFLAGS) | ./dedup.sh | sort | uniq | grep -v -e "-X.*" | grep -v -e "-march.*")

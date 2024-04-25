@@ -80,6 +80,7 @@ int
 LFIProc::set_program(RunnableScriptView const& script)
 {
 	if (actively_running) {
+		std::printf("wtf\n");
 		return -1;
 	}
 	if (script.len == 0) {
@@ -87,6 +88,7 @@ LFIProc::set_program(RunnableScriptView const& script)
 			perror("invalid contract in db");
 			std::abort();
 		}
+		std::printf("len=0\n");
 		return -1;
 	}
 	return lfi_proc_exec(proc, const_cast<uint8_t*>(script.data), script.len, &info);
