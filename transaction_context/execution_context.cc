@@ -80,7 +80,7 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
             throw std::runtime_error("cannot get new proc");
         }
 
-        if (!proc->set_program(script)) {
+        if (proc->set_program(script) != 0) {
             throw std::runtime_error("failed to set program");
         }
 
@@ -165,9 +165,12 @@ ExecutionContext<TransactionContext_t>::execute(Hash const& tx_hash,
 	    std::printf("tx failed %s\n", e.what());
 	    CONTRACT_INFO("Execution error: %s", e.what());
         return TransactionStatus::FAILURE;
-    } catch (...) {
-        std::printf("unrecoverable error!\n");
+    } catch (std::exception& e) {
+        std::printf("unrecoverable error! %s\n", e.what());
         std::abort();
+    } catch (...) {
+	    std::printf("impossible\n");
+	std::abort();
     }
 
     auto storage_commitment = tx_context -> push_storage_deltas();
