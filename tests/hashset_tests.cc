@@ -39,7 +39,7 @@ TEST_CASE("hashset manipulation test contract", "[sdk][hashset]")
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
 
-    auto c = load_wasm_from_file("cpp_contracts/test_hashset_manipulation.wasm");
+    auto c = load_wasm_from_file("lfi_contracts/test_hashset_manipulation.lfi");
 
     auto h = hash_xdr(*c);
 
@@ -48,7 +48,7 @@ TEST_CASE("hashset manipulation test contract", "[sdk][hashset]")
     std::unique_ptr<BlockContext> block_context
         = std::make_unique<BlockContext>(0);
 
-    ExecutionContext<TxContext> exec_ctx;
+    ExecutionContext<TxContext> exec_ctx(scs_data_structures.engine);
 
 
 

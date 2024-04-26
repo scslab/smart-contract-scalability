@@ -46,7 +46,7 @@ TEST_CASE("hashset insert", "[storage]")
     auto& script_db = scs_data_structures.contract_db;
     auto& state_db = scs_data_structures.state_db;
 
-    auto c = load_wasm_from_file("cpp_contracts/test_hashset.wasm");
+    auto c = load_wasm_from_file("lfi_contracts/test_hashset.lfi");
 
     auto h = hash_xdr(*c);
 
@@ -63,7 +63,7 @@ TEST_CASE("hashset insert", "[storage]")
         uint64_t value;
     };
 
-    ExecutionContext<TxContext> exec_ctx;
+    ExecutionContext<TxContext> exec_ctx(scs_data_structures.engine);
 
     auto make_insert_tx = [&](
                            InvariantKey const& key,
@@ -156,7 +156,7 @@ TEST_CASE("int64 storage write", "[storage]")
     auto& script_db = scs_data_structures.contract_db;
     auto& state_db = scs_data_structures.state_db;
 
-    auto c = load_wasm_from_file("cpp_contracts/test_nn_int64.wasm");
+    auto c = load_wasm_from_file("lfi_contracts/test_nn_int64.lfi");
 
     const auto h = hash_xdr(*c);
 
@@ -177,7 +177,7 @@ TEST_CASE("int64 storage write", "[storage]")
         uint64_t value;
     };
 
-    ExecutionContext<TxContext> exec_ctx;
+    ExecutionContext<TxContext> exec_ctx(scs_data_structures.engine);
 
     auto make_set_add_tx = [&](InvariantKey const& key,
                                int64_t set,
@@ -403,7 +403,7 @@ TEST_CASE("raw mem storage write", "[storage]")
     auto& script_db = scs_data_structures.contract_db;
     auto& state_db = scs_data_structures.state_db;
 
-    auto c = load_wasm_from_file("cpp_contracts/test_raw_memory.wasm");
+    auto c = load_wasm_from_file("lfi_contracts/test_raw_memory.lfi");
 
     auto h = hash_xdr(*c);
 
@@ -458,7 +458,7 @@ TEST_CASE("raw mem storage write", "[storage]")
         return out;
     };
 
-    ExecutionContext<TxContext> exec_ctx;
+    ExecutionContext<TxContext> exec_ctx(scs_data_structures.engine);
 
 
     auto exec_success = [&](const Hash& tx_hash, const SignedTransaction& tx) {

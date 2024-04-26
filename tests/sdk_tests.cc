@@ -43,7 +43,7 @@ TEST_CASE("replay cache", "[sdk]")
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
 
-    auto c = load_wasm_from_file("cpp_contracts/test_sdk.wasm");
+    auto c = load_wasm_from_file("lfi_contracts/test_sdk.lfi");
 
     auto h = hash_xdr(*c);
 
@@ -58,7 +58,7 @@ TEST_CASE("replay cache", "[sdk]")
         uint64_t nonce; // ignored in the contract
     };
 
-    ExecutionContext<TxContext> exec_ctx;
+    ExecutionContext<TxContext> exec_ctx(scs_data_structures.engine);
 
 
     auto make_replay_tx = [&](uint64_t nonce,
@@ -153,7 +153,7 @@ TEST_CASE("semaphore", "[sdk]")
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
 
-    auto c = load_wasm_from_file("cpp_contracts/test_sdk.wasm");
+    auto c = load_wasm_from_file("lfi_contracts/test_sdk.lfi");
 
     auto h = hash_xdr(*c);
 
@@ -166,7 +166,7 @@ TEST_CASE("semaphore", "[sdk]")
     {
     };
 
-    ExecutionContext<TxContext> exec_ctx;
+    ExecutionContext<TxContext> exec_ctx(scs_data_structures.engine);
 
     auto make_semaphore_tx = [&](bool success = true) -> Hash {
 

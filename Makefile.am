@@ -204,14 +204,12 @@ TEST_UTILS_SRCS = \
 	test_utils/deploy_and_commit_contractdb.cc
 
 TESTS_CCS = \
-	tests/builtin_fns_log_tests.cc
-
-
-#	tests/builtin_fns_invoke_tests.cc \
-#	tests/gas_tests.cc \
-#	tests/hashset_tests.cc \
-#	tests/storage_tests.cc \
-#	tests/sdk_tests.cc \
+	tests/builtin_fns_log_tests.cc \
+	tests/builtin_fns_invoke_tests.cc \
+	tests/gas_tests.cc \
+	tests/hashset_tests.cc \
+	tests/storage_tests.cc \
+	tests/sdk_tests.cc
 #	tests/test_rpc.cc \
 #	storage_proxy/tests/test_proxy_applicator.cc \
 #	object/tests/test_revertable_object.cc \
@@ -297,6 +295,8 @@ sisyphus_payment_sim_SOURCES = main/sisyphus_payment_sim.cc $(SRCS)
 groundhog_payment_sim_SOURCES = main/groundhog_payment_sim.cc $(SRCS)
 basic_SOURCES = main/basic.cc $(COMPLETE_SRCS)
 sisyphus_proof_size_exp_SOURCES = main/sisyphus_proof_size_exp.cc $(SRCS)
+
+test: $(LFI_BUILTS)
 
 clean-local:
 	cd metering && \

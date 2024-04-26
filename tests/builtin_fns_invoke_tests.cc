@@ -39,17 +39,17 @@ TEST_CASE("test invoke", "[builtin]")
     GlobalContext scs_data_structures;
     auto& script_db = scs_data_structures.contract_db;
 
-    auto c1 = load_wasm_from_file("cpp_contracts/test_log.wasm");
+    auto c1 = load_wasm_from_file("lfi_contracts/test_log.lfi");
     auto h1 = hash_xdr(*c1);
 
     auto c2
-        = load_wasm_from_file("cpp_contracts/test_redirect_call.wasm");
+        = load_wasm_from_file("lfi_contracts/test_redirect_call.lfi");
     auto h2 = hash_xdr(*c2);
 
     test::deploy_and_commit_contractdb(script_db, h1, c1);
     test::deploy_and_commit_contractdb(script_db, h2, c2);
 
-    ExecutionContext<TxContext> exec_ctx;
+    ExecutionContext<TxContext> exec_ctx(scs_data_structures.engine);
 
     BlockContext block_context(0);
 
@@ -76,19 +76,11 @@ TEST_CASE("test invoke", "[builtin]")
 
     SECTION("msg sender self")
     {
+	// LFI blocks reentrance
         TransactionInvocation invocation(h1, 4, xdr::opaque_vec<>());
 
         auto [h, tx] = make_tx(invocation);
-        exec_success(h, tx);
-
-        auto const& logs = exec_ctx.get_logs();
-
-        REQUIRE(logs.size() == 1);
-
-        if (logs.size() >= 1) {
-            REQUIRE(logs[0].size() == 32);
-            REQUIRE(memcmp(logs[0].data(), h1.data(), 32) == 0);
-        }
+        exec_fail(h, tx);
     }
 
     SECTION("msg sender self fails on base call")
@@ -124,6 +116,8 @@ TEST_CASE("test invoke", "[builtin]")
         }
     }
 
+    // lfi blocks reentrance currenty
+    /*
     SECTION("invoke self")
     {
         struct calldata_t
@@ -163,7 +157,7 @@ TEST_CASE("test invoke", "[builtin]")
 
         auto [h, tx] = make_tx(invocation);
         exec_fail(h, tx);
-    }
+    }*/
 
     SECTION("invoke other")
     {

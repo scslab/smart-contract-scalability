@@ -21,6 +21,9 @@ int cmain(uint32_t method, uint8_t* ptr, uint32_t len)
     }
     case 1:
     {
+	if (len == 0) {
+		return -1;
+	}
         lfihog_log(ptr, len);
         break;
     }
