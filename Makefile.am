@@ -213,6 +213,7 @@ TESTS_CCS = \
 	tests/hashset_tests.cc \
 	tests/storage_tests.cc \
 	tests/sdk_tests.cc
+
 #	tests/test_rpc.cc \
 #	storage_proxy/tests/test_proxy_applicator.cc \
 #	object/tests/test_revertable_object.cc \
@@ -273,10 +274,6 @@ LDADD = $(xdrpp_LIBS) \
 lib/lfi/liblfi/liblfi.a: lib/lfi/liblfi/*.c lib/lfi/liblfi/*.h
 	cd lib/lfi/liblfi && \
 	knit liblfi.a
-
-pedersen/target/release/libcommitments.a : pedersen/commitments/src/*.rs
-	cd pedersen && \
-	cargo build --release --package commitments
 
 $(SRCS:.cc=.o) : $(XH_FILES)
 $(TESTS_CCS:.cc=.o) : $(XH_FILES)

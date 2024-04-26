@@ -6,11 +6,6 @@
 #include <sys/mman.h>
 #include <cstring>
 
-#include "crypto/hash.h"
-#include "transaction_context/error.h"
-
-#include "crypto/hash.h"
-
 namespace scs
 {
 	
@@ -23,7 +18,7 @@ LFIGlobalEngine::LFIGlobalEngine(lfi_syshandler handler)
 			.pagesize = (size_t) getpagesize(),
 			.stacksize = 65536, 
 			.syshandler = handler,
-			.gas = 0,			
+			.gas = 1'000'000,
 			.poc = 1
 		};
 
@@ -80,32 +75,30 @@ LFIProc::addr(uint64_t a) {
 }
 
 int 
-LFIProc::set_program(RunnableScriptView const& script)
+LFIProc::set_program(const uint8_t* bytes, const size_t len)
 {
 	if (actively_running) {
-		std::printf("wtf\n");
 		return -1;
 	}
-	if (script.len == 0) {
-		if (script.data != NULL) {
+	if (len == 0) {
+		if (bytes != NULL) {
 			perror("invalid contract in db");
 			std::abort();
 		}
-		std::printf("len=0\n");
 		return -1;
 	}
-	return lfi_proc_exec(proc, const_cast<uint8_t*>(script.data), script.len, &info);
+	return lfi_proc_exec(proc, const_cast<uint8_t*>(bytes), len, &info);
 }
 
 uint32_t sandboxaddr(uintptr_t realaddr) {
 	return realaddr & 0xFFFF'FFFF;
 }
 
-uint64_t
-LFIProc::run(uint32_t method, std::vector<uint8_t> const& calldata, uint32_t gas)
+int
+LFIProc::run(uint32_t method, std::vector<uint8_t> const& calldata)
 {
 	if (actively_running) {
-		throw HostError("reentrance in LFIProc");
+		return -1;
 	}
 	lfi_proc_init_regs(proc, info.elfentry, reinterpret_cast<uintptr_t>(info.stack) + info.stacksize - 16);
 
@@ -116,7 +109,7 @@ LFIProc::run(uint32_t method, std::vector<uint8_t> const& calldata, uint32_t gas
 	regs -> x0 = method;
 	
 	if (sbrk(calldata.size()) == static_cast<uintptr_t>(-1)) {
-		throw HostError("failed to allocate calldata");
+		return -1;
 	}
 
 	std::memcpy((void*)brkbase, calldata.data(), calldata.size());
@@ -124,15 +117,8 @@ LFIProc::run(uint32_t method, std::vector<uint8_t> const& calldata, uint32_t gas
 	regs -> x1 = sandboxaddr(brkbase);
 	regs -> x2 = calldata.size();
 
-	regs -> x23 = sandboxaddr(gas);
-
 	actively_running = true;
 	int code = lfi_proc_start(proc);
-	actively_running = false;
-
-	if (code != 0) {
-		throw HostError("lfi_proc_start returned errorcode");
-	}
 
 	if (brksize != 0)
 	{
@@ -142,25 +128,8 @@ LFIProc::run(uint32_t method, std::vector<uint8_t> const& calldata, uint32_t gas
 		}
 	}
 
-	uint64_t remaining_gas = regs -> x23;
-	if (remaining_gas > gas) {
-		throw HostError("gas usage exceeded limit");
-	}
-	return gas - remaining_gas;
-}
-
-void
-LFIProc::deduct_gas(uint64_t gas) {
-	struct lfi_regs* regs = lfi_proc_get_regs(proc);
-	if (gas > regs -> x23) {
-		throw HostError("gas usage exceeded limit in deduct_gas");
-	}
-	regs -> x23 -= gas;
-}
-uint64_t 
-LFIProc::get_available_gas() {
-	struct lfi_regs* regs = lfi_proc_get_regs(proc);
-	return regs -> x23;
+	actively_running = false;
+	return code;
 }
 
 void 
@@ -231,25 +200,5 @@ LFIProc::is_readable(uint64_t p, uint32_t size) const {
 	return is_writable(p, size);
 }
 
-LFIContract::LFIContract(std::shared_ptr<const Contract> unmetered)
-	: base(unmetered)
-	{
-		std::printf("VERIFIER UNIMPLEMENTED: TODO(zyedidia)\n");
-	}
 
-RunnableScriptView 
-LFIContract::to_view() const
-{
-    return RunnableScriptView(base->data(), base->size());
 }
-
-Hash
-LFIContract::hash() const
-{
-    Hash out;
-    hash_raw(base->data(), base->size(), out.data());
-    return out;
-}
-
-} // namespace scs
-
