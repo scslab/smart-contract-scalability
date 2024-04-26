@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-#include "metering_ffi/metered_contract.h"
-
 #include "xdr/storage.h"
 #include "xdr/storage_delta.h"
 #include "xdr/types.h"
@@ -30,6 +28,8 @@
 
 #include <utils/non_movable.h>
 
+#include "contract_db/types.h"
+
 namespace scs {
 
 class ContractDB;
@@ -37,7 +37,7 @@ class ContractDB;
 class UncommittedContracts : public utils::NonMovableOrCopyable
 {
     // map contract hash to contract
-    std::map<Hash, metered_contract_ptr_t> new_contracts;
+    std::map<Hash, verified_contract_ptr_t> new_contracts;
 
     // map address to contract hash
     std::map<Address, Hash> new_deployments;
@@ -52,7 +52,7 @@ class UncommittedContracts : public utils::NonMovableOrCopyable
 
     void undo_deploy_contract_to_address(Address const& addr);
 
-    void add_new_contract(Hash const& h, metered_contract_ptr_t new_contract);
+    void add_new_contract(Hash const& h, verified_contract_ptr_t new_contract);
 
     void commit(ContractDB& contract_db);
 

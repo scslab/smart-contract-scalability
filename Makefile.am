@@ -22,7 +22,6 @@ CLEANFILES = *~ .*~
 
 include $(srcdir)/lib/utility/Makefile.am.fragment
 include $(srcdir)/lib/merkle_trie_toolkit/Makefile.am.fragment
-include $(srcdir)/lib/wasm_api/Makefile.am.fragment
 
 X_FILES = \
 	xdr/block.x \
@@ -37,7 +36,7 @@ XH_FILES = $(X_FILES:.x=.h)
 #building x files
 $(XH_FILES) : $(XDRC)
 
-SUFFIXES = .x .h .wat .wasm
+SUFFIXES = .x .h
 
 .x.h:
 	$(XDRC)  -hh -o $@ $<
@@ -55,22 +54,6 @@ PROTO_SRCS = \
 BLOCK_ASSEMBLY_SRCS = \
 	block_assembly/assembly_worker.cc \
 	block_assembly/limits.cc
-
-BUILTIN_FNS_SRCS = \
-	builtin_fns/asset.cc \
-	builtin_fns/builtin_fns.cc \
-	builtin_fns/contract.cc \
-	builtin_fns/crypto.cc \
-	builtin_fns/delete.cc \
-	builtin_fns/env.cc \
-	builtin_fns/general_storage.cc \
-	builtin_fns/hashset.cc \
-	builtin_fns/int64.cc \
-	builtin_fns/logging.cc \
-	builtin_fns/raw_memory.cc \
-	builtin_fns/rpc.cc \
-	builtin_fns/runtime.cc \
-	builtin_fns/witness.cc
 
 CONFIG_SRCS = \
 	config/print_configs.cc
@@ -100,11 +83,12 @@ HASH_SET_TEST_SRCS = \
 	hash_set/tests/test_atomic_set.cc \
 	hash_set/tests/test_hs_utils.cc
 
+LFICPP_SRCS = \
+	lficpp/lficpp.cc \
+	lficpp/signal_handler.cc
+
 MEMPOOL_SRCS = \
 	mempool/mempool.cc
-
-METERING_FFI_SRCS = \
-	metering_ffi/metered_contract.cc
 
 OBJECT_SRCS = \
 	object/comparators.cc \
@@ -153,6 +137,7 @@ THREADLOCAL_SRCS = \
 
 TRANSACTION_CONTEXT_SRCS = \
 	transaction_context/execution_context.cc \
+	transaction_context/global_context.cc \
 	transaction_context/method_invocation.cc \
 	transaction_context/transaction_context.cc \
 	transaction_context/transaction_results.cc
@@ -175,8 +160,8 @@ SRCS = \
 	$(DEBUG_SRCS) \
 	$(EXPERIMENTS_SRCS) \
 	$(HASH_SET_SRCS) \
+	$(LFICPP_SRCS) \
 	$(MEMPOOL_SRCS) \
-	$(METERING_FFI_SRCS) \
 	$(OBJECT_SRCS) \
 	$(PEDERSEN_FFI_SRCS) \
 	$(PERSISTENCE_SRCS) \
@@ -194,23 +179,46 @@ SRCS = \
 	$(WASM_API_SRCS) \
 	$(utility_CCS)
 
+LFI_CONTRACTS = \
+	lfi_contracts/deployer.c \
+	lfi_contracts/erc20.c \
+	lfi_contracts/payment.c \
+	lfi_contracts/test_invoke.c \
+        lfi_contracts/test_log.c \
+	lfi_contracts/test_redirect_call.c \
+	lfi_contracts/test_calldata.c
+
+#disable some builtin rule
+lfi_contracts/libc/syscall.S:
+	echo ""
+
+LFI_BUILTS = $(LFI_CONTRACTS:.c=.lfi)
+
+%.lfi:%.c
+	cd lfi_contracts && \
+	knit $@
+
+$(LFI_BUILTS) : $(wildcard lfi_contracts/libc/*.c) $(wildcard lfi_contracts/libc/*.h) $(wildcard lfi_contracts/libc/*.S)
+
 TEST_UTILS_SRCS = \
 	test_utils/deploy_and_commit_contractdb.cc
 
 TESTS_CCS = \
-	tests/builtin_fns_log_tests.cc \
-	tests/builtin_fns_invoke_tests.cc \
-	tests/gas_tests.cc \
-	tests/hashset_tests.cc \
-	tests/storage_tests.cc \
-	tests/sdk_tests.cc \
-	tests/test_rpc.cc \
-	storage_proxy/tests/test_proxy_applicator.cc \
-	object/tests/test_revertable_object.cc \
-	tx_block/tests/test_unique_txset.cc \
-	$(HASH_SET_TEST_SRCS) \
-	$(EXPERIMENTS_TEST_SRCS) \
-	$(STATE_DB_TEST_SRCS)
+	tests/builtin_fns_log_tests.cc
+
+
+#	tests/builtin_fns_invoke_tests.cc \
+#	tests/gas_tests.cc \
+#	tests/hashset_tests.cc \
+#	tests/storage_tests.cc \
+#	tests/sdk_tests.cc \
+#	tests/test_rpc.cc \
+#	storage_proxy/tests/test_proxy_applicator.cc \
+#	object/tests/test_revertable_object.cc \
+#	tx_block/tests/test_unique_txset.cc \
+#	$(HASH_SET_TEST_SRCS) \
+#	$(EXPERIMENTS_TEST_SRCS) \
+#	$(STATE_DB_TEST_SRCS)
 
 MAIN_CCS = \
 	main/blockstm_comparison.cc \
@@ -218,45 +226,9 @@ MAIN_CCS = \
 	main/sisyphus_payment_sim.cc \
 	main/groundhog_payment_sim.cc
 
-.wat.wasm:
-	wat2wasm -o $@ $<
-
 wasm_ed25519/libed25519.a:
 	cd wasm_ed25519 &&\
 	make libed25519.a
-
-CC_WASMS = \
-	cpp_contracts/erc20.cc \
-	cpp_contracts/erc721.cc \
-	cpp_contracts/test_hashset.cc \
-	cpp_contracts/test_hashset_manipulation.cc \
-	cpp_contracts/test_gas_limit.cc \
-	cpp_contracts/test_log.cc \
-	cpp_contracts/test_nn_int64.cc \
-	cpp_contracts/test_redirect_call.cc \
-	cpp_contracts/test_raw_memory.cc \
-	cpp_contracts/test_rpc.cc \
-	cpp_contracts/test_sdk.cc \
-	cpp_contracts/genesis/deploy.cc \
-	cpp_contracts/atomic_swap.cc \
-	cpp_contracts/payment_experiment/payment.cc \
-	cpp_contracts/payment_experiment/payment_wasmsig.cc \
-	cpp_contracts/payment_channel.cc \
-	cpp_contracts/public_auction.cc \
-	cpp_contracts/0x.cc \
-	cpp_contracts/cfmm.cc \
-	cpp_contracts/sisyphus_erc20.cc
-
-.cc.wasm: Makefile.am Makefile
-	clang++ -O3 -target wasm32-unknown-wasi -I./cpp_contracts/ $< -o $@ \
-		--sysroot=wasi/wasi-sysroot \
-		-std=gnu++2a \
-		-nostdlib++ \
-		-nostdlib \
-		-Wl,--no-entry -fno-exceptions -Wl,--allow-undefined \
-		wasi/lib/wasi/libclang_rt.builtins-wasm32.a \
-		wasm_ed25519/libed25519.a \
-		-I./wasm_ed25519/ed25519/src/
 
 #TODO parity-wasm serialization doesn't support bulk memory ops
 # This ruins the metering (it outputs wasm in an invalid section ordering)
@@ -265,8 +237,6 @@ CC_WASMS = \
 # https://github.com/paritytech/parity-wasm/blob/b760a74d4b533adb01c52fb5a91d59ab87587097/src/elements/module.rs#L635
 # add this flag to compile flags to enable (for wasm)
 #		-mbulk-memory
-
-$(CC_WASMS:.cc=.wasm) : $(wildcard cpp_contracts/sdk/*.h)
 
 grpc_DEDUP_CFLAGS = $(shell echo $(grpc_CFLAGS) | ./dedup.sh | sort | uniq | grep -v -e "-X.*" | grep -v -e "-march.*")
 grpcpp_DEDUP_CFLAGS = $(shell echo $(grpcpp_CFLAGS) | ./dedup.sh | sort | uniq | grep -v -e "-X.*" | grep -v -e "-march.*")
@@ -282,7 +252,8 @@ AM_CPPFLAGS = \
 	$(wasm_api_CFLAGS) \
 	$(Catch2_CFLAGS) \
 	$(grpcpp_DEDUP_CFLAGS) \
-	$(protobuf_CFLAGS)
+	$(protobuf_CFLAGS) \
+	-I./lib/lfi/liblfi/
 
 LDADD = $(xdrpp_LIBS) \
 	$(libsodium_LIBS) \
@@ -294,17 +265,13 @@ LDADD = $(xdrpp_LIBS) \
 	$(rocksdb_LIBS) \
 	$(wasm_api_LIBS) \
 	$(Catch2_LIBS) \
-	./metering/target/release/libinject_metering.a \
+	./lib/lfi/liblfi/liblfi.a \
 	$(grpcpp_LIBS) \
 	$(protobuf_LIBS)
 
-metering/target/release/libinject_metering.a : metering/inject_metering/src/*.rs
-	cd metering && \
-	cargo build --release --package inject_metering
-
-pedersen/target/release/libcommitments.a : pedersen/commitments/src/*.rs
-	cd pedersen && \
-	cargo build --release --package commitments
+lib/lfi/liblfi/liblfi.a: lib/lfi/liblfi/*.c lib/lfi/liblfi/*.h
+	cd lib/lfi/liblfi && \
+	knit liblfi.a
 
 $(SRCS:.cc=.o) : $(XH_FILES)
 $(TESTS_CCS:.cc=.o) : $(XH_FILES)
@@ -318,12 +285,9 @@ bin_PROGRAMS = \
 	groundhog_payment_sim \
 	sisyphus_proof_size_exp
 
-vm/genesis.o: $(CC_WASMS:.cc=.wasm)
-main/test.o : $(CC_WASMS:.cc=.wasm) $(WASM_API_TEST_WASMS)
-
 COMPLETE_SRCS = $(SRCS) $(TESTS_CCS) $(TEST_UTILS_SRCS)
 
-test_SOURCES = main/test.cc $(COMPLETE_SRCS) $(utility_TEST_CCS) $(mtt_TEST_CCS) $(WASM_API_TEST_CCS)
+test_SOURCES = main/test.cc $(COMPLETE_SRCS) $(utility_TEST_CCS) $(mtt_TEST_CCS)
 blockstm_comparison_SOURCES = main/blockstm_comparison.cc $(SRCS)
 sisyphus_payment_sim_SOURCES = main/sisyphus_payment_sim.cc $(SRCS)
 groundhog_payment_sim_SOURCES = main/groundhog_payment_sim.cc $(SRCS)

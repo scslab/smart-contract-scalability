@@ -29,10 +29,9 @@
 
 #include <mtt/trie/merkle_trie.h>
 
-#include "metering_ffi/metered_contract.h"
-
 #include "contract_db/contract_persistence.h"
 #include "contract_db/runnable_script.h"
+#include "contract_db/types.h"
 
 namespace scs {
 
@@ -41,7 +40,7 @@ class ContractDB
 {
     struct value_struct
     {
-        metered_contract_ptr_t contract;
+        verified_contract_ptr_t contract;
 
         /**
          * One might consider swapping this for a hash of the data, instead.
@@ -72,7 +71,7 @@ class ContractDB
         = trie::MerkleTrie<prefix_t, value_t, metadata_t>;
 
     contract_map_t addresses_to_contracts_map;
-    std::map<Hash, metered_contract_ptr_t> hashes_to_contracts_map;
+    std::map<Hash, verified_contract_ptr_t> hashes_to_contracts_map;
 
     UncommittedContracts uncommitted_contracts;
 
@@ -85,7 +84,7 @@ class ContractDB
     friend class UncommittedContracts;
 
     void commit_contract_to_db(Hash const& contract_hash,
-                               metered_contract_ptr_t new_contract);
+                               verified_contract_ptr_t new_contract);
 
     void commit_registration(Address const& new_address,
                              Hash const& contract_hash);
@@ -105,7 +104,7 @@ class ContractDB
 
     void add_new_uncommitted_contract(
         Hash const& h,
-        metered_contract_ptr_t new_contract,
+        verified_contract_ptr_t new_contract,
         std::shared_ptr<const Contract> new_unmetered_contract);
 
     RunnableScriptView get_script_by_hash(const Hash& hash) const;

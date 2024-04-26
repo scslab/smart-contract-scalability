@@ -6,6 +6,7 @@ enum SYSCALLS
 	EXIT = 500,
 	WRITE = 501,
 	WRITE_BYTES = 502,
+	SBRK = 503,
 
 	// groundhog runtime
 	LOG = 600,
