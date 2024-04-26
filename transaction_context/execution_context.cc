@@ -352,9 +352,11 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         invoke_subroutine(invocation);
 
         return_len = std::min<uint32_t>(return_len, tx_ctx.return_buf.size());
-
-        write_to_memory(tx_ctx.return_buf, return_addr, return_len);
-        tx_ctx.return_buf.clear();
+	if (return_len > 0)
+	{
+        	write_to_memory(tx_ctx.return_buf, return_addr, return_len);
+	}
+	tx_ctx.return_buf.clear();
         ret = return_len;
         break;
     }
