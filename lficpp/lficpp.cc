@@ -6,8 +6,11 @@
 #include <sys/mman.h>
 #include <cstring>
 
+<<<<<<< HEAD
 #include "crypto/hash.h"
 
+=======
+>>>>>>> f2a9b7c (oops)
 namespace scs
 {
 	
@@ -203,6 +206,7 @@ LFIProc::is_readable(uint64_t p, uint32_t size) const {
 }
 
 
+<<<<<<< HEAD
 LFIContract::LFIContract(std::shared_ptr<const Contract> unmetered)
 	: base(unmetered)
 	{
@@ -222,4 +226,6 @@ LFIContract::hash() const
     hash_raw(base->data(), base->size(), out.data());
     return out;
 }
+
 }
+
