@@ -52,6 +52,7 @@ DECL_COST_STATIC(get_calldata_len, 10)
 
 // TODO invoke cost linear in invoked wasm size?
 DECL_COST_LINEAR(invoke, 10000, 2)
+DECL_COST_STATIC(init_transaction, 10000)
 DECL_COST_STATIC(get_msg_sender, 50)
 DECL_COST_STATIC(get_self_addr, 50)
 DECL_COST_STATIC(get_block_number, 10)

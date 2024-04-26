@@ -158,7 +158,10 @@ ExecutionContext<TransactionContext_t>::execute(Hash const& tx_hash,
     } };
 
     try {
-        invoke_subroutine(invocation, tx.tx.gas_limit);
+	if (tx.tx.gas_limit < gas_init_transaction) {
+		throw HostError("invalid startup cost");
+	}
+        invoke_subroutine(invocation, tx.tx.gas_limit - gas_init_transaction);
     } catch (HostError& e) {
 	    std::printf("tx failed %s\n", e.what());
 	    CONTRACT_INFO("Execution error: %s", e.what());
@@ -305,8 +308,8 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
             len);
     };
 
-    auto consume_gas = [&tx_ctx] (uint64_t gas_amount) {
-	tx_ctx.consume_gas(gas_amount);
+    auto consume_gas = [&] (uint64_t gas_amount) {
+    	runtime.deduct_gas(gas_amount);
     };
 
     switch(static_cast<SYSCALLS>(callno))

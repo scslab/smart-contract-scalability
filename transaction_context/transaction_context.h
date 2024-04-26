@@ -75,15 +75,11 @@ class TransactionContext
 	const SignedTransaction& tx;
 	const Hash& tx_hash;
 
-	uint64_t gas_used;
-
 	const uint64_t current_block;
 
 public:
 
 	using StateDB_t = decltype(GlobalContext_t().state_db);
-
-	void consume_gas(uint64_t gas_to_consume);
 
 	std::vector<uint8_t> return_buf;
 

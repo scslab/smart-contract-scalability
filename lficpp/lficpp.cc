@@ -126,6 +126,8 @@ LFIProc::run(uint32_t method, std::vector<uint8_t> const& calldata, uint32_t gas
 
 	regs -> x23 = sandboxaddr(gas);
 
+	std::printf("gas was %u set is %u\n", gas, regs -> x23);
+
 	actively_running = true;
 	int code = lfi_proc_start(proc);
 	actively_running = false;
@@ -146,6 +148,7 @@ LFIProc::run(uint32_t method, std::vector<uint8_t> const& calldata, uint32_t gas
 	if (remaining_gas > gas) {
 		throw HostError("gas usage exceeded limit");
 	}
+	std::printf("remaining gas is %lu\n", remaining_gas);
 	return gas - remaining_gas;
 }
 

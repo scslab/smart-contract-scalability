@@ -92,7 +92,7 @@ TEST_CASE("gas metering", "[gas]")
         return hash;
     };
 
-    SECTION("short") { make_spin_tx(3, 10000); }
+    SECTION("short") { make_spin_tx(3, 20000); }
     SECTION("long") { make_spin_tx(10000, 10000, false); }
     SECTION("low gas") { make_spin_tx(0, 1, false); }
     SECTION("loop short") { make_loop_tx(1); }
