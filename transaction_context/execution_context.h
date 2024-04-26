@@ -44,7 +44,7 @@ class ExecutionContext : public utils::NonMovableOrCopyable
 
     RpcAddressDB* addr_db;
 
-    void invoke_subroutine(MethodInvocation const& invocation);
+    uint64_t invoke_subroutine(MethodInvocation const& invocation, uint64_t gas_limit);
 
     auto& get_transaction_context()
     {

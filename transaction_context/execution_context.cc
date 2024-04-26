@@ -61,7 +61,7 @@ EC_DECL()::ExecutionContext(LFIGlobalEngine& engine)
 {}
 
 
-EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
+EC_DECL(uint64_t)::invoke_subroutine(MethodInvocation const& invocation, uint64_t gas_limit)
 {
     auto iter = active_runtimes.find(invocation.addr);
     if (iter == active_runtimes.end()) {
@@ -95,13 +95,11 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
 
     tx_context->push_invocation_stack(runtime, invocation);
 
-    int errorcode = runtime->run(invocation.method_name, invocation.calldata);
+    uint64_t consumed_gas = runtime->run(invocation.method_name, invocation.calldata, gas_limit);
     
     tx_context->pop_invocation_stack();
 
-    if (errorcode != 0) {
-        throw HostError("invocation failed\n");
-    }
+    return consumed_gas;
 }
 
 template
@@ -160,7 +158,7 @@ ExecutionContext<TransactionContext_t>::execute(Hash const& tx_hash,
     } };
 
     try {
-        invoke_subroutine(invocation);
+        invoke_subroutine(invocation, tx.tx.gas_limit);
     } catch (HostError& e) {
 	    std::printf("tx failed %s\n", e.what());
 	    CONTRACT_INFO("Execution error: %s", e.what());
@@ -394,7 +392,8 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
                       debug::array_to_str(invocation.addr).c_str(),
                       methodname);
 
-        invoke_subroutine(invocation);
+        uint64_t consumed_gas = invoke_subroutine(invocation, runtime.get_available_gas());
+	runtime.deduct_gas(consumed_gas);
 
         return_len = std::min<uint32_t>(return_len, tx_ctx.return_buf.size());
 	if (return_len > 0)
