@@ -63,9 +63,9 @@ public:
 		return proc != nullptr;
 	}
 
-	int
-	__attribute__((warn_unused_result))
-	run(uint32_t method, std::vector<uint8_t> const& calldata);
+	// returns gas consumed
+	uint64_t
+	run(uint32_t method, std::vector<uint8_t> const& calldata, uint32_t gas_limit);
 
 	int 
 	__attribute__((warn_unused_result))
@@ -79,6 +79,9 @@ public:
 
     bool is_writable(uintptr_t p, uint32_t size) const;
     bool is_readable(uintptr_t p, uint32_t size) const;
+
+    void deduct_gas(uint64_t deduction);
+    uint64_t get_available_gas();
 };
 
 uint32_t sandboxaddr(uintptr_t p);

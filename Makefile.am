@@ -186,7 +186,8 @@ LFI_CONTRACTS = \
 	lfi_contracts/test_invoke.c \
         lfi_contracts/test_log.c \
 	lfi_contracts/test_redirect_call.c \
-	lfi_contracts/test_calldata.c
+	lfi_contracts/test_calldata.c \
+	lfi_contracts/test_gas_limit.c
 
 #disable some builtin rule
 lfi_contracts/libc/syscall.S:
@@ -197,6 +198,8 @@ LFI_BUILTS = $(LFI_CONTRACTS:.c=.lfi)
 %.lfi:%.c
 	cd lfi_contracts && \
 	knit $@
+
+main/test.o: $(LFI_CONTRACTS:.c=.lfi)
 
 $(LFI_BUILTS) : $(wildcard lfi_contracts/libc/*.c) $(wildcard lfi_contracts/libc/*.h) $(wildcard lfi_contracts/libc/*.S)
 
@@ -295,8 +298,6 @@ sisyphus_payment_sim_SOURCES = main/sisyphus_payment_sim.cc $(SRCS)
 groundhog_payment_sim_SOURCES = main/groundhog_payment_sim.cc $(SRCS)
 basic_SOURCES = main/basic.cc $(COMPLETE_SRCS)
 sisyphus_proof_size_exp_SOURCES = main/sisyphus_proof_size_exp.cc $(SRCS)
-
-test: $(LFI_BUILTS)
 
 clean-local:
 	cd metering && \

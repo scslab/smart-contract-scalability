@@ -7,6 +7,7 @@
 #include <cstring>
 
 #include "crypto/hash.h"
+#include "transaction_context/error.h"
 
 #include "crypto/hash.h"
 
@@ -22,7 +23,7 @@ LFIGlobalEngine::LFIGlobalEngine(lfi_syshandler handler)
 			.pagesize = (size_t) getpagesize(),
 			.stacksize = 65536, 
 			.syshandler = handler,
-			.gas = 1'000'000,
+			.gas = 0,			
 			.poc = 1
 		};
 
@@ -100,11 +101,11 @@ uint32_t sandboxaddr(uintptr_t realaddr) {
 	return realaddr & 0xFFFF'FFFF;
 }
 
-int
-LFIProc::run(uint32_t method, std::vector<uint8_t> const& calldata)
+uint64_t
+LFIProc::run(uint32_t method, std::vector<uint8_t> const& calldata, uint32_t gas)
 {
 	if (actively_running) {
-		return -1;
+		throw HostError("reentrance in LFIProc");
 	}
 	lfi_proc_init_regs(proc, info.elfentry, reinterpret_cast<uintptr_t>(info.stack) + info.stacksize - 16);
 
@@ -115,7 +116,7 @@ LFIProc::run(uint32_t method, std::vector<uint8_t> const& calldata)
 	regs -> x0 = method;
 	
 	if (sbrk(calldata.size()) == static_cast<uintptr_t>(-1)) {
-		return -1;
+		throw HostError("failed to allocate calldata");
 	}
 
 	std::memcpy((void*)brkbase, calldata.data(), calldata.size());
@@ -123,8 +124,15 @@ LFIProc::run(uint32_t method, std::vector<uint8_t> const& calldata)
 	regs -> x1 = sandboxaddr(brkbase);
 	regs -> x2 = calldata.size();
 
+	regs -> x23 = sandboxaddr(gas);
+
 	actively_running = true;
 	int code = lfi_proc_start(proc);
+	actively_running = false;
+
+	if (code != 0) {
+		throw HostError("lfi_proc_start returned errorcode");
+	}
 
 	if (brksize != 0)
 	{
@@ -134,8 +142,25 @@ LFIProc::run(uint32_t method, std::vector<uint8_t> const& calldata)
 		}
 	}
 
-	actively_running = false;
-	return code;
+	uint64_t remaining_gas = regs -> x23;
+	if (remaining_gas > gas) {
+		throw HostError("gas usage exceeded limit");
+	}
+	return gas - remaining_gas;
+}
+
+void
+LFIProc::deduct_gas(uint64_t gas) {
+	struct lfi_regs* regs = lfi_proc_get_regs(proc);
+	if (gas > regs -> x23) {
+		throw HostError("gas usage exceeded limit in deduct_gas");
+	}
+	regs -> x23 -= gas;
+}
+uint64_t 
+LFIProc::get_available_gas() {
+	struct lfi_regs* regs = lfi_proc_get_regs(proc);
+	return regs -> x23;
 }
 
 void 
