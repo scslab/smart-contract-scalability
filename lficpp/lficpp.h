@@ -71,7 +71,7 @@ public:
 	__attribute__((warn_unused_result))
 	set_program(RunnableScriptView const& script);
 
-    void exit(int code);
+    void exit [[noreturn]] (int code);
 
     uint64_t addr(uint64_t addr);
 
