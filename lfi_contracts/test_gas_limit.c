@@ -29,6 +29,9 @@ int cmain(uint32_t method, uint8_t* ptr, uint32_t len)
         	lfihog_log((const uint8_t*)p, sizeof(uint64_t));
 	}
     }
+    case 2:
+	lfihog_gas(*((const uint64_t*)ptr));
+	break;
     default:
         return -1;
     }

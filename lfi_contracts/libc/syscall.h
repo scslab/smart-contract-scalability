@@ -58,5 +58,7 @@ uint32_t lfihog_witness_get_len(uint64_t witness_index);
 
 void lfihog_return(const uint8_t* return_buf, uint32_t return_len);
 
+void lfihog_gas(const uint64_t gas);
+
 #endif
 

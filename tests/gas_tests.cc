@@ -91,10 +91,34 @@ TEST_CASE("gas metering", "[gas]")
 
         return hash;
     };
+    auto make_syscall_gas_tx = [&](uint64_t amt, uint64_t gas_limit, bool success = true) -> Hash {
+	const uint64_t gas_bid = 1;
+	TransactionInvocation invocation(h, 2, make_calldata<uint64_t>(amt));
+
+	Transaction tx = Transaction(
+		invocation, gas_limit, gas_bid, xdr::xvector<Contract>());
+
+	SignedTransaction stx;
+	stx.tx = tx;
+
+	auto hash = hash_xdr(stx);
+
+        if (success) {
+            REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
+                  == TransactionStatus::SUCCESS);
+        } else {
+            REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
+                  != TransactionStatus::SUCCESS);
+        }
+        return hash;
+    };
+
 
     SECTION("short") { make_spin_tx(3, 20000); }
     SECTION("long") { make_spin_tx(10000, 10000, false); }
     SECTION("low gas") { make_spin_tx(0, 1, false); }
     SECTION("loop short") { make_loop_tx(1); }
     SECTION("loop long") { make_loop_tx(100000); }
+    SECTION("make syscall good") { make_syscall_gas_tx(100000, 200000); }
+    SECTION("make syscall bad") { make_syscall_gas_tx(100000, 50000, false); }
 }

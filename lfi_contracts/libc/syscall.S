@@ -51,3 +51,4 @@ syscall lfihog_witness_get_len 625
 
 syscall lfihog_return 626
 
+syscall lfihog_gas 629
