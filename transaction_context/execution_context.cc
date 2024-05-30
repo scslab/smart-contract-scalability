@@ -277,6 +277,10 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         runtime.template write_to_memory(buf, offset, len);
     };
 
+    auto consume_gas = [&tx_ctx] (uint64_t gas_amount) {
+	tx_ctx.consume_gas(gas_amount);
+    };
+
     switch(static_cast<SYSCALLS>(callno))
     {
     case EXIT:
@@ -313,7 +317,8 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg1: log len
         uint32_t log_offset = arg0;
         uint32_t log_len = arg1;
-        tx_ctx.consume_gas(gas_log(log_len));
+        
+	consume_gas(gas_log(log_len));
 
         CONTRACT_INFO("Logging offset=%lu len=%lu", log_offset, log_len);
         auto log = load_from_memory.template operator()<std::vector<uint8_t>>(log_offset, log_len);
@@ -338,7 +343,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         uint32_t return_addr = arg4;
         uint32_t return_len = arg5;
 
-        tx_ctx.consume_gas(gas_invoke(calldata_len + return_len));
+        consume_gas(gas_invoke(calldata_len + return_len));
 
         MethodInvocation invocation(
             load_from_memory_constsize.template operator()<Address>(arg0),
@@ -352,16 +357,18 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         invoke_subroutine(invocation);
 
         return_len = std::min<uint32_t>(return_len, tx_ctx.return_buf.size());
-
-        write_to_memory(tx_ctx.return_buf, return_addr, return_len);
-        tx_ctx.return_buf.clear();
+	if (return_len > 0)
+	{
+        	write_to_memory(tx_ctx.return_buf, return_addr, return_len);
+	}
+	tx_ctx.return_buf.clear();
         ret = return_len;
         break;
     }
     case GET_SENDER:
     {
         // arg0: addr offset
-        tx_ctx.consume_gas(gas_get_msg_sender);
+        consume_gas(gas_get_msg_sender);
         Address const& sender = tx_ctx.get_msg_sender();
         write_to_memory(sender, arg0, sender.size());
         ret = 0;
@@ -370,7 +377,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     case GET_SELF_ADDR:
     {
         // arg0: addr offset
-        tx_ctx.consume_gas(gas_get_self_addr);
+        consume_gas(gas_get_self_addr);
         Address const& addr = tx_ctx.get_current_method_invocation().addr;
         write_to_memory(addr, arg0, addr.size());
         ret = 0;
@@ -379,7 +386,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     case GET_SRC_TX_HASH:
     {
         // arg0: hash offset
-        tx_ctx.consume_gas(gas_get_src_tx_hash);
+        consume_gas(gas_get_src_tx_hash);
         write_to_memory(tx_ctx.get_src_tx_hash(), arg0, sizeof(Hash));
         ret = 0;
         break;
@@ -387,21 +394,21 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     case GET_INVOKED_TX_HASH:
     {
         // arg0: hash offset
-        tx_ctx.consume_gas(gas_get_invoked_tx_hash);
+        consume_gas(gas_get_invoked_tx_hash);
         write_to_memory(tx_ctx.get_invoked_tx_hash(), arg0, sizeof(Hash));
         ret = 0;
         break;
     }
     case GET_BLOCK_NUMBER:
     {
-        tx_ctx.consume_gas(gas_get_block_number);
+        consume_gas(gas_get_block_number);
         ret = tx_ctx.get_block_number();
         break;
     }
     case HAS_KEY:
     {
         // arg0: key offset
-        tx_ctx.consume_gas(gas_has_key);
+        consume_gas(gas_has_key);
 
         auto addr_and_key = load_storage_key(arg0);
         auto res = tx_ctx.storage_proxy.get(addr_and_key);
@@ -416,7 +423,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         uint32_t mem_offset = arg1;
         uint32_t mem_len = arg2;
         
-        tx_ctx.consume_gas(gas_raw_memory_set(mem_len));
+        consume_gas(gas_raw_memory_set(mem_len));
         auto storage_key = load_storage_key(arg0);
 
         if (mem_len > RAW_MEMORY_MAX_LEN) {
@@ -439,7 +446,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg2: mem max len
         uint32_t output_max_len = arg2;
 
-        tx_ctx.consume_gas(gas_raw_memory_get(output_max_len));
+        consume_gas(gas_raw_memory_get(output_max_len));
         auto storage_key = load_storage_key(arg0);
 
         auto const& res = tx_ctx.storage_proxy.get(storage_key);
@@ -464,7 +471,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     case RAW_MEM_GET_LEN:
     {
         // arg0: key offset
-        tx_ctx.consume_gas(gas_raw_memory_get_len);
+        consume_gas(gas_raw_memory_get_len);
         auto storage_key = load_storage_key(arg0);
 
         auto const& res = tx_ctx.storage_proxy.get(storage_key);
@@ -484,7 +491,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     case DELETE_KEY_LAST:
     {
         // arg0: key offset
-        tx_ctx.consume_gas(gas_delete_key_last);
+        consume_gas(gas_delete_key_last);
         auto storage_key = load_storage_key(arg0);
         tx_ctx.storage_proxy.delete_object_last(storage_key);
         ret = 0;
@@ -499,7 +506,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         int64_t set_value = arg1;
         int64_t delta = arg2;
 
-        tx_ctx.consume_gas(gas_nonnegative_int64_set_add);
+        consume_gas(gas_nonnegative_int64_set_add);
         auto storage_key = load_storage_key(arg0);
 
         tx_ctx.storage_proxy.nonnegative_int64_set_add(
@@ -514,7 +521,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg1: delta
         int64_t delta = arg1;
 
-        tx_ctx.consume_gas(gas_nonnegative_int64_add);
+        consume_gas(gas_nonnegative_int64_add);
         auto storage_key = load_storage_key(arg0);
 
         EXEC_TRACE("int64 add %lld to key %s",
@@ -529,7 +536,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     case NNINT_GET:
     {
         // arg0: key addr
-        tx_ctx.consume_gas(gas_nonnegative_int64_get);
+        consume_gas(gas_nonnegative_int64_get);
         auto storage_key = load_storage_key(arg0);
 
         auto const& res = tx_ctx.storage_proxy.get(storage_key);
@@ -550,7 +557,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg0: key addr
         // arg1: hash addr
         // arg2: hash threshold
-        tx_ctx.consume_gas(gas_hashset_insert);
+        consume_gas(gas_hashset_insert);
         auto storage_key = load_storage_key(arg0);
 
         auto hash = load_from_memory_constsize.template operator()<Hash>(arg1);
@@ -563,7 +570,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     {
         // arg0: key addr
         // arg1: increase
-        tx_ctx.consume_gas(gas_hashset_increase_limit);
+        consume_gas(gas_hashset_increase_limit);
         auto storage_key = load_storage_key(arg0);
 
         uint32_t limit_increase = arg1;
@@ -577,7 +584,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     {
         // arg0: key addr
         // arg1: threshold
-        tx_ctx.consume_gas(gas_hashset_clear);
+        consume_gas(gas_hashset_clear);
         auto storage_key = load_storage_key(arg0);
 
         tx_ctx.storage_proxy.hashset_clear(
@@ -588,7 +595,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     case HS_GET_SIZE:
     {
         // arg0: key offset
-        tx_ctx.consume_gas(gas_hashset_get_size);
+        consume_gas(gas_hashset_get_size);
         auto storage_key = load_storage_key(arg0);
         auto res = tx_ctx.storage_proxy.get(storage_key);
 
@@ -605,7 +612,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     case HS_GET_MAX_SIZE:
     {
         // arg0: key offset
-        tx_ctx.consume_gas(gas_hashset_get_max_size);
+        consume_gas(gas_hashset_get_max_size);
         auto storage_key = load_storage_key(arg0);
         auto res = tx_ctx.storage_proxy.get(storage_key);
 
@@ -623,7 +630,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     {
         // arg0: key offset
         // arg1: query threshold
-        tx_ctx.consume_gas(gas_hashset_get_index_of);
+        consume_gas(gas_hashset_get_index_of);
         auto storage_key = load_storage_key(arg0);
         auto res = tx_ctx.storage_proxy.get(storage_key);
 
@@ -657,7 +664,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg0: key offset
         // arg1: query index
         // arg2: output offset
-        tx_ctx.consume_gas(gas_hashset_get_index);
+        consume_gas(gas_hashset_get_index);
         auto storage_key = load_storage_key(arg0);
         auto res = tx_ctx.storage_proxy.get(storage_key);
 
@@ -693,7 +700,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         std::shared_ptr<const Contract> contract = std::make_shared<const Contract>(
             tx_ctx.get_deployable_contract(contract_idx));
 
-        tx_ctx.consume_gas(gas_create_contract(contract -> size()));
+        consume_gas(gas_create_contract(contract -> size()));
 
         Hash h = tx_ctx.contract_db_proxy.create_contract(contract);
 
@@ -706,7 +713,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg0: contract hash in offset
         // arg1: nonce
         // arg2: out addr offset
-        tx_ctx.consume_gas(gas_deploy_contract);
+        consume_gas(gas_deploy_contract);
 
         auto contract_hash = load_from_memory_constsize.template operator()<Hash>(arg0);
         auto deploy_addr = compute_contract_deploy_address(tx_ctx.get_self_addr(), contract_hash, arg1);
@@ -725,7 +732,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg1: wit offset out
         // arg2: wit max len out
 
-        tx_ctx.consume_gas(gas_get_witness(arg2));
+        consume_gas(gas_get_witness(arg2));
 
         auto const& wit = tx_ctx.get_witness(arg0);
 
@@ -738,7 +745,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     case WITNESS_GET_LEN:
     {
         // arg0: wit idx
-        tx_ctx.consume_gas(gas_get_witness_len);
+        consume_gas(gas_get_witness_len);
         ret = tx_ctx.get_witness(arg0).value.size();
         break;
     }
@@ -760,7 +767,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
             throw HostError("invalid calldata params");
         }
 
-        tx_ctx.consume_gas(
+        consume_gas(
             gas_get_calldata(slice_end - slice_start));
         
         tx_ctx.get_current_runtime()->write_slice_to_memory(
@@ -770,7 +777,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     }
     case GET_CALLDATA_LEN:
     {
-        tx_ctx.consume_gas(gas_get_calldata_len);
+        consume_gas(gas_get_calldata_len);
         ret = tx_ctx.get_current_method_invocation().calldata.size();
         break;
     }
@@ -780,7 +787,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg1: read len
 
         uint32_t len = arg1;
-        tx_ctx.consume_gas(gas_return(len));
+        consume_gas(gas_return(len));
 
         tx_ctx.return_buf = 
             load_from_memory.template operator()<std::vector<uint8_t>>(arg0, len);
@@ -790,7 +797,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     case GAS:
     {
         // arg0: gas
-        tx_ctx.consume_gas(arg0);
+        consume_gas(arg0);
         break;   
     }
     case HASH:
@@ -798,7 +805,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg0: input offset
         // arg1: input len
         // arg2: output offset
-        tx_ctx.consume_gas(gas_hash);
+        consume_gas(gas_hash);
 
         auto hash_buf = load_from_memory.template operator()<xdr::opaque_vec<MAX_HASH_LEN>>(arg0, arg1);
 
@@ -818,7 +825,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         static_assert(sizeof(PublicKey) == 32, "expected 32 byte pk");
         static_assert(sizeof(Signature) == 64, "expected 64 byte sig");
 
-        tx_ctx.consume_gas(gas_check_sig_ed25519);
+        consume_gas(gas_check_sig_ed25519);
         
         auto pk = load_from_memory_constsize.template operator()<PublicKey>(arg0);
         auto sig = load_from_memory_constsize.template operator()<Signature>(arg1);
