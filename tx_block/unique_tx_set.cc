@@ -31,20 +31,24 @@ struct UniqueInsertFn
     value_insert(UniqueTxSet::value_t& main_entry,
                              TxSetEntry&& other_entry)
     {
-        if (main_entry.nondeterministic_results.size() == 0)
+        // main entry is empty
+        if (main_entry.entry.nondeterministic_results.size() == 0)
         {
-            main_entry = other_entry;
+            main_entry.entry = other_entry;
         }
 
-        if (main_entry.nondeterministic_results.size() == 0)
+        // nonsense
+        if (main_entry.entry.nondeterministic_results.size() == 0)
         {
             throw std::runtime_error("invalid insert in unique tx set");
         }
+        // otherwise, null op, and function returns false -- i.e. tx was not inserted (since it's already there)
     }
 
-    static TxSetEntry new_value(UniqueTxSet::prefix_t const& key)
+    static void reset_value(UniqueTxSet::value_t& v, UniqueTxSet::prefix_t const& key)
     {
-        return TxSetEntry{};
+        v.cancelled.store(false, std::memory_order_relaxed);
+        v.entry = TxSetEntry();
     }
 };
 
@@ -71,9 +75,9 @@ UniqueTxSet::clear()
     txs_merged = false;
 }
 
-static TxSetEntry const& get_txset_entry(trie::ByteArrayPrefix<sizeof(Hash)> const&, const TxSetEntry& entry)
+static TxSetEntry const& get_txset_entry(trie::ByteArrayPrefix<sizeof(Hash)> const&, const CancellableTxSetEntry& entry)
 {
-    return entry;
+    return entry.entry;
 }
 
 bool
@@ -83,6 +87,17 @@ UniqueTxSet::try_add_transaction(const Hash& hash, const SignedTransaction& tx, 
     auto& local_trie = cache.get(txs);
     return local_trie.template insert<UniqueInsertFn, TxSetEntry>(
         hash, TxSetEntry(tx, xdr::xvector<NondeterministicResults>{nres}));
+}
+
+void
+UniqueTxSet::cancel_transaction(const Hash& h)
+{
+    auto* r = txs.get_value(h);
+    if (r == nullptr) {
+        throw std::runtime_error("cannot cancel nexist tx");
+    }
+
+    r -> cancelled.store(true, std::memory_order_relaxed);
 }
 
 void

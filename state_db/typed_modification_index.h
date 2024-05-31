@@ -41,10 +41,10 @@ class TypedModificationIndex
 
 public:
     using value_t = trie::BetterSerializeWrapper<StorageDelta, &serialize>;
-    // keys are [addrkey] [modification type] [modification] [txid]
+    // keys are [addrkey] [modification type] [modification] [priority] [txid]
     constexpr static size_t modification_key_length = 32 + 8; // len(hash) + len(tag), for hashset entries
 
-    using trie_prefix_t = trie::ByteArrayPrefix<sizeof(AddressAndKey) + 1 + modification_key_length + sizeof(Hash)>;
+    using trie_prefix_t = trie::ByteArrayPrefix<sizeof(AddressAndKey) + 1 + modification_key_length + sizeof(uint64_t) + sizeof(Hash)>;
     using map_t = trie::AtomicTrie<value_t, trie_prefix_t, ModificationMetadata>;
 
 private:
@@ -57,7 +57,7 @@ private:
 
 public:
 
-	void log_modification(AddressAndKey const& addrkey, StorageDelta const& mod, Hash const& src_tx_hash);
+	void log_modification(AddressAndKey const& addrkey, StorageDelta const& mod, uint64_t priority, Hash const& src_tx_hash);
 
     const map_t& get_keys() const
     {
@@ -77,6 +77,6 @@ public:
 
 // public for testing
 TypedModificationIndex::trie_prefix_t
-make_index_key(AddressAndKey const& addrkey, StorageDelta const& delta, Hash const& src_tx_hash);
+make_index_key(AddressAndKey const& addrkey, StorageDelta const& delta, uint64_t priority, Hash const& src_tx_hash);
 
 }

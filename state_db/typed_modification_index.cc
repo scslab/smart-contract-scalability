@@ -37,6 +37,7 @@ validate_enum(std::array<int32_t, enum_count> const& vals)
 TypedModificationIndex::trie_prefix_t
 make_index_key(AddressAndKey const& addrkey,
                StorageDelta const& delta,
+               uint64_t priority,
                Hash const& src_tx_hash)
 {
     TypedModificationIndex::trie_prefix_t out;
@@ -108,16 +109,18 @@ make_index_key(AddressAndKey const& addrkey,
             throw std::runtime_error("unimplemented");
     }
     data += TypedModificationIndex::modification_key_length;
+    std::memcpy(data, &priority, sizeof(uint64_t));
+    data += sizeof(uint64_t);
     std::memcpy(data, src_tx_hash.data(), sizeof(Hash));
     return out;
 }
 
 void 
 TypedModificationIndex::log_modification(
-    AddressAndKey const& addrkey, StorageDelta const& mod, Hash const& src_tx_hash)
+    AddressAndKey const& addrkey, StorageDelta const& mod, uint64_t priority, Hash const& src_tx_hash)
 {
     auto& local_trie = cache.get(keys);
-    auto key = make_index_key(addrkey, value_t(mod), src_tx_hash);
+    auto key = make_index_key(addrkey, value_t(mod), priority, src_tx_hash);
 
     local_trie.insert(key, mod);
 }
