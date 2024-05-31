@@ -171,7 +171,7 @@ ProxyApplicator::make_current_nnint64(set_add_t const& delta)
 }
 
 bool
-ProxyApplicator::try_apply(StorageDelta const& d)
+ProxyApplicator::try_apply(StorageDelta const& d, uint64_t priority)
 {
     if (d.type() == DeltaType::DELETE_LAST) {
         is_deleted = true;
@@ -195,6 +195,7 @@ ProxyApplicator::try_apply(StorageDelta const& d)
             memory_write->data = d.data();
             make_current(ObjectType::RAW_MEMORY);
             current->body.raw_memory_storage() = *memory_write;
+            write_priority = std::min(priority, write_priority);
             return true;
         }
         case DeltaType::NONNEGATIVE_INT64_SET_ADD: {
@@ -206,6 +207,7 @@ ProxyApplicator::try_apply(StorageDelta const& d)
                 if (res) {
                     nnint64_delta = *res;
                     make_current_nnint64(*nnint64_delta);
+                    nnint64_set_add_priority = std::min(nnint64_set_add_priority, priority);
                     return true;
                 } else {
                     return false;
@@ -227,6 +229,7 @@ ProxyApplicator::try_apply(StorageDelta const& d)
                 }
                 nnint64_delta = *res;
                 make_current_nnint64(*nnint64_delta);
+                nnint64_set_add_priority = std::min(nnint64_set_add_priority, priority);
                 return true;
             }
         }
@@ -254,7 +257,7 @@ ProxyApplicator::try_apply(StorageDelta const& d)
 
         	current -> body.hash_set().hashes.push_back(d.hash());
             normalize_hashset(current -> body.hash_set());
-        	new_hashes.push_back(d.hash());
+        	new_hashes.emplace_back(priority, d.hash());
         	return true;
         }
         case DeltaType::HASH_SET_INCREASE_LIMIT:
@@ -306,6 +309,7 @@ ProxyApplicator::try_apply(StorageDelta const& d)
             }
 
             current->body.asset().amount += d.asset_delta();
+            asset_priority = std::min(asset_priority, priority);
             return true;
         }
         default:
@@ -332,48 +336,56 @@ ProxyApplicator::get() const
     return current;
 }
 
-std::vector<StorageDelta>
+std::vector<PrioritizedStorageDelta>
 ProxyApplicator::get_deltas() const
 {
     if (!is_deleted && (!current)) {
         return {};
     }
 
-    std::vector<StorageDelta> out;
+    std::vector<PrioritizedStorageDelta> out;
 
     if (memory_write) {
-        out.push_back(make_raw_memory_write(
-            xdr::opaque_vec<RAW_MEMORY_MAX_LEN>(memory_write->data)));
+        out.emplace_back(make_raw_memory_write(
+            xdr::opaque_vec<RAW_MEMORY_MAX_LEN>(memory_write->data)),
+        write_priority);
     }
 
     if (nnint64_delta) {
-        out.push_back(make_nonnegative_int64_set_add(nnint64_delta->set_value,
-                                                     nnint64_delta->delta));
+        out.emplace_back(
+            make_nonnegative_int64_set_add(nnint64_delta->set_value,
+                                                     nnint64_delta->delta),
+            nnint64_set_add_priority);
     }
 
     if (do_limit_increase) {
         static_assert(
             MAX_HASH_SET_SIZE <= UINT16_MAX,
             "change uint16 type on make_hash_set_increase_limit to wider uint");
-        out.push_back(make_hash_set_increase_limit(std::min(
-            hs_size_increase, static_cast<uint64_t>(MAX_HASH_SET_SIZE))));
+        out.emplace_back(
+            make_hash_set_increase_limit(std::min(
+                hs_size_increase, static_cast<uint64_t>(MAX_HASH_SET_SIZE))),
+            0);
     }
 
     for (auto const& h : new_hashes) {
-        out.push_back(make_hash_set_insert(h));
+        out.emplace_back(
+            make_hash_set_insert(h.entry), h.priority);
     }
 
     if (hs_clear_threshold.has_value()) {
-        out.push_back(make_hash_set_clear(*hs_clear_threshold));
+        out.emplace_back(
+            make_hash_set_clear(*hs_clear_threshold),
+            0); // empty priority
     }
 
     if (delta.has_value())
     {
-        out.push_back(make_asset_add(*delta));
+        out.emplace_back(make_asset_add(*delta), asset_priority);
     }
 
     if (is_deleted) {
-        out.push_back(make_delete_last());
+        out.emplace_back(make_delete_last(), 0);
     }
 
     return out;

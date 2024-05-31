@@ -80,6 +80,11 @@ union StorageDelta switch (DeltaType type)
 		int64 asset_delta;
 };
 
+struct PrioritizedStorageDelta {
+	StorageDelta delta;
+	uint64_t priority;
+};
+
 // REFUND DESIGN:
 // imo this is the simplest
 // alternative is tracking excesses per block

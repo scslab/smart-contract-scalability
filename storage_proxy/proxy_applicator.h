@@ -17,6 +17,8 @@
  */
 
 #include <optional>
+#include <cstdint>
+#include <vector>
 
 #include "xdr/storage.h"
 #include "xdr/storage_delta.h"
@@ -38,20 +40,30 @@ class ProxyApplicator
     // memory write
 
     std::optional<RawMemoryStorage> memory_write;
+    uint64_t write_priority = UINT64_MAX;
 
     // nnint64
 
     std::optional<set_add_t> nnint64_delta;
+    uint64_t nnint64_set_add_priority = UINT64_MAX;
 
     // hash set
 
     bool do_limit_increase = false;
     uint64_t hs_size_increase = 0;
-    std::vector<HashSetEntry> new_hashes;
+
+    struct PrioritizedHashSetEntry {
+        uint64_t priority;
+        HashSetEntry entry;
+    };
+
+    std::vector<PrioritizedHashSetEntry> new_hashes;
     std::optional<uint64_t> hs_clear_threshold = std::nullopt;
+    // Clear ignores priority -- never conflicts
 
     // known supply asset
     std::optional<int64_t> delta;
+    uint64_t asset_priority = UINT64_MAX;
 
     // deletions
     bool is_deleted = false;
@@ -79,11 +91,11 @@ class ProxyApplicator
     // that everywhere that this is used, a failed attempt
     // to apply reverts the whole transaction.
     bool __attribute__((warn_unused_result))
-    try_apply(StorageDelta const& delta);
+    try_apply(StorageDelta const& delta, uint64_t priority);
 
     std::optional<StorageObject> const& get() const;
 
-    std::vector<StorageDelta> get_deltas() const;
+    std::vector<PrioritizedStorageDelta> get_deltas() const;
 
     // type specific methods
     // returns nullopt if type mismatch
