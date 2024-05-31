@@ -55,19 +55,19 @@ public:
 	get(AddressAndKey const& key) const;
 
 	void
-	raw_memory_write(AddressAndKey const& key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& bytes);
+	raw_memory_write(AddressAndKey const& key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& bytes, uint64_t priority);
 
 	void
-	nonnegative_int64_set_add(AddressAndKey const& key, int64_t set_value, int64_t delta);
+	nonnegative_int64_set_add(AddressAndKey const& key, int64_t set_value, int64_t delta, uint64_t priority);
 
 	void
-	nonnegative_int64_add(AddressAndKey const& key, int64_t delta);
+	nonnegative_int64_add(AddressAndKey const& key, int64_t delta, uint64_t priority);
 
 	void
 	delete_object_last(AddressAndKey const& key);
 
 	void
-	hashset_insert(AddressAndKey const& key, Hash const& h, uint64_t threshold);
+	hashset_insert(AddressAndKey const& key, Hash const& h, uint64_t threshold, uint64_t priority);
 
 	void
 	hashset_increase_limit(AddressAndKey const& key, uint32_t limit);
@@ -76,11 +76,7 @@ public:
 	hashset_clear(AddressAndKey const& key, uint64_t threshold);
 
 	void
-	asset_add(AddressAndKey const& key, int64_t d);
-
-	bool
-	__attribute__((warn_unused_result))
-	push_deltas_to_statedb(TransactionRewind& rewind) const;
+	asset_add(AddressAndKey const& key, int64_t d, uint64_t priority);
 
 	void log_modified_keys(ModifiedKeysList& keys, const Hash&);
 	void log_modified_keys(TypedModificationIndex& keys, const Hash& src_hash);

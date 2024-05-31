@@ -72,13 +72,14 @@ PROXY_TEMPLATE
 void
 PROXY_DECL::raw_memory_write(
 	AddressAndKey const& key, 
-	xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& bytes)
+	xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& bytes,
+	uint64_t priority)
 {
 	auto& v = get_local(key);
 
 	auto delta = make_raw_memory_write(std::move(bytes));
 
-	if (!v.applicator.try_apply(delta))
+	if (!v.applicator.try_apply(delta, priority))
 	{
 		throw HostError("failed to apply raw_memory_write");
 	}
@@ -89,12 +90,13 @@ void
 PROXY_DECL::nonnegative_int64_set_add(
 	AddressAndKey const& key, 
 	int64_t set_value, 
-	int64_t delta_value)
+	int64_t delta_value,
+	uint64_t priority)
 {
 	auto& v = get_local(key);
 	auto delta = make_nonnegative_int64_set_add(set_value, delta_value);
 
-	if (!v.applicator.try_apply(delta))
+	if (!v.applicator.try_apply(delta, priority))
 	{
 		throw HostError("failed to apply nonnegative_int64_set_add");
 	}
@@ -102,7 +104,7 @@ PROXY_DECL::nonnegative_int64_set_add(
 
 PROXY_TEMPLATE
 void 
-PROXY_DECL::nonnegative_int64_add(AddressAndKey const& key, int64_t delta_value)
+PROXY_DECL::nonnegative_int64_add(AddressAndKey const& key, int64_t delta_value, uint64_t priority)
 {
 	auto& v = get_local(key);
 	auto base_value = v.applicator.get_base_nnint64_set_value();
@@ -112,7 +114,7 @@ PROXY_DECL::nonnegative_int64_add(AddressAndKey const& key, int64_t delta_value)
 	}
 	auto delta = make_nonnegative_int64_set_add(*base_value, delta_value);
 
-	if (!v.applicator.try_apply(delta))
+	if (!v.applicator.try_apply(delta, priority))
 	{
 		throw HostError("failed to apply nonnegative_int64_add");
 	}
@@ -126,7 +128,7 @@ PROXY_DECL::delete_object_last(AddressAndKey const& key)
 
 	auto delta = make_delete_last();
 
-	if (!v.applicator.try_apply(delta))
+	if (!v.applicator.try_apply(delta, 0))
 	{
 		throw HostError("failed to apply delete_last");
 	}
@@ -134,13 +136,13 @@ PROXY_DECL::delete_object_last(AddressAndKey const& key)
 
 PROXY_TEMPLATE
 void
-PROXY_DECL::hashset_insert(AddressAndKey const& key, Hash const& h, uint64_t threshold)
+PROXY_DECL::hashset_insert(AddressAndKey const& key, Hash const& h, uint64_t threshold, uint64_t priority)
 {
 	auto& v = get_local(key);
 
 	auto delta = make_hash_set_insert(h, threshold);
 
-	if (!v.applicator.try_apply(delta))
+	if (!v.applicator.try_apply(delta, priority))
 	{
 		throw HostError("failed to apply hashset insert");
 	}
@@ -161,7 +163,7 @@ PROXY_DECL::hashset_increase_limit(AddressAndKey const& key, uint32_t limit)
 
 	auto delta = make_hash_set_increase_limit(limit);
 
-	if (!v.applicator.try_apply(delta))
+	if (!v.applicator.try_apply(delta, 0))
 	{
 		throw HostError("failed to apply hashset limit increase");
 	}
@@ -175,7 +177,7 @@ PROXY_DECL::hashset_clear(AddressAndKey const& key, uint64_t threshold)
 
 	auto delta = make_hash_set_clear(threshold);
 
-	if (!v.applicator.try_apply(delta))
+	if (!v.applicator.try_apply(delta, 0))
 	{
 		throw HostError("failed to apply hashset clear");
 	}
@@ -183,41 +185,16 @@ PROXY_DECL::hashset_clear(AddressAndKey const& key, uint64_t threshold)
 
 PROXY_TEMPLATE
 void
-PROXY_DECL::asset_add(AddressAndKey const& key, int64_t d)
+PROXY_DECL::asset_add(AddressAndKey const& key, int64_t d, uint64_t priority)
 {
 	auto& v = get_local(key);
 
 	auto delta = make_asset_add(d);
 
-	if (!v.applicator.try_apply(delta))
+	if (!v.applicator.try_apply(delta, priority))
 	{
 		throw HostError("failed to apply asset add");
 	}
-}
-
-PROXY_TEMPLATE
-bool 
-PROXY_DECL::push_deltas_to_statedb(TransactionRewind& rewind) const
-{
-	assert_not_committed_local_values();
-
-	for (auto const& [k, v] : cache)
-	{
-		auto deltas = v.applicator.get_deltas();
-		for (auto const& delta : deltas)
-		{
-			auto res = state_db.try_apply_delta(k, delta);
-			if (res)
-			{
-				rewind.add(std::move(*res));
-			} 
-			else
-			{
-				return false;
-			}
-		}
-	}
-	return true;
 }
 
 PROXY_TEMPLATE
@@ -245,7 +222,7 @@ PROXY_DECL::log_modified_keys(TypedModificationIndex& keys, const Hash& src_hash
 		auto deltas = v.applicator.get_deltas();
 		for (auto const& delta : deltas)
 		{
-			keys.log_modification(k, delta, src_hash);
+			keys.log_modification(k, delta.delta, delta.priority, src_hash);
 		}
 	}
 
