@@ -199,20 +199,6 @@ PROXY_DECL::asset_add(AddressAndKey const& key, int64_t d, uint64_t priority)
 
 PROXY_TEMPLATE
 void 
-PROXY_DECL::log_modified_keys(ModifiedKeysList& keys, const Hash&)
-{
-	assert_not_committed_local_values();
-
-	for (auto const& [k, _] : cache)
-	{
-		keys.log_key(k);
-	}
-
-	committed_local_values = true;
-}
-
-PROXY_TEMPLATE
-void 
 PROXY_DECL::log_modified_keys(TypedModificationIndex& keys, const Hash& src_hash)
 {
 	assert_not_committed_local_values();

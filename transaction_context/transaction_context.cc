@@ -25,9 +25,7 @@
 
 namespace scs {
 
-template class TransactionContext<GlobalContext>;
 template class TransactionContext<SisyphusGlobalContext>;
-template class TransactionContext<GroundhogGlobalContext>;
 
 #define TC_TEMPLATE template<typename GlobalContext_t>
 #define TC_DECL TransactionContext<GlobalContext_t>
@@ -158,10 +156,7 @@ TC_DECL::push_storage_deltas()
 
     auto commitment = std::make_unique<StorageCommitment<StateDB_t>>(storage_proxy, tx_hash);
 
-    if (!storage_proxy.push_deltas_to_statedb(commitment->rewind)) {
-        return nullptr;
-    }
-
+    throw std::runtime_error("need to fix contractdb proxy pushes");
     if (!contract_db_proxy.push_updates_to_db(commitment->rewind)) {
         return nullptr;
     }

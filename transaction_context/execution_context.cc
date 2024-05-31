@@ -45,9 +45,7 @@
 
 namespace scs {
 
-template class ExecutionContext<GroundhogTxContext>;
 template class ExecutionContext<SisyphusTxContext>;
-template class ExecutionContext<TxContext>;
 
 EC_DECL()::ExecutionContext()
     : wasm_context(MAX_STACK_BYTES)
@@ -102,24 +100,6 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
 
     tx_context->pop_invocation_stack();
 }
-
-template
-TransactionStatus
-ExecutionContext<TxContext>::execute(
-    Hash const&,
-    SignedTransaction const&,
-    GlobalContext&,
-    BlockContext&,
-    std::optional<NondeterministicResults>);
-
-template
-TransactionStatus
-ExecutionContext<GroundhogTxContext>::execute(
-    Hash const&,
-    SignedTransaction const&,
-    GroundhogGlobalContext&,
-    GroundhogBlockContext&,
-    std::optional<NondeterministicResults>);
 
 template
 TransactionStatus
@@ -318,7 +298,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         uint32_t log_offset = arg0;
         uint32_t log_len = arg1;
         
-	consume_gas(gas_log(log_len));
+	    consume_gas(gas_log(log_len));
 
         CONTRACT_INFO("Logging offset=%lu len=%lu", log_offset, log_len);
         auto log = load_from_memory.template operator()<std::vector<uint8_t>>(log_offset, log_len);
@@ -357,11 +337,11 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         invoke_subroutine(invocation);
 
         return_len = std::min<uint32_t>(return_len, tx_ctx.return_buf.size());
-	if (return_len > 0)
-	{
-        	write_to_memory(tx_ctx.return_buf, return_addr, return_len);
-	}
-	tx_ctx.return_buf.clear();
+    	if (return_len > 0)
+    	{
+            	write_to_memory(tx_ctx.return_buf, return_addr, return_len);
+    	}
+    	tx_ctx.return_buf.clear();
         ret = return_len;
         break;
     }
@@ -420,6 +400,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg0: key offset
         // arg1: mem offset
         // arg2: mem len
+        // arg3: priority
         uint32_t mem_offset = arg1;
         uint32_t mem_len = arg2;
         
@@ -435,7 +416,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
                       mem_offset, mem_len);
 
         tx_ctx.storage_proxy.raw_memory_write(
-            storage_key, std::move(data));
+            storage_key, std::move(data), arg3);
         ret = 0;
         break;
     }
@@ -502,6 +483,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg0: storage key
         // arg1: set value
         // arg2: delta
+        // arg3: priority
 
         int64_t set_value = arg1;
         int64_t delta = arg2;
@@ -510,7 +492,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         auto storage_key = load_storage_key(arg0);
 
         tx_ctx.storage_proxy.nonnegative_int64_set_add(
-            storage_key, set_value, delta);
+            storage_key, set_value, delta, arg3);
 
         ret = 0;
         break;
@@ -519,6 +501,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     {
         // arg0: storage key
         // arg1: delta
+        // arg2: priority
         int64_t delta = arg1;
 
         consume_gas(gas_nonnegative_int64_add);
@@ -529,7 +512,7 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
                    debug::array_to_str(storage_key).c_str());
 
         tx_ctx.storage_proxy.nonnegative_int64_add(
-            storage_key, delta);
+            storage_key, delta, arg2);
         ret = 0;
         break;
     }
@@ -557,12 +540,13 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg0: key addr
         // arg1: hash addr
         // arg2: hash threshold
+        // arg3: priority
         consume_gas(gas_hashset_insert);
         auto storage_key = load_storage_key(arg0);
 
         auto hash = load_from_memory_constsize.template operator()<Hash>(arg1);
         tx_ctx.storage_proxy.hashset_insert(
-            storage_key, hash, arg2);
+            storage_key, hash, arg2, arg3);
         ret = 0;
         break;
     }

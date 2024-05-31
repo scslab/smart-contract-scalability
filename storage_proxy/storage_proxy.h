@@ -78,7 +78,6 @@ public:
 	void
 	asset_add(AddressAndKey const& key, int64_t d, uint64_t priority);
 
-	void log_modified_keys(ModifiedKeysList& keys, const Hash&);
 	void log_modified_keys(TypedModificationIndex& keys, const Hash& src_hash);
 };
 
