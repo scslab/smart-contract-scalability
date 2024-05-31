@@ -35,17 +35,27 @@
 
 namespace scs {
 
+struct CancellableTxSetEntry {
+    std::atomic<bool> cancelled = false;
+    TxSetEntry entry;
+
+    CancellableTxSetEntry(TxSetEntry e)
+        : entry(e)
+        {}
+
+    CancellableTxSetEntry() {};
+};
+
 class UniqueTxSet
 {
-    static std::vector<uint8_t> serialize(const TxSetEntry& v)
+    static std::vector<uint8_t> serialize(const CancellableTxSetEntry& v)
     {
-        return xdr::xdr_to_opaque(v);
+        return xdr::xdr_to_opaque(v.entry);
     }
 
     friend struct UniqueInsertFn;
 
-
-    using value_t = trie::XdrTypeWrapper<TxSetEntry, &serialize>;
+    using value_t = trie::XdrTypeWrapper<CancellableTxSetEntry, &serialize>;
 
     using prefix_t = trie::ByteArrayPrefix<sizeof(Hash)>;
 
@@ -65,6 +75,8 @@ class UniqueTxSet
   public:
 
     bool try_add_transaction(const Hash& hash, const SignedTransaction& tx, const NondeterministicResults& nres);
+
+    void cancel_transaction(const Hash& hash);
 
     void finalize();
 
