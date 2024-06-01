@@ -141,6 +141,12 @@ ExecutionContext<TransactionContext_t>::execute(Hash const& tx_hash,
     } catch (wasm_api::HostError& e) {
 	    std::printf("tx failed %s\n", e.what());
 	    CONTRACT_INFO("Execution error: %s", e.what());
+
+        // Doesn't check return -- duplicate transactions just get added again.
+        // In case of nondeterministic results -- whichever one gets added first wins (any duplicates
+        // are then assumed to just repeat the same results
+        block_context.tx_set.try_add_transaction(tx_hash, tx, tx_context -> tx_results->get_results().ndeterministic_results);
+
         return TransactionStatus::FAILURE;
     } catch (...) {
         std::printf("unrecoverable error!\n");
