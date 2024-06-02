@@ -27,6 +27,13 @@ using xdr::operator!=;
 
 struct UniqueInsertFn
 {
+    // Value insert normally needs to be threadsafe.
+    // However, the use case here is implicitly guarded by 
+    // how tries create new value nodes.
+    // Either they are created by (reset_value) then (value_insert) (guarded by the fact
+    // that during this process they're not actually in the trie yet)
+    // or, once they're in the trie, this function is always read-only (the first condition always
+    // gets skipped, since it only does something on the first call to value_insert)
     static void
     value_insert(UniqueTxSet::value_t& main_entry,
                              TxSetEntry&& other_entry)
