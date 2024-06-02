@@ -157,6 +157,7 @@ TC_DECL::push_storage_deltas()
     auto commitment = std::make_unique<StorageCommitment<StateDB_t>>(storage_proxy, tx_hash);
 
     throw std::runtime_error("need to fix contractdb proxy pushes");
+    
     if (!contract_db_proxy.push_updates_to_db(commitment->rewind)) {
         return nullptr;
     }

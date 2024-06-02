@@ -56,22 +56,6 @@ BLOCK_ASSEMBLY_SRCS = \
 	block_assembly/assembly_worker.cc \
 	block_assembly/limits.cc
 
-BUILTIN_FNS_SRCS = \
-	builtin_fns/asset.cc \
-	builtin_fns/builtin_fns.cc \
-	builtin_fns/contract.cc \
-	builtin_fns/crypto.cc \
-	builtin_fns/delete.cc \
-	builtin_fns/env.cc \
-	builtin_fns/general_storage.cc \
-	builtin_fns/hashset.cc \
-	builtin_fns/int64.cc \
-	builtin_fns/logging.cc \
-	builtin_fns/raw_memory.cc \
-	builtin_fns/rpc.cc \
-	builtin_fns/runtime.cc \
-	builtin_fns/witness.cc
-
 CONFIG_SRCS = \
 	config/print_configs.cc
 
@@ -137,7 +121,8 @@ STATE_DB_SRCS = \
 	state_db/sisyphus_state_db.cc \
 	state_db/state_db.cc \
 	state_db/state_db_v2.cc \
-	state_db/typed_modification_index.cc
+	state_db/typed_modification_index.cc \
+	state_db/typed_mod_trie.cc
 
 STATE_DB_TEST_SRCS = \
 	state_db/tests/test_typed_modification_index.cc

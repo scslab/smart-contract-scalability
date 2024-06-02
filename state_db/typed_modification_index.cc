@@ -18,6 +18,8 @@
 
 #include <utils/serialize_endian.h>
 
+
+#include "tx_block/unique_tx_set.h"
 #include "crypto/hash.h"
 
 namespace scs {
@@ -147,14 +149,99 @@ TypedModificationIndex::hash()
     Hash out;
     auto h = keys.hash();
     std::memcpy(out.data(), h.data(), h.size());
+    hashed = true;
     return out;
 }
 
 void 
 TypedModificationIndex::clear()
 {
+    hashed = false;
     cache.clear();
     keys.clear();
+}
+
+struct CancelTxsFn
+{
+    
+    UniqueTxSet& txs;
+
+    using index_trie_t = TypedModificationIndex::map_t;
+    using prefix_t = TypedModificationIndex::trie_prefix_t;
+
+    index_trie_t const& modification_trie_ref;
+
+    void operator()(index_trie_t::const_applyable_ref& work_root)
+    {
+        // WARNING -- don't save these pointers -- they might get deleted during
+        // the normalization cleanup, and regardless accessing them later
+        // doesn't guarantee hash invalidation.
+
+        static_assert(std::is_same<decltype(work_root.get_prefix()), prefix_t>::value, "is same");
+
+        prefix_t work_root_prefix = work_root.get_prefix();
+
+
+
+
+        /*
+
+        auto* main_db_subnode = main_db.get_subnode_ref_and_invalidate_hash(
+            work_root_prefix, statedb_query_len, current_timestamp);
+
+        if (main_db_subnode->get_prefix_len() != statedb_query_len)
+        {
+            std::printf("len mismatch got %s wanted %s\n",
+                        main_db_subnode->get_prefix()
+                            .to_string(main_db_subnode->get_prefix_len())
+                            .c_str(),
+                        work_root.get_prefix()
+                            .to_string(work_root.get_prefix_len())
+                            .c_str());
+            std::fflush(stdout);
+            throw std::runtime_error("wtf");
+        }
+
+        auto apply_lambda = [this, main_db_subnode, &work_root](
+                                const prefix_t& addrkey) {
+            auto* main_db_value = main_db_subnode->get_value(addrkey, main_db.get_storage(), true);
+            if (main_db_value) {
+                main_db_subnode->invalidate_hash_to_key(addrkey, current_timestamp);
+
+                main_db_value->commit_round();
+
+                // TODO this check shouldn't be necessary
+                if (!(main_db_value->get_committed_object())) {
+                    main_db_subnode->delete_value(addrkey, current_timestamp, main_db.get_gc(), main_db.get_storage());
+                }
+            } else {
+                std::printf("there was no value returned from %s\n", addrkey.to_string(prefix_t::len()).c_str());
+                std::fflush(stdout);
+                throw std::runtime_error("should never happen");
+            }
+        };
+
+        // preallocating reuseable buffer helps performance
+        std::vector<uint8_t> digest_bytes;
+
+        work_root.apply_to_keys(apply_lambda, prefix_t::len());
+        main_db_subnode->compute_hash_and_normalize(main_db.get_gc(), 0,
+                                                    digest_bytes, main_db.get_storage());
+                                                    */
+    }
+};
+
+void
+TypedModificationIndex::prune_conflicts(UniqueTxSet& txs) const
+{
+    assert_hashed();
+    CancelTxsFn cancels(txs);
+
+    keys.parallel_batch_value_modify_const<CancelTxsFn, trie_prefix_t::len()>(cancels, 1);
+
+
+
+
 }
 
 } // namespace scs

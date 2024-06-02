@@ -29,7 +29,6 @@ namespace scs
 {
 
 class TransactionRewind;
-class ModifiedKeysList;
 class TypedModificationIndex;
 
 template<typename StateDB_t>

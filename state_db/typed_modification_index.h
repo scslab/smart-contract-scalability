@@ -30,6 +30,7 @@
 
 namespace scs
 {
+class UniqueTxSet;
 
 class TypedModificationIndex
 {
@@ -55,6 +56,14 @@ private:
 
     cache_t cache;
 
+    bool hashed = false;
+    void assert_hashed() const
+    {
+        if (!hashed) {
+            throw std::runtime_error("not hashed");
+        }
+    }
+
 public:
 
 	void log_modification(AddressAndKey const& addrkey, StorageDelta const& mod, uint64_t priority, Hash const& src_tx_hash);
@@ -72,6 +81,8 @@ public:
 
     Hash hash();
 	void clear();
+
+    void prune_conflicts(UniqueTxSet& txs) const;
 };
 
 
