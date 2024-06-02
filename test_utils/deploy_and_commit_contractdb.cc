@@ -40,12 +40,12 @@ deploy_and_commit_contractdb(ContractDB& contract_db,
 
     proxy.create_contract(contract);
 
-    REQUIRE(proxy.deploy_contract(addr, h));
+    proxy.deploy_contract_at_specific_address(addr, h);
 
     {
         TransactionRewind rewind;
 
-        REQUIRE(proxy.push_updates_to_db(rewind));
+        proxy.push_updates_to_db(rewind);
 
         rewind.commit();
     }
