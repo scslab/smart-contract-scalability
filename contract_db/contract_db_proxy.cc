@@ -17,6 +17,7 @@
 #include "contract_db/contract_db_proxy.h"
 
 #include "contract_db/contract_db.h"
+#include "contract_db/contract_utils.h"
 
 #include "crypto/hash.h"
 
@@ -62,30 +63,17 @@ ContractCreateClosure::~ContractCreateClosure()
 
 ContractDeployClosure::ContractDeployClosure(
     const Address& deploy_address,
+    const Hash& contract_hash,
     ContractDB& contract_db)
     : deploy_address(deploy_address)
+    , contract_hash(contract_hash)
     , contract_db(contract_db)
 {}
-
-ContractDeployClosure::ContractDeployClosure(ContractDeployClosure&& other)
-    : deploy_address(other.deploy_address)
-    , contract_db(other.contract_db)
-    , undo_deploy(other.undo_deploy)
-{
-    other.undo_deploy = false;
-}
 
 void
 ContractDeployClosure::commit()
 {
-    undo_deploy = false;
-}
-
-ContractDeployClosure::~ContractDeployClosure()
-{
-    if (undo_deploy) {
-        contract_db.undo_deploy_contract_to_address(deploy_address);
-    }
+    contract_db.deploy_contract_to_address(deploy_address, contract_hash);
 }
 
 bool
@@ -97,39 +85,44 @@ ContractDBProxy::check_contract_exists(const Hash& contract_hash) const
     return new_contracts.find(contract_hash) != new_contracts.end();
 }
 
-bool
-ContractDBProxy::deploy_contract(const Address& deploy_address,
-                                 const Hash& contract_hash)
+std::optional<Address>
+ContractDBProxy::deploy_contract(const Address& sender_address,
+                                 const Hash& contract_hash,
+                                 uint64_t nonce)
 {
-/*
-    std::printf("attempting to deploy contract hash %s to address %s\n",
-        debug::array_to_str(contract_hash).c_str(),
-        debug::array_to_str(deploy_address).c_str());
-*/
+    auto deploy_address = compute_contract_deploy_address(sender_address, contract_hash, nonce);
+
     if (!check_contract_exists(contract_hash)) {
-        return false;
+        return std::nullopt;
     }
     if (new_deployments.find(deploy_address) != new_deployments.end()) {
-        return false;
-    }
-
-    if (!contract_db.check_address_open_for_deployment(deploy_address)) {
-        return false;
-    }
-    new_deployments[deploy_address] = contract_hash;
-    return true;
-}
-
-std::optional<ContractDeployClosure>
-ContractDBProxy::push_deploy_contract(const Address& deploy_address,
-                                      const Hash& contract_hash)
-{
-    if (!contract_db.deploy_contract_to_address(deploy_address,
-                                                contract_hash)) {
         return std::nullopt;
     }
 
-    return ContractDeployClosure(deploy_address, contract_db);
+    new_deployments[deploy_address] = contract_hash;
+    return {deploy_address};
+}
+
+void
+ContractDBProxy::deploy_contract_at_specific_address(const Address& deploy_address,
+                                                     const Hash& contract_hash)
+{
+    if (!check_contract_exists(contract_hash)) {
+        throw std::runtime_error("invalid deploy at specific address");
+    }
+    if (new_deployments.find(deploy_address) != new_deployments.end()) {
+        throw std::runtime_error("invalid deploy at specific address");
+    }
+
+    new_deployments[deploy_address] = contract_hash;
+}
+
+
+ContractDeployClosure
+ContractDBProxy::push_deploy_contract(const Address& deploy_address,
+                                      const Hash& contract_hash) const
+{
+    return ContractDeployClosure(deploy_address, contract_hash, contract_db);
 }
 
 Hash
@@ -149,25 +142,19 @@ ContractDBProxy::push_create_contract(
     return ContractCreateClosure(h, contract.first, contract.second, contract_db);
 }
 
-bool
+void
 ContractDBProxy::push_updates_to_db(TransactionRewind& rewind)
 {
     assert_not_committed();
     is_committed = true;
     
     for (auto const& [addr, hash] : new_deployments) {
-        auto res = push_deploy_contract(addr, hash);
-        if (res) {
-            rewind.add(std::move(*res));
-        } else {
-            return false;
-        }
+        rewind.add(push_deploy_contract(addr, hash));
     }
 
     for (auto const& [hash, script] : new_contracts) {
         rewind.add(push_create_contract(hash, script));
     }
-    return true;
 }
 
 RunnableScriptView

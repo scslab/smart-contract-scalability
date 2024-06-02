@@ -162,9 +162,7 @@ TC_DECL::push_storage_deltas()
         return nullptr;
     }
 
-    if (!contract_db_proxy.push_updates_to_db(commitment->rewind)) {
-        return nullptr;
-    }
+    contract_db_proxy.push_updates_to_db(commitment->rewind);
 
     return commitment;
 }

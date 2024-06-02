@@ -20,6 +20,8 @@
 
 namespace scs {
 
+
+// Guarantee -- no collisions on deploy contracts
 Address
 compute_contract_deploy_address(Address const& deployer_address,
                                 Hash const& contract_hash,
