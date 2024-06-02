@@ -36,6 +36,7 @@ class ModificationMetadata : public trie::EphemeralTrieMetadataBase
         NNINT64 = 1,
         HASHSET_LIMIT = 2,
         KNOWN_SUPPLY_ASSET = 3,
+        HASHSET_INSERT = 4,
         NONE = 0
     };
 
@@ -45,6 +46,7 @@ class ModificationMetadata : public trie::EphemeralTrieMetadataBase
         int128_t nnint64_delta;
         uint64_t hashset_limit_delta;
         int128_t known_supply_asset_delta;
+        uint64_t hs_insert_count;
     } meta;
 
     ActiveMeta active_meta;
@@ -60,7 +62,7 @@ class ModificationMetadata : public trie::EphemeralTrieMetadataBase
         return meta.nnint64_delta;
     }
 
-    int128_t get_hs_limit() const
+    uint64_t get_hs_limit() const
     {
         if (active_meta != HASHSET_LIMIT) {
             throw std::runtime_error("mismatch");
@@ -74,6 +76,13 @@ class ModificationMetadata : public trie::EphemeralTrieMetadataBase
             throw std::runtime_error("mismatch");
         }
         return meta.known_supply_asset_delta;
+    }
+
+    uint64_t get_hs_insert_count() const {
+        if (active_meta != HASHSET_INSERT) {
+            throw std::runtime_error("mismatch");
+        }
+        return meta.hs_insert_count;
     }
 
     void write_to(std::vector<uint8_t>& digest_bytes) const
@@ -143,9 +152,9 @@ class ModificationMetadata : public trie::EphemeralTrieMetadataBase
             }
             meta.known_supply_asset_delta = *reinterpret_cast<const int128_t*>(data);
             return EphemeralTrieMetadataBase::try_parse(data + sizeof(int128_t) + 1, len - sizeof(int128_t) - 1);
+        default:
+            return false;
         }
-
-        return false;
     }
 
     void from_value(StorageDelta const& value)
@@ -164,6 +173,11 @@ class ModificationMetadata : public trie::EphemeralTrieMetadataBase
             case DeltaType::ASSET_OBJECT_ADD: {
                 active_meta = ActiveMeta::KNOWN_SUPPLY_ASSET;
                 meta.known_supply_asset_delta = value.asset_delta();
+                break;
+            }
+            case DeltaType::HASH_SET_INSERT: {
+                active_meta = ActiveMeta::HASHSET_INSERT;
+                meta.hs_insert_count = 1;
                 break;
             }
             default: {
@@ -192,6 +206,9 @@ class ModificationMetadata : public trie::EphemeralTrieMetadataBase
                     meta.known_supply_asset_delta = other.meta.known_supply_asset_delta;
                     break;
                 }
+                case ActiveMeta::HASHSET_INSERT: {
+                    meta.hs_insert_count = other.meta.hs_insert_count;
+                }
                 case ActiveMeta::NONE: {
                     break;
                 }
@@ -200,8 +217,8 @@ class ModificationMetadata : public trie::EphemeralTrieMetadataBase
             }
         } else if (other.active_meta == active_meta) {
             switch (active_meta) {
-                // we're implementing the honest operator,
-                // for which the additions cannot overflow (by design)
+                // in deterministic version, possibility of overflow on int64_delta (so we have large bitwidths)
+                // But nnint64_delta is 64bit per delta and 128 total, and hs limit is 32bit per delta and 64 total, so ok
                 case ActiveMeta::NNINT64: {
                     meta.nnint64_delta += other.meta.nnint64_delta;
                     break;
@@ -213,6 +230,10 @@ class ModificationMetadata : public trie::EphemeralTrieMetadataBase
                 case ActiveMeta::KNOWN_SUPPLY_ASSET: {
                     meta.known_supply_asset_delta += other.meta.known_supply_asset_delta;
                     break;
+                }
+                case ActiveMeta::HASHSET_INSERT: {
+                    meta.hs_insert_count += other.meta.hs_insert_count;
+                    break;   
                 }
                 case ActiveMeta::NONE:
                     break;
