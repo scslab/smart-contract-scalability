@@ -82,6 +82,15 @@ make_hash_set_clear(uint64_t threshold)
 }
 
 StorageDelta
+make_hash_set_reserve_size_increase(uint32_t amount)
+{
+    StorageDelta d;
+    d.type(Deltatype::HASH_SET_INSERT_RESERVE_SIZE);
+    d.reserve_amount() = amount;
+    return d;
+}
+
+StorageDelta
 make_asset_add(int64_t delta)
 {
     StorageDelta d;

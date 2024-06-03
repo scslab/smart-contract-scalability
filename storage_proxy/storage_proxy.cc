@@ -208,7 +208,7 @@ PROXY_DECL::log_modified_keys(TypedModificationIndex& keys, const Hash& src_hash
 		auto deltas = v.applicator.get_deltas();
 		for (auto const& delta : deltas)
 		{
-			keys.log_modification(k, delta.delta, delta.priority, src_hash);
+			keys.log_modification(k, delta, src_hash);
 		}
 	}
 

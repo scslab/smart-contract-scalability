@@ -368,9 +368,17 @@ ProxyApplicator::get_deltas() const
             0);
     }
 
+    uint64_t min_insert_priority = UINT64_MAX;
+
     for (auto const& h : new_hashes) {
         out.emplace_back(
             make_hash_set_insert(h.entry), h.priority);
+        min_insert_priority = std::min(min_insert_priority, h.priority);
+    }
+    if (new_hashes.size() > 0)
+    {
+        out.emplace_back(
+            make_hash_set_reserve_size_increase(new_hashes.size(), min_insert_priority));
     }
 
     if (hs_clear_threshold.has_value()) {
