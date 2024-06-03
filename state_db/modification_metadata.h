@@ -110,6 +110,13 @@ class ModificationMetadata : public trie::EphemeralTrieMetadataBase
                     digest_bytes.end(), ptr, ptr + sizeof(int128_t));
                 break;
             }
+            case ActiveMeta::HASHSET_INSERT: {
+                const uint8_t* ptr = reinterpret_cast<const uint8_t*>(
+                    &meta.hs_insert_count);
+                digest_bytes.insert(
+                    digest_bytes.end(), ptr, ptr + sizeof(uint64_t));
+                break;
+            }
             case ActiveMeta::NONE: {
                 break;
             }
@@ -157,8 +164,9 @@ class ModificationMetadata : public trie::EphemeralTrieMetadataBase
         }
     }
 
-    void from_value(StorageDelta const& value)
+    void from_value(PrioritizedStorageDelta const& delta)
     {
+        auto const& value = delta.delta;
         switch (value.type()) {
             case DeltaType::NONNEGATIVE_INT64_SET_ADD: {
                 active_meta = ActiveMeta::NNINT64;
@@ -175,7 +183,7 @@ class ModificationMetadata : public trie::EphemeralTrieMetadataBase
                 meta.known_supply_asset_delta = value.asset_delta();
                 break;
             }
-            case DeltaType::HASH_SET_INSERT: {
+            case DeltaType::HASH_SET_INSERT_RESERVE_SIZE: {
                 active_meta = ActiveMeta::HASHSET_INSERT;
                 meta.hs_insert_count = 1;
                 break;

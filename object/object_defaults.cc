@@ -73,4 +73,32 @@ object_from_delta_class(StorageDeltaClass const& dc, std::optional<StorageObject
 	return out;
 }
 
+StorageDeltaClass 
+delta_class_from_delta(StorageDelta const& delta)
+{
+	StorateDeltaClass out;
+
+	switch(delta.type())
+	{
+	case DeltaType::RAW_MEMORY_WRITE:
+		out.type(ObjectType::RAW_MEMORY);
+		out.data() = delta.data();
+		return out;
+	case DeltaType::NONNEGATIVE_INT64:
+		out.type(ObjectType::NONNEGATIVE_INT64);
+		out.nonnegative_int64() = delta.set_add_nonnegative_int64().set_value;
+		return out;
+	case DeltaType::HASH_SET_INSERT:
+	case DeltaType::HASH_SET_INCREASE_LIMIT:
+	case DeltaType::HASH_SET_CLEAR:
+		out.type(ObjectType::HASH_SET);
+		return out;
+	case DeltaType::ASSET_OBJECT_ADD:
+		out.type(ObjectType::KNOWN_SUPPLY_ASSET);
+		return out;
+	}
+
+	throw std::runtime_error("invalid delta type in create StorageDeltaClass");
+}
+
 } /* scs */

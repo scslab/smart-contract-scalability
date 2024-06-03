@@ -23,35 +23,21 @@ namespace scs
 enum DeltaType
 {
 	DELETE_LAST = 0,
-	RAW_MEMORY_WRITE = 1,
-	NONNEGATIVE_INT64_SET_ADD = 2,
-	HASH_SET_INSERT = 3,
-	HASH_SET_INCREASE_LIMIT = 4,
-	HASH_SET_CLEAR = 5,
-	UNCONSTRAINED_INT64_SET_ADD = 6,
-	UNCONSTRAINED_INT64_SET_MAX = 7,
-	UNCONSTRAINED_INT64_SET_XOR = 8,
-	ASSET_OBJECT_ADD = 9,
+	RAW_MEMORY_WRITE = 0x10,
+	NONNEGATIVE_INT64_SET_ADD = 0x20,
+	HASH_SET_INSERT = 0x30,
+	HASH_SET_INCREASE_LIMIT = 0x31,
+	HASH_SET_CLEAR = 0x32,
+	HASH_SET_INSERT_RESERVE_SIZE = 0x33,
+	ASSET_OBJECT_ADD = 0x40
 };
 
 % static_assert(static_cast<uint64_t>(-1) == 0xFFFF'FFFF'FFFF'FFFF, "requires two's complement");
 
 struct set_add_t
 {
-	int64 set_value;
-	int64 delta;
-};
-
-struct set_xor_t
-{
-	int64 set_value;
-	uint64 bitmap;
-};
-
-struct set_max_t
-{
-	int64 set_value;
-	int64_t max;
+       int64 set_value;
+       int64 delta;
 };
 
 union StorageDelta switch (DeltaType type)
@@ -70,12 +56,8 @@ union StorageDelta switch (DeltaType type)
 		uint32 limit_increase;
 	case HASH_SET_CLEAR:
 		uint64 threshold;
-	case UNCONSTRAINED_INT64_SET_ADD:
-		set_add_t set_add_unconstrained_int64;
-	case UNCONSTRAINED_INT64_SET_MAX:
-		set_max_t set_max_unconstrained_int64;
-	case UNCONSTRAINED_INT64_SET_XOR:
-		set_xor_t set_xor_unconstrained_int64;
+	case HASH_SET_INSERT_RESERVE_SIZE:
+		uint32 reserve_amount;
 	case ASSET_OBJECT_ADD:
 		int64 asset_delta;
 };
@@ -103,12 +85,6 @@ struct PrioritizedStorageDelta {
 // on this class would allow things like hash set limit set,
 // not just add().
 
-struct UnconstrainedInt64DeltaClass
-{
-	int64 set_value;
-	DeltaType delta;
-};
-
 union StorageDeltaClass switch (ObjectType type)
 {
 	case RAW_MEMORY:
@@ -117,8 +93,6 @@ union StorageDeltaClass switch (ObjectType type)
 		int64 nonnegative_int64;
 	case HASH_SET:
 		void;
-	case UNCONSTRAINED_INT64:
-		UnconstrainedInt64DeltaClass unconstrained_int64_modtype;
 	case KNOWN_SUPPLY_ASSET:
 		void;
 };
@@ -133,48 +107,5 @@ struct IndexedModification
 
 typedef IndexedModification ModIndexLog<>;
 
-
-/*
-
-struct DeltaPriority
-{
-	// higher custom_priority beats lower (empty) custom_priority
-	uint32 custom_priority;
-
-	//higher gas bid wins ties
-	uint64 gas_rate_bid;
-
-	Hash tx_hash;
-
-	// the ith delta created by a tx gets id i.  Final uniqueness tiebreaker.
-	uint32 delta_id_number;
-};
-
-enum TypeclassValence
-{
-	TV_FREE = 0,
-	TV_RAW_MEMORY_WRITE = 1,
-	TV_NONNEGATIVE_INT64_SET = 2,
-	TV_ERROR = 3,
-};
-
-struct DeltaValence
-{
-	union switch(TypeclassValence type)
-	{
-		case TV_FREE:
-			void;
-		case TV_RAW_MEMORY_WRITE:
-			opaque data<RAW_MEMORY_MAX_LEN>;
-		case TV_NONNEGATIVE_INT64_SET:
-			int64 set_value;
-		case TV_ERROR:
-			void;
-	} tv;
-
-	uint32 deleted_last; // 0 = false, nonzero = true;
-};
-
-*/
 
 } /* scs */

@@ -38,12 +38,12 @@ validate_enum(std::array<int32_t, enum_count> const& vals)
 
 TypedModificationIndex::trie_prefix_t
 make_index_key(AddressAndKey const& addrkey,
-               StorageDelta const& delta,
-               uint64_t priority,
+               PrioritizedStorageDelta const& p_delta,
                Hash const& src_tx_hash)
 {
     TypedModificationIndex::trie_prefix_t out;
     // relying on ctor of trie_prefix_t to zero out memory
+    auto const& delta = p_delta.delta;
 
     auto* data = out.underlying_data_ptr();
 
@@ -75,19 +75,26 @@ make_index_key(AddressAndKey const& addrkey,
         }
         case DeltaType::NONNEGATIVE_INT64_SET_ADD:
         {
+            // [set_value] [mod priority] [delta_value]
             auto const& sa = delta.set_add_nonnegative_int64();
             // apparently standard says this conversion is well-defined
             utils::write_unsigned_big_endian(
                 data, static_cast<uint64_t>(sa.set_value));
-            utils::write_unsigned_big_endian(data + sizeof(uint64_t),
+            utils::write_unsigned_big_endian(
+                data + sizeof(uint64_t),
+                p_delta.priority);
+            utils::write_unsigned_big_endian(data + sizeof(uint64_t) + sizeof(p_delta.priority),
                                              static_cast<uint64_t>(sa.delta));
             break;
         }
         case DeltaType::HASH_SET_INSERT:
         {
+            // [hash] [mod_priority] [threshold]
             std::memcpy(
                 data, delta.hash().hash.data(), delta.hash().hash.size());
             utils::write_unsigned_big_endian(data + delta.hash().hash.size(),
+                p_delta.priority);
+            utils::write_unsigned_big_endian(data + delta.hash().hash.size() + sizeof(p_delta.priority),
                                              delta.hash().index);
             break;
         }
@@ -101,28 +108,38 @@ make_index_key(AddressAndKey const& addrkey,
             utils::write_unsigned_big_endian(data, delta.threshold());
             break;
         }
+        case DeltaType::HASH_SET_INSERT_RESERVE_SIZE:
+        {
+            utils::write_unsigned_big_endian(data, p_delta.priority);
+            utils::write_unsigned_big_endian(data + sizeof(p_delta.priority),
+                delta.reserve_amount());
+            break;
+        }
         case DeltaType::ASSET_OBJECT_ADD:
         {
             utils::write_unsigned_big_endian(
-                data, static_cast<uint64_t>(delta.asset_delta()));
+                data,
+                p_delta.priority);
+            utils::write_unsigned_big_endian(
+                data + sizeof(p_delta.priority), 
+                static_cast<uint64_t>(delta.asset_delta()));
+
             break;
         }
         default:
             throw std::runtime_error("unimplemented");
     }
     data += TypedModificationIndex::modification_key_length;
-    std::memcpy(data, &priority, sizeof(uint64_t));
-    data += sizeof(uint64_t);
     std::memcpy(data, src_tx_hash.data(), sizeof(Hash));
     return out;
 }
 
 void 
 TypedModificationIndex::log_modification(
-    AddressAndKey const& addrkey, StorageDelta const& mod, uint64_t priority, Hash const& src_tx_hash)
+    AddressAndKey const& addrkey, PrioritizedStorageDelta const& mod, Hash const& src_tx_hash)
 {
     auto& local_trie = cache.get(keys);
-    auto key = make_index_key(addrkey, value_t(mod), priority, src_tx_hash);
+    auto key = make_index_key(addrkey, mod, src_tx_hash);
 
     local_trie.insert(key, mod);
 }
@@ -130,12 +147,12 @@ TypedModificationIndex::log_modification(
 void 
 TypedModificationIndex::save_modifications(ModIndexLog& out)
 {
-    auto get_fn = [](trie_prefix_t const& prefix, StorageDelta const& delta) -> IndexedModification
+    auto get_fn = [](trie_prefix_t const& prefix, PrioritizedStorageDelta const& delta) -> IndexedModification
     {
         IndexedModification out;
         std::memcpy(out.addr.data(), prefix.underlying_data_ptr(), sizeof(AddressAndKey));
         std::memcpy(out.tx_hash.data(), prefix.underlying_data_ptr() + trie_prefix_t::size_bytes() - sizeof(Hash), sizeof(Hash));
-        out.delta = delta;
+        out.delta = delta.delta;
         return out;
     };
 
@@ -235,7 +252,7 @@ void
 TypedModificationIndex::prune_conflicts(UniqueTxSet& txs) const
 {
     assert_hashed();
-    CancelTxsFn cancels(txs);
+    CancelTxsFn cancels(txs, keys);
 
     keys.parallel_batch_value_modify_const<CancelTxsFn, trie_prefix_t::len()>(cancels, 1);
 

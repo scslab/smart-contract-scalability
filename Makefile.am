@@ -122,7 +122,9 @@ STATE_DB_SRCS = \
 	state_db/state_db.cc \
 	state_db/state_db_v2.cc \
 	state_db/typed_modification_index.cc \
-	state_db/typed_mod_trie.cc
+	state_db/typed_mod_trie.cc \
+	state_db/prioritized_tc.cc \
+	state_db/deterministic_state_db.cc
 
 STATE_DB_TEST_SRCS = \
 	state_db/tests/test_typed_modification_index.cc

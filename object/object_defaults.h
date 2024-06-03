@@ -27,4 +27,7 @@ namespace scs
 StorageObject
 object_from_delta_class(StorageDeltaClass const& d, std::optional<StorageObject> const& prev_object);
 
+StorageDeltaClass 
+delta_class_from_delta(StorageDelta const& delta);
+
 } // namespace scs

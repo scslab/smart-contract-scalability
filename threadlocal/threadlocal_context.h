@@ -37,13 +37,15 @@
 
 #include "config/static_constants.h"
 
+#include "state_db/prioritized_tc.h"
+
 namespace scs {
 
 class ThreadlocalContextStore
 {
     struct context_t
     {
-        MultitypeGarbageCollector<StorageDeltaClass>
+        MultitypeGarbageCollector<StorageDeltaClass, TCInstance>
             gc;
 
         UniqueIdentifier uid;
