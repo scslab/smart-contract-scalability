@@ -97,6 +97,18 @@ union StorageDeltaClass switch (ObjectType type)
 		void;
 };
 
+union CompressedStorageDeltaClass switch (ObjectType type)
+{
+	case RAW_MEMORY:
+		Hash hashed_data;  // only difference
+	case NONNEGATIVE_INT64:
+		int64 nonnegative_int64;
+	case HASH_SET:
+		void;
+	case KNOWN_SUPPLY_ASSET:
+		void;
+};
+
 
 struct IndexedModification
 {

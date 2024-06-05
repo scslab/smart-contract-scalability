@@ -30,4 +30,8 @@ object_from_delta_class(StorageDeltaClass const& d, std::optional<StorageObject>
 StorageDeltaClass 
 delta_class_from_delta(StorageDelta const& delta);
 
+
+CompressedStorageDeltaClass 
+compressed_delta_class_from_delta(StorageDelta const& delta);
+
 } // namespace scs

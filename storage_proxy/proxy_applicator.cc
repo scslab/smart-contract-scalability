@@ -378,7 +378,7 @@ ProxyApplicator::get_deltas() const
     if (new_hashes.size() > 0)
     {
         out.emplace_back(
-            make_hash_set_reserve_size_increase(new_hashes.size(), min_insert_priority));
+            make_hash_set_reserve_size_increase(new_hashes.size()), min_insert_priority);
     }
 
     if (hs_clear_threshold.has_value()) {

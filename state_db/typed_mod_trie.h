@@ -6,8 +6,8 @@
 
 #include <xdrpp/marshal.h>
 
-#include <vector>
 #include <cstdint>
+#include <vector>
 
 #include "xdr/storage_delta.h"
 
@@ -15,12 +15,16 @@
 
 #include "config/static_constants.h"
 
-namespace scs
+namespace scs {
+
+class DeterministicStateDB;
+class DeterministicStateDBValue;
+class UniqueTxSet;
+
+struct TypedModificationTrieTypes
 {
 
-struct TypedModificationTrieTypes {
-
-	static void serialize(std::vector<uint8_t>& buf, const StorageDelta& v)
+    static void serialize(std::vector<uint8_t>& buf, const StorageDelta& v)
     {
         xdr::append_xdr_to_opaque(buf, v);
     }
@@ -28,27 +32,33 @@ struct TypedModificationTrieTypes {
     using value_t = trie::BetterSerializeWrapper<StorageDelta, &serialize>;
 
     // keys are [addrkey] [modification type] [modification] [priority] [txid]
-    constexpr static size_t modification_key_length = 32 + 8; // len(hash) + len(tag), for hashset entries
+    constexpr static size_t modification_key_length
+        = 32 + 8; // len(hash) + len(tag), for hashset entries
 
-    using trie_prefix_t = trie::ByteArrayPrefix<sizeof(AddressAndKey) + 1 + modification_key_length + sizeof(uint64_t) + sizeof(Hash)>;
-    using map_t = trie::AtomicTrie<value_t, trie_prefix_t, ModificationMetadata>;
+    using trie_prefix_t
+        = trie::ByteArrayPrefix<sizeof(AddressAndKey) + 1
+                                + modification_key_length + sizeof(uint64_t)
+                                + sizeof(Hash)>;
+    using map_t
+        = trie::AtomicTrie<value_t, trie_prefix_t, ModificationMetadata>;
 
     using serial_trie_t = trie::AtomicTrieReference<map_t>;
 
     using cache_t = utils::ThreadlocalCache<serial_trie_t, TLCACHE_SIZE>;
 };
 
-
 class TypedModificationTrie : public TypedModificationTrieTypes::map_t
 {
+    void prune_all_below(node_t const* node,
+        UniqueTxSet& txs) const;
 
-	public:
-
-	void prune_conflicts(node_t const* node, ModificationMetadata offset_meta) const;
+  public:
+    void prune_conflicts(node_t const* node,
+                         std::optional<ModificationMetadata> offset_meta,
+                         const DeterministicStateDBValue* value,
+                         DeterministicStateDB const& sdb,
+                         UniqueTxSet& txs,
+                         bool hs_duplicate_insert_flag) const;
 };
 
-
-
-
-
-}
+} // namespace scs

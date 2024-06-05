@@ -16,6 +16,8 @@
 
 #include "object/object_defaults.h"
 
+#include "crypto/hash.h"
+
 #include <cstring>
 
 namespace scs
@@ -76,7 +78,7 @@ object_from_delta_class(StorageDeltaClass const& dc, std::optional<StorageObject
 StorageDeltaClass 
 delta_class_from_delta(StorageDelta const& delta)
 {
-	StorateDeltaClass out;
+	StorageDeltaClass out;
 
 	switch(delta.type())
 	{
@@ -84,18 +86,53 @@ delta_class_from_delta(StorageDelta const& delta)
 		out.type(ObjectType::RAW_MEMORY);
 		out.data() = delta.data();
 		return out;
-	case DeltaType::NONNEGATIVE_INT64:
+	case DeltaType::NONNEGATIVE_INT64_SET_ADD:
 		out.type(ObjectType::NONNEGATIVE_INT64);
 		out.nonnegative_int64() = delta.set_add_nonnegative_int64().set_value;
 		return out;
 	case DeltaType::HASH_SET_INSERT:
 	case DeltaType::HASH_SET_INCREASE_LIMIT:
 	case DeltaType::HASH_SET_CLEAR:
+	case DeltaType::HASH_SET_INSERT_RESERVE_SIZE:
 		out.type(ObjectType::HASH_SET);
 		return out;
 	case DeltaType::ASSET_OBJECT_ADD:
 		out.type(ObjectType::KNOWN_SUPPLY_ASSET);
 		return out;
+	case DeltaType::DELETE_LAST:
+		throw std::runtime_error("Delete Last has no typeclass");
+	}
+
+	throw std::runtime_error("invalid delta type in create StorageDeltaClass");
+}
+
+CompressedStorageDeltaClass
+compressed_delta_class_from_delta(StorageDelta const& delta)
+{
+	CompressedStorageDeltaClass out;
+
+	switch(delta.type())
+	{
+	case DeltaType::RAW_MEMORY_WRITE:
+		out.type(ObjectType::RAW_MEMORY);
+		// key difference
+		hash_raw(delta.data().data(), delta.data().size(), out.hashed_data().data());
+		return out;
+	case DeltaType::NONNEGATIVE_INT64_SET_ADD:
+		out.type(ObjectType::NONNEGATIVE_INT64);
+		out.nonnegative_int64() = delta.set_add_nonnegative_int64().set_value;
+		return out;
+	case DeltaType::HASH_SET_INSERT:
+	case DeltaType::HASH_SET_INCREASE_LIMIT:
+	case DeltaType::HASH_SET_CLEAR:
+	case DeltaType::HASH_SET_INSERT_RESERVE_SIZE:
+		out.type(ObjectType::HASH_SET);
+		return out;
+	case DeltaType::ASSET_OBJECT_ADD:
+		out.type(ObjectType::KNOWN_SUPPLY_ASSET);
+		return out;
+	case DeltaType::DELETE_LAST:
+		throw std::runtime_error("DELETE_LAST has no typeclass");
 	}
 
 	throw std::runtime_error("invalid delta type in create StorageDeltaClass");

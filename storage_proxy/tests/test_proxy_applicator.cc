@@ -36,10 +36,10 @@ TEST_CASE("raw mem only", "[mutator]")
     std::unique_ptr<ProxyApplicator> applicator;
 
     auto check_valid
-        = [&](StorageDelta const& d) { REQUIRE(applicator->try_apply(d)); };
+        = [&](StorageDelta const& d) { REQUIRE(applicator->try_apply(d, 0)); };
 
     auto check_invalid
-        = [&](StorageDelta const& d) { REQUIRE(!applicator->try_apply(d)); };
+        = [&](StorageDelta const& d) { REQUIRE(!applicator->try_apply(d, 0)); };
 
     auto make_raw_mem_write = [&](const raw_mem_val& v) -> StorageDelta {
         raw_mem_val copy = v;
@@ -173,10 +173,10 @@ TEST_CASE("nonnegative int64 only", "[mutator]")
     std::unique_ptr<ProxyApplicator> applicator;
 
     auto check_valid
-        = [&](StorageDelta const& d) { REQUIRE(applicator->try_apply(d)); };
+        = [&](StorageDelta const& d) { REQUIRE(applicator->try_apply(d, 0)); };
 
     auto check_invalid
-        = [&](StorageDelta const& d) { REQUIRE(!applicator->try_apply(d)); };
+        = [&](StorageDelta const& d) { REQUIRE(!applicator->try_apply(d, 0)); };
 
     auto val_expect_int64 = [&](int64_t v) {
         REQUIRE(applicator->get());
@@ -298,10 +298,10 @@ TEST_CASE("hash set only", "[mutator]")
     std::unique_ptr<ProxyApplicator> applicator;
 
     auto check_valid
-        = [&](StorageDelta const& d) { REQUIRE(applicator->try_apply(d)); };
+        = [&](StorageDelta const& d) { REQUIRE(applicator->try_apply(d, 0)); };
 
     auto check_invalid
-        = [&](StorageDelta const& d) { REQUIRE(!applicator->try_apply(d)); };
+        = [&](StorageDelta const& d) { REQUIRE(!applicator->try_apply(d, 0)); };
 
     auto val_expect_hash = [&](Hash const& h) {
         REQUIRE(applicator->get());
@@ -391,8 +391,8 @@ TEST_CASE("hash set only", "[mutator]")
             auto res = applicator->get_deltas();
 
             REQUIRE(res.size() == 1);
-            REQUIRE(res[0].type() == DeltaType::HASH_SET_INCREASE_LIMIT);
-            REQUIRE(res[0].limit_increase() == 128);
+            REQUIRE(res[0].delta.type() == DeltaType::HASH_SET_INCREASE_LIMIT);
+            REQUIRE(res[0].delta.limit_increase() == 128);
 
             check_valid(make_hash_set_insert(make_hash(0), 0));
             check_invalid(make_hash_set_insert(make_hash(1), 0));
@@ -411,7 +411,7 @@ TEST_CASE("hash set only", "[mutator]")
 
             auto find_clear = [&]() {
                 for (auto const& d : res) {
-                    if (d.type() == DeltaType::HASH_SET_CLEAR) {
+                    if (d.delta.type() == DeltaType::HASH_SET_CLEAR) {
                         return true;
                     }
                 }
@@ -439,8 +439,8 @@ TEST_CASE("hash set only", "[mutator]")
             check_valid(make_hash_set_increase_limit(0));
             auto res = applicator->get_deltas();
             REQUIRE(res.size() == 1);
-            REQUIRE(res[0].type() == DeltaType::HASH_SET_INCREASE_LIMIT);
-            REQUIRE(res[0].limit_increase() == 0);
+            REQUIRE(res[0].delta.type() == DeltaType::HASH_SET_INCREASE_LIMIT);
+            REQUIRE(res[0].delta.limit_increase() == 0);
         }
     }
 }
@@ -450,10 +450,10 @@ TEST_CASE("asset only", "[mutator]")
     std::unique_ptr<ProxyApplicator> applicator;
 
     auto check_valid
-        = [&](StorageDelta const& d) { REQUIRE(applicator->try_apply(d)); };
+        = [&](StorageDelta const& d) { REQUIRE(applicator->try_apply(d, 0)); };
 
     auto check_invalid
-        = [&](StorageDelta const& d) { REQUIRE(!applicator->try_apply(d)); };
+        = [&](StorageDelta const& d) { REQUIRE(!applicator->try_apply(d, 0)); };
 
 
     auto val_expect_amount = [&](uint64_t amount) {
@@ -464,7 +464,7 @@ TEST_CASE("asset only", "[mutator]")
     auto expect_delta = [&](int64_t delta)
     {
         REQUIRE(applicator -> get_deltas().size() == 1);
-        REQUIRE(applicator -> get_deltas().at(0).asset_delta() == delta);
+        REQUIRE(applicator -> get_deltas().at(0).delta.asset_delta() == delta);
     };
 
     SECTION("add to empty")

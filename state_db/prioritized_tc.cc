@@ -8,50 +8,50 @@
 
 #include <stdexcept>
 
-namespace scs
-{
+namespace scs {
 
 void
 PrioritizedTC::log_prioritized_typeclass(PrioritizedStorageDelta const& delta)
 {
-	if (delta.delta.type() == DeltaType::DELETE_LAST) {
-		return;
-	}
+    if (delta.delta.type() == DeltaType::DELETE_LAST) {
+        return;
+    }
 
-	TCInstance* tc = new TCInstance(delta.priority, delta_class_from_delta(delta.delta));
+    // TODO: This winds up hashing a raw_memory_write twice (once here, and once
+    // in the modification log)
+    TCInstance* tc = new TCInstance(
+        delta.priority, compressed_delta_class_from_delta(delta.delta));
 
-	while (true) {
-		const auto* ptr = cur_active_instance.load(std::memory_order_relaxed);
-		if ((ptr == nullptr) || (ptr -> tc_priority > tc -> tc_priority)) {
-			if (cur_active_instance.compare_exchange_strong(ptr, tc, std::memory_order_acq_rel))
-			{
-				ThreadlocalContextStore::defer_delete(ptr);
-				return;
-			}
-		}
-		else
-		{
-			return;
-		}
+    while (true) {
+        const auto* ptr = cur_active_instance.load(std::memory_order_relaxed);
+        if ((ptr == nullptr) || (ptr->tc_priority > tc->tc_priority)) {
+            if (cur_active_instance.compare_exchange_strong(
+                    ptr, tc, std::memory_order_acq_rel)) {
+                ThreadlocalContextStore::defer_delete(ptr);
+                return;
+            }
+        } else {
+            return;
+        }
 
-		SPINLOCK_PAUSE();
-	}
+        SPINLOCK_PAUSE();
+    }
 }
 
-StorageDeltaClass const& 
+CompressedStorageDeltaClass const&
 PrioritizedTC::get_sdc() const
 {
-	auto const* ptr = cur_active_instance.load(std::memory_order_acquire);
-	if (ptr == nullptr) {
-		throw std::runtime_error("cannot get sdc if nexist");
-	}
-	return ptr -> sdc;
+    auto const* ptr = cur_active_instance.load(std::memory_order_acquire);
+    if (ptr == nullptr) {
+        throw std::runtime_error("cannot get sdc if nexist");
+    }
+    return ptr->sdc;
 }
 
-void 
+void
 PrioritizedTC::reset()
 {
-	cur_active_instance.store(nullptr, std::memory_order_release);
+    cur_active_instance.store(nullptr, std::memory_order_release);
 }
 
-}
+} // namespace scs
