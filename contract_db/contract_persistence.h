@@ -179,6 +179,7 @@ class AsyncPersistContracts : public utils::AsyncWorker
                     Hash const& contract_hash)
     {
         if constexpr (PERSISTENT_STORAGE_ENABLED) {
+            std::lock_guard lock(mtx);
             cache.get().deployments.emplace_back(contract_addr, contract_hash);
         }
     }
@@ -187,6 +188,7 @@ class AsyncPersistContracts : public utils::AsyncWorker
                     std::shared_ptr<const Contract> contract)
     {
         if constexpr (PERSISTENT_STORAGE_ENABLED) {
+            std::lock_guard lock(mtx);
             cache.get().creations.emplace_back(hash, contract);
         }
     }
