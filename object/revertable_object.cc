@@ -375,7 +375,7 @@ RevertableObject::try_add_delta(const StorageDelta& delta)
                 for (auto const& h : committed_base->body.hash_set().hashes) {
                     // TODO these will be sorted (unless we pick a homomorphic
                     // hash fn)? bin search might be faster
-                    if (h == delta.hash()) {
+                    if (h.hash == delta.hash().hash) {
                         return std::nullopt;
                     }
                 }
