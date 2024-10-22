@@ -19,6 +19,8 @@
 
 #include "genesis/addresses.h"
 
+#include <cstring>
+
 namespace deploy
 {
 

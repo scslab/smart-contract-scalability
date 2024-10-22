@@ -41,9 +41,28 @@
 #include "builtin_fns/gas_costs.h"
 #include "contract_db/contract_utils.h"
 
+#include <type_traits>
+#include <cinttypes>
+
 #define EC_DECL(ret) template<typename TransactionContext_t> ret ExecutionContext<TransactionContext_t>
 
 namespace scs {
+
+template<typename T>
+concept TriviallyCopyable
+= requires {
+    typename std::enable_if<std::is_trivially_copyable<T>::value>::type;
+};
+
+
+wasm_api::HostFnStatus<void> gas_handler(wasm_api::HostCallContext* context, uint64_t gas)
+{
+    if (context -> runtime -> consume_gas(gas)) {
+        return {};
+    }
+    std::printf("out of gas\n");
+    return wasm_api::HostFnStatus<void>{std::unexpect_t{}, wasm_api::HostFnError::OUT_OF_GAS};
+}
 
 template class ExecutionContext<GroundhogTxContext>;
 template class ExecutionContext<SisyphusTxContext>;
@@ -55,11 +74,15 @@ EC_DECL()::ExecutionContext()
     , tx_context(nullptr)
     , results_of_last_tx(nullptr)
     , addr_db(nullptr)
-{}
-
-
-EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
 {
+    wasm_context.link_fn("scs", "syscall", &ExecutionContext<TransactionContext_t>::static_syscall_handler);
+    wasm_context.link_fn("scs", "gas", &gas_handler);
+}
+
+
+EC_DECL(wasm_api::MeteredReturn)::invoke_subroutine(MethodInvocation const& invocation, uint64_t gas_limit)
+{
+    std::printf("start invoke subroutine\n");
     auto iter = active_runtimes.find(invocation.addr);
     if (iter == active_runtimes.end()) {
         CONTRACT_INFO("creating new runtime for contract at %s",
@@ -67,24 +90,35 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
 
         //auto timestamp = utils::init_time_measurement();
 
+        if (!tx_context) {
+            throw std::runtime_error("no tx context??");
+        }
+
         auto script = tx_context->get_contract_db_proxy().get_script(invocation.addr);
         wasm_api::Script s {.data = script.data, .len = script.len};
+
+        std::printf("script = %p len %"PRIu32"\n", s.data, s.len);
 
         auto runtime_instance = wasm_context.new_runtime_instance(
             s,
             reinterpret_cast<void*>(this));
 
         if (!runtime_instance) {
-            throw HostError("cannot find target address");
+            std::printf("failed to launch a runtime instance\n");
+            return wasm_api::MeteredReturn{
+                .result = wasm_api::InvokeStatus<uint64_t>(std::unexpect_t{}, wasm_api::InvokeError::OUT_OF_GAS_ERROR),
+                .gas_consumed = 0
+            };
         }
 
-        runtime_instance -> template link_fn<&ExecutionContext<TransactionContext_t>::static_syscall_handler>("scs", "syscall");
-        runtime_instance -> template link_fn<&ExecutionContext<TransactionContext_t>::static_gas_handler>("scs", "gas");
+        /*runtime_instance -> link_fn("scs", "syscall", &ExecutionContext<TransactionContext_t>::static_syscall_handler);
+        runtime_instance -> link_fn("scs", "gas", &gas_handler);
 
         runtime_instance -> template link_env<&ExecutionContext<TransactionContext_t>::static_env_memcmp>("memcmp");
         runtime_instance -> template link_env<&ExecutionContext<TransactionContext_t>::static_env_memset>("memset");
         runtime_instance -> template link_env<&ExecutionContext<TransactionContext_t>::static_env_memcpy>("memcpy");
         runtime_instance -> template link_env<&ExecutionContext<TransactionContext_t>::static_env_strnlen>("strnlen");
+        */
 
         //std::printf("launch time: %lf\n", utils::measure_time(timestamp));
 
@@ -97,10 +131,16 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
 
     tx_context->push_invocation_stack(runtime, invocation);
 
-    runtime->template invoke<void>(
-        invocation.get_invocable_methodname().c_str());
+    auto res = runtime->invoke(
+        invocation.get_invocable_methodname().c_str(), gas_limit);
+
+    if (!res.result.has_value()) {
+        std::printf("invoke failed! err %u\n", res.result.error());
+    }
 
     tx_context->pop_invocation_stack();
+
+    return res;
 }
 
 template
@@ -156,15 +196,18 @@ ExecutionContext<TransactionContext_t>::execute(Hash const& tx_hash,
         reset();
     } };
 
-    try {
-        invoke_subroutine(invocation);
-    } catch (wasm_api::HostError& e) {
-	    std::printf("tx failed %s\n", e.what());
-	    CONTRACT_INFO("Execution error: %s", e.what());
+    auto invoke_res = invoke_subroutine(invocation, tx.tx.gas_limit);
+
+    if (!invoke_res.result) {
+        if (invoke_res.result.error() == wasm_api::InvokeError::UNRECOVERABLE) {
+            std::printf("unrecoverable error\n");
+            std::terminate();
+        }
+
+        std::printf("Error: Invoke res %u\n", invoke_res.result.error());
+
+        std::printf("failed here\n");
         return TransactionStatus::FAILURE;
-    } catch (...) {
-        std::printf("unrecoverable error!\n");
-        std::abort();
     }
 
     auto storage_commitment = tx_context -> push_storage_deltas();
@@ -221,6 +264,7 @@ EC_DECL()::~ExecutionContext()
   }
 }
 
+/*
 EC_DECL(int32_t)::env_memcmp(uint32_t lhs, uint32_t rhs, uint32_t sz)
 {
     tx_context -> consume_gas(gas_memcmp(sz));
@@ -246,45 +290,125 @@ EC_DECL(uint32_t)::env_strnlen(uint32_t ptr, uint32_t max_len)
     tx_context -> consume_gas(gas_strnlen(max_len));
     return tx_context -> get_current_runtime()->safe_strlen(ptr, max_len);
 }
+*/
 
-EC_DECL(void)::gas_handler(uint64_t gas)
+EC_DECL(wasm_api::HostFnStatus<uint64_t>)::
+syscall_handler(wasm_api::WasmRuntime* runtime, uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5) noexcept
 {
-    syscall_handler(SYSCALLS::GAS, gas, 0, 0, 0, 0, 0);
-}
+    auto ret = wasm_api::HostFnStatus<uint64_t>(std::unexpect_t{}, wasm_api::HostFnError::UNRECOVERABLE);
+    uint64_t required_gas = UINT64_MAX;
 
-EC_DECL(int64_t)::
-syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5)
-{
-    uint64_t ret = -1;
     auto& tx_ctx = *tx_context;
-    auto& runtime = *tx_ctx.get_current_runtime();
 
-    auto load_from_memory = [&runtime]<typename T>(uint32_t offset, uint32_t len) -> T {
-        return runtime.template load_from_memory<T>(offset, len);
+    auto load_from_memory = [&runtime]<TriviallyCopyable T>(T& arg, uint32_t offset) -> bool {
+        auto mem = runtime-> get_memory();
+
+        if (((uint64_t)offset) + sizeof(T) > mem.size()) {
+            return false;
+        }
+
+        T* in = reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(mem.data()) + offset);
+        arg = *in;
+
+        return true;
     };
 
-    auto load_from_memory_constsize = [&runtime]<typename T>(uint32_t offset) -> T {
-        return runtime.template load_from_memory_to_const_size_buf<T>(offset);
+    auto load_vec_from_memory = [&runtime]<typename T>(T& arg, uint32_t offset, uint32_t len) -> bool {
+        auto mem = runtime-> get_memory();
+
+        if (((uint64_t)offset) + len > mem.size()) {
+            return false;
+        }
+
+        arg.insert(
+            arg.end(),
+            reinterpret_cast<uint8_t*>(mem.data()) + offset,
+            reinterpret_cast<uint8_t*>(mem.data()) + offset + len);
+
+        return true;
     };
 
-    auto load_storage_key = [&] (uint32_t offset) -> AddressAndKey {
-        auto key = load_from_memory_constsize.template operator()<InvariantKey>(arg0);
-        return tx_ctx.get_storage_key(key);
+    auto load_storage_key = [&] (AddressAndKey& load_arg, uint32_t offset) -> bool {
+        InvariantKey key;
+        if (!load_from_memory(key, offset)) {
+            return false;
+        }
+        load_arg = tx_ctx.get_storage_key(key);
+        return true;
     };
 
-    auto write_to_memory = [&runtime]<typename T>(T const& buf, uint32_t offset, uint32_t len)
+    auto write_to_memory = [&runtime]<TriviallyCopyable T>(T const& arg, uint32_t offset) -> bool
     {
-        runtime.template write_to_memory(buf, offset, len);
+        auto mem = runtime-> get_memory();
+
+        if (((uint64_t)offset) + sizeof(T) > mem.size()) {
+            return false;
+        }
+
+        T* out = reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(mem.data()) + offset);
+        *out = arg;
+
+        return true;
     };
 
-    auto consume_gas = [&tx_ctx] (uint64_t gas_amount) {
-	tx_ctx.consume_gas(gas_amount);
+    auto write_vec_to_memory = [&runtime]<typename T>(T const& arg, uint32_t offset, uint32_t len) -> bool
+    {
+        auto mem = runtime-> get_memory();
+
+        if (((uint64_t)offset) + len > mem.size()) {
+            return false;
+        }
+
+        std::memcpy(
+            reinterpret_cast<uint8_t*>(mem.data()) + offset,
+            arg.data(), 
+            len);
+
+        return true;
     };
+
+    auto write_slice_to_memory = [&runtime]<typename T>(T const& arg, uint32_t offset, uint32_t slice_start, uint32_t slice_end) -> bool
+    {
+        auto mem = runtime-> get_memory();
+
+        if (((uint64_t)offset) + slice_end > mem.size()) {
+            return false;
+        }
+        
+        if (slice_end < slice_start) {
+            return false;
+        }
+
+        if (slice_end == slice_start) {
+            return true;
+        }
+
+        std::memcpy(
+            reinterpret_cast<uint8_t*>(mem.data()) + offset,
+            arg.data() + slice_start, 
+            slice_end - slice_start);
+
+        return true;
+    };
+
+    auto deterministic_error = [] {
+        return wasm_api::HostFnStatus<uint64_t>(std::unexpect_t{}, wasm_api::HostFnError::DETERMINISTIC_ERROR);
+    };
+
+    auto unrecoverable_error = [] {
+        return wasm_api::HostFnStatus<uint64_t>(std::unexpect_t{}, wasm_api::HostFnError::UNRECOVERABLE);
+    };
+
+    using enum SYSCALLS;
+
+    std::printf("syscall %llu\n", callno);
 
     switch(static_cast<SYSCALLS>(callno))
     {
     case EXIT:
-        throw HostError("sys exit unimplemented in Wasm3");
+        // unimpl for wasm
+        return unrecoverable_error();
+        break;
     case WRITE:
     {
         // arg0: str offset
@@ -292,7 +416,14 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
 
         // disable if not in debug mode
 
-        auto log = load_from_memory.template operator()<std::vector<uint8_t>>(arg0, arg1);
+        required_gas = 0;
+
+        std::vector<uint8_t> log;
+        if (!load_vec_from_memory(log, arg0, arg1)) {
+            ret = deterministic_error();
+            break;
+        }
+
         log.push_back('\0');
 
         std::printf("print: %s\n", log.data());
@@ -305,9 +436,16 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg1: str max len
 
         // disable if not in debug mode
-        auto log = load_from_memory.template operator()<std::vector<uint8_t>>(arg0, arg1);
 
-        std::printf("print: %s\n", debug::array_to_str(log).c_str());
+        required_gas = 0;
+
+        std::vector<uint8_t> log;
+        if (!load_vec_from_memory(log, arg0, arg1)) {
+            ret = deterministic_error();
+            break;
+        }
+
+        std::printf("print: %s len %" PRIu64 "\n", debug::array_to_str(log).c_str(), arg1);
         ret = 0;
         break;
     }
@@ -318,10 +456,14 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         uint32_t log_offset = arg0;
         uint32_t log_len = arg1;
         
-	consume_gas(gas_log(log_len));
+        required_gas = gas_log(log_len);
 
         CONTRACT_INFO("Logging offset=%lu len=%lu", log_offset, log_len);
-        auto log = load_from_memory.template operator()<std::vector<uint8_t>>(log_offset, log_len);
+        std::vector<uint8_t> log;
+        if (!load_vec_from_memory(log, log_offset, log_len)) {
+            ret = deterministic_error();
+            break;
+        }
         tx_ctx.tx_results->add_log(TransactionLog(log.begin(), log.end()));
         ret = 0;
         break;
@@ -343,74 +485,155 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         uint32_t return_addr = arg4;
         uint32_t return_len = arg5;
 
-        consume_gas(gas_invoke(calldata_len + return_len));
+        required_gas = gas_invoke(calldata_len + return_len);
+
+        Address invoked_addr;
+        if (!load_from_memory(invoked_addr, arg0)) {
+            ret = deterministic_error();
+            break;
+        }
+
+        std::vector<uint8_t> calldata_buf;
+        if (!load_vec_from_memory(calldata_buf, calldata, calldata_len)) {
+            ret = deterministic_error();
+            break;
+        }
 
         MethodInvocation invocation(
-            load_from_memory_constsize.template operator()<Address>(arg0),
+            invoked_addr,
             methodname,
-            load_from_memory.template operator()<std::vector<uint8_t>>(calldata, calldata_len));
+            std::move(calldata_buf));
 
         CONTRACT_INFO("call into %s method %lu",
                       debug::array_to_str(invocation.addr).c_str(),
                       methodname);
 
-        invoke_subroutine(invocation);
+        auto invoke_res = invoke_subroutine(invocation, runtime-> get_available_gas());
+
+        if (__builtin_add_overflow_p(required_gas, invoke_res.gas_consumed, static_cast<uint64_t>(0)))
+        {
+            required_gas = UINT64_MAX;
+        } else
+        {
+            required_gas += invoke_res.gas_consumed;
+        }
+
+        // This version of groundhog doesn't implement a try-catch mechanism on state/storageproxy
+        if (!invoke_res.result) {
+            using enum wasm_api::InvokeError;
+            switch(invoke_res.result.error())
+            {
+            case DETERMINISTIC_ERROR:
+                ret = deterministic_error();
+                break;
+            case OUT_OF_GAS_ERROR:
+                ret = wasm_api::HostFnStatus<uint64_t>(std::unexpect_t{}, wasm_api::HostFnError::OUT_OF_GAS);
+                break;
+            case UNRECOVERABLE:
+                return unrecoverable_error();
+                break;
+            case RETURN:
+                ret = 0;
+                break;
+            default:
+                return unrecoverable_error();
+            }
+
+            if (!ret) {
+                break;
+            }
+        } else {
+            if (*invoke_res.result != 0) {
+                std::printf("failing bc here\n");
+                ret = deterministic_error();
+                break;
+            } else {
+                ret = 0;
+            }
+        }
 
         return_len = std::min<uint32_t>(return_len, tx_ctx.return_buf.size());
-	if (return_len > 0)
-	{
-        	write_to_memory(tx_ctx.return_buf, return_addr, return_len);
-	}
-	tx_ctx.return_buf.clear();
+    	if (return_len > 0)
+    	{
+            if (!write_vec_to_memory(tx_ctx.return_buf, return_addr, return_len)) {
+                ret = deterministic_error();
+                break;
+            }
+    	}
+    	tx_ctx.return_buf.clear();
         ret = return_len;
         break;
     }
     case GET_SENDER:
     {
         // arg0: addr offset
-        consume_gas(gas_get_msg_sender);
-        Address const& sender = tx_ctx.get_msg_sender();
-        write_to_memory(sender, arg0, sender.size());
+        required_gas = gas_get_msg_sender;
+
+        auto sender = tx_ctx.get_msg_sender();
+        if (!sender) {
+            ret = deterministic_error();
+            break;
+        }
+        if (!write_to_memory(*sender, arg0)) {
+            ret = deterministic_error();
+            break;
+        }
         ret = 0;
         break;
     }
     case GET_SELF_ADDR:
     {
         // arg0: addr offset
-        consume_gas(gas_get_self_addr);
+        required_gas = gas_get_self_addr;
+
         Address const& addr = tx_ctx.get_current_method_invocation().addr;
-        write_to_memory(addr, arg0, addr.size());
+        if (!write_to_memory(addr, arg0)) {
+            ret = deterministic_error();
+            break;
+        }
         ret = 0;
         break;
     }
     case GET_SRC_TX_HASH:
     {
         // arg0: hash offset
-        consume_gas(gas_get_src_tx_hash);
-        write_to_memory(tx_ctx.get_src_tx_hash(), arg0, sizeof(Hash));
+        required_gas = gas_get_src_tx_hash;
+        if (!write_to_memory(tx_ctx.get_src_tx_hash(), arg0)) {
+            ret = deterministic_error();
+            break;
+        }
         ret = 0;
         break;
     }
     case GET_INVOKED_TX_HASH:
     {
         // arg0: hash offset
-        consume_gas(gas_get_invoked_tx_hash);
-        write_to_memory(tx_ctx.get_invoked_tx_hash(), arg0, sizeof(Hash));
+        required_gas = gas_get_invoked_tx_hash;
+        if (!write_to_memory(tx_ctx.get_invoked_tx_hash(), arg0)) {
+            ret = deterministic_error();
+            break;
+        }
         ret = 0;
         break;
     }
     case GET_BLOCK_NUMBER:
     {
-        consume_gas(gas_get_block_number);
+        required_gas = gas_get_block_number;
         ret = tx_ctx.get_block_number();
         break;
     }
     case HAS_KEY:
     {
         // arg0: key offset
-        consume_gas(gas_has_key);
+        required_gas = gas_has_key;
 
-        auto addr_and_key = load_storage_key(arg0);
+        AddressAndKey addr_and_key;
+
+        if (!load_storage_key(addr_and_key, arg0)) {
+            ret = deterministic_error();
+            break;
+        }
+
         auto res = tx_ctx.storage_proxy.get(addr_and_key);
         ret = res.has_value() ? 1 : 0;
         break;
@@ -423,19 +646,32 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         uint32_t mem_offset = arg1;
         uint32_t mem_len = arg2;
         
-        consume_gas(gas_raw_memory_set(mem_len));
-        auto storage_key = load_storage_key(arg0);
+        required_gas = gas_raw_memory_set(mem_len);
 
-        if (mem_len > RAW_MEMORY_MAX_LEN) {
-            throw HostError("mem write too long");
+        AddressAndKey storage_key;
+        if (!load_storage_key(storage_key, arg0)) {
+            ret = deterministic_error();
+            break;
         }
 
-        auto data
-            = load_from_memory.template operator()<xdr::opaque_vec<RAW_MEMORY_MAX_LEN>>(
-                      mem_offset, mem_len);
+        if (mem_len > RAW_MEMORY_MAX_LEN) {
+            ret = deterministic_error();
+            break;
+        }
 
-        tx_ctx.storage_proxy.raw_memory_write(
-            storage_key, std::move(data));
+        xdr::opaque_vec<RAW_MEMORY_MAX_LEN> data;
+
+        if (!load_vec_from_memory(data, mem_offset, mem_len)) {
+            ret = deterministic_error();
+            break;
+        }
+
+        if (!tx_ctx.storage_proxy.raw_memory_write(
+            storage_key, std::move(data)))
+        {
+            ret = deterministic_error();
+            break;
+        }
         ret = 0;
         break;
     }
@@ -446,8 +682,13 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg2: mem max len
         uint32_t output_max_len = arg2;
 
-        consume_gas(gas_raw_memory_get(output_max_len));
-        auto storage_key = load_storage_key(arg0);
+        required_gas = gas_raw_memory_get(output_max_len);
+
+        AddressAndKey storage_key;
+        if (!load_storage_key(storage_key, arg0)) {
+            ret = deterministic_error();
+            break;
+        }
 
         auto const& res = tx_ctx.storage_proxy.get(storage_key);
 
@@ -457,12 +698,16 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         }
 
         if (res->body.type() != ObjectType::RAW_MEMORY) {
-            throw HostError("type mismatch in raw mem get");
+            ret = deterministic_error();
+            break;
         }
 
         uint32_t max_write_len = std::min<uint32_t>(res->body.raw_memory_storage().data.size(), output_max_len);
 
-        write_to_memory(res->body.raw_memory_storage().data, arg1, max_write_len);
+        if (!write_vec_to_memory(res->body.raw_memory_storage().data, arg1, max_write_len)) {
+            ret = deterministic_error();
+            break;
+        }
 
         ret = max_write_len;
         break;
@@ -471,8 +716,13 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     case RAW_MEM_GET_LEN:
     {
         // arg0: key offset
-        consume_gas(gas_raw_memory_get_len);
-        auto storage_key = load_storage_key(arg0);
+        required_gas = gas_raw_memory_get_len;
+        
+        AddressAndKey storage_key;
+        if (!load_storage_key(storage_key, arg0)) {
+            ret = deterministic_error();
+            break;
+        }
 
         auto const& res = tx_ctx.storage_proxy.get(storage_key);
 
@@ -482,7 +732,8 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         }
 
         if (res->body.type() != ObjectType::RAW_MEMORY) {
-            throw HostError("type mismatch in raw mem get");
+            ret = deterministic_error();
+            break;
         }
 
         ret = res->body.raw_memory_storage().data.size();
@@ -491,9 +742,18 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     case DELETE_KEY_LAST:
     {
         // arg0: key offset
-        consume_gas(gas_delete_key_last);
-        auto storage_key = load_storage_key(arg0);
-        tx_ctx.storage_proxy.delete_object_last(storage_key);
+        required_gas = gas_delete_key_last;
+
+        AddressAndKey storage_key;
+        if (!load_storage_key(storage_key, arg0)) {
+            ret = deterministic_error();
+            break;
+        }
+
+        if (!tx_ctx.storage_proxy.delete_object_last(storage_key)) {
+            ret = deterministic_error();
+            break;
+        }
         ret = 0;
         break;
     }
@@ -506,11 +766,19 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         int64_t set_value = arg1;
         int64_t delta = arg2;
 
-        consume_gas(gas_nonnegative_int64_set_add);
-        auto storage_key = load_storage_key(arg0);
+        required_gas = gas_nonnegative_int64_set_add;
 
-        tx_ctx.storage_proxy.nonnegative_int64_set_add(
-            storage_key, set_value, delta);
+        AddressAndKey storage_key;
+        if (!load_storage_key(storage_key, arg0)) {
+            ret = deterministic_error();
+            break;
+        }
+
+        if (!tx_ctx.storage_proxy.nonnegative_int64_set_add(
+            storage_key, set_value, delta)) {
+            ret = deterministic_error();
+            break;
+        }
 
         ret = 0;
         break;
@@ -521,23 +789,36 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg1: delta
         int64_t delta = arg1;
 
-        consume_gas(gas_nonnegative_int64_add);
-        auto storage_key = load_storage_key(arg0);
+        required_gas = gas_nonnegative_int64_add;
+        
+        AddressAndKey storage_key;
+        if (!load_storage_key(storage_key, arg0)) {
+            ret = deterministic_error();
+            break;
+        }
 
         EXEC_TRACE("int64 add %lld to key %s",
                    delta,
                    debug::array_to_str(storage_key).c_str());
 
-        tx_ctx.storage_proxy.nonnegative_int64_add(
-            storage_key, delta);
+        if (!tx_ctx.storage_proxy.nonnegative_int64_add(
+            storage_key, delta)) {
+            ret = deterministic_error();
+            break;
+        }
         ret = 0;
         break;
     }
     case NNINT_GET:
     {
         // arg0: key addr
-        consume_gas(gas_nonnegative_int64_get);
-        auto storage_key = load_storage_key(arg0);
+        required_gas = gas_nonnegative_int64_get;
+        
+        AddressAndKey storage_key;
+        if (!load_storage_key(storage_key, arg0)) {
+            ret = deterministic_error();
+            break;
+        }
 
         auto const& res = tx_ctx.storage_proxy.get(storage_key);
 
@@ -547,7 +828,8 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         }
 
         if (res->body.type() != ObjectType::NONNEGATIVE_INT64) {
-            throw HostError("type mismatch in raw mem get");
+            ret = deterministic_error();
+            break;
         }
         ret = res->body.nonnegative_int64();
         break;
@@ -557,12 +839,24 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg0: key addr
         // arg1: hash addr
         // arg2: hash threshold
-        consume_gas(gas_hashset_insert);
-        auto storage_key = load_storage_key(arg0);
+        required_gas = gas_hashset_insert;
 
-        auto hash = load_from_memory_constsize.template operator()<Hash>(arg1);
-        tx_ctx.storage_proxy.hashset_insert(
-            storage_key, hash, arg2);
+        AddressAndKey storage_key;
+        if (!load_storage_key(storage_key, arg0)) {
+            ret = deterministic_error();
+            break;
+        }
+
+        Hash to_insert;
+        if (!load_from_memory(to_insert, arg1)) {
+            ret = deterministic_error();
+            break;
+        }
+        if (!tx_ctx.storage_proxy.hashset_insert(
+            storage_key, to_insert, arg2)) {
+            ret = deterministic_error();
+            break;
+        }
         ret = 0;
         break;
     }
@@ -570,13 +864,20 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     {
         // arg0: key addr
         // arg1: increase
-        consume_gas(gas_hashset_increase_limit);
-        auto storage_key = load_storage_key(arg0);
+        required_gas = gas_hashset_increase_limit;
 
+        AddressAndKey storage_key;
+        if (!load_storage_key(storage_key, arg0)) {
+            ret = deterministic_error();
+            break;
+        }
         uint32_t limit_increase = arg1;
 
-        tx_ctx.storage_proxy.hashset_increase_limit(
-            storage_key, limit_increase);
+        if (!tx_ctx.storage_proxy.hashset_increase_limit(
+            storage_key, limit_increase)) {
+            ret = deterministic_error();
+            break;
+        }
         ret = 0;
         break;
     }
@@ -584,24 +885,40 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     {
         // arg0: key addr
         // arg1: threshold
-        consume_gas(gas_hashset_clear);
-        auto storage_key = load_storage_key(arg0);
+        required_gas = gas_hashset_clear;
 
-        tx_ctx.storage_proxy.hashset_clear(
-            storage_key, arg1);
+        AddressAndKey storage_key;
+        if (!load_storage_key(storage_key, arg0)) {
+            ret = deterministic_error();
+            break;
+        }
+
+        if (!tx_ctx.storage_proxy.hashset_clear(
+            storage_key, arg1)) {
+            ret = deterministic_error();
+            break;
+        }
+
         ret = 0;
         break;
     }
     case HS_GET_SIZE:
     {
         // arg0: key offset
-        consume_gas(gas_hashset_get_size);
-        auto storage_key = load_storage_key(arg0);
+        required_gas = gas_hashset_get_size;
+
+        AddressAndKey storage_key;
+        if (!load_storage_key(storage_key, arg0)) {
+            ret = deterministic_error();
+            break;
+        }
+
         auto res = tx_ctx.storage_proxy.get(storage_key);
 
         if (res.has_value()) {
             if (res->body.type() != ObjectType::HASH_SET) {
-                throw HostError("type mismatch in hashset get_size");
+                ret = deterministic_error();
+                break;
             }
             ret = res -> body.hash_set().hashes.size();
             break;
@@ -612,13 +929,20 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     case HS_GET_MAX_SIZE:
     {
         // arg0: key offset
-        consume_gas(gas_hashset_get_max_size);
-        auto storage_key = load_storage_key(arg0);
+        required_gas = gas_hashset_get_max_size;
+
+        AddressAndKey storage_key;
+        if (!load_storage_key(storage_key, arg0)) {
+            ret = deterministic_error();
+            break;
+        }
+
         auto res = tx_ctx.storage_proxy.get(storage_key);
 
         if (res.has_value()) {
             if (res->body.type() != ObjectType::HASH_SET) {
-                throw HostError("type mismatch in hashset get_max_size");
+                ret = deterministic_error();
+                break;
             }
             ret = res -> body.hash_set().max_size;
             break;
@@ -630,16 +954,24 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     {
         // arg0: key offset
         // arg1: query threshold
-        consume_gas(gas_hashset_get_index_of);
-        auto storage_key = load_storage_key(arg0);
+        required_gas = gas_hashset_get_index_of;
+        
+        AddressAndKey storage_key;
+        if (!load_storage_key(storage_key, arg0)) {
+            ret = deterministic_error();
+            break;
+        }        
+
         auto res = tx_ctx.storage_proxy.get(storage_key);
 
         if (!res.has_value()) {
-            throw HostError("key nexist (no hashset)");
+            ret = deterministic_error();
+            break;
         }
 
         if (res->body.type() != ObjectType::HASH_SET) {
-            throw HostError("type mismatch in hashset get_index_of");
+            ret = deterministic_error();
+            break;
         }
 
         auto const& entries = res->body.hash_set().hashes;
@@ -655,7 +987,8 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
             }
         }
         if (!found) {
-            throw HostError("key nexist (not found)");
+            ret = deterministic_error();
+            break;
         }
         break;
     }
@@ -664,24 +997,37 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg0: key offset
         // arg1: query index
         // arg2: output offset
-        consume_gas(gas_hashset_get_index);
-        auto storage_key = load_storage_key(arg0);
+        required_gas = gas_hashset_get_index;
+
+
+        AddressAndKey storage_key;
+        if (!load_storage_key(storage_key, arg0)) {
+            ret = deterministic_error();
+            break;
+        }
+
         auto res = tx_ctx.storage_proxy.get(storage_key);
 
         if (!res.has_value()) {
-            throw HostError("key nexist (no hashset)");
+            ret = deterministic_error();
+            break;        
         }
 
         if (res->body.type() != ObjectType::HASH_SET) {
-            throw HostError("type mismatch in hashset get_index_of_index");
+            ret = deterministic_error();
+            break;
         }
 
         if (res->body.hash_set().hashes.size() <= arg1) {
-            throw HostError("invalid hashset index");
+            ret = deterministic_error();
+            break;
         }
 
-        write_to_memory(
-            res->body.hash_set().hashes[arg1].hash, arg2, sizeof(Hash));
+        if (!write_to_memory(
+            res->body.hash_set().hashes[arg1].hash, arg2)) {
+            ret = deterministic_error();
+            break;
+        }
 
         ret = res->body.hash_set().hashes[arg1].index;
         break;
@@ -693,18 +1039,24 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         uint32_t contract_idx = arg0;
 
         uint32_t num_contracts = tx_ctx.get_num_deployable_contracts();
+        required_gas = gas_create_contract(0);
+
         if (num_contracts <= contract_idx) {
-            throw HostError("Invalid deployable contract access");
+            ret = deterministic_error();
+            break;
         }
 
         std::shared_ptr<const Contract> contract = std::make_shared<const Contract>(
             tx_ctx.get_deployable_contract(contract_idx));
 
-        consume_gas(gas_create_contract(contract -> size()));
+        required_gas = gas_create_contract(contract -> size());
 
         Hash h = tx_ctx.contract_db_proxy.create_contract(contract);
 
-        write_to_memory(h, arg1, h.size());
+        if (!write_to_memory(h, arg1)) {
+            ret = deterministic_error();
+            break;
+        }
         ret = 0;
         break;
     } 
@@ -713,17 +1065,26 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg0: contract hash in offset
         // arg1: nonce
         // arg2: out addr offset
-        consume_gas(gas_deploy_contract);
+        required_gas = gas_deploy_contract;
 
-        auto contract_hash = load_from_memory_constsize.template operator()<Hash>(arg0);
+        Hash contract_hash;
+        if (!load_from_memory(contract_hash, arg0)) {
+            ret = deterministic_error();
+            break;
+        }
 
         auto deploy_addr_opt = tx_ctx.contract_db_proxy.deploy_contract(tx_ctx.get_self_addr(), contract_hash, arg1);
 
         if (!deploy_addr_opt.has_value()) {
-            throw HostError("failed to deploy contract");
+            // failed to deploy contract
+            ret = deterministic_error();
+            break;
         }
 
-        write_to_memory(*deploy_addr_opt, arg2, deploy_addr_opt->size());
+        if (!write_to_memory(*deploy_addr_opt, arg2)) {
+            ret = deterministic_error();
+            break;
+        }
         ret = 0;
         break;
     }
@@ -733,21 +1094,36 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg1: wit offset out
         // arg2: wit max len out
 
-        consume_gas(gas_get_witness(arg2));
+        required_gas = gas_get_witness(arg2);
 
-        auto const& wit = tx_ctx.get_witness(arg0);
+        auto wit = tx_ctx.get_witness(arg0);
 
-        uint32_t write_len = std::min<uint32_t>(wit.value.size(), arg2);
+        if (!wit) {
+            ret = deterministic_error();
+            break;
+        }
 
-        runtime.write_to_memory(wit.value, arg1, write_len);
-        ret = wit.value.size();
+        uint32_t write_len = std::min<uint32_t>(wit->value.size(), arg2);
+
+        if (!write_vec_to_memory((*wit).value, arg1, write_len)) {
+            ret = deterministic_error();
+            break;
+        }
+
+        ret = wit->value.size();
         break;
     }
     case WITNESS_GET_LEN:
     {
         // arg0: wit idx
-        consume_gas(gas_get_witness_len);
-        ret = tx_ctx.get_witness(arg0).value.size();
+        required_gas = gas_get_witness_len;
+
+        auto wit = tx_ctx.get_witness(arg0);
+        if (!wit) {
+            ret = deterministic_error();
+            break;
+        }
+        ret = wit -> value.size();
         break;
     }
     case GET_CALLDATA:
@@ -762,23 +1138,28 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         uint32_t slice_end = arg2;
 
         auto& calldata = tx_ctx.get_current_method_invocation().calldata;
-        slice_end = std::min<uint32_t>(slice_end, calldata.size());
 
-        if (slice_end <= slice_start) {
-            throw HostError("invalid calldata params");
+        required_gas = gas_get_calldata(0);
+
+        if (slice_end <= slice_start || slice_end > calldata.size()) {
+            ret = deterministic_error();
+            break;
         }
 
-        consume_gas(
-            gas_get_calldata(slice_end - slice_start));
+        required_gas = 
+            gas_get_calldata(slice_end - slice_start);
+
+        if (!write_slice_to_memory(calldata, offset, slice_start, slice_end)) {
+            ret = deterministic_error();
+            break;
+        }
         
-        tx_ctx.get_current_runtime()->write_slice_to_memory(
-            calldata, offset, slice_start, slice_end);
         ret = 0;
         break;
     }
     case GET_CALLDATA_LEN:
     {
-        consume_gas(gas_get_calldata_len);
+        required_gas = gas_get_calldata_len;
         ret = tx_ctx.get_current_method_invocation().calldata.size();
         break;
     }
@@ -788,17 +1169,21 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg1: read len
 
         uint32_t len = arg1;
-        consume_gas(gas_return(len));
 
-        tx_ctx.return_buf = 
-            load_from_memory.template operator()<std::vector<uint8_t>>(arg0, len);
+        required_gas = gas_return(len);
+
+        if (!load_vec_from_memory(tx_ctx.return_buf, arg0, len)) {
+            ret = deterministic_error();
+            break;
+        }
         ret = 0;
         break;
     }
     case GAS:
     {
         // arg0: gas
-        consume_gas(arg0);
+        required_gas = arg0;
+        ret = 0;
         break;   
     }
     case HASH:
@@ -806,13 +1191,25 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         // arg0: input offset
         // arg1: input len
         // arg2: output offset
-        consume_gas(gas_hash);
+        required_gas = gas_hash;
 
-        auto hash_buf = load_from_memory.template operator()<xdr::opaque_vec<MAX_HASH_LEN>>(arg0, arg1);
+        if (arg1 > MAX_HASH_LEN) {
+            ret = deterministic_error();
+            break;
+        }
 
-        Hash out = hash_xdr(hash_buf);
+        std::vector<uint8_t> hash_buf;
+        if (!load_vec_from_memory(hash_buf, arg0, arg1)) {
+            ret = deterministic_error();
+            break;
+        }
 
-        write_to_memory(out, arg2, out.size());
+        Hash out = hash_vec(hash_buf);
+
+        if (!write_to_memory(out, arg2)) {
+            ret = deterministic_error();
+            break;
+        }
         ret = 0;
         break;
     }
@@ -826,13 +1223,25 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         static_assert(sizeof(PublicKey) == 32, "expected 32 byte pk");
         static_assert(sizeof(Signature) == 64, "expected 64 byte sig");
 
-        consume_gas(gas_check_sig_ed25519);
+        required_gas = gas_check_sig_ed25519;
+
+        PublicKey pk;
+        Signature sig;
+        if (!load_from_memory(pk, arg0)) {
+            ret = deterministic_error();
+            break;
+        }
+        if (!load_from_memory(sig, arg1)) {
+            ret = deterministic_error();
+            break;
+        }
+
+        std::vector<uint8_t> msg;
+        if (!load_vec_from_memory(msg, arg2, arg3)) {
+            ret = deterministic_error();
+            break;
+        }
         
-        auto pk = load_from_memory_constsize.template operator()<PublicKey>(arg0);
-        auto sig = load_from_memory_constsize.template operator()<Signature>(arg1);
-
-        auto msg = load_from_memory.template operator()<std::vector<uint8_t>>(arg2, arg3);
-
         bool res = check_sig_ed25519(pk, sig, msg);
 
         auto s = debug::array_to_str(msg);
@@ -843,7 +1252,24 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
     }
 
     default:
-        throw HostError(std::string("invalid syscall no: ") + std::to_string(callno));
+        // unknown syscall
+        ret = deterministic_error();
+        break;
+    }
+
+    // should not be at unrecoverable here
+
+    auto consume_gas = [&runtime] (uint64_t gas_amount) -> bool {
+       return runtime -> consume_gas(gas_amount);
+    };
+
+    if (!consume_gas(required_gas)) {
+        std::printf("out of gas failure\n");
+        return wasm_api::HostFnStatus<uint64_t>(std::unexpect_t{}, wasm_api::HostFnError::OUT_OF_GAS);
+    }
+    std::printf("syscall result: has_value = %u\n", ret.has_value());
+    if (ret.has_value()) {
+        std::printf("returned val : %" PRIu64 "\n", *ret);
     }
     return ret;
 }

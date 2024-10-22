@@ -21,5 +21,5 @@
 
 #define BUILTIN(x) MODULE NAME(x)
 
-#define EXPORT(name) void __attribute((export_name(name)))
+#define EXPORT(name) uint64_t __attribute((export_name(name)))
 

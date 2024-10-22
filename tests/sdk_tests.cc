@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <catch2/catch_test_macros.hpp>
+#include <gtest/gtest.h>
 
 #include "transaction_context/global_context.h"
 #include "transaction_context/execution_context.h"
@@ -36,34 +36,35 @@
 
 using namespace scs;
 
-TEST_CASE("replay cache", "[sdk]")
-{
-    test::DeferredContextClear defer;
+class SdkTests : public ::testing::Test {
 
-    GlobalContext scs_data_structures;
-    auto& script_db = scs_data_structures.contract_db;
-
+ protected:
+  void SetUp() override {
     auto c = load_wasm_from_file("cpp_contracts/test_sdk.wasm");
+    deploy_addr = hash_xdr(*c);
 
-    auto h = hash_xdr(*c);
+    test::deploy_and_commit_contractdb(scs_data_structures.contract_db, deploy_addr, c);
 
-    test::deploy_and_commit_contractdb(script_db, h, c);
+    sem_addr = make_addrkey(deploy_addr, make_address(0, 1, 0, 0));
+    sem2_addr = make_addrkey(deploy_addr, make_address(1, 1, 0, 0));
+    transient_addr = make_addrkey(deploy_addr, make_address(2, 1, 0, 0));
+  }
 
-    std::unique_ptr<BlockContext> block_context
-        = std::make_unique<BlockContext>(0);
+  test::DeferredContextClear defer;
 
-    struct calldata_0
-    {
-        uint64_t expiry_time;
-        uint64_t nonce; // ignored in the contract
-    };
+  Address deploy_addr;
 
-    ExecutionContext<TxContext> exec_ctx;
+  GlobalContext scs_data_structures;
+  std::unique_ptr<BlockContext> block_context = std::make_unique<BlockContext>(0);
 
+  ExecutionContext<TxContext> exec_ctx;
 
-    auto make_replay_tx = [&](uint64_t nonce,
-                        uint64_t expiry_time,
-                           bool success = true) -> Hash {
+  Hash make_replay_tx(uint64_t nonce, uint64_t expiry_time, bool success = true) {
+        struct calldata_0
+        {
+            uint64_t expiry_time;
+            uint64_t nonce; // ignored in the contract
+        };
 
         calldata_0 data
         {
@@ -73,7 +74,7 @@ TEST_CASE("replay cache", "[sdk]")
 
         const uint64_t gas_bid = 1;
 
-        TransactionInvocation invocation(h, 0, make_calldata(data));
+        TransactionInvocation invocation(deploy_addr, 0, make_calldata(data));
 
         Transaction tx = Transaction(
             invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());
@@ -83,68 +84,247 @@ TEST_CASE("replay cache", "[sdk]")
         auto hash = hash_xdr(stx);
 
         if (success) {
-            REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
+            EXPECT_TRUE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
                     == TransactionStatus::SUCCESS);
         } else {
-            REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
+            EXPECT_TRUE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
+                    != TransactionStatus::SUCCESS);
+        }
+
+        return hash;
+    }
+
+    void check_valid (const Hash& tx_hash, uint32_t multiplicity = 1) {
+        ASSERT_EQ(block_context->tx_set.contains_tx(tx_hash), multiplicity);
+    };
+
+    void check_invalid(const Hash& tx_hash) {
+        ASSERT_EQ(block_context->tx_set.contains_tx(tx_hash), 0);
+    };
+
+    void finish_block() {
+        phase_finish_block(scs_data_structures, *block_context);
+    };
+
+    void advance_block ()
+    {
+        block_context = std::make_unique<BlockContext>(block_context->block_number + 1);
+    };
+
+    Hash make_semaphore_tx(bool success = true) {
+
+        struct calldata_0 {};
+
+        calldata_0 data
+        {
+        };
+
+        const uint64_t gas_bid = 1;
+
+        TransactionInvocation invocation(deploy_addr, 1, make_calldata(data));
+
+        Transaction tx = Transaction(
+            invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());
+        SignedTransaction stx;
+        stx.tx = tx;
+
+        auto hash = hash_xdr(stx);
+      
+        if (success) {
+            EXPECT_TRUE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
+                    == TransactionStatus::SUCCESS);
+        } else {
+            EXPECT_TRUE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
+                    != TransactionStatus::SUCCESS);
+        }
+
+        return hash;
+    }
+
+    // a semaphore that can be acquired twice (i.e. set_add (2, -1))
+    Hash make_semaphore2_tx(bool success = true) {
+        struct calldata_0 {};
+
+        calldata_0 data
+        {
+        };
+
+        const uint64_t gas_bid = 1;
+
+        TransactionInvocation invocation(deploy_addr, 2, make_calldata(data));
+
+        Transaction tx = Transaction(
+            invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());
+        
+        SignedTransaction stx;
+        stx.tx = tx;
+        
+        auto hash = hash_xdr(stx);
+
+        if (success) {
+            EXPECT_TRUE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
+                    == TransactionStatus::SUCCESS);
+        } else {
+            EXPECT_TRUE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
                     != TransactionStatus::SUCCESS);
         }
 
         return hash;
     };
 
-    auto check_valid = [&](const Hash& tx_hash) {
-        REQUIRE(block_context->tx_set.contains_tx(tx_hash));
-    };
-
-    auto finish_block = [&]() {
-        phase_finish_block(scs_data_structures, *block_context);
-    };
-
-    auto advance_block = [&] ()
+    Hash make_transient_semaphore_tx(bool success = true)
     {
-    	block_context = std::make_unique<BlockContext>(block_context -> block_number + 1);
-    };
+        struct calldata_0 {};
 
-    SECTION("one block")
-    {
-    	auto h0 = make_replay_tx(0, UINT64_MAX);
-    	auto h1 = make_replay_tx(1, UINT64_MAX);
+        calldata_0 data
+        {
+        };
 
-    	make_replay_tx(0, UINT64_MAX, false);
-    	make_replay_tx(1, UINT64_MAX, false);
 
-    	finish_block();
+        const uint64_t gas_bid = 1;
 
-    	check_valid(h0);
-    	check_valid(h1);
+        TransactionInvocation invocation(deploy_addr, 3, make_calldata(data));
+
+        Transaction tx = Transaction(
+            invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());
+        
+        SignedTransaction stx;
+        stx.tx = tx;
+        
+        auto hash = hash_xdr(stx);
+
+        if (success) {
+            EXPECT_EQ(exec_ctx.execute(hash, stx, scs_data_structures, *block_context), TransactionStatus::SUCCESS);
+        } else {
+            EXPECT_NE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context),  TransactionStatus::SUCCESS);
+        }
+
+        return hash;
     }
 
-    SECTION("overflow replay")
+    AddressAndKey make_addrkey(const Address& a, const InvariantKey& k)
     {
-    	for (size_t i = 0; i < 64; i++)
-    	{
-    		make_replay_tx(i, 0);
-    		make_replay_tx(i, 0, false);
-    	}
+        AddressAndKey out;
+        std::memcpy(out.data(), a.data(), a.size());
+        std::memcpy(out.data() + a.size(), k.data(), k.size());
+        return out;
+    };
 
-    	// fill up replay cache
-    	make_replay_tx(500, 0, false);
+    // hardcoded in the sdk tests contract
+    AddressAndKey sem_addr;
+    AddressAndKey sem2_addr;
+    AddressAndKey transient_addr;
+};
 
-    	finish_block();
+TEST_F(SdkTests, ReplayCacheOneBlock)
+{
+    auto h0 = make_replay_tx(0, UINT64_MAX);
+    auto h1 = make_replay_tx(1, UINT64_MAX);
 
-    	SECTION("no overflow next block")
-    	{
-    		advance_block();
-    		for (size_t i = 0; i < 64; i++)
-	    	{
-	    		make_replay_tx(i, 1);
-	    		make_replay_tx(i, 1, false);
-	    	}
-            make_replay_tx(500, 1, false);
-    	}
-    }
+    make_replay_tx(0, UINT64_MAX, false);
+    make_replay_tx(1, UINT64_MAX, false);
+
+    finish_block();
+
+    check_valid(h0);
+    check_valid(h1);
 }
+
+TEST_F(SdkTests, ReplayCacheFill)
+{
+    for (size_t i = 0; i < 64; i++)
+    {
+        make_replay_tx(i, 0);
+        make_replay_tx(i, 0, false);
+    }
+
+    // fill up replay cache
+    make_replay_tx(500, 0, false);
+
+    finish_block();
+
+    // next block can insert again until full
+    advance_block();
+    for (size_t i = 0; i < 64; i++)
+    {
+        make_replay_tx(i, 1);
+        make_replay_tx(i, 1, false);
+    }
+    make_replay_tx(500, 1, false);
+}
+
+TEST_F(SdkTests, SemaphoreTests) 
+{
+ 
+    // One semaphore acquire in one block ok
+    auto h = make_semaphore_tx();
+
+    auto h2 = make_semaphore_tx(false);
+    auto h3 = make_semaphore_tx(false);
+
+    finish_block();
+    check_valid(h, 1);
+    EXPECT_EQ(h, h2);
+    EXPECT_EQ(h, h3);
+
+    advance_block();
+
+    // can be reaquired in future blocks
+    make_semaphore_tx();
+
+    finish_block();
+    advance_block();
+
+    make_semaphore_tx();
+
+    finish_block();
+    advance_block();
+
+    make_semaphore_tx();
+
+    finish_block();
+
+    ASSERT_TRUE(!!scs_data_structures.state_db.get_committed_value(sem_addr));
+    ASSERT_TRUE(scs_data_structures.state_db.get_committed_value(sem_addr) -> body.nonnegative_int64() == 0);    
+}
+
+TEST_F(SdkTests, DoubleSemaphore2Ok)
+{
+    auto h1 = make_semaphore2_tx();
+    auto h2 = make_semaphore2_tx();
+    auto h3 = make_semaphore2_tx(false);
+    EXPECT_EQ(h1, h2);
+    EXPECT_EQ(h2, h3);
+
+    finish_block();
+
+    check_valid(h1, 2);
+    
+    ASSERT_TRUE(!!scs_data_structures.state_db.get_committed_value(sem2_addr));
+    ASSERT_TRUE(scs_data_structures.state_db.get_committed_value(sem2_addr) -> body.nonnegative_int64() == 0);
+}
+
+TEST_F(SdkTests, TransientSemaphoreCleanup)
+{
+    make_transient_semaphore_tx();
+
+    finish_block();
+
+    ASSERT_TRUE(!scs_data_structures.state_db.get_committed_value(transient_addr));
+}
+
+TEST_F(SdkTests, TransientSemaphoreConflict)
+{
+    make_transient_semaphore_tx();
+    make_transient_semaphore_tx(false);
+
+    finish_block();
+
+    ASSERT_TRUE(!scs_data_structures.state_db.get_committed_value(transient_addr));
+}
+
+
+/*
 
 TEST_CASE("semaphore", "[sdk]")
 {
@@ -336,4 +516,4 @@ TEST_CASE("semaphore", "[sdk]")
 
         REQUIRE(!scs_data_structures.state_db.get_committed_value(transient_addr));
     }
-}
+} */

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <catch2/catch_test_macros.hpp>
+#include <gtest/gtest.h>
 
 #include "experiments/payment_experiment.h"
 
@@ -29,16 +29,16 @@
 namespace scs
 {
 
-TEST_CASE("payment experiment init", "[experiment][paymentz]")
+TEST(PaymentExperiment, InitializeSmall)
 {
 	PaymentExperiment e(2);
 
 	auto vm = e.prepare_vm();
 
-	REQUIRE(!!vm);
+	ASSERT_TRUE(!!vm);
 }
 
-TEST_CASE("payment experiment hashset", "[experiment][payment]")
+TEST(PaymentExperiment, SmallBlockOk)
 {
 	PaymentExperiment e(2);
 
@@ -52,74 +52,90 @@ TEST_CASE("payment experiment hashset", "[experiment][payment]")
 		return out;
 	};
 
-	REQUIRE(!!vm);
+	ASSERT_TRUE(!!vm);
 
-	SECTION("small block ok")
+
+	auto batch = e.gen_transaction_batch(10);
+
+	Block b;
+	for (auto const& stx : batch)
 	{
-		auto batch = e.gen_transaction_batch(10);
-
-		Block b;
-		for (auto const& stx : batch)
-		{
-			b.transactions.push_back(make_txset(stx));
-		}
-
-		REQUIRE(vm -> try_exec_tx_block(b));
+		b.transactions.push_back(make_txset(stx));
 	}
 
-	SECTION("large blocks fill replay cache")
-	{
-		auto batch = e.gen_transaction_batch(200);
-
-		Block b;
-		for (auto const& stx : batch)
-		{
-			b.transactions.push_back(make_txset(stx));
-		}
-
-		REQUIRE(!vm -> try_exec_tx_block(b));
-	}
+	ASSERT_TRUE(vm -> try_exec_tx_block(b));
 }
 
-TEST_CASE("payment experiment assemble block", "[experiment][payments]")
+TEST(PaymentExperiment, LargeBlockFillsReplayCache)
 {
+	PaymentExperiment e(2);
 
-	//tbb::global_control g(tbb::global_control::max_allowed_parallelism, 1);
+	auto vm = e.prepare_vm();
+
+	auto make_txset = [] (SignedTransaction const& stx)
+	{
+		TxSetEntry out;
+		out.tx = stx;
+		out.nondeterministic_results.push_back(NondeterministicResults());
+		return out;
+	};
+
+	ASSERT_TRUE(!!vm);
+
+
+	auto batch = e.gen_transaction_batch(200);
+
+	Block b;
+	for (auto const& stx : batch)
+	{
+		b.transactions.push_back(make_txset(stx));
+	}
+
+	ASSERT_FALSE(vm -> try_exec_tx_block(b));
+}
+
+
+TEST(PaymentExperiment, AssembleBlockSmall)
+{
 	PaymentExperiment e(10, 1000);
 
 	auto vm = e.prepare_vm();
 
-	REQUIRE(!!vm);
+	ASSERT_TRUE(!!vm);
 
-	SECTION("prepare one small block")
-	{
-		auto& mp = vm -> get_mempool();
-		REQUIRE(mp.add_txs(e.gen_transaction_batch(10000)) == 10000);
+	auto& mp = vm -> get_mempool();
+	ASSERT_TRUE(mp.add_txs(e.gen_transaction_batch(10000)) == 10000);
 
-		AssemblyLimits limits(10, INT64_MAX);
+	AssemblyLimits limits(10, INT64_MAX);
 
-		Block blk;
+	Block blk;
 
-		auto header = vm -> propose_tx_block(limits, 1000, 10, blk);
+	auto header = vm -> propose_tx_block(limits, 1000, 10, blk);
 
-		REQUIRE(blk.transactions.size() == 10);
-	}
-
-	SECTION("prepare several small blocks")
-	{
-		auto& mp = vm -> get_mempool();
-		REQUIRE(mp.add_txs(e.gen_transaction_batch(10000)) == 10000);
-
-		Block blk;
-
-		for (size_t i = 0; i < 10; i++)
-		{
-			AssemblyLimits limits(100, INT64_MAX);
-			std::printf("============= start block ===============\n");
-			auto header = vm -> propose_tx_block(limits, 1000, 10, blk);
-			REQUIRE(blk.transactions.size() == 100);
-		}
-	} 
+	ASSERT_EQ(blk.transactions.size(), 10);
 }
+
+TEST(PaymentExperiment, AssembleSeveralBlocks)
+{
+	PaymentExperiment e(10, 1000);
+
+	auto vm = e.prepare_vm();
+
+	ASSERT_TRUE(!!vm);
+
+	auto& mp = vm -> get_mempool();
+	ASSERT_EQ(mp.add_txs(e.gen_transaction_batch(10000)), 10000);
+
+	Block blk;
+
+	for (size_t i = 0; i < 10; i++)
+	{
+		AssemblyLimits limits(100, INT64_MAX);
+		std::printf("============= start block ===============\n");
+		auto header = vm -> propose_tx_block(limits, 1000, 10, blk);
+		ASSERT_EQ(blk.transactions.size(),  100);
+	}
+} 
+
 
 } // namespace scs

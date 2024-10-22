@@ -30,6 +30,8 @@ namespace scs {
 
 struct MethodInvocation;
 
+wasm_api::HostFnStatus<void> gas_handler(wasm_api::HostCallContext* context, uint64_t gas);
+
 template<typename TransactionContext_t>
 class ExecutionContext : public utils::NonMovableOrCopyable
 {
@@ -43,7 +45,8 @@ class ExecutionContext : public utils::NonMovableOrCopyable
 
     RpcAddressDB* addr_db;
 
-    void invoke_subroutine(MethodInvocation const& invocation);
+    wasm_api::MeteredReturn
+    invoke_subroutine(MethodInvocation const& invocation, uint64_t gas_limit);
 
     auto& get_transaction_context()
     {
@@ -54,27 +57,25 @@ class ExecutionContext : public utils::NonMovableOrCopyable
       return *tx_context;
     }
 
-    int64_t syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5);
+    wasm_api::HostFnStatus<uint64_t>
+    syscall_handler(wasm_api::WasmRuntime* runtime, uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5) noexcept;
 
     static 
-    int64_t static_syscall_handler(void* self, uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5)
+    wasm_api::HostFnStatus<uint64_t> 
+    static_syscall_handler(wasm_api::HostCallContext* host_call_context, uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5) noexcept
     {
+      void* self = host_call_context->user_ctx;
       if (self == nullptr) {
-        throw std::runtime_error("cannot invoke static syscall on nullptr self");
+        std::terminate();
       }
-      return reinterpret_cast<ExecutionContext*>(self) -> syscall_handler(callno, arg0, arg1, arg2, arg3, arg4, arg5);
-    }
-
-    void gas_handler(uint64_t gas);
-
-    static
-    void static_gas_handler(void* self, uint64_t gas)
-    {
-      if (self == nullptr) {
-        throw std::runtime_error("cannot invoke static syscall on nullptr self");
+      try {
+        return reinterpret_cast<ExecutionContext*>(self) -> syscall_handler(host_call_context -> runtime, callno, arg0, arg1, arg2, arg3, arg4, arg5);
+      } catch(...) {
+        return wasm_api::HostFnStatus<uint64_t>{std::unexpect_t{}, wasm_api::HostFnError::UNRECOVERABLE};
       }
-      reinterpret_cast<ExecutionContext*>(self) -> gas_handler(gas);
     }
+    
+    /*
 
     int32_t env_memcmp(uint32_t lhs, uint32_t rhs, uint32_t sz);
     uint32_t env_memset(uint32_t ptr, uint32_t val, uint32_t len);
@@ -83,7 +84,7 @@ class ExecutionContext : public utils::NonMovableOrCopyable
 
     static
     int32_t 
-    static_env_memcmp(void* self, uint32_t lhs, uint32_t rhs, uint32_t sz) {
+    static_env_memcmp(void* self, uint32_t lhs, uint32_t rhs, uint32_t sz) noexcept {
       if (self == nullptr) {
         throw std::runtime_error("invalid self ptr in env");
       }
@@ -92,7 +93,7 @@ class ExecutionContext : public utils::NonMovableOrCopyable
 
     static
     uint32_t 
-    static_env_memset(void* self, uint32_t ptr, uint32_t val, uint32_t len)
+    static_env_memset(void* self, uint32_t ptr, uint32_t val, uint32_t len) noexcept
     { 
       if (self == nullptr) {
         throw std::runtime_error("invalid self ptr in env");
@@ -102,7 +103,7 @@ class ExecutionContext : public utils::NonMovableOrCopyable
 
     static
     uint32_t
-    static_env_memcpy(void* self, uint32_t dst, uint32_t src, uint32_t len)
+    static_env_memcpy(void* self, uint32_t dst, uint32_t src, uint32_t len) noexcept
     {
       if (self == nullptr) {
         throw std::runtime_error("invalid self ptr in env");
@@ -112,13 +113,13 @@ class ExecutionContext : public utils::NonMovableOrCopyable
 
     static
     uint32_t
-    static_env_strnlen(void* self, uint32_t ptr, uint32_t max_len)
+    static_env_strnlen(void* self, uint32_t ptr, uint32_t max_len) noexcept
     {
       if (self == nullptr) {
         throw std::runtime_error("invalid self ptr in env");
       }
       return reinterpret_cast<ExecutionContext*>(self) -> env_strnlen(ptr, max_len);
-    }
+    } */
 
     void extract_results();
     void reset();

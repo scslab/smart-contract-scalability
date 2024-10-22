@@ -69,7 +69,7 @@ PROXY_DECL::get(AddressAndKey const& key) const
 }
 
 PROXY_TEMPLATE
-void
+bool
 PROXY_DECL::raw_memory_write(
 	AddressAndKey const& key, 
 	xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& bytes)
@@ -78,14 +78,11 @@ PROXY_DECL::raw_memory_write(
 
 	auto delta = make_raw_memory_write(std::move(bytes));
 
-	if (!v.applicator.try_apply(delta))
-	{
-		throw HostError("failed to apply raw_memory_write");
-	}
+	return v.applicator.try_apply(delta);
 }
 
 PROXY_TEMPLATE
-void
+bool
 PROXY_DECL::nonnegative_int64_set_add(
 	AddressAndKey const& key, 
 	int64_t set_value, 
@@ -94,60 +91,48 @@ PROXY_DECL::nonnegative_int64_set_add(
 	auto& v = get_local(key);
 	auto delta = make_nonnegative_int64_set_add(set_value, delta_value);
 
-	if (!v.applicator.try_apply(delta))
-	{
-		throw HostError("failed to apply nonnegative_int64_set_add");
-	}
+	return v.applicator.try_apply(delta);
 }
 
 PROXY_TEMPLATE
-void 
+bool 
 PROXY_DECL::nonnegative_int64_add(AddressAndKey const& key, int64_t delta_value)
 {
 	auto& v = get_local(key);
 	auto base_value = v.applicator.get_base_nnint64_set_value();
 	if (!base_value.has_value())
 	{
-		throw HostError("type mismatch in nonnegative_int64_add");
+		return false;
 	}
 	auto delta = make_nonnegative_int64_set_add(*base_value, delta_value);
 
-	if (!v.applicator.try_apply(delta))
-	{
-		throw HostError("failed to apply nonnegative_int64_add");
-	}
+	return v.applicator.try_apply(delta);
 }
 
 PROXY_TEMPLATE
-void
+bool
 PROXY_DECL::delete_object_last(AddressAndKey const& key)
 {
 	auto& v = get_local(key);
 
 	auto delta = make_delete_last();
 
-	if (!v.applicator.try_apply(delta))
-	{
-		throw HostError("failed to apply delete_last");
-	}
+	return v.applicator.try_apply(delta);
 }
 
 PROXY_TEMPLATE
-void
+bool
 PROXY_DECL::hashset_insert(AddressAndKey const& key, Hash const& h, uint64_t threshold)
 {
 	auto& v = get_local(key);
 
 	auto delta = make_hash_set_insert(h, threshold);
 
-	if (!v.applicator.try_apply(delta))
-	{
-		throw HostError("failed to apply hashset insert");
-	}
+	return v.applicator.try_apply(delta);
 }
 
 PROXY_TEMPLATE
-void
+bool
 PROXY_DECL::hashset_increase_limit(AddressAndKey const& key, uint32_t limit)
 {
 	auto& v = get_local(key);
@@ -156,43 +141,34 @@ PROXY_DECL::hashset_increase_limit(AddressAndKey const& key, uint32_t limit)
 
 	if (limit > UINT16_MAX)
 	{
-		throw HostError("limit increase too large");
+		return false;
 	}
 
 	auto delta = make_hash_set_increase_limit(limit);
 
-	if (!v.applicator.try_apply(delta))
-	{
-		throw HostError("failed to apply hashset limit increase");
-	}
+	return v.applicator.try_apply(delta);
 }
 
 PROXY_TEMPLATE
-void
+bool
 PROXY_DECL::hashset_clear(AddressAndKey const& key, uint64_t threshold)
 {
 	auto& v = get_local(key);
 
 	auto delta = make_hash_set_clear(threshold);
 
-	if (!v.applicator.try_apply(delta))
-	{
-		throw HostError("failed to apply hashset clear");
-	}
+	return v.applicator.try_apply(delta);
 }
 
 PROXY_TEMPLATE
-void
+bool
 PROXY_DECL::asset_add(AddressAndKey const& key, int64_t d)
 {
 	auto& v = get_local(key);
 
 	auto delta = make_asset_add(d);
 
-	if (!v.applicator.try_apply(delta))
-	{
-		throw HostError("failed to apply asset add");
-	}
+	return v.applicator.try_apply(delta);
 }
 
 PROXY_TEMPLATE

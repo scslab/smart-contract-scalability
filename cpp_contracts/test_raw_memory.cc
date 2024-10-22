@@ -32,6 +32,7 @@ log_key()
 	uint64_t stored_value = sdk::get_raw_memory<uint64_t>(calldata.key);
 
 	sdk::log(stored_value);
+	return 0;
 }
 
 struct calldata_1 {
@@ -45,6 +46,7 @@ set_key()
 	auto calldata = sdk::get_calldata<calldata_1>();
 
 	sdk::set_raw_memory<uint64_t>(calldata.key, calldata.value);
+	return 0;
 }
 
 EXPORT("pub02000000")
@@ -64,6 +66,7 @@ check_double_write()
 	sdk::invoke(self, 0, c0);
 	sdk::invoke(self, 1, c1_1);
 	sdk::invoke(self, 0, c0);
+	return 0;
 }
 
 EXPORT("pub03000000")
@@ -80,6 +83,7 @@ check_read_self_writes()
 
 	sdk::invoke(self, 1, c1);
 	sdk::invoke(self, 0, c0);
+	return 0;
 }
 /*
 EXPORT("pub04000000")
@@ -96,6 +100,7 @@ delete_key_last()
 	auto calldata = sdk::get_calldata<calldata_0>();
 	auto const& key = calldata.key;
 	sdk::delete_last(key);
+	return 0;
 }
 EXPORT("pub06000000")
 write_after_delete()
@@ -108,4 +113,5 @@ write_after_delete()
 
 	auto self = sdk::get_self();
 	sdk::invoke(self, 1, c1);
+	return 0;
 }

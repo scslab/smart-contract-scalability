@@ -117,7 +117,7 @@ class TxSet
     void clear();
 
     // for testing
-
+    // should return the multiplicity of the tx in the set
     uint32_t contains_tx(const Hash& hash) const
     {
         auto const* r = txs.get_value(hash);

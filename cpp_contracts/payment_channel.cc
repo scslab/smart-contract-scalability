@@ -326,6 +326,7 @@ initialize()
 
     token.transferFrom(calldata.addrAlice, sdk::get_self(), calldata.alice_amount);
     token.transferFrom(calldata.addrBob, sdk::get_self(), calldata.bob_amount);
+    return 0;
 }
 
 struct calldata_mutual_close
@@ -343,6 +344,7 @@ pub_mutual_close()
 	sdk::Signature bobSig = sdk::get_witness<sdk::Signature>(2);
 
 	mutual_closing(aliceSig, bobSig, calldata.payment_alice, calldata.payment_bob);
+	return 0;
 }
 
 struct calldata_closing
@@ -358,6 +360,7 @@ pub_alice_init_closing()
 	auto calldata = sdk::get_calldata<calldata_closing>();
 
 	alice_init_close(calldata.alice_sig, calldata.bob_sig, calldata.params);
+	return 0;
 }
 
 EXPORT("pub03000000")
@@ -366,6 +369,7 @@ pub_bob_init_closing()
 	auto calldata = sdk::get_calldata<calldata_closing>();
 
 	bob_init_close(calldata.alice_sig, calldata.bob_sig, calldata.params);
+	return 0;
 }
 
 EXPORT("pub04000000")
@@ -373,6 +377,7 @@ pub_alice_challenge_close()
 {
 	auto calldata = sdk::get_calldata<calldata_closing>();
 	alice_challenge_close(calldata.alice_sig, calldata.bob_sig, calldata.params);
+	return 0;
 }
 
 EXPORT("pub05000000")
@@ -380,6 +385,7 @@ pub_bob_challenge_close()
 {
 	auto calldata = sdk::get_calldata<calldata_closing>();
 	bob_challenge_close(calldata.alice_sig, calldata.bob_sig, calldata.params);
+	return 0;
 }
 
 
@@ -387,12 +393,14 @@ EXPORT("pub06000000")
 pub_alice_finish_closing()
 {
 	alice_claim_closed();
+	return 0;
 }
 
 EXPORT("pub07000000")
 pub_bob_finish_closing()
 {
 	bob_claim_closed();
+	return 0;
 }
 
 

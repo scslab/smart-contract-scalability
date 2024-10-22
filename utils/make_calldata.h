@@ -22,6 +22,7 @@
 
 namespace scs {
 
+[[maybe_unused]]
 xdr::opaque_vec<>
 static
 make_calldata()

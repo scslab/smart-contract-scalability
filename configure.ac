@@ -46,7 +46,8 @@ AM_CONDITIONAL([USE_RPC_AM], [test x$use-rpc = xtrue])
 PKG_PROG_PKG_CONFIG
 PKG_CHECK_MODULES([libsodium], [libsodium])
 PKG_CHECK_MODULES([tbb], [tbb]);
-PKG_CHECK_MODULES([Catch2], [catch2])
+PKG_CHECK_MODULES([gtest], [gtest])
+PKG_CHECK_MODULES([gtest_main], [gtest_main])
 PKG_CHECK_MODULES([lmdb], [lmdb])
 PKG_CHECK_MODULES([gmp], [gmp])
 PKG_CHECK_MODULES([gmpxx], [gmpxx])

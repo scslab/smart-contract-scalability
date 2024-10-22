@@ -22,11 +22,4 @@
 namespace scs
 {
 
-// calls to builtin fns from the sandbox should
-// throw HostError
-struct HostError : public wasm_api::HostError
-{
-	using wasm_api::HostError::HostError;
-};
-
 } /* scs */

@@ -41,6 +41,7 @@ deployAndInitialize()
 	auto deployed_addr = sdk::deploy_contract(calldata_fixed.contract_hash, calldata_fixed.nonce);
 
 	sdk::invoke(deployed_addr, calldata_fixed.ctor_method, invoke_data, calldata_fixed.ctor_calldata_size);
+	return 0;
 }
 
 EXPORT("pub01000000")
@@ -49,6 +50,7 @@ deploy()
 	auto calldata = sdk::get_calldata<calldata_Deploy>();
 
 	sdk::deploy_contract(calldata.contract_hash, calldata.nonce);
+	return 0;
 }
 
 EXPORT("pub02000000")
@@ -57,6 +59,7 @@ create()
 	auto calldata = sdk::get_calldata<calldata_Create>();
 
 	sdk::create_contract(calldata.contract_idx);
+	return 0;
 }
 
 

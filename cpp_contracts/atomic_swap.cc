@@ -98,6 +98,7 @@ initialize()
 	auto config = sdk::get_calldata<atomic_swap_config>();
 	write_config(config);
 	initialized.acquire();
+	return 0;
 }
 
 
@@ -111,6 +112,7 @@ claim_preimage()
 {
 	auto calldata = sdk::get_calldata<calldata_claim>();
 	claim_swap(calldata.preimage);
+	return 0;
 }
 
 EXPORT("pub02000000")
@@ -127,6 +129,7 @@ reclaim_expired()
 	token.transferFrom(sdk::get_self(), config.source_addr, config.amount);
 
 	closed.acquire();
+	return 0;
 }
 
 

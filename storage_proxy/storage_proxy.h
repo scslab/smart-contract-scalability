@@ -54,28 +54,28 @@ public:
 	std::optional<StorageObject>
 	get(AddressAndKey const& key) const;
 
-	void
+	bool
 	raw_memory_write(AddressAndKey const& key, xdr::opaque_vec<RAW_MEMORY_MAX_LEN>&& bytes);
 
-	void
+	bool
 	nonnegative_int64_set_add(AddressAndKey const& key, int64_t set_value, int64_t delta);
 
-	void
+	bool
 	nonnegative_int64_add(AddressAndKey const& key, int64_t delta);
 
-	void
+	bool
 	delete_object_last(AddressAndKey const& key);
 
-	void
+	bool
 	hashset_insert(AddressAndKey const& key, Hash const& h, uint64_t threshold);
 
-	void
+	bool
 	hashset_increase_limit(AddressAndKey const& key, uint32_t limit);
 
-	void
+	bool
 	hashset_clear(AddressAndKey const& key, uint64_t threshold);
 
-	void
+	bool
 	asset_add(AddressAndKey const& key, int64_t d);
 
 	bool

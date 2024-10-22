@@ -169,6 +169,7 @@ create_offer()
 {
 	auto calldata = sdk::get_calldata<offer_config>();
 	create_offer(calldata);
+	return 0;
 }
 
 struct calldata_consume {
@@ -181,6 +182,7 @@ consume_offer()
 {
 	auto calldata = sdk::get_calldata<calldata_consume>();
 	consume_offer(calldata.hash, calldata.amount_sell_consumed);
+	return 0;
 }
 
 EXPORT("pub02000000")
@@ -188,6 +190,7 @@ cancel_offer()
 {
 	auto calldata = sdk::get_calldata<sdk::Hash>();
 	cancel_offer(calldata);
+	return 0;
 }
 
 }

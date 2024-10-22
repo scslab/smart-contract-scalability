@@ -30,6 +30,7 @@
 #include "sdk/crypto.h"
 
 #include <cstdint>
+#include <algorithm>
 
 namespace public_auction
 {
@@ -243,6 +244,7 @@ initialize()
 	auto calldata = sdk::get_calldata<auction_static_config>();
 
 	create_auction(calldata);
+	return 0;
 }
 
 struct calldata_submit_bid {
@@ -260,6 +262,7 @@ pub_submit_bid()
 	};
 
 	submit_bid(b, get_config());
+	return 0;
 }
 
 EXPORT("pub02000000")
@@ -268,6 +271,7 @@ pub_refund_bid()
 	auto calldata = sdk::get_calldata<bid>();
 
 	refund_bid(calldata, get_config());
+	return 0;
 }
 
 EXPORT("pub03000000")
@@ -276,12 +280,14 @@ pub_winning_bid()
 	auto calldata = sdk::get_calldata<bid>();
 
 	execute_winning_bid(calldata, get_config());
+	return 0;
 }
 
 EXPORT("pub04000000")
 pub_destroy_auction()
 {
 	destroy_empty_auction(get_config());
+	return 0;
 }
 
 

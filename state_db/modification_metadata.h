@@ -196,7 +196,7 @@ class ModificationMetadata : public trie::EphemeralTrieMetadataBase
                     break;
                 }
                 default:
-                    throw std::runtime_error("impossible");
+                    throw std::runtime_error("impossible active_meta type");
             }
         } else if (other.active_meta == active_meta) {
             switch (active_meta) {

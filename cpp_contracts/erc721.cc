@@ -181,6 +181,7 @@ approve()
     auto calldata = sdk::get_calldata<calldata_approve>();
 
     internal::approve(calldata.nft, calldata.approved);
+    return 0;
 }
 
 EXPORT("pub01000000")
@@ -188,6 +189,7 @@ approveAll()
 {
     auto calldata = sdk::get_calldata<calldata_approveAll>();
     internal::set_approval_for_all(calldata.op, calldata.auth);
+    return 0;
 }
 
 EXPORT("pub02000000")
@@ -197,6 +199,7 @@ transferFrom()
     Address sender = sdk::get_msg_sender();
 
     internal::transferFrom(calldata.from, calldata.to, calldata.nft);
+    return 0;
 }
 
 }

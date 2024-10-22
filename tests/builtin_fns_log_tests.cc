@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <catch2/catch_test_macros.hpp>
+#include <gtest/gtest.h>
 
 #include "threadlocal/threadlocal_context.h"
 
@@ -28,106 +28,111 @@
 
 namespace scs {
 
-TEST_CASE("test log", "[builtin]")
+class BuiltinLogTests : public ::testing::Test {
+
+ protected:
+  void SetUp() override {
+    auto c = load_wasm_from_file("cpp_contracts/test_log.wasm");
+    deploy_addr = hash_xdr(*c);
+
+    test::deploy_and_commit_contractdb(scs_data_structures.contract_db, deploy_addr, c);
+  }
+
+  void TearDown() override {
+    test::DeferredContextClear defer;
+  }
+
+  Address deploy_addr;
+
+  GlobalContext scs_data_structures;
+  BlockContext block_context = BlockContext(0);
+
+  ExecutionContext<TxContext> exec_ctx;
+
+
+  void exec_success(const Hash& tx_hash, const SignedTransaction& tx) {
+    EXPECT_EQ(exec_ctx.execute(tx_hash, tx, scs_data_structures, block_context),
+                TransactionStatus::SUCCESS);
+  }
+
+  void exec_fail(const Hash& tx_hash, const SignedTransaction& tx) {
+    EXPECT_NE(exec_ctx.execute(tx_hash, tx, scs_data_structures, block_context),
+                TransactionStatus::SUCCESS);
+  }
+
+  std::pair<Hash, SignedTransaction>
+  make_tx(TransactionInvocation const& invocation) {
+    Transaction tx(
+        invocation, UINT64_MAX, 1, xdr::xvector<Contract>());
+
+    SignedTransaction stx;
+    stx.tx = tx;
+
+    return { hash_xdr(stx), stx };
+  }
+};
+
+TEST_F(BuiltinLogTests, TestLogHardcoded)
+{
+    TransactionInvocation invocation(deploy_addr, 0, xdr::opaque_vec<>());
+
+    auto [h, tx] = make_tx(invocation);
+
+    exec_success(h, tx);
+
+    auto const& logs = exec_ctx.get_logs();
+
+    ASSERT_EQ(logs.size(), 1);
+
+    EXPECT_EQ(logs[0].size(), 8);
+    EXPECT_EQ(logs[0],
+             (std::vector<uint8_t>{0x11, 0x00, 0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA }));
+}
+
+TEST_F(BuiltinLogTests, TestLogCalldata)
+{
+ 
+    TransactionInvocation invocation(
+        deploy_addr,
+        1,
+        xdr::opaque_vec<>{
+            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 });
+
+    auto [h, tx] = make_tx(invocation);
+    exec_success(h, tx);
+
+    auto const& logs = exec_ctx.get_logs();
+
+    ASSERT_EQ(logs.size(), 1);
+
+    EXPECT_EQ(logs[0].size(), 8);
+    EXPECT_EQ(logs[0],
+            (std::vector<uint8_t>{
+                0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 }));
+    
+}
+
+TEST_F(BuiltinLogTests, TestLogTwice)
 {
     test::DeferredContextClear defer;
     
-    GlobalContext scs_data_structures;
-    auto& script_db = scs_data_structures.contract_db;
 
-    auto c = load_wasm_from_file("cpp_contracts/test_log.wasm");
-    auto h = hash_xdr(*c);
+    TransactionInvocation invocation(
+        deploy_addr,
+        2,
+        xdr::opaque_vec<>{
+            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 });
 
-    test::deploy_and_commit_contractdb(script_db, h, c);
+    auto [h, tx] = make_tx(invocation);
+    exec_success(h, tx);
 
-    ExecutionContext<TxContext> exec_ctx;
+    auto const& logs = exec_ctx.get_logs();
 
-    BlockContext block_context(0);
+    ASSERT_EQ(logs.size(),2);
 
-    auto exec_success = [&](const Hash& tx_hash, const SignedTransaction& tx) {
-        REQUIRE(exec_ctx.execute(tx_hash, tx, scs_data_structures, block_context)
-                == TransactionStatus::SUCCESS);
-    };
-
-    auto exec_fail = [&](const Hash& tx_hash, const SignedTransaction& tx) {
-        REQUIRE(exec_ctx.execute(tx_hash, tx, scs_data_structures, block_context)
-                != TransactionStatus::SUCCESS);
-    };
-
-    auto make_tx = [&](TransactionInvocation const& invocation)
-        -> std::pair<Hash, SignedTransaction> {
-        Transaction tx(
-            invocation, UINT64_MAX, 1, xdr::xvector<Contract>());
-
-        SignedTransaction stx;
-        stx.tx = tx;
-
-        return { hash_xdr(stx), stx };
-    };
-
-    SECTION("log hardcoded")
-    {
-        TransactionInvocation invocation(h, 0, xdr::opaque_vec<>());
-
-        auto [h, tx] = make_tx(invocation);
-
-        exec_success(h, tx);
-
-        auto const& logs = exec_ctx.get_logs();
-
-        REQUIRE(logs.size() == 1);
-
-        if (logs.size() >= 1) {
-            REQUIRE(logs[0].size() == 8);
-            REQUIRE(logs[0]
-                    == std::vector<uint8_t>{
-                        0x11, 0x00, 0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA });
-        }
-    }
-    SECTION("log calldata")
-    {
-        TransactionInvocation invocation(
-            h,
-            1,
-            xdr::opaque_vec<>{
-                0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 });
-
-        auto [h, tx] = make_tx(invocation);
-        exec_success(h, tx);
-
-        auto const& logs = exec_ctx.get_logs();
-
-        REQUIRE(logs.size() == 1);
-
-        if (logs.size() >= 1) {
-            REQUIRE(logs[0].size() == 8);
-            REQUIRE(logs[0]
-                    == std::vector<uint8_t>{
-                        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 });
-        }
-    }
-
-    SECTION("log twice")
-    {
-        TransactionInvocation invocation(
-            h,
-            2,
-            xdr::opaque_vec<>{
-                0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 });
-
-        auto [h, tx] = make_tx(invocation);
-        exec_success(h, tx);
-
-        auto const& logs = exec_ctx.get_logs();
-
-        REQUIRE(logs.size() == 2);
-
-        if (logs.size() >= 2) {
-            REQUIRE(logs[0].size() == 4);
-            REQUIRE(logs[0] == std::vector<uint8_t>{ 0x00, 0x01, 0x02, 0x03 });
-            REQUIRE(logs[1] == std::vector<uint8_t>{ 0x04, 0x05, 0x06, 0x07 });
-        }
-    }
+    EXPECT_EQ(logs[0].size(), 4);
+    EXPECT_EQ(logs[0], (std::vector<uint8_t>{ 0x00, 0x01, 0x02, 0x03 }));
+    EXPECT_EQ(logs[1], (std::vector<uint8_t>{ 0x04, 0x05, 0x06, 0x07 }));
 }
 
 } // namespace scs

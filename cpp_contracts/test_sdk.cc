@@ -28,6 +28,7 @@ replay()
 {
 	auto calldata = sdk::get_calldata<replay_calldata>();
 	sdk::record_self_replay(calldata.expiry_time);
+	return 0;
 }
 
 static sdk::Semaphore s(sdk::make_static_key(0, 1));
@@ -37,17 +38,20 @@ EXPORT("pub01000000")
 semaphore()
 {
 	s.acquire();
+	return 0;
 }
 
 EXPORT("pub02000000")
 semaphore2()
 {
 	s2.acquire();
+	return 0;
 }
 
 EXPORT("pub03000000")
 transientSemaphore()
 {
 	sdk::TransientSemaphore (sdk::make_static_key(2, 1)).acquire();
+	return 0;
 }
 

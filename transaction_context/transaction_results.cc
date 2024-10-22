@@ -39,11 +39,11 @@ TransactionResultsFrame::add_rpc_result(RpcResult result)
 	} 
 	else
 	{
-		throw HostError("added rpc result when validating");
+		throw std::runtime_error("cannot add rpc results in validating mode");
 	}
 }
 
-RpcResult
+std::optional<RpcResult>
 TransactionResultsFrame::get_next_rpc_result()
 {
 	if (rpc_idx < results.ndeterministic_results.rpc_results.size())
@@ -54,7 +54,7 @@ TransactionResultsFrame::get_next_rpc_result()
 	} 
 	else
 	{
-		throw HostError("insufficient rpc results stored");
+		return std::nullopt;
 	}
 }
 

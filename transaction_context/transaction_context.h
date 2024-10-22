@@ -75,15 +75,11 @@ class TransactionContext
 	const SignedTransaction& tx;
 	const Hash& tx_hash;
 
-	uint64_t gas_used;
-
 	const uint64_t current_block;
 
 public:
 
 	using StateDB_t = decltype(GlobalContext_t().state_db);
-
-	void consume_gas(uint64_t gas_to_consume);
 
 	std::vector<uint8_t> return_buf;
 
@@ -107,15 +103,6 @@ public:
 		return out;
 	}
 
-	wasm_api::WasmRuntime*
-	get_current_runtime();
-
-	wasm_api::WasmRuntime const*
-	get_current_runtime() const
-	{
-		return const_cast<TransactionContext*>(this)->get_current_runtime();
-	}
-
 	const MethodInvocation& 
 	get_current_method_invocation() const;
 
@@ -125,7 +112,7 @@ public:
 		return get_current_method_invocation().addr;
 	}
 
-	const Address&
+	std::optional<Address>
 	get_msg_sender() const;
 
 	const Hash&
@@ -148,7 +135,7 @@ public:
 	AddressAndKey 
 	get_storage_key(InvariantKey const& key) const;
 
-	WitnessEntry const&
+	std::optional<WitnessEntry>
 	get_witness(uint64_t wit_idx) const;
 
 	void pop_invocation_stack();

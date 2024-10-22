@@ -58,6 +58,7 @@ init()
     token.allowanceDelta(sdk::get_self(), INT64_MAX);
 
     sdk::replay_cache_size_increase(calldata.size_increase);
+    return 0;
 }
 
 struct calldata_transfer
@@ -82,6 +83,7 @@ transfer()
     erc20::Ierc20 token(token_key);
 
     token.transferFrom(sdk::get_self(), calldata.to, calldata.amount);
+    return 0;
 }
 
 }

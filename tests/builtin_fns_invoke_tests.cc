@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <catch2/catch_test_macros.hpp>
+#include <gtest/gtest.h>
 
 #include "threadlocal/threadlocal_context.h"
 
@@ -32,184 +32,184 @@ using xdr::operator==;
 
 namespace scs {
 
-TEST_CASE("test invoke", "[builtin]")
-{
-    test::DeferredContextClear defer;
+class BuiltinInvokeTests : public ::testing::Test {
 
-    GlobalContext scs_data_structures;
-    auto& script_db = scs_data_structures.contract_db;
-
+ protected:
+  void SetUp() override {
     auto c1 = load_wasm_from_file("cpp_contracts/test_log.wasm");
-    auto h1 = hash_xdr(*c1);
+    deploy_addr1 = hash_xdr(*c1);
 
-    auto c2
-        = load_wasm_from_file("cpp_contracts/test_redirect_call.wasm");
-    auto h2 = hash_xdr(*c2);
+    test::deploy_and_commit_contractdb(scs_data_structures.contract_db, deploy_addr1, c1);
 
-    test::deploy_and_commit_contractdb(script_db, h1, c1);
-    test::deploy_and_commit_contractdb(script_db, h2, c2);
+    auto c2 = load_wasm_from_file("cpp_contracts/test_redirect_call.wasm");
+    deploy_addr2 = hash_xdr(*c2);
 
-    ExecutionContext<TxContext> exec_ctx;
+    test::deploy_and_commit_contractdb(scs_data_structures.contract_db, deploy_addr2, c2);
+  }
 
-    BlockContext block_context(0);
+  void TearDown() override {
+    test::DeferredContextClear defer;
+  }
 
-    auto exec_success = [&](const Hash& tx_hash, const SignedTransaction& tx) {
-        REQUIRE(exec_ctx.execute(tx_hash, tx, scs_data_structures, block_context)
-                == TransactionStatus::SUCCESS);
+  Address deploy_addr1;
+  Address deploy_addr2;
+
+  GlobalContext scs_data_structures;
+  BlockContext block_context = BlockContext(0);
+
+  ExecutionContext<TxContext> exec_ctx;
+
+  void exec_success(const Hash& tx_hash, const SignedTransaction& tx) {
+    EXPECT_EQ(exec_ctx.execute(tx_hash, tx, scs_data_structures, block_context),
+                TransactionStatus::SUCCESS);
+  }
+
+  void exec_fail(const Hash& tx_hash, const SignedTransaction& tx) {
+    EXPECT_NE(exec_ctx.execute(tx_hash, tx, scs_data_structures, block_context),
+                TransactionStatus::SUCCESS);
+  }
+
+  std::pair<Hash, SignedTransaction>
+  make_tx(TransactionInvocation const& invocation) {
+    Transaction tx(
+        invocation, UINT64_MAX, 1, xdr::xvector<Contract>());
+
+    SignedTransaction stx;
+    stx.tx = tx;
+
+    return { hash_xdr(stx), stx };
+  }
+};
+
+TEST_F(BuiltinInvokeTests, LogSelfAddr)
+{
+    TransactionInvocation invocation(deploy_addr1, 4, xdr::opaque_vec<>());
+
+    auto [h, tx] = make_tx(invocation);
+    exec_success(h, tx);
+
+    auto const& logs = exec_ctx.get_logs();
+
+    ASSERT_EQ(logs.size(), 1);
+
+    ASSERT_EQ(logs[0].size(), 32);
+    EXPECT_EQ(memcmp(logs[0].data(), deploy_addr1.data(), 32), 0);
+}
+
+TEST_F(BuiltinInvokeTests, MsgSenderSelfFailsNoRedirect)
+{
+    TransactionInvocation invocation(deploy_addr1, 3, xdr::opaque_vec<>());
+
+    auto [h, tx] = make_tx(invocation);
+    exec_fail(h, tx);
+}
+
+TEST_F(BuiltinInvokeTests, MsgSenderOther)
+{
+    struct calldata_t
+    {
+        Address callee;
+        uint32_t method;
     };
 
-    auto exec_fail = [&](const Hash& tx_hash, const SignedTransaction& tx) {
-        REQUIRE(exec_ctx.execute(tx_hash, tx, scs_data_structures, block_context)
-                != TransactionStatus::SUCCESS);
+    calldata_t data{ .callee = deploy_addr1, .method = 3 };
+
+    TransactionInvocation invocation(deploy_addr2, 0, make_calldata(data));
+
+    auto [h, tx] = make_tx(invocation);
+    exec_success(h, tx);
+
+    auto const& logs = exec_ctx.get_logs();
+
+    ASSERT_EQ(logs.size(), 1);
+
+    ASSERT_EQ(logs[0].size(), 32);
+    EXPECT_EQ(memcmp(logs[0].data(), deploy_addr2.data(), 32), 0);
+}
+
+TEST_F(BuiltinInvokeTests, InvokeSelf)
+{
+    struct calldata_t
+    {
+        Address callee;
+        uint32_t method;
     };
 
-    auto make_tx = [&](TransactionInvocation const& invocation)
-        -> std::pair<Hash, SignedTransaction> {
-        Transaction tx(
-            invocation, UINT64_MAX, 1, xdr::xvector<Contract>());
+    calldata_t data{ .callee = deploy_addr2, .method = 1 };
 
-        SignedTransaction stx;
-        stx.tx = tx;
+    TransactionInvocation invocation(deploy_addr2, 0, make_calldata(data));
 
-        return { hash_xdr(stx), stx };
+    auto [h, tx] = make_tx(invocation);
+    exec_success(h, tx);
+
+    auto const& logs = exec_ctx.get_logs();
+
+    ASSERT_EQ(logs.size(), 1);
+
+    ASSERT_EQ(logs[0].size(), 1);
+    EXPECT_EQ(logs[0], std::vector<uint8_t>{ 0xFF });
+}
+
+TEST_F(BuiltinInvokeTests, InvokeSelfReentranceGuard)
+{
+    struct calldata_t
+    {
+        Address callee;
+        uint32_t method;
     };
 
-    SECTION("msg sender self")
+    calldata_t data{ .callee = deploy_addr2, .method = 2 };
+
+    TransactionInvocation invocation(deploy_addr2, 0, make_calldata(data));
+
+    auto [h, tx] = make_tx(invocation);
+    exec_fail(h, tx);   
+}
+
+TEST_F(BuiltinInvokeTests, InvokeOther)
+{
+    struct calldata_t
     {
-        TransactionInvocation invocation(h1, 4, xdr::opaque_vec<>());
+        Address callee;
+        uint32_t method;
+    };
 
-        auto [h, tx] = make_tx(invocation);
-        exec_success(h, tx);
+    calldata_t data{ .callee = deploy_addr1, .method = 0 };
 
-        auto const& logs = exec_ctx.get_logs();
+    TransactionInvocation invocation(deploy_addr2, 0, make_calldata(data));
 
-        REQUIRE(logs.size() == 1);
+    auto [h, tx] = make_tx(invocation);
+    exec_success(h, tx);
 
-        if (logs.size() >= 1) {
-            REQUIRE(logs[0].size() == 32);
-            REQUIRE(memcmp(logs[0].data(), h1.data(), 32) == 0);
-        }
-    }
+    auto const& logs = exec_ctx.get_logs();
 
-    SECTION("msg sender self fails on base call")
+    EXPECT_EQ(logs.size(), 1);
+}
+
+TEST_F(BuiltinInvokeTests, InvokeInsufficientCalldata)
+{
+    TransactionInvocation invocation(deploy_addr1, 1, xdr::opaque_vec<>());
+
+    auto [h, tx] = make_tx(invocation);
+    exec_fail(h, tx);
+}
+
+TEST_F(BuiltinInvokeTests, InvokeNonexistent)
+{
+    struct calldata_t
     {
-        TransactionInvocation invocation(h1, 3, xdr::opaque_vec<>());
+        Address callee;
+        uint32_t method;
+    };
 
-        auto [h, tx] = make_tx(invocation);
-        exec_fail(h, tx);
-    }
+    Address empty_addr;
 
-    SECTION("msg sender other")
-    {
-        struct calldata_t
-        {
-            Address callee;
-            uint32_t method;
-        };
+    calldata_t data{ .callee = empty_addr, .method = 1 };
 
-        calldata_t data{ .callee = h1, .method = 3 };
+    TransactionInvocation invocation(deploy_addr2, 0, make_calldata(data));
 
-        TransactionInvocation invocation(h2, 0, make_calldata(data));
-
-        auto [h, tx] = make_tx(invocation);
-        exec_success(h, tx);
-
-        auto const& logs = exec_ctx.get_logs();
-
-        REQUIRE(logs.size() == 1);
-
-        if (logs.size() >= 1) {
-            REQUIRE(logs[0].size() == 32);
-            REQUIRE(memcmp(logs[0].data(), h2.data(), 32) == 0);
-        }
-    }
-
-    SECTION("invoke self")
-    {
-        struct calldata_t
-        {
-            Address callee;
-            uint32_t method;
-        };
-
-        calldata_t data{ .callee = h2, .method = 1 };
-
-        TransactionInvocation invocation(h2, 0, make_calldata(data));
-
-        auto [h, tx] = make_tx(invocation);
-        exec_success(h, tx);
-
-        auto const& logs = exec_ctx.get_logs();
-
-        REQUIRE(logs.size() == 1);
-
-        if (logs.size() >= 1) {
-            REQUIRE(logs[0].size() == 1);
-            REQUIRE(logs[0] == std::vector<uint8_t>{ 0xFF });
-        }
-    }
-
-    SECTION("invoke self with reentrance guard")
-    {
-        struct calldata_t
-        {
-            Address callee;
-            uint32_t method;
-        };
-
-        calldata_t data{ .callee = h2, .method = 2 };
-
-        TransactionInvocation invocation(h2, 0, make_calldata(data));
-
-        auto [h, tx] = make_tx(invocation);
-        exec_fail(h, tx);
-    }
-
-    SECTION("invoke other")
-    {
-        struct calldata_t
-        {
-            Address callee;
-            uint32_t method;
-        };
-
-        calldata_t data{ .callee = h1, .method = 0 };
-
-        TransactionInvocation invocation(h2, 0, make_calldata(data));
-
-        auto [h, tx] = make_tx(invocation);
-        exec_success(h, tx);
-
-        auto const& logs = exec_ctx.get_logs();
-
-        REQUIRE(logs.size() == 1);
-    }
-
-    SECTION("invoke insufficient calldata")
-    {
-        TransactionInvocation invocation(h1, 1, xdr::opaque_vec<>());
-
-        auto [h, tx] = make_tx(invocation);
-        exec_fail(h, tx);
-    }
-
-    SECTION("invoke nonexistent")
-    {
-        struct calldata_t
-        {
-            Address callee;
-            uint32_t method;
-        };
-
-        Address empty_addr;
-
-        calldata_t data{ .callee = empty_addr, .method = 1 };
-
-        TransactionInvocation invocation(h2, 0, make_calldata(data));
-
-        auto [h, tx] = make_tx(invocation);
-        exec_fail(h, tx);
-    }
+    auto [h, tx] = make_tx(invocation);
+    exec_fail(h, tx);
 }
 
 } // namespace scs

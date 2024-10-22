@@ -42,24 +42,12 @@ TC_DECL::TransactionContext(SignedTransaction const& tx,
     , runtime_stack()
     , tx(tx)
     , tx_hash(tx_hash)
-    , gas_used(0)
     , current_block(current_block)
     , return_buf()
     , tx_results(results ? new TransactionResultsFrame(*results) : new TransactionResultsFrame())
     , storage_proxy(global_context.state_db)
     , contract_db_proxy(global_context.contract_db)
 {}
-
-TC_TEMPLATE
-wasm_api::WasmRuntime*
-TC_DECL::get_current_runtime()
-{
-    if (runtime_stack.size() == 0) {
-        throw std::runtime_error(
-            "no active runtime during get_current_runtime() call");
-    }
-    return runtime_stack.back();
-}
 
 TC_TEMPLATE
 const MethodInvocation&
@@ -102,11 +90,11 @@ TC_DECL::get_storage_key(InvariantKey const& key) const
 }
 
 TC_TEMPLATE
-const Address&
+std::optional<Address>
 TC_DECL::get_msg_sender() const
 {
     if (invocation_stack.size() <= 1) {
-        throw HostError("no sender on root tx");
+        return std::nullopt;
     }
     return invocation_stack[invocation_stack.size() - 2].addr;
 }
@@ -153,22 +141,26 @@ TC_TEMPLATE
 std::unique_ptr<StorageCommitment<typename TC_DECL::StateDB_t>>
 TC_DECL::push_storage_deltas()
 {
+    std::printf("start push storage deltas\n");
     assert_not_committed();
     committed_to_statedb = true;
 
     auto commitment = std::make_unique<StorageCommitment<StateDB_t>>(storage_proxy, tx_hash);
 
     if (!storage_proxy.push_deltas_to_statedb(commitment->rewind)) {
+        std::printf("push storage deltas failed\n");
         return nullptr;
     }
 
     contract_db_proxy.push_updates_to_db(commitment->rewind);
 
+    std::printf("end push storage deltas success\n");
+
     return commitment;
 }
 
 TC_TEMPLATE
-WitnessEntry const&
+std::optional<WitnessEntry>
 TC_DECL::get_witness(uint64_t wit_idx) const
 {
     for (auto const& w : tx.witnesses)
@@ -178,25 +170,7 @@ TC_DECL::get_witness(uint64_t wit_idx) const
             return w;
         }
     }
-    throw HostError("witness not found");
-}
-
-TC_TEMPLATE
-void
-TC_DECL::consume_gas(uint64_t consumed_gas) 
-{   
-    //std::printf("consume gas %" PRIu64 " += %" PRIu64 " of %" PRIu64 "\n", gas_used, consumed_gas, tx.tx.gas_limit);
-    if (__builtin_add_overflow_p(gas_used, consumed_gas, static_cast<uint64_t>(0)))
-    {
-        throw HostError("gas consumption overflow");
-    }
-
-    gas_used += consumed_gas;
-
-    if (gas_used >= tx.tx.gas_limit)
-    {
-        throw HostError("gas limit reached");
-    }
+    return std::nullopt;
 }
 
 #undef TC_DECL

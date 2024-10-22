@@ -72,6 +72,7 @@ test_see_hs_writes_from_empty()
 	assert(sdk::hashset_get_size(addr) == 2);
 
 	sdk::hashset_insert(addr, get_hash(3), 3);
+	return 0;
 }
 
 EXPORT("pub01000000")
@@ -80,6 +81,7 @@ test_insert_after_clear_bad()
 	sdk::hashset_clear(addr, 1);
 
 	sdk::hashset_insert(addr, get_hash(0), 0);
+	return 0;
 }
 
 // should run after method 0
@@ -110,5 +112,6 @@ test_see_hs_writes_from_nonempty()
 
 	// can insert higher after a clear
 	sdk::hashset_insert(addr, get_hash(4), 4);
+	return 0;
 }
 

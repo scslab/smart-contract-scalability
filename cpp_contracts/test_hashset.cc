@@ -32,5 +32,6 @@ hashset_insert()
 	auto hash = sdk::hash(reinterpret_cast<uint8_t*>(&(calldata.value)), sizeof(uint64_t));
 
 	sdk::hashset_insert(calldata.key, hash, 0);
+	return 0;
 }
 

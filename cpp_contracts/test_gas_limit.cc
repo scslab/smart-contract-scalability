@@ -32,6 +32,7 @@ consume_gas()
 		out += i;
 		sdk::log(out);
 	}
+	return 0;
 }
 EXPORT("pub01000000")
 infinite_loop()
@@ -41,4 +42,5 @@ infinite_loop()
 	{
 		sdk::log(out);
 	}
+	return 0;
 }

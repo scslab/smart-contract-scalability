@@ -1,6 +1,8 @@
 #pragma once
 
-enum SYSCALLS
+#include <cstdint>
+
+enum class SYSCALLS : uint64_t
 {
 	// standard syscalls, not groundhog-specific
 	EXIT = 500,

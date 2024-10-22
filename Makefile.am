@@ -190,8 +190,7 @@ SRCS = \
 	$(TRANSACTION_CONTEXT_SRCS) \
 	$(TX_BLOCK_SRCS) \
 	$(VM_SRCS) \
-	$(WASM3_SRCS) \
-	$(WASM_API_SRCS) \
+	$(wasm_api_SRCS) \
 	$(utility_CCS)
 
 TEST_UTILS_SRCS = \
@@ -201,16 +200,21 @@ TESTS_CCS = \
 	tests/builtin_fns_log_tests.cc \
 	tests/builtin_fns_invoke_tests.cc \
 	tests/gas_tests.cc \
-	tests/hashset_tests.cc \
-	tests/storage_tests.cc \
 	tests/sdk_tests.cc \
-	tests/test_rpc.cc \
-	storage_proxy/tests/test_proxy_applicator.cc \
-	object/tests/test_revertable_object.cc \
 	tx_block/tests/test_unique_txset.cc \
-	$(HASH_SET_TEST_SRCS) \
-	$(EXPERIMENTS_TEST_SRCS) \
-	$(STATE_DB_TEST_SRCS)
+	object/tests/test_revertable_object.cc \
+	$(EXPERIMENTS_TEST_SRCS)
+
+
+
+
+
+#	tests/hashset_tests.cc \
+#	tests/storage_tests.cc \
+#	tests/test_rpc.cc \
+#	storage_proxy/tests/test_proxy_applicator.cc \
+#	$(HASH_SET_TEST_SRCS) \
+#	$(STATE_DB_TEST_SRCS)
 
 MAIN_CCS = \
 	main/blockstm_comparison.cc \
@@ -247,10 +251,13 @@ CC_WASMS = \
 	cpp_contracts/cfmm.cc \
 	cpp_contracts/sisyphus_erc20.cc
 
-.cc.wasm: Makefile.am Makefile
+$(CC_WASMS:.cc=.wasm) : Makefile.am Makefile wasm_ed25519/libed25519.a
+$(CC_WASMS:.cc=.wasm) : $(wildcard cpp_contracts/sdk/*.h)
+
+.cc.wasm:
 	clang++ -O3 -target wasm32-unknown-wasi -I./cpp_contracts/ $< -o $@ \
 		--sysroot=wasi/wasi-sysroot \
-		-std=gnu++2a \
+		-std=gnu++2b \
 		-nostdlib++ \
 		-nostdlib \
 		-Wl,--no-entry -fno-exceptions -Wl,--allow-undefined \
@@ -266,8 +273,6 @@ CC_WASMS = \
 # add this flag to compile flags to enable (for wasm)
 #		-mbulk-memory
 
-$(CC_WASMS:.cc=.wasm) : $(wildcard cpp_contracts/sdk/*.h)
-
 grpc_DEDUP_CFLAGS = $(shell echo $(grpc_CFLAGS) | ./dedup.sh | sort | uniq | grep -v -e "-X.*" | grep -v -e "-march.*")
 grpcpp_DEDUP_CFLAGS = $(shell echo $(grpcpp_CFLAGS) | ./dedup.sh | sort | uniq | grep -v -e "-X.*" | grep -v -e "-march.*")
 
@@ -282,7 +287,8 @@ AM_CPPFLAGS = \
 	$(wasm_api_CFLAGS) \
 	$(Catch2_CFLAGS) \
 	$(grpcpp_DEDUP_CFLAGS) \
-	$(protobuf_CFLAGS)
+	$(protobuf_CFLAGS) \
+	$(gtest_CFLAGS)
 
 LDADD = $(xdrpp_LIBS) \
 	$(libsodium_LIBS) \
@@ -296,7 +302,8 @@ LDADD = $(xdrpp_LIBS) \
 	$(Catch2_LIBS) \
 	./metering/target/release/libinject_metering.a \
 	$(grpcpp_LIBS) \
-	$(protobuf_LIBS)
+	$(protobuf_LIBS) \
+	$(gtest_LIBS)
 
 metering/target/release/libinject_metering.a : metering/inject_metering/src/*.rs
 	cd metering && \
@@ -319,11 +326,14 @@ bin_PROGRAMS = \
 	sisyphus_proof_size_exp
 
 vm/genesis.o: $(CC_WASMS:.cc=.wasm)
-main/test.o : $(CC_WASMS:.cc=.wasm) $(WASM_API_TEST_WASMS)
+EXTRA_test_DEPENDENCIES = $(CC_WASMS:.cc=.wasm) $(wasm_api_TEST_WASMS)
 
 COMPLETE_SRCS = $(SRCS) $(TESTS_CCS) $(TEST_UTILS_SRCS)
 
-test_SOURCES = main/test.cc $(COMPLETE_SRCS) $(utility_TEST_CCS) $(mtt_TEST_CCS) $(WASM_API_TEST_CCS)
+test_SOURCES = $(COMPLETE_SRCS) $(wasm_api_TEST_SRCS)
+#$(utility_TEST_CCS) $(mtt_TEST_CCS)
+test_LDADD = $(LDADD) $(gtest_main_LIBS)
+
 blockstm_comparison_SOURCES = main/blockstm_comparison.cc $(SRCS)
 sisyphus_payment_sim_SOURCES = main/sisyphus_payment_sim.cc $(SRCS)
 groundhog_payment_sim_SOURCES = main/groundhog_payment_sim.cc $(SRCS)

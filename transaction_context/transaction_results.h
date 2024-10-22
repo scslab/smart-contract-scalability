@@ -53,7 +53,7 @@ public:
     void add_log(TransactionLog log);
 
     void add_rpc_result(RpcResult result);
-    RpcResult get_next_rpc_result();
+    std::optional<RpcResult> get_next_rpc_result();
 
     TransactionResults get_results() {
         return results;

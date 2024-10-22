@@ -30,6 +30,8 @@
 
 #include "erc20.h"
 
+#include <algorithm>
+
 namespace cfmm
 {
 
@@ -427,6 +429,7 @@ initialize()
 
 	CFMMState state;
 	write_state(state);
+	return 0;
 }
 
 struct swap_call
@@ -449,6 +452,7 @@ swap()
 		.minReceive = calldata.minReceive
 	};
 	add_swap(s, calldata.fee_bid);
+	return 0;
 }
 
 struct deposit_call
@@ -469,6 +473,7 @@ deposit()
 		.depositB = calldata.depositB,
 	};
 	add_deposit(d, calldata.fee_bid);
+	return 0;
 }
 
 struct withdraw_call
@@ -487,6 +492,7 @@ withdraw()
 		.lp_shares = calldata.lpshares,
 	};
 	add_withdraw(w, calldata.fee_bid);
+	return 0;
 }
 
 struct round_bounds {
@@ -510,6 +516,7 @@ execute()
 	{
 		exec_round(config, i);
 	}
+	return 0;
 }
 
 

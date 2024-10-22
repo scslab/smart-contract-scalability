@@ -163,6 +163,7 @@ ContractDBProxy::get_script(const Address& address) const
     auto it = new_deployments.find(address);
 
     if (it == new_deployments.end()) {
+        std::printf("get here\n");
         return contract_db.get_script_by_address(address);
     }
 
@@ -170,8 +171,10 @@ ContractDBProxy::get_script(const Address& address) const
     
     auto s_it = new_contracts.find(script_hash);
     if (s_it == new_contracts.end()) {
+        std::printf("get there\n");
         return contract_db.get_script_by_hash(script_hash);
     }
+    std::printf("get end\n");
     return s_it-> second.first->to_view();//{s_it->second.first->data(), s_it -> second.first -> size() };
 }
 

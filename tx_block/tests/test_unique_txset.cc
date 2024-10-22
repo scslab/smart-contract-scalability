@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <catch2/catch_test_macros.hpp>
+#include <gtest/gtest.h>
 
 #include "tx_block/unique_tx_set.h"
 #include "xdr/transaction.h"
@@ -22,49 +22,54 @@
 
 namespace scs {
 
-TEST_CASE("test unique txset", "[txset]")
-{
-    UniqueTxSet set;
+class TxSetTests : public ::testing::Test {
 
-    auto add_tx = [&] (SignedTransaction const& stx)
-    {
-        auto h = hash_xdr(stx);
-        return set.try_add_transaction(h, stx, NondeterministicResults());
-    };
+ protected:
+  
 
-    auto simple_make_unique_tx = [] (uint64_t nonce) {
+  UniqueTxSet set;
+
+  auto add_tx(SignedTransaction const& stx) {
+    auto h = hash_xdr(stx);
+    return set.try_add_transaction(h, stx, NondeterministicResults());
+  }
+
+    auto simple_make_unique_tx(uint64_t nonce) {
 
         SignedTransaction t;
         t.tx.gas_limit = nonce;
         return t;
     };
+};
 
-    SECTION("single inserts good")
-    {
-        REQUIRE(add_tx(simple_make_unique_tx(0)));
-        REQUIRE(add_tx(simple_make_unique_tx(1)));
-        REQUIRE(add_tx(simple_make_unique_tx(2)));
+TEST_F(TxSetTests, SingleInsertsGood)
+{
 
-        set.finalize();
 
-        Block b;
-        set.serialize_block(b);
+    ASSERT_TRUE(add_tx(simple_make_unique_tx(0)));
+    ASSERT_TRUE(add_tx(simple_make_unique_tx(1)));
+    ASSERT_TRUE(add_tx(simple_make_unique_tx(2)));
 
-        REQUIRE(b.transactions.size() == 3);
-    }
-    SECTION("double inserts bad")
-    {
-        REQUIRE(add_tx(simple_make_unique_tx(0)));
-        REQUIRE(add_tx(simple_make_unique_tx(1)));
-        REQUIRE(!add_tx(simple_make_unique_tx(1)));
+    set.finalize();
 
-        set.finalize();
+    Block b;
+    set.serialize_block(b);
 
-        Block b;
-        set.serialize_block(b);
+    ASSERT_EQ(b.transactions.size(), 3);
+}
 
-        REQUIRE(b.transactions.size() == 2);
-    }
+TEST_F(TxSetTests, DoubleInsertsBad) 
+{
+    ASSERT_TRUE(add_tx(simple_make_unique_tx(0)));
+    ASSERT_TRUE(add_tx(simple_make_unique_tx(1)));
+    ASSERT_TRUE(!add_tx(simple_make_unique_tx(1)));
+
+    set.finalize();
+
+    Block b;
+    set.serialize_block(b);
+
+    ASSERT_EQ(b.transactions.size(), 2);
 }
 
 } // namespace scs

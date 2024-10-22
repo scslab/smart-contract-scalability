@@ -48,5 +48,6 @@ dispatch()
 	}
 
 	sdk::log(res);
+	return 0;
 }
 

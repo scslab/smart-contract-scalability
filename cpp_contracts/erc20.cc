@@ -136,6 +136,7 @@ initialize()
     auto calldata = sdk::get_calldata<calldata_ctor>();
 
     sdk::set_raw_memory(internal::owner_id_storage_key, calldata.owner);
+    return 0;
 }
 
 EXPORT("pub01000000")
@@ -146,6 +147,7 @@ transferFrom()
 
     internal::allowance_delta(calldata.from, sender, -calldata.amount);
     internal::transfer(calldata.from, calldata.to, calldata.amount);
+    return 0;
 }
 
 EXPORT("pub02000000")
@@ -153,6 +155,7 @@ mint()
 {
     auto calldata = sdk::get_calldata<calldata_mint>();
     internal::mint(calldata.recipient, calldata.amount);
+    return 0;
 }
 
 EXPORT("pub03000000")
@@ -162,6 +165,7 @@ allowanceDelta()
     Address sender = sdk::get_msg_sender();
 
     internal::allowance_delta(sender, calldata.account, calldata.amount);
+    return 0;
 }
 
 EXPORT("pub04000000")
@@ -169,6 +173,7 @@ balanceOf()
 {
     auto calldata = sdk::get_calldata<calldata_balanceOf>();
     sdk::return_value(internal::balance_of(calldata.account));
+    return 0;
 }
 
 EXPORT("pub05000000")
@@ -176,6 +181,7 @@ get_metadata()
 {
     auto calldata = sdk::get_calldata<calldata_get_metadata>();
     sdk::return_value(internal::get_metadata());
+    return 0;
 }
 
 EXPORT("pub06000000")
@@ -185,6 +191,7 @@ set_metadata()
 
     internal::owner_guard();
     internal::set_metadata(calldata);
+    return 0;
 }
 
 // TODO initialize with guard on owner
