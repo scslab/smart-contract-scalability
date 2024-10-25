@@ -20,6 +20,7 @@
 #include "xdr/rpc.h"
 
 #include <cstdint>
+#include <optional>
 #include <vector>
 
 namespace scs {
