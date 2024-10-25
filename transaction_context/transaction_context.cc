@@ -141,20 +141,16 @@ TC_TEMPLATE
 std::unique_ptr<StorageCommitment<typename TC_DECL::StateDB_t>>
 TC_DECL::push_storage_deltas()
 {
-    std::printf("start push storage deltas\n");
     assert_not_committed();
     committed_to_statedb = true;
 
     auto commitment = std::make_unique<StorageCommitment<StateDB_t>>(storage_proxy, tx_hash);
 
     if (!storage_proxy.push_deltas_to_statedb(commitment->rewind)) {
-        std::printf("push storage deltas failed\n");
         return nullptr;
     }
 
     contract_db_proxy.push_updates_to_db(commitment->rewind);
-
-    std::printf("end push storage deltas success\n");
 
     return commitment;
 }

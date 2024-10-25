@@ -393,8 +393,6 @@ syscall_handler(wasm_api::WasmRuntime* runtime, uint64_t callno, uint64_t arg0, 
 
     using enum SYSCALLS;
 
-    std::printf("syscall %llu\n", callno);
-
     switch(static_cast<SYSCALLS>(callno))
     {
     case EXIT:
