@@ -100,17 +100,12 @@ ContractDB::commit_registration(Address const& new_address,
     persistence.log_deploy(new_address, contract_hash);
 }
 
-bool
+void
 ContractDB::deploy_contract_to_address(Address const& addr,
                                        Hash const& script_hash)
 {
-    if (!check_address_open_for_deployment(addr)) {
-        return false;
-    }
-
     has_uncommitted_modifications.store(true, std::memory_order_relaxed);
-
-    return uncommitted_contracts.deploy_contract_to_address(addr, script_hash);
+    uncommitted_contracts.deploy_contract_to_address(addr, script_hash);
 }
 
 bool
@@ -129,14 +124,6 @@ ContractDB::add_new_uncommitted_contract(
     has_uncommitted_modifications.store(true, std::memory_order_relaxed);
     uncommitted_contracts.add_new_contract(h, new_contract);
     persistence.log_create(h, new_unmetered_contract);
-}
-
-bool
-ContractDB::check_address_open_for_deployment(const Address& addr) const
-{
-    return addresses_to_contracts_map.get_value_nolocks(addr) == nullptr;
-//    return addresses_to_contracts_map.find(addr)
-//           == addresses_to_contracts_map.end();
 }
 
 void

@@ -52,22 +52,18 @@ class ContractCreateClosure : public utils::NonCopyable
     ~ContractCreateClosure();
 };
 
-class ContractDeployClosure : public utils::NonCopyable
+class ContractDeployClosure
 {
     const Address& deploy_address;
+    const Hash& contract_hash;
     ContractDB& contract_db;
-
-    bool undo_deploy = true;
 
   public:
     ContractDeployClosure(const Address& deploy_address,
+                          const Hash& contract_hash,
                           ContractDB& contract_db);
 
-    ContractDeployClosure(ContractDeployClosure&& other);
-
     void commit();
-
-    ~ContractDeployClosure();
 };
 
 class ContractDBProxy
@@ -80,9 +76,9 @@ class ContractDBProxy
 
     bool check_contract_exists(const Hash& contract_hash) const;
 
-    std::optional<ContractDeployClosure> __attribute__((warn_unused_result))
+    ContractDeployClosure __attribute__((warn_unused_result))
     push_deploy_contract(const Address& deploy_address,
-                         const Hash& contract_hash);
+                         const Hash& contract_hash) const;
 
     ContractCreateClosure __attribute__((warn_unused_result))
     push_create_contract(Hash const& h, 
@@ -98,13 +94,24 @@ class ContractDBProxy
         , new_deployments()
     {}
 
-    bool __attribute__((warn_unused_result))
-    deploy_contract(const Address& deploy_address,
-                         const Hash& contract_hash);
+    // sender_address -- address of contract that creates the deployment
+    // returns address at which contract is deployed (nullopt if error)
+    std::optional<Address>
+    deploy_contract(const Address& sender_address,
+                    const Hash& contract_hash,
+                    uint64_t nonce);
+
+    // Only used for initialization -- must ensure that deploy address
+    // can never collide with another potential deployment (i.e.
+    // ensure deploy_address can't be a collision with some potential
+    // output of the normal deploy_contract)
+    void
+    deploy_contract_at_specific_address(const Address& deploy_address,
+      const Hash& contract_hash);
 
     Hash create_contract(std::shared_ptr<const Contract> contract);
 
-    bool push_updates_to_db(TransactionRewind& rewind);
+    void push_updates_to_db(TransactionRewind& rewind);
 
     RunnableScriptView
     get_script(const Address& address) const;

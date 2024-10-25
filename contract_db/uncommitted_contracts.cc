@@ -21,16 +21,14 @@
 
 namespace scs {
 
-bool
+void
 UncommittedContracts::deploy_contract_to_address(
     Address const& addr,
     Hash const& script_hash)
 {
     std::lock_guard lock(mtx);
 
-    auto [_, insertion_happened] = new_deployments.emplace(addr, script_hash);
-
-    return insertion_happened;
+    new_deployments.emplace(addr, script_hash);
 }
 
 void

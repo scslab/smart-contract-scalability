@@ -42,10 +42,7 @@ install_contract(ContractDBProxy& db,
                  const Address& addr)
 {
     auto h = db.create_contract(contract);
-
-    if (!db.deploy_contract(addr, h)) {
-        throw std::runtime_error("failed to deploy genesis contract");
-    }
+    db.deploy_contract_at_specific_address(addr, h);
 }
 
 void
@@ -61,9 +58,7 @@ install_genesis_contracts(ContractDB& contract_db)
     {
         TransactionRewind rewind;
 
-        if (!proxy.push_updates_to_db(rewind)) {
-            throw std::runtime_error("failed to push proxy updates");
-        }
+        proxy.push_updates_to_db(rewind);
 
         rewind.commit();
     }

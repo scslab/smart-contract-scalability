@@ -758,13 +758,14 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
         consume_gas(gas_deploy_contract);
 
         auto contract_hash = load_from_memory_constsize.template operator()<Hash>(arg0);
-        auto deploy_addr = compute_contract_deploy_address(tx_ctx.get_self_addr(), contract_hash, arg1);
 
-        if (!tx_ctx.contract_db_proxy.deploy_contract(deploy_addr, contract_hash)) {
+        auto deploy_addr_opt = tx_ctx.contract_db_proxy.deploy_contract(tx_ctx.get_self_addr(), contract_hash, arg1);
+
+        if (!deploy_addr_opt.has_value()) {
             throw HostError("failed to deploy contract");
         }
 
-        write_to_memory(deploy_addr, arg2, deploy_addr.size());
+        write_to_memory(*deploy_addr_opt, arg2, deploy_addr_opt->size());
         ret = 0;
         break;
     }

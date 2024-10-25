@@ -47,7 +47,7 @@ class UncommittedContracts : public utils::NonMovableOrCopyable
 
   public:
     // caller must ensure script_hash exists
-    bool deploy_contract_to_address(Address const& addr,
+    void deploy_contract_to_address(Address const& addr,
                                     Hash const& script_hash);
 
     void undo_deploy_contract_to_address(Address const& addr);

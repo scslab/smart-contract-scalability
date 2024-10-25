@@ -98,7 +98,7 @@ class ContractDB
         uncommitted_contracts.undo_deploy_contract_to_address(addr);
     }
 
-    bool __attribute__((warn_unused_result))
+    void
     deploy_contract_to_address(Address const& addr,
                                Hash const& script_hash);
 
