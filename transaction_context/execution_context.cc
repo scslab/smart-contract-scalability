@@ -60,7 +60,6 @@ wasm_api::HostFnStatus<void> gas_handler(wasm_api::HostCallContext* context, uin
     if (context -> runtime -> consume_gas(gas)) {
         return {};
     }
-    std::printf("out of gas\n");
     return wasm_api::HostFnStatus<void>{std::unexpect_t{}, wasm_api::HostFnError::OUT_OF_GAS};
 }
 
@@ -82,7 +81,6 @@ EC_DECL()::ExecutionContext()
 
 EC_DECL(wasm_api::MeteredReturn)::invoke_subroutine(MethodInvocation const& invocation, uint64_t gas_limit)
 {
-    std::printf("start invoke subroutine\n");
     auto iter = active_runtimes.find(invocation.addr);
     if (iter == active_runtimes.end()) {
         CONTRACT_INFO("creating new runtime for contract at %s",
@@ -97,14 +95,11 @@ EC_DECL(wasm_api::MeteredReturn)::invoke_subroutine(MethodInvocation const& invo
         auto script = tx_context->get_contract_db_proxy().get_script(invocation.addr);
         wasm_api::Script s {.data = script.data, .len = script.len};
 
-        std::printf("script = %p len %"PRIu32"\n", s.data, s.len);
-
         auto runtime_instance = wasm_context.new_runtime_instance(
             s,
             reinterpret_cast<void*>(this));
 
         if (!runtime_instance) {
-            std::printf("failed to launch a runtime instance\n");
             return wasm_api::MeteredReturn{
                 .result = wasm_api::InvokeStatus<uint64_t>(std::unexpect_t{}, wasm_api::InvokeError::OUT_OF_GAS_ERROR),
                 .gas_consumed = 0
@@ -204,9 +199,6 @@ ExecutionContext<TransactionContext_t>::execute(Hash const& tx_hash,
             std::terminate();
         }
 
-        std::printf("Error: Invoke res %u\n", invoke_res.result.error());
-
-        std::printf("failed here\n");
         return TransactionStatus::FAILURE;
     }
 
@@ -1264,12 +1256,7 @@ syscall_handler(wasm_api::WasmRuntime* runtime, uint64_t callno, uint64_t arg0, 
     };
 
     if (!consume_gas(required_gas)) {
-        std::printf("out of gas failure\n");
         return wasm_api::HostFnStatus<uint64_t>(std::unexpect_t{}, wasm_api::HostFnError::OUT_OF_GAS);
-    }
-    std::printf("syscall result: has_value = %u\n", ret.has_value());
-    if (ret.has_value()) {
-        std::printf("returned val : %" PRIu64 "\n", *ret);
     }
     return ret;
 }
