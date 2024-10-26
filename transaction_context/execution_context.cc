@@ -106,15 +106,6 @@ EC_DECL(wasm_api::MeteredReturn)::invoke_subroutine(MethodInvocation const& invo
             };
         }
 
-        /*runtime_instance -> link_fn("scs", "syscall", &ExecutionContext<TransactionContext_t>::static_syscall_handler);
-        runtime_instance -> link_fn("scs", "gas", &gas_handler);
-
-        runtime_instance -> template link_env<&ExecutionContext<TransactionContext_t>::static_env_memcmp>("memcmp");
-        runtime_instance -> template link_env<&ExecutionContext<TransactionContext_t>::static_env_memset>("memset");
-        runtime_instance -> template link_env<&ExecutionContext<TransactionContext_t>::static_env_memcpy>("memcpy");
-        runtime_instance -> template link_env<&ExecutionContext<TransactionContext_t>::static_env_strnlen>("strnlen");
-        */
-
         //std::printf("launch time: %lf\n", utils::measure_time(timestamp));
 
         active_runtimes.emplace(invocation.addr, std::move(runtime_instance));
@@ -128,10 +119,6 @@ EC_DECL(wasm_api::MeteredReturn)::invoke_subroutine(MethodInvocation const& invo
 
     auto res = runtime->invoke(
         invocation.get_invocable_methodname().c_str(), gas_limit);
-
-    if (!res.result.has_value()) {
-        std::printf("invoke failed! err %u\n", res.result.error());
-    }
 
     tx_context->pop_invocation_stack();
 
@@ -534,7 +521,6 @@ syscall_handler(wasm_api::WasmRuntime* runtime, uint64_t callno, uint64_t arg0, 
             }
         } else {
             if (*invoke_res.result != 0) {
-                std::printf("failing bc here\n");
                 ret = deterministic_error();
                 break;
             } else {

@@ -74,52 +74,6 @@ class ExecutionContext : public utils::NonMovableOrCopyable
         return wasm_api::HostFnStatus<uint64_t>{std::unexpect_t{}, wasm_api::HostFnError::UNRECOVERABLE};
       }
     }
-    
-    /*
-
-    int32_t env_memcmp(uint32_t lhs, uint32_t rhs, uint32_t sz);
-    uint32_t env_memset(uint32_t ptr, uint32_t val, uint32_t len);
-    uint32_t env_memcpy(uint32_t dst, uint32_t src, uint32_t len);
-    uint32_t env_strnlen( uint32_t ptr, uint32_t max_len);
-
-    static
-    int32_t 
-    static_env_memcmp(void* self, uint32_t lhs, uint32_t rhs, uint32_t sz) noexcept {
-      if (self == nullptr) {
-        throw std::runtime_error("invalid self ptr in env");
-      }
-      return reinterpret_cast<ExecutionContext*>(self) -> env_memcmp(lhs, rhs, sz);
-    }
-
-    static
-    uint32_t 
-    static_env_memset(void* self, uint32_t ptr, uint32_t val, uint32_t len) noexcept
-    { 
-      if (self == nullptr) {
-        throw std::runtime_error("invalid self ptr in env");
-      }
-      return reinterpret_cast<ExecutionContext*>(self) -> env_memset(ptr, val, len);
-    }
-
-    static
-    uint32_t
-    static_env_memcpy(void* self, uint32_t dst, uint32_t src, uint32_t len) noexcept
-    {
-      if (self == nullptr) {
-        throw std::runtime_error("invalid self ptr in env");
-      }
-      return reinterpret_cast<ExecutionContext*>(self) -> env_memcpy(dst, src, len);
-    }
-
-    static
-    uint32_t
-    static_env_strnlen(void* self, uint32_t ptr, uint32_t max_len) noexcept
-    {
-      if (self == nullptr) {
-        throw std::runtime_error("invalid self ptr in env");
-      }
-      return reinterpret_cast<ExecutionContext*>(self) -> env_strnlen(ptr, max_len);
-    } */
 
     void extract_results();
     void reset();
