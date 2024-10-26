@@ -201,15 +201,13 @@ TESTS_CCS = \
 	tests/builtin_fns_invoke_tests.cc \
 	tests/gas_tests.cc \
 	tests/sdk_tests.cc \
+	tests/hashset_tests.cc \
 	tx_block/tests/test_unique_txset.cc \
 	object/tests/test_revertable_object.cc \
 	$(EXPERIMENTS_TEST_SRCS)
 
 
 
-
-
-#	tests/hashset_tests.cc \
 #	tests/storage_tests.cc \
 #	tests/test_rpc.cc \
 #	storage_proxy/tests/test_proxy_applicator.cc \

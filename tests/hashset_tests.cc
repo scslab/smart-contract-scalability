@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <catch2/catch_test_macros.hpp>
+#include <gtest/gtest.h>
 
 #include "transaction_context/global_context.h"
 #include "transaction_context/execution_context.h"
@@ -32,94 +32,97 @@
 
 using namespace scs;
 
-TEST_CASE("hashset manipulation test contract", "[sdk][hashset]")
-{
-    test::DeferredContextClear defer;
+class HashsetTests : public ::testing::Test {
 
-    GlobalContext scs_data_structures;
-    auto& script_db = scs_data_structures.contract_db;
-
+ protected:
+  void SetUp() override {
     auto c = load_wasm_from_file("cpp_contracts/test_hashset_manipulation.wasm");
+    deploy_addr = hash_xdr(*c);
 
-    auto h = hash_xdr(*c);
+    test::deploy_and_commit_contractdb(scs_data_structures.contract_db, deploy_addr, c);
+  }
 
-    test::deploy_and_commit_contractdb(script_db, h, c);
+  test::DeferredContextClear defer;
 
-    std::unique_ptr<BlockContext> block_context
-        = std::make_unique<BlockContext>(0);
+  Address deploy_addr;
 
-    ExecutionContext<TxContext> exec_ctx;
+  GlobalContext scs_data_structures;
+  std::unique_ptr<BlockContext> block_context = std::make_unique<BlockContext>(0);
+
+  ExecutionContext<TxContext> exec_ctx;
 
 
+  void exec_success(const Hash& tx_hash, const SignedTransaction& tx) {
+    EXPECT_EQ(exec_ctx.execute(tx_hash, tx, scs_data_structures, *block_context),
+                TransactionStatus::SUCCESS);
+  }
 
-    auto make_tx = [&](uint32_t round, bool success = true) -> Hash {
+  void exec_fail(const Hash& tx_hash, const SignedTransaction& tx) {
+    EXPECT_NE(exec_ctx.execute(tx_hash, tx, scs_data_structures, *block_context),
+                TransactionStatus::SUCCESS);
+  }
 
-        const uint64_t gas_bid = 1;
+  void check_valid(const Hash& tx_hash) {
+    EXPECT_TRUE(block_context->tx_set.contains_tx(tx_hash));
+  };
 
-        TransactionInvocation invocation(h, round, make_calldata());
+  void finish_block() {
+    phase_finish_block(scs_data_structures, *block_context);
+  };
 
-        Transaction tx = Transaction(
-            invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());
-        SignedTransaction stx;
-        stx.tx = tx;
+  void advance_block()
+  {
+    block_context = std::make_unique<BlockContext>(block_context -> block_number + 1);
+  };
 
-        auto hash = hash_xdr(stx);
+  Hash make_tx(uint32_t round, bool success = true) {
 
-        if (success)
-        {
-            REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
-                    == TransactionStatus::SUCCESS);
-        }
-        else
-        {
-            REQUIRE(exec_ctx.execute(hash, stx, scs_data_structures, *block_context)
-                    != TransactionStatus::SUCCESS);
-        }
+    const uint64_t gas_bid = 1;
 
-        return hash;
-    };
+    TransactionInvocation invocation(deploy_addr, round, make_calldata());
 
-    auto check_valid = [&](const Hash& tx_hash) {
-        REQUIRE(block_context->tx_set.contains_tx(tx_hash));
-    };
+    Transaction tx = Transaction(
+        invocation, UINT64_MAX, gas_bid, xdr::xvector<Contract>());
+    SignedTransaction stx;
+    stx.tx = tx;
 
-    auto finish_block = [&]() {
-        phase_finish_block(scs_data_structures, *block_context);
-    };
+    auto hash = hash_xdr(stx);
 
-    auto advance_block = [&] ()
+    if (success)
     {
-        block_context = std::make_unique<BlockContext>(block_context -> block_number + 1);
-    };
-
-    std::printf("start work section\n");
-
-    SECTION("good manips")
+        exec_success(hash, stx);
+    }
+    else
     {
-        auto tx0 = make_tx(0);
-
-        finish_block();
-        check_valid(tx0);
-        advance_block();
-
-        auto tx2 = make_tx(2);
-        
-        finish_block();
-        check_valid(tx2);
-        advance_block();
+        exec_fail(hash, stx);
     }
 
-    SECTION("bad manips")
-    {
-        // prevent the degenerate case of contract calling clear(),
-        // and then inserting something that would be cleared -- by common sense,
-        // the contract should see this write, but then this write will never be materialized after
-        // the block.  This would just be weird.
-        SECTION("insert after clear")
-        {
-            make_tx(1, false);
-        }
-    }
+    return hash;
+  }
+};
 
+TEST_F(HashsetTests, GoodManipulation)
+{
+    auto tx0 = make_tx(0);
+
+    finish_block();
+    check_valid(tx0);
+    advance_block();
+
+    auto tx2 = make_tx(2);
+    
+    finish_block();
+    check_valid(tx2);
+    advance_block();
 }
+
+// prevent the degenerate case of contract calling clear(),
+// and then inserting something that would be cleared -- by common sense,
+// the contract should see this write, but then this write will never be materialized after
+// the block.  This would just be weird.
+TEST_F(HashsetTests, InsertAfterClear)
+{
+    make_tx(1, false);
+}
+
 
