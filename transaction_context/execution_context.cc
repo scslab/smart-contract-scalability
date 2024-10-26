@@ -19,7 +19,6 @@
 #include "transaction_context/method_invocation.h"
 #include "transaction_context/transaction_results.h"
 #include "transaction_context/transaction_context.h"
-#include "transaction_context/error.h"
 
 #include "threadlocal/threadlocal_context.h"
 

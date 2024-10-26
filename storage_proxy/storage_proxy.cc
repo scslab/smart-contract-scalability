@@ -25,8 +25,6 @@
 
 #include "storage_proxy/transaction_rewind.h"
 
-#include "transaction_context/error.h"
-
 #include "object/make_delta.h"
 
 #include "debug/debug_utils.h"

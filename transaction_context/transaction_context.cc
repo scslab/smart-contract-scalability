@@ -21,8 +21,6 @@
 
 #include "crypto/hash.h"
 
-#include "transaction_context/error.h"
-
 namespace scs {
 
 template class TransactionContext<GlobalContext>;

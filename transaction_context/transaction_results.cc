@@ -16,8 +16,6 @@
 
 #include "transaction_context/transaction_results.h"
 
-#include "transaction_context/error.h"
-
 namespace scs
 {
 
