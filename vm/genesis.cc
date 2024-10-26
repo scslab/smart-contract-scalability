@@ -52,7 +52,7 @@ install_genesis_contracts(ContractDB& contract_db)
 
     // address registry should mirror cpp_contracts/genesis/addresses.h
     install_contract(proxy,
-                     load_wasm_from_file("cpp_contracts/genesis/deploy.wasm"),
+                     load_wasm_from_file("lfi_contracts/deployer.lfi"),
                      DEPLOYER_ADDRESS);
 
     {

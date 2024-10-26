@@ -32,7 +32,7 @@ namespace scs {
 const uint64_t gas_limit = 10'000'000;
 
 // wasmsig needs A LOT of gas
-const char* payment_contract = "cpp_contracts/payment_experiment/payment_wasmsig.wasm";
+const char* payment_contract = "lfi_contracts/payment.lfi";
 
 PaymentExperiment::PaymentExperiment(size_t num_accounts, uint16_t hs_size_inc)
     : num_accounts(num_accounts)
@@ -222,7 +222,7 @@ PaymentExperiment::get_active_key_set()
     InvariantKey replayaddr = make_static_key(0);
     InvariantKey token_addr = make_static_key(0, 2);
 
-    const char* erc20_contract = (SisyphusStateDB::USE_ASSETS == 1) ? "cpp_contracts/sisyphus_erc20.wasm" : "cpp_contracts/erc20.wasm"; 
+    const char* erc20_contract = (SisyphusStateDB::USE_ASSETS == 1) ? "cpp_contracts/sisyphus_erc20.wasm" : "lfi_contracts/erc20.lfi"; 
 
     Hash token_contract_hash
         = hash_xdr(*load_wasm_from_file(erc20_contract));
@@ -342,7 +342,7 @@ PaymentExperiment::prepare_vm()
 
     vm->init_default_genesis();
 
-    if (!vm->try_exec_tx_block(make_create_transactions("cpp_contracts/erc20.wasm"))) {
+    if (!vm->try_exec_tx_block(make_create_transactions("lfi_contracts/erc20.lfi"))) {
         return nullptr;
     }
 
@@ -350,7 +350,7 @@ PaymentExperiment::prepare_vm()
 
     Block deploy_erc20;
     deploy_erc20.transactions
-        = { make_deploy_erc20_transaction("cpp_contracts/erc20.wasm") };
+        = { make_deploy_erc20_transaction("lfi_contracts/erc20.lfi") };
 
     if (!vm->try_exec_tx_block(deploy_erc20)) {
         return nullptr;
@@ -358,7 +358,7 @@ PaymentExperiment::prepare_vm()
 
     std::printf("made deploy erc20\n");
 
-    auto [wallet_txs, mint_txs] = make_accounts_and_mints("cpp_contracts/erc20.wasm");
+    auto [wallet_txs, mint_txs] = make_accounts_and_mints("lfi_contracts/erc20.lfi");
 
     const size_t batch_exec_size = 100'000;
     for (size_t i = 0; i < (wallet_txs.size() / batch_exec_size) + 1; i++) {
@@ -401,7 +401,7 @@ PaymentExperiment::prepare_groundhog_vm()
 
     vm->init_default_genesis();
 
-    if (!vm->try_exec_tx_block(make_create_transactions("cpp_contracts/erc20.wasm"))) {
+    if (!vm->try_exec_tx_block(make_create_transactions("lfi_contracts/erc20.lfi"))) {
         return nullptr;
     }
 
@@ -409,7 +409,7 @@ PaymentExperiment::prepare_groundhog_vm()
 
     Block deploy_erc20;
     deploy_erc20.transactions
-        = { make_deploy_erc20_transaction("cpp_contracts/erc20.wasm") };
+        = { make_deploy_erc20_transaction("lfi_contracts/erc20.lfi") };
 
     if (!vm->try_exec_tx_block(deploy_erc20)) {
         return nullptr;
@@ -417,7 +417,7 @@ PaymentExperiment::prepare_groundhog_vm()
 
     std::printf("made deploy erc20\n");
 
-    auto [wallet_txs, mint_txs] = make_accounts_and_mints("cpp_contracts/erc20.wasm");
+    auto [wallet_txs, mint_txs] = make_accounts_and_mints("lfi_contracts/erc20.lfi");
 
     const size_t batch_exec_size = 100'000;
     for (size_t i = 0; i < (wallet_txs.size() / batch_exec_size) + 1; i++) {
@@ -458,7 +458,7 @@ PaymentExperiment::prepare_sisyphus_vm()
 {
     auto vm = std::make_unique<SisyphusVirtualMachine>();
 
-    const char* erc20_contract = (SisyphusStateDB::USE_ASSETS == 1) ? "cpp_contracts/sisyphus_erc20.wasm" : "cpp_contracts/erc20.wasm"; //"cpp_contracts/sisyphus_erc20.wasm"; // version with asset implementation
+    const char* erc20_contract = (SisyphusStateDB::USE_ASSETS == 1) ? "cpp_contracts/sisyphus_erc20.wasm" : "lfi_contracts/erc20.lfi"; //"cpp_contracts/sisyphus_erc20.wasm"; // version with asset implementation
 
     vm->init_default_genesis();
 

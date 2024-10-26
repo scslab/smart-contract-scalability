@@ -27,6 +27,7 @@ namespace scs {
 {
     FILE* f = std::fopen(filename, "r");
 
+    printf("%s\n", filename);
     if (f == nullptr) {
         throw std::runtime_error("failed to load wasm file");
     }

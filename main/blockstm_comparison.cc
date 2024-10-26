@@ -91,8 +91,10 @@ int
 main(int argc, const char** argv)
 {
     std::vector<uint32_t> accts = { 2, 10, 100, 1000, 10'000 };
-    std::vector<uint32_t> batches = {100, 1'000,  10'000, 100'000 };
-    std::vector<uint32_t> nthreads = { /*1, 2, 4, 8, 16,*/ 32, 64, 96 };
+    // std::vector<uint32_t> batches = {100, 1'000,  10'000, 100'000 };
+    // std::vector<uint32_t> nthreads = { /*1, 2, 4, 8, 16,*/ 32, 64, 96 };
+    std::vector<uint32_t> batches = {100};
+    std::vector<uint32_t> nthreads = {8};
     std::vector<uint32_t> big_accts = {  100'000,  1'000'000 , 10'000'000  };
     struct exp_res
     {
