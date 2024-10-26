@@ -80,7 +80,7 @@ EC_DECL(uint64_t)::invoke_subroutine(MethodInvocation const& invocation, uint64_
             throw std::runtime_error("cannot get new proc");
         }
 
-        if (proc->set_program(script) != 0) {
+        if (!proc->set_program(script)) {
             throw std::runtime_error("failed to set program");
         }
 

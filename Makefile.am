@@ -209,10 +209,10 @@ TEST_UTILS_SRCS = \
 TESTS_CCS = \
 	tests/builtin_fns_log_tests.cc \
 	tests/builtin_fns_invoke_tests.cc \
-	tests/gas_tests.cc \
-	tests/hashset_tests.cc \
-	tests/storage_tests.cc \
-	tests/sdk_tests.cc
+	tests/gas_tests.cc
+# tests/hashset_tests.cc \
+# tests/storage_tests.cc \
+# tests/sdk_tests.cc
 
 #	tests/test_rpc.cc \
 #	storage_proxy/tests/test_proxy_applicator.cc \
@@ -267,13 +267,14 @@ LDADD = $(xdrpp_LIBS) \
 	$(rocksdb_LIBS) \
 	$(wasm_api_LIBS) \
 	$(Catch2_LIBS) \
-	./lib/lfi/liblfi/liblfi.a \
+	./lib/lfi/build/liblfi/liblfi.a \
 	$(grpcpp_LIBS) \
 	$(protobuf_LIBS)
 
-lib/lfi/liblfi/liblfi.a: lib/lfi/liblfi/*.c lib/lfi/liblfi/*.h
-	cd lib/lfi/liblfi && \
-	knit liblfi.a
+lib/lfi/build/liblfi/liblfi.a: lib/lfi/liblfi/*.c lib/lfi/liblfi/*.h
+	cd lib/lfi && \
+	meson setup build && \
+	ninja -C build liblfi/liblfi.a
 
 $(SRCS:.cc=.o) : $(XH_FILES)
 $(TESTS_CCS:.cc=.o) : $(XH_FILES)

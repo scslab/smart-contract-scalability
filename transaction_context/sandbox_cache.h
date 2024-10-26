@@ -10,7 +10,7 @@ namespace scs {
 
 class SandboxCache
 {
-    std::vector<std::unique_ptr<LFIProc>> procs;
+    std::vector<std::unique_ptr<DeClProc>> procs;
     size_t free_ptr = 0;
     LFIGlobalEngine& global_engine;
     void* ctxp;
@@ -24,11 +24,11 @@ class SandboxCache
     {
     }
 
-    LFIProc* get_new_proc()
+    DeClProc* get_new_proc()
     {
         if (free_ptr >= procs.size()) {
-            std::unique_ptr<LFIProc> proc
-                = std::make_unique<LFIProc>(ctxp, global_engine);
+            std::unique_ptr<DeClProc> proc
+                = std::make_unique<DeClProc>(ctxp, global_engine);
             if (!(*proc)) {
                 return nullptr;
             }

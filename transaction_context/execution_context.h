@@ -36,7 +36,7 @@ class ExecutionContext : public utils::NonMovableOrCopyable
 {
     SandboxCache sandbox_cache;
 
-    std::map<Address, LFIProc*> active_runtimes;
+    std::map<Address, DeClProc*> active_runtimes;
 
     std::unique_ptr<TransactionContext_t> tx_context;
 

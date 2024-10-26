@@ -50,7 +50,7 @@ TC_DECL::TransactionContext(SignedTransaction const& tx,
 {}
 
 TC_TEMPLATE
-LFIProc*
+DeClProc*
 TC_DECL::get_current_runtime()
 {
     if (runtime_stack.size() == 0) {
@@ -77,7 +77,7 @@ TC_DECL::pop_invocation_stack()
 
 TC_TEMPLATE
 void
-TC_DECL::push_invocation_stack(LFIProc* runtime,
+TC_DECL::push_invocation_stack(DeClProc* runtime,
                                           MethodInvocation const& invocation)
 {
     invocation_stack.push_back(invocation);

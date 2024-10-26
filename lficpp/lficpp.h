@@ -22,26 +22,26 @@ namespace scs
 class LFIGlobalEngine : public utils::NonMovableOrCopyable
 {
 	std::mutex mtx;
-	struct lfi* lfi_engine;
+	LFIEngine* lfi_engine;
 	uint32_t active_proc_count = 0;
 
 public:
-	LFIGlobalEngine(lfi_syshandler handler);
+	LFIGlobalEngine(SysHandler handler);
 
 	~LFIGlobalEngine();
 
-	int
+	bool
 	__attribute__((warn_unused_result))
-	new_proc(struct lfi_proc** o_proc, void* ctxp);
+	new_proc(LFIProc** o_proc, void* ctxp);
 
-	void delete_proc(struct lfi_proc* proc);
+	void delete_proc(LFIProc* proc);
 };
 
-class LFIProc : public utils::NonMovableOrCopyable
+class DeClProc : public utils::NonMovableOrCopyable
 {
-	struct lfi_proc* proc;
+	LFIProc* proc;
 
-	struct lfi_proc_info info;
+	LFIProcInfo info;
 
 	void* ctxp;
 
@@ -55,9 +55,9 @@ class LFIProc : public utils::NonMovableOrCopyable
 
 public:
 
-	LFIProc(void* ctxp, LFIGlobalEngine& main_lfi);
+	DeClProc(void* ctxp, LFIGlobalEngine& main_lfi);
 
-	~LFIProc();
+	~DeClProc();
 
 	operator bool() const {
 		return proc != nullptr;
@@ -67,7 +67,7 @@ public:
 	uint64_t
 	run(uint32_t method, std::vector<uint8_t> const& calldata, uint32_t gas_limit);
 
-	int 
+	bool
 	__attribute__((warn_unused_result))
 	set_program(RunnableScriptView const& script);
 

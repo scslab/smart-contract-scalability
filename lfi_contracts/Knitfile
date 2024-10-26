@@ -1,10 +1,9 @@
-cc := /opt/lfi/groundhog-toolchain/bin/lfi-clang
-libclang := /opt/lfi/groundhog-toolchain/compiler-rt/lib/linux/libclang_rt.builtins-aarch64.a
+cc := /opt/decl-branch-groundhog/bin/aarch64-lfi-linux-musl-gcc
 
 return b{
     $ all:VB:hello.lfi test_calldata.lfi test_invoke.lfi test_log.lfi test_redirect_call.lfi
     $ %.lfi: %.o
-        $cc -Llibc -Llibc/build/install/lib -lc -lsyscalls $input -o $output -nostdlib $libclang /opt/lfi/libed25519/lib/libed25519.a
+        $cc -Llibc -Llibc/build/install/lib $input -o $output -nostdlib /opt/lfi/libed25519/lib/libed25519.a -static -lc -lsyscalls -lc -lgcc
     $ %.o: %.c
-        $cc -Ilibc -Ilib/build/install/include -O2 $input -o $output -c -nostdlib -I/opt/lfi/libed25519/include
+        $cc -Ilibc -Ilib/build/install/include -O2 $input -o $output -c -nostdlib -I/opt/lfi/libed25519/include -static
 }

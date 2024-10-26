@@ -14,23 +14,25 @@
 namespace scs
 {
 	
-LFIGlobalEngine::LFIGlobalEngine(lfi_syshandler handler)
+LFIGlobalEngine::LFIGlobalEngine(SysHandler handler)
 	: lfi_engine(nullptr)
 	{
-		struct lfi_options opts {
+		LFIOptions opts = (LFIOptions) {
 			.noverify = 1, // programs should be verified when they're registered, not at runtime
-			.fastyield = 0, // this option does nothing at the moment TODO
-			.pagesize = (size_t) getpagesize(),
+            .poc = 1,
+            .sysexternal = true,
+			.pagesize = (size_t) getpagesize(), // TODO: this should probably be 16k hardcoded
 			.stacksize = 65536, 
-			.syshandler = handler,
-			.gas = 0,			
-			.poc = 1
+			.gas = 0,
+            .syshandler = handler,
 		};
 
 		lfi_engine = lfi_new(opts);
+        assert(lfi_engine);
 
 		std::printf("add vaspaces\n");
-        lfi_auto_add_vaspaces(lfi_engine,  8ULL * 1024  * 1024 * 1024 * 1024);
+        bool ok = lfi_reserve(lfi_engine,  8ULL * 1024  * 1024 * 1024 * 1024); // 8TB
+        assert(ok);
 	}
 
 LFIGlobalEngine::~LFIGlobalEngine() {
@@ -44,29 +46,29 @@ LFIGlobalEngine::~LFIGlobalEngine() {
 }
 
 
-int 
-LFIGlobalEngine::new_proc(struct lfi_proc** o_proc, void* ctxp)
+bool 
+LFIGlobalEngine::new_proc(LFIProc** o_proc, void* ctxp)
 {
 	std::lock_guard lock(mtx);
 	active_proc_count++;
-	return lfi_add_proc(lfi_engine, o_proc, ctxp);
+	return lfi_addproc(lfi_engine, o_proc, ctxp);
 }
 
 void 
-LFIGlobalEngine::delete_proc(struct lfi_proc* proc)
+LFIGlobalEngine::delete_proc(LFIProc* proc)
 {
 	std::lock_guard lock(mtx);
-	lfi_remove_proc(lfi_engine, proc);
+	lfi_rmproc(lfi_engine, proc);
 	active_proc_count--;
 }
 
-LFIProc::LFIProc(void* ctxp, LFIGlobalEngine& main_lfi) 
+DeClProc::DeClProc(void* ctxp, LFIGlobalEngine& main_lfi) 
 	: proc(nullptr)
 	, info()
 	, ctxp(ctxp)
 	, main_lfi(main_lfi)
 {
-	if (main_lfi.new_proc(&proc, ctxp) != 0)
+	if (!main_lfi.new_proc(&proc, ctxp))
 	{
 		proc = nullptr;
 	} else {
@@ -75,12 +77,12 @@ LFIProc::LFIProc(void* ctxp, LFIGlobalEngine& main_lfi)
 }
 
 uint64_t
-LFIProc::addr(uint64_t a) {
+DeClProc::addr(uint64_t a) {
     return base | ((uint32_t) a);
 }
 
-int 
-LFIProc::set_program(RunnableScriptView const& script)
+bool 
+DeClProc::set_program(RunnableScriptView const& script)
 {
 	if (actively_running) {
 		std::printf("wtf\n");
@@ -94,7 +96,7 @@ LFIProc::set_program(RunnableScriptView const& script)
 		std::printf("len=0\n");
 		return -1;
 	}
-	return lfi_proc_exec(proc, const_cast<uint8_t*>(script.data), script.len, &info);
+	return lfi_proc_loadelf(proc, const_cast<uint8_t*>(script.data), script.len, NULL, 0, &info);
 }
 
 uint32_t sandboxaddr(uintptr_t realaddr) {
@@ -102,17 +104,17 @@ uint32_t sandboxaddr(uintptr_t realaddr) {
 }
 
 uint64_t
-LFIProc::run(uint32_t method, std::vector<uint8_t> const& calldata, uint32_t gas)
+DeClProc::run(uint32_t method, std::vector<uint8_t> const& calldata, uint32_t gas)
 {
 	if (actively_running) {
-		throw HostError("reentrance in LFIProc");
+		throw HostError("reentrance in DeClProc");
 	}
-	lfi_proc_init_regs(proc, info.elfentry, reinterpret_cast<uintptr_t>(info.stack) + info.stacksize - 16);
+	lfi_proc_init(proc, info.elfentry, reinterpret_cast<uintptr_t>(info.stack) + info.stacksize - 16);
 
 	brkbase = info.lastva;
 	brksize = 0;
 
-	struct lfi_regs* regs = lfi_proc_get_regs(proc);
+	LFIRegs* regs = lfi_proc_regs(proc);
 	regs -> x0 = method;
 	
 	if (sbrk(calldata.size()) == static_cast<uintptr_t>(-1)) {
@@ -150,31 +152,31 @@ LFIProc::run(uint32_t method, std::vector<uint8_t> const& calldata, uint32_t gas
 }
 
 void
-LFIProc::deduct_gas(uint64_t gas) {
-	struct lfi_regs* regs = lfi_proc_get_regs(proc);
+DeClProc::deduct_gas(uint64_t gas) {
+	LFIRegs* regs = lfi_proc_regs(proc);
 	if (gas > regs -> x23) {
 		throw HostError("gas usage exceeded limit in deduct_gas");
 	}
 	regs -> x23 -= gas;
 }
 uint64_t 
-LFIProc::get_available_gas() {
-	struct lfi_regs* regs = lfi_proc_get_regs(proc);
+DeClProc::get_available_gas() {
+	LFIRegs* regs = lfi_proc_regs(proc);
 	return regs -> x23;
 }
 
 void 
-LFIProc::exit(int code) {
+DeClProc::exit(int code) {
 	if (!actively_running) {
 		std::printf("bizarre\n");
 		std::abort();
 	}
 	actively_running = false;
-	lfi_proc_exit(proc, code);
+	lfi_proc_exit(code);
 	std::unreachable();
 }
 
-LFIProc::~LFIProc()
+DeClProc::~DeClProc()
 {
 	if (actively_running) {
 		//impossible
@@ -187,7 +189,7 @@ LFIProc::~LFIProc()
 }
 
 uintptr_t
-LFIProc::sbrk(uint32_t incr)
+DeClProc::sbrk(uint32_t incr)
 {
 	
 	uintptr_t brkp = brkbase + brksize;
@@ -215,7 +217,7 @@ LFIProc::sbrk(uint32_t incr)
 }
 
 bool 
-LFIProc::is_writable(uintptr_t p, uint32_t size) const
+DeClProc::is_writable(uintptr_t p, uint32_t size) const
 {
 	if (p < brkbase) {
 		return false;
@@ -227,7 +229,7 @@ LFIProc::is_writable(uintptr_t p, uint32_t size) const
 }
 
 bool
-LFIProc::is_readable(uint64_t p, uint32_t size) const {
+DeClProc::is_readable(uint64_t p, uint32_t size) const {
 	return is_writable(p, size);
 }
 
