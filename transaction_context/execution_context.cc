@@ -746,7 +746,8 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
 
         Hash h = tx_ctx.contract_db_proxy.create_contract(contract);
 
-        write_to_memory(h, arg1, h.size());
+        if (arg1 != 0)
+            write_to_memory(h, arg1, h.size());
         ret = 0;
         break;
     } 
@@ -765,7 +766,8 @@ syscall_handler(uint64_t callno, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
             throw HostError("failed to deploy contract");
         }
 
-        write_to_memory(*deploy_addr_opt, arg2, deploy_addr_opt->size());
+        if (arg2 != 0)
+            write_to_memory(*deploy_addr_opt, arg2, deploy_addr_opt->size());
         ret = 0;
         break;
     }

@@ -20,10 +20,10 @@ LFIGlobalEngine::LFIGlobalEngine(SysHandler handler)
 		LFIOptions opts = (LFIOptions) {
 			.noverify = 1, // programs should be verified when they're registered, not at runtime
             .poc = 1,
-            .sysexternal = true,
+            .sysexternal = 1,
 			.pagesize = (size_t) getpagesize(), // TODO: this should probably be 16k hardcoded
 			.stacksize = 65536, 
-			.gas = 0xffffffffffffff,
+			.gas = 0,
             .syshandler = handler,
 		};
 
@@ -126,8 +126,7 @@ DeClProc::run(uint32_t method, std::vector<uint8_t> const& calldata, uint32_t ga
 	regs -> x1 = sandboxaddr(brkbase);
 	regs -> x2 = calldata.size();
 
-    // TODO: select a more appropriate initial gas value for LFI
-	// regs -> x23 = gas;
+	regs -> x23 = gas;
 
 	actively_running = true;
 	int code = lfi_proc_start(proc);
