@@ -40,13 +40,16 @@ LFIGlobalEngine::~LFIGlobalEngine() {
 	}
 }
 
+enum {
+    KB = 1024,
+};
 
 bool
 LFIGlobalEngine::new_proc(LFIProc** o_proc, void* ctxp)
 {
 	std::lock_guard lock(mtx);
 	active_proc_count++;
-	return lfi_addproc(lfi_engine, o_proc, ctxp);
+	return lfi_adduproc(lfi_engine, o_proc, ctxp, 0x20000, 128 * KB, 128 * KB);
 }
 
 void 
@@ -169,9 +172,13 @@ DeClProc::sbrk(uint32_t incr)
 	if (brkp + incr < base + (4ULL * 1024 * 1024 * 1024)) {
         void* map = NULL;
         if (brksize == 0 && brkfull == 0) {
-            map = mmap((void*) brkbase, brksize + incr, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
+            fprintf(stderr, "excessive allocation would require remapping\n");
+            std::abort();
+            // map = mmap((void*) brkbase, brksize + incr, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
         } else if (brksize + incr > brkfull) {
-            map = mremap((void*) brkbase, brksize, brksize + incr, 0);
+            fprintf(stderr, "excessive allocation would require remapping\n");
+            std::abort();
+            // map = mremap((void*) brkbase, brksize, brksize + incr, 0);
         }
         if (map == (void*) -1) {
             perror("sbrk: mmap");
