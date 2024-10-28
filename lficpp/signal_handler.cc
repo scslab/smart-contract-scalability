@@ -25,8 +25,10 @@ static void signal_trap_handler(int sig, siginfo_t* si, void* context) {
     ucontext_t* uctx = (ucontext_t*) context;
     std::printf("received signal %d, pc: %llx\n", sig, uctx->uc_mcontext.pc);
 
-    lfi_proc_exit(sig);
+    if (lfi_proc())
+        lfi_proc_exit(sig);
 
+    std::printf("no active LFI process\n");
     // unreachable
     std::abort();
 }
