@@ -95,7 +95,7 @@ EC_DECL(void)::invoke_subroutine(MethodInvocation const& invocation)
             = tx_context->get_contract_db_proxy().get_script(invocation.addr);
 
 	auto ts = utils::init_time_measurement();
-        if (runtime->set_program(script.bytes, script.len) != 0) {
+        if (!runtime->set_program(script.bytes, script.len)) {
             throw HostError("program nexist at target address");
         }
 
@@ -175,7 +175,9 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
         return out;
     };
 
-    LFIProc* p = tx_context->get_current_runtime();
+    DeClProc* p = tx_context->get_current_runtime();
+
+    // printf("SYSCALL %ld %lx %lx %lx %lx %lx\n", callno, arg0, arg1, arg2, arg3, arg4);
 
     try {
         switch (callno) {
@@ -252,6 +254,10 @@ EC_DECL(uint64_t)::syscall_handler(uint64_t callno,
                                 p->addr(calldata_addr + calldata_len)));
                     }
                 }
+
+                // printf("call into %s method %lu\n",
+                //               debug::array_to_str(address).c_str(),
+                //               arg1);
 
                 invoke_subroutine(
                     MethodInvocation(address, method, std::move(calldata)));

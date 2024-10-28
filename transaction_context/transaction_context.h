@@ -60,9 +60,9 @@ template<typename GlobalContext_t>
 class TransactionContext
 {
 	std::vector<MethodInvocation> invocation_stack;
-	std::vector<LFIProc*> runtime_stack;
+	std::vector<DeClProc*> runtime_stack;
 
-	std::map<Address, LFIProc*> active_runtimes;
+	std::map<Address, DeClProc*> active_runtimes;
 
 	bool committed_to_statedb = false;
 
@@ -83,7 +83,7 @@ class TransactionContext
 
 public:
 
-	LFIProc* get_runtime_by_addr(const Address& addr) {
+	DeClProc* get_runtime_by_addr(const Address& addr) {
 		auto it = active_runtimes.find(addr);
 		if (it == active_runtimes.end())
 		{
@@ -92,7 +92,7 @@ public:
 		return it -> second;
 	}
 
-	void add_active_runtime(const Address& addr, LFIProc* proc)
+	void add_active_runtime(const Address& addr, DeClProc* proc)
 	{
 		active_runtimes[addr] = proc;
 	}
@@ -123,10 +123,10 @@ public:
 		return out;
 	}
 
-	LFIProc*
+	DeClProc*
 	get_current_runtime();
 
-	LFIProc const*
+	DeClProc const*
 	get_current_runtime() const
 	{
 		return const_cast<TransactionContext*>(this)->get_current_runtime();
@@ -168,7 +168,7 @@ public:
 	get_witness(uint64_t wit_idx) const;
 
 	void pop_invocation_stack();
-	void push_invocation_stack(LFIProc* runtime, MethodInvocation const& invocation);
+	void push_invocation_stack(DeClProc* runtime, MethodInvocation const& invocation);
 
 	std::unique_ptr<StorageCommitment<StateDB_t>>
 	__attribute__((warn_unused_result))

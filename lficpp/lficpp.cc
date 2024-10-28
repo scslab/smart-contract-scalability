@@ -1,5 +1,6 @@
 #include "lficpp/lficpp.h"
 
+#include <cassert>
 #include <utility>
 
 #include <unistd.h>
@@ -9,23 +10,24 @@
 namespace scs
 {
 	
-LFIGlobalEngine::LFIGlobalEngine(lfi_syshandler handler)
+LFIGlobalEngine::LFIGlobalEngine(SysHandler handler)
 	: lfi_engine(nullptr)
 	{
-		struct lfi_options opts {
+		LFIOptions opts = (LFIOptions) {
 			.noverify = 1, // programs should be verified when they're registered, not at runtime
-			.fastyield = 0, // this option does nothing at the moment TODO
+            .poc = 1,
 			.pagesize = 16 * 1024,
 			.stacksize = 65536, 
-			.syshandler = handler,
 			.gas = 1'000'000,
-			.poc = 1
+            .syshandler = handler,
 		};
 
 		lfi_engine = lfi_new(opts);
+        assert(lfi_engine);
 
 		std::printf("add vaspaces\n");
-        lfi_auto_add_vaspaces(lfi_engine,  8ULL * 1024  * 1024 * 1024 * 1024);
+        bool ok = lfi_reserve(lfi_engine,  8ULL * 1024  * 1024 * 1024 * 1024);
+        assert(ok);
 	}
 
 LFIGlobalEngine::~LFIGlobalEngine() {
@@ -39,29 +41,29 @@ LFIGlobalEngine::~LFIGlobalEngine() {
 }
 
 
-int 
-LFIGlobalEngine::new_proc(struct lfi_proc** o_proc, void* ctxp)
+bool
+LFIGlobalEngine::new_proc(LFIProc** o_proc, void* ctxp)
 {
 	std::lock_guard lock(mtx);
 	active_proc_count++;
-	return lfi_add_proc(lfi_engine, o_proc, ctxp);
+	return lfi_addproc(lfi_engine, o_proc, ctxp);
 }
 
 void 
-LFIGlobalEngine::delete_proc(struct lfi_proc* proc)
+LFIGlobalEngine::delete_proc(LFIProc* proc)
 {
 	std::lock_guard lock(mtx);
-	lfi_remove_proc(lfi_engine, proc);
+	lfi_rmproc(lfi_engine, proc);
 	active_proc_count--;
 }
 
-LFIProc::LFIProc(void* ctxp, LFIGlobalEngine& main_lfi) 
+DeClProc::DeClProc(void* ctxp, LFIGlobalEngine& main_lfi) 
 	: proc(nullptr)
 	, info()
 	, ctxp(ctxp)
 	, main_lfi(main_lfi)
 {
-	if (main_lfi.new_proc(&proc, ctxp) != 0)
+	if (!main_lfi.new_proc(&proc, ctxp))
 	{
 		proc = nullptr;
 	} else {
@@ -70,12 +72,12 @@ LFIProc::LFIProc(void* ctxp, LFIGlobalEngine& main_lfi)
 }
 
 uint64_t
-LFIProc::addr(uint64_t a) {
+DeClProc::addr(uint64_t a) {
     return base | ((uint32_t) a);
 }
 
-int 
-LFIProc::set_program(const uint8_t* bytes, const size_t len)
+bool
+DeClProc::set_program(const uint8_t* bytes, const size_t len)
 {
 	if (actively_running) {
 		return -1;
@@ -87,7 +89,7 @@ LFIProc::set_program(const uint8_t* bytes, const size_t len)
 		}
 		return -1;
 	}
-	return lfi_proc_exec(proc, const_cast<uint8_t*>(bytes), len, &info);
+	return lfi_proc_loadelf(proc, const_cast<uint8_t*>(bytes), len, NULL, 0, &info);
 }
 
 uint32_t sandboxaddr(uintptr_t realaddr) {
@@ -95,18 +97,18 @@ uint32_t sandboxaddr(uintptr_t realaddr) {
 }
 
 int
-LFIProc::run(uint32_t method, std::vector<uint8_t> const& calldata)
+DeClProc::run(uint32_t method, std::vector<uint8_t> const& calldata)
 {
 	if (actively_running) {
 		return -1;
 	}
-	lfi_proc_init_regs(proc, info.elfentry, reinterpret_cast<uintptr_t>(info.stack) + info.stacksize - 16);
+	lfi_proc_init(proc, info.elfentry, reinterpret_cast<uintptr_t>(info.stack) + info.stacksize - 16);
 
 	brkbase = info.lastva;
 	brksize = 0;
 	brkfull = info.extradata;
 
-	struct lfi_regs* regs = lfi_proc_get_regs(proc);
+	LFIRegs* regs = lfi_proc_regs(proc);
 	regs -> x0 = method;
 	
 	if (sbrk(calldata.size()) == static_cast<uintptr_t>(-1)) {
@@ -134,17 +136,17 @@ LFIProc::run(uint32_t method, std::vector<uint8_t> const& calldata)
 }
 
 void 
-LFIProc::exit(int code) {
+DeClProc::exit(int code) {
 	if (!actively_running) {
 		std::printf("bizarre\n");
 		std::abort();
 	}
 	actively_running = false;
-	lfi_proc_exit(proc, code);
+	lfi_proc_exit(code);
 //	unreachable();
 }
 
-LFIProc::~LFIProc()
+DeClProc::~DeClProc()
 {
 	if (actively_running) {
 		//impossible
@@ -157,7 +159,7 @@ LFIProc::~LFIProc()
 }
 
 uintptr_t
-LFIProc::sbrk(uint32_t incr)
+DeClProc::sbrk(uint32_t incr)
 {
 	
 	uintptr_t brkp = brkbase + brksize;
@@ -185,7 +187,7 @@ LFIProc::sbrk(uint32_t incr)
 }
 
 bool 
-LFIProc::is_writable(uintptr_t p, uint32_t size) const
+DeClProc::is_writable(uintptr_t p, uint32_t size) const
 {
 	if (p < brkbase) {
 		return false;
@@ -197,7 +199,7 @@ LFIProc::is_writable(uintptr_t p, uint32_t size) const
 }
 
 bool
-LFIProc::is_readable(uint64_t p, uint32_t size) const {
+DeClProc::is_readable(uint64_t p, uint32_t size) const {
 	return is_writable(p, size);
 }
 

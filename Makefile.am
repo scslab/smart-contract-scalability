@@ -258,11 +258,12 @@ grpcpp_DEDUP_CFLAGS = $(shell echo $(grpcpp_CFLAGS) | ./dedup.sh | sort | uniq |
 
 LFI_CFLAGS = -I./lib/lfi/liblfi/
 
-LFI_LDADD = lib/lfi/liblfi/liblfi.a
+LFI_LDADD = lib/lfi/build/liblfi/liblfi.a
 
-lib/lfi/liblfi/liblfi.a: lib/lfi/liblfi/*.c lib/lfi/liblfi/*.h lib/lfi/liblfi/*.S
-	cd lib/lfi/liblfi && \
-	knit liblfi.a
+lib/lfi/build/liblfi/liblfi.a: lib/lfi/liblfi/*.c lib/lfi/liblfi/*.h
+	cd lib/lfi && \
+	meson setup build && \
+	ninja -C build liblfi/liblfi.a
 
 AM_CPPFLAGS = \
 	$(xdrpp_CFLAGS) \

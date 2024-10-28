@@ -1,5 +1,5 @@
 [binaries]
-c = '/opt/lfi/groundhog-toolchain/bin/lfi-clang'
+c = '/opt/decl-branch-groundhog/bin/aarch64-lfi-linux-musl-gcc'
 ar = 'ar'
 strip = 'strip'
 exe_wrapper = 'lfi-run'

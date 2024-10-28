@@ -6,7 +6,7 @@
 #define GROUNDHOG_SYSCALL_H
 
 void 
-lfihog_log(const uint8_t* ptr, uint32_t size);
+lfihog_log(void* ptr, uint32_t size);
 
 uint64_t 
 lfihog_invoke(const uint8_t* addr /* 32 bytes */, uint32_t method, const uint8_t* calldata, uint32_t calldata_len, uint8_t* return_data, uint32_t return_len);
