@@ -256,7 +256,7 @@ $(CC_WASMS:.cc=.wasm) : $(wildcard cpp_contracts/sdk/*.h)
 grpc_DEDUP_CFLAGS = $(shell echo $(grpc_CFLAGS) | ./dedup.sh | sort | uniq | grep -v -e "-X.*" | grep -v -e "-march.*")
 grpcpp_DEDUP_CFLAGS = $(shell echo $(grpcpp_CFLAGS) | ./dedup.sh | sort | uniq | grep -v -e "-X.*" | grep -v -e "-march.*")
 
-LFI_CFLAGS = -I./lib/lfi/liblfi/
+LFI_CFLAGS = -I./lib/lfi/liblfi/ -I./lib/lfi/lfi-verify
 
 LFI_LDADD = lib/lfi/build/liblfi/liblfi.a
 
