@@ -172,7 +172,7 @@ make_mint_transaction(Address const& wallet_addr,
 
     auto calldata = make_calldata(data);
 
-    TransactionInvocation invocation(token_addr, 2, calldata);
+    TransactionInvocation invocation(token_addr, 1, calldata);
 
     SignedTransaction stx;
     stx.tx.invocation = invocation;
@@ -369,7 +369,8 @@ PaymentExperiment::prepare_vm()
 
         block.transactions.insert(
             block.transactions.end(), wallet_txs.begin() + start, wallet_txs.begin() + end);
-        if (!vm->try_exec_tx_block(block)) {
+	std::printf("wallet exec batch size %lu\n", block.transactions.size());
+	if (!vm->try_exec_tx_block(block)) {
             return nullptr;
         }
     }
@@ -384,6 +385,7 @@ PaymentExperiment::prepare_vm()
 
         block.transactions.insert(block.transactions.end(), mint_txs.begin() + start, mint_txs.begin() + end);
 
+	std::printf("mint exec batch size %lu\n", block.transactions.size());
         if (!vm->try_exec_tx_block(block)) {
             return nullptr;
         }
