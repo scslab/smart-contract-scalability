@@ -16,6 +16,7 @@ LFIGlobalEngine::LFIGlobalEngine(SysHandler handler)
 		LFIOptions opts = (LFIOptions) {
 			.noverify = 1, // programs should be verified when they're registered, not at runtime
             .poc = 1,
+            .sysexternal = 1,
 			.pagesize = 16 * 1024,
 			.stacksize = 65536, 
 			.gas = 1'000'000,
