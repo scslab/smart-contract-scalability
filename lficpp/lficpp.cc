@@ -21,9 +21,9 @@ LFIGlobalEngine::LFIGlobalEngine(SysHandler handler)
 			.noverify = 1, // programs should be verified when they're registered, not at runtime
             .poc = 1,
             .sysexternal = 1,
-			.pagesize = (size_t) getpagesize(), // TODO: this should probably be 16k hardcoded
+			.pagesize = 16 * 1024,
 			.stacksize = 65536, 
-			.gas = 0,
+			.gas = 1'000'000,
             .syshandler = handler,
 		};
 
@@ -113,6 +113,7 @@ DeClProc::run(uint32_t method, std::vector<uint8_t> const& calldata, uint32_t ga
 
 	brkbase = info.lastva;
 	brksize = 0;
+    brkfull = info.extradata;
 
 	LFIRegs* regs = lfi_proc_regs(proc);
 	regs -> x0 = method;
@@ -136,7 +137,7 @@ DeClProc::run(uint32_t method, std::vector<uint8_t> const& calldata, uint32_t ga
 		throw HostError("lfi_proc_start returned errorcode");
 	}
 
-	if (brksize != 0)
+	if (brksize != 0 && brksize > brkfull)
 	{
 		if (munmap((void*) brkbase, brksize) != 0) {
 			std::printf("cleanup failed\n");
@@ -198,9 +199,9 @@ DeClProc::sbrk(uint32_t incr)
 	}
 	if (brkp + incr < base + (4ULL * 1024 * 1024 * 1024)) {
         void* map;
-        if (brksize == 0) {
+        if (brksize == 0 && brkfull == 0) {
             map = mmap((void*) brkbase, brksize + incr, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
-        } else {
+        } else if (brksize + incr > brkfull) {
             map = mremap((void*) brkbase, brksize, brksize + incr, 0);
         }
         if (map == (void*) -1) {
@@ -219,12 +220,7 @@ DeClProc::sbrk(uint32_t incr)
 bool 
 DeClProc::is_writable(uintptr_t p, uint32_t size) const
 {
-	if (p < brkbase) {
-		return false;
-	}
-	if (p + size > brkbase + brksize) {
-		return false;
-	}
+    // TODO: provide API for this in liblfi
 	return true;
 }
 

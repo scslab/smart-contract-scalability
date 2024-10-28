@@ -255,6 +255,7 @@ AM_CPPFLAGS = \
 	$(Catch2_CFLAGS) \
 	$(grpcpp_DEDUP_CFLAGS) \
 	$(protobuf_CFLAGS) \
+	-I./lib/lfi/lfi-verify \
 	-I./lib/lfi/liblfi/
 
 LDADD = $(xdrpp_LIBS) \

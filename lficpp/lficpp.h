@@ -51,6 +51,7 @@ class DeClProc : public utils::NonMovableOrCopyable
 
     uint64_t brkbase = 0;
     size_t brksize = 0;
+    size_t brkfull = 0;
     uint64_t base = 0;
 
 public:
