@@ -1,11 +1,11 @@
 [binaries]
-c = '/opt/decl-branch-groundhog/bin/aarch64-lfi-linux-musl-gcc'
+c = 'x86_64-lfi-linux-musl-gcc'
 ar = 'ar'
 strip = 'strip'
 exe_wrapper = 'lfi-run'
 
 [host_machine]
 system = 'linux'
-cpu_family = 'aarch64'
-cpu = 'aarch64'
+cpu_family = 'x86_64'
+cpu = 'x86_64'
 endian = 'little'

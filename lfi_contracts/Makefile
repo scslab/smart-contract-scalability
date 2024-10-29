@@ -1,4 +1,4 @@
-export LFICC = /opt/decl-branch-groundhog/bin/aarch64-lfi-linux-musl-gcc
+export LFICC = x86_64-lfi-linux-musl-gcc
 
 CONTRACTS = hello.lfi \
 			test_calldata.lfi \
@@ -25,7 +25,7 @@ LINKLIBS = -led25519 \
 		   -lgcc
 
 CFLAGS = -Os -nostdlib -static
-LDFLAGS = -Wl,--gc-sections -Tld.ld
+LDFLAGS = -Wl,--gc-sections -Tld.ld -z noexecstack
 
 all: $(CONTRACTS)
 

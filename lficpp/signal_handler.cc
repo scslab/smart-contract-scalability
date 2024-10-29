@@ -15,15 +15,19 @@ extern "C" {
 namespace scs
 {
 
-#if defined(__aarch64__)
-
 static void signal_trap_handler(int sig, siginfo_t* si, void* context) {
-    // TODO: check if the signal arrived while a LFI process was executing, by
-    // checking if the PC is inside a sandbox. Currently we assume this is the
-    // case, meaning that if Groundhog itself causes a SIGSEGV, this will
-    // behave badly.
+    (void) si;
+
     ucontext_t* uctx = (ucontext_t*) context;
-    std::printf("received signal %d, pc: %llx\n", sig, uctx->uc_mcontext.pc);
+
+    uintptr_t pc;
+#if defined(__aarch64__)
+    pc = uctx->uc_mcontext.pc;
+#elif defined(__x86_64__)
+    pc = uctx->uc_mcontext.gregs[REG_RIP];
+#endif
+
+    std::printf("received signal %d, pc: %lx\n", sig, pc);
 
     if (lfi_proc())
         lfi_proc_exit(sig);
@@ -43,7 +47,6 @@ static void signal_register(int sig) {
         std::abort();
     }
 }
-
 
 static thread_local bool initialized = false;
 
@@ -70,13 +73,5 @@ void signal_init() {
     signal_register(SIGBUS);
     initialized = true;
 }
-
-#else
-
-void signal_init() {
-	throw std::runtime_error("wrong architecture");
-}
-
-#endif
 
 }

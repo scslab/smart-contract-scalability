@@ -20,8 +20,8 @@ LFIGlobalEngine::LFIGlobalEngine(SysHandler handler)
         LFIOptions opts = (LFIOptions) {
             .noverify = 1, // programs should be verified when they're registered, not at runtime
             .poc = 1,
-            .sysexternal = 1,
-            .pagesize = 16 * 1024,
+            .sysexternal = 0,
+            .pagesize = 4 * 1024,
             .stacksize = 65536, 
             .gas = 1'000'000,
             .syshandler = handler,
@@ -119,7 +119,7 @@ DeClProc::run(uint32_t method, std::vector<uint8_t> const& calldata, uint32_t ga
     brkfull = info.extradata;
 
     LFIRegs* regs = lfi_proc_regs(proc);
-    regs -> x0 = method;
+    *lfi_regs_arg(regs, 0) = method;
     
     if (sbrk(calldata.size()) == static_cast<uintptr_t>(-1)) {
         throw HostError("failed to allocate calldata");
@@ -127,10 +127,14 @@ DeClProc::run(uint32_t method, std::vector<uint8_t> const& calldata, uint32_t ga
 
     std::memcpy((void*)brkbase, calldata.data(), calldata.size());
 
-    regs -> x1 = sandboxaddr(brkbase);
-    regs -> x2 = calldata.size();
+    *lfi_regs_arg(regs, 1) = sandboxaddr(brkbase);
+    *lfi_regs_arg(regs, 2) = calldata.size();
 
-    regs -> x23 = gas;
+    uint64_t* r;
+    if ((r = lfi_regs_gas(regs)))
+        *r = gas;
+    // else
+    //     fprintf(stderr, "warning: LFI does not support gas tracking on this architecture\n");
 
     actively_running = true;
     int code = lfi_proc_start(proc);
@@ -148,7 +152,12 @@ DeClProc::run(uint32_t method, std::vector<uint8_t> const& calldata, uint32_t ga
         }
     }
 
-    uint64_t remaining_gas = regs -> x23;
+    uint64_t remaining_gas;
+    if (r) {
+        remaining_gas = *r;
+    } else {
+        remaining_gas = gas;
+    }
     if (remaining_gas > gas) {
         throw HostError("gas usage exceeded limit");
     }
@@ -158,15 +167,23 @@ DeClProc::run(uint32_t method, std::vector<uint8_t> const& calldata, uint32_t ga
 void
 DeClProc::deduct_gas(uint64_t gas) {
     LFIRegs* regs = lfi_proc_regs(proc);
-    if (gas > regs -> x23) {
-        throw HostError("gas usage exceeded limit in deduct_gas");
+    uint64_t* r;
+    if ((r = lfi_regs_gas(regs))) {
+        if (gas > *r) {
+            throw HostError("gas usage exceeded limit in deduct_gas");
+        }
+        *r -= gas;
     }
-    regs -> x23 -= gas;
 }
+
 uint64_t 
 DeClProc::get_available_gas() {
     LFIRegs* regs = lfi_proc_regs(proc);
-    return regs -> x23;
+    uint64_t* r;
+    if ((r = lfi_regs_gas(regs))) {
+        return *r;
+    }
+    return UINT64_MAX;
 }
 
 void 
@@ -177,7 +194,6 @@ DeClProc::exit(int code) {
     }
     actively_running = false;
     lfi_proc_exit(code);
-    std::unreachable();
 }
 
 DeClProc::~DeClProc()
