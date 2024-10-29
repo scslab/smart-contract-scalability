@@ -1,9 +1,0 @@
-cc := /opt/decl-branch-groundhog/bin/aarch64-lfi-linux-musl-gcc
-
-return b{
-    $ all:VB:hello.lfi test_calldata.lfi test_invoke.lfi test_log.lfi test_redirect_call.lfi deployer.lfi erc20.lfi payment.lfi test_gas_limit.lfi
-    $ %.lfi: %.o
-        $cc -Llibc -Llibc/build/install/lib $input -o $output -nostdlib /opt/lfi/libed25519/lib/libed25519.a -static -lsyscalls -lc -lsyscalls -lgcc -Wl,--gc-sections -Tld.ld -static
-    $ %.o: %.c
-        $cc -Ilibc -Ilib/build/install/include -O2 $input -o $output -c -nostdlib -I/opt/lfi/libed25519/include -static
-}
