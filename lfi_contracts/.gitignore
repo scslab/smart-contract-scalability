@@ -1,3 +1,4 @@
 .knit/
 *.lfi
 !Makefile
+*.a

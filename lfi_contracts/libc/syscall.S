@@ -1,4 +1,5 @@
 .macro defsys name num
+.p2align 4
 .globl \name
 \name:
 #if defined(__aarch64__)

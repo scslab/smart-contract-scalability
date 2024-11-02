@@ -12,7 +12,7 @@ OBJ = add_scalar.o \
 libed25519.a: $(OBJ)
 	ar rcs $@ $^
 %.o: %.c
-	$(LFICC) -Os -c $< -o $@ -DED25519_NO_SEED
+	$(LFICC) -c $< -o $@ -DED25519_NO_SEED $(CFLAGS)
 
 clean:
 	rm -f *.o

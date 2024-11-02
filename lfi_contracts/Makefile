@@ -24,7 +24,7 @@ LINKLIBS = -led25519 \
 		   -lsyscalls \
 		   -lgcc
 
-CFLAGS = -Os -nostdlib -static
+export CFLAGS = -Os -nostdlib -static -fno-pic
 LDFLAGS = -Wl,--gc-sections -Tld.ld -z noexecstack
 
 all: $(CONTRACTS)
