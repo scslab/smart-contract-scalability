@@ -39,7 +39,7 @@ libc:
 	$(LFICC) $< -o $@ $(LIBS) $(LINKLIBS) $(CFLAGS) $(LDFLAGS)
 
 %.o: %.c
-	$(LFICC) $< -o $@ -c $(INCLUDE) $(CFLAGS)
+	$(LFICC) $< -o $@ -c $(INCLUDE) $(CFLAGS) -DDECL_CRYPTO
 
 clean:
 	rm -f *.o *.lfi

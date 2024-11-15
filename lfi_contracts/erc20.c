@@ -39,10 +39,16 @@ void calculate_allowance_key(const uint8_t* owner,
 //	{
 //		exit(-1);
 //	}
+#ifdef DECL_CRYPTO
 	if (sha512(allowance_key_buf, 64, sha512_buf) != 0) {
 		exit(-1);
 	}
 	memcpy(addr_out, sha512_buf, 32);
+#else
+    if (lfihog_hash(allowance_key_buf, 64, addr_out) != 0) {
+        exit(-1);
+    }
+#endif
 }
 
 void transfer(const uint8_t* from, const uint8_t* to, const int64_t amount)

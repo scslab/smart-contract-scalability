@@ -107,9 +107,12 @@ toplevel_transfer(const uint8_t* to, int64_t amount, uint64_t expiration_time)
 
     lfihog_witness_get(0, signature, 64);
 
+#ifdef DECL_CRYPTO
     if (ed25519_verify(signature, invoked_hash, 32, pk) != 1)
+#else
+    if (!lfihog_verify_ed25519(pk, signature, invoked_hash, 32))
+#endif
     {
-	printf("sig verify failed!!!!!!!!\n");
     	exit(-1);
     }
 

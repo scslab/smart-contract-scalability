@@ -60,3 +60,6 @@ defsys lfihog_witness_get_len 625
 defsys lfihog_return 626
 
 defsys lfihog_gas 629
+
+defsys lfihog_hash 700
+defsys lfihog_verify_ed25519 701

@@ -58,6 +58,9 @@ uint32_t lfihog_witness_get_len(uint64_t witness_index);
 
 void lfihog_return(const uint8_t* return_buf, uint32_t return_len);
 
+int lfihog_verify_ed25519(uint8_t* pk, uint8_t* signature, uint8_t* invoked_hash, size_t msg_len);
+int lfihog_hash(uint8_t* input, size_t input_len, uint8_t* output);
+
 void lfihog_gas(const uint64_t gas);
 
 #endif
