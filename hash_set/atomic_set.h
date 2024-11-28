@@ -31,7 +31,10 @@ class AtomicSet : public utils::NonMovableOrCopyable
 {
     constexpr static float extra_buffer = 1.2;
 
-    uint32_t capacity = 0;
+    // allocated_capacity is approx extra_buffer * actual_hash_capacity.
+    // actual_hash_capacity is the strictly enforced hashset size limit.
+    uint32_t allocated_capacity = 0;
+    uint32_t actual_hash_capacity = 0;
 
     std::atomic<uint32_t>* array = nullptr;
 
@@ -41,12 +44,13 @@ class AtomicSet : public utils::NonMovableOrCopyable
 
   public:
     AtomicSet(uint32_t max_capacity)
-        : capacity(max_capacity * extra_buffer)
+        : allocated_capacity(max_capacity * extra_buffer)
+        , actual_hash_capacity(max_capacity)
         , array(nullptr)
     {
-        if (capacity > 0)
+        if (allocated_capacity > 0)
         {
-           array = new std::atomic<uint32_t>[capacity] {};
+           array = new std::atomic<uint32_t>[allocated_capacity] {};
         }
     }
 

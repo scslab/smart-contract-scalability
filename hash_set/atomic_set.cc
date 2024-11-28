@@ -35,15 +35,18 @@ void
 AtomicSet::resize(uint32_t new_capacity)
 {
     uint32_t new_alloc_size = new_capacity * extra_buffer;
-    if (new_alloc_size < capacity) {
+    actual_hash_capacity = new_capacity;
+
+    if (new_alloc_size < allocated_capacity) {
         return;
     }
 
     if (array != nullptr) {
         delete[] array;
     }
-    capacity = new_alloc_size;
-    array = new std::atomic<uint32_t>[capacity] {};
+
+    allocated_capacity = new_alloc_size;
+    array = new std::atomic<uint32_t>[allocated_capacity] {};
 
     num_filled_slots = 0;
 }
@@ -51,7 +54,7 @@ AtomicSet::resize(uint32_t new_capacity)
 void
 AtomicSet::clear()
 {
-    for (auto i = 0u; i < capacity; i++) {
+    for (auto i = 0u; i < allocated_capacity; i++) {
         array[i] = 0;
     }
     num_filled_slots = 0;
@@ -61,17 +64,18 @@ bool
 AtomicSet::try_insert(const HashSetEntry& h)
 {
     const uint32_t start_idx
-        = shorthash(h.hash.data(), h.hash.size(), capacity);
+        = shorthash(h.hash.data(), h.hash.size(), allocated_capacity);
     uint32_t idx = start_idx;
 
-    uint32_t alloc = ThreadlocalContextStore::allocate_hash(HashSetEntry(h));
 
     const uint32_t cur_filled_slots
         = num_filled_slots.load(std::memory_order_relaxed);
 
-    if (cur_filled_slots >= capacity) {
+    if (cur_filled_slots >= actual_hash_capacity) {
         return false;
     }
+
+    uint32_t alloc = ThreadlocalContextStore::allocate_hash(HashSetEntry(h));
 
     do {
         while (true) {
@@ -102,7 +106,7 @@ AtomicSet::try_insert(const HashSetEntry& h)
         }
 
         idx++;
-        if (idx == capacity) {
+        if (idx == allocated_capacity) {
             idx = 0;
         }
 
@@ -114,7 +118,7 @@ void
 AtomicSet::erase(const HashSetEntry& h)
 {
     const uint32_t start_idx
-        = shorthash(h.hash.data(), h.hash.size(), capacity);
+        = shorthash(h.hash.data(), h.hash.size(), allocated_capacity);
     uint32_t idx = start_idx;
 
     do {
@@ -141,7 +145,7 @@ AtomicSet::erase(const HashSetEntry& h)
         }
 
         idx++;
-        if (idx == capacity) {
+        if (idx == allocated_capacity) {
             idx = 0;
         }
 
@@ -155,7 +159,7 @@ AtomicSet::get_hashes() const
 {
     std::vector<HashSetEntry> out;
 
-    for (uint32_t i = 0; i < capacity; i++) {
+    for (uint32_t i = 0; i < allocated_capacity; i++) {
         uint32_t idx = array[i].load(std::memory_order_relaxed);
         if (idx != 0 && idx != TOMBSTONE) {
             out.push_back(ThreadlocalContextStore::get_hash(idx));
