@@ -1,4 +1,4 @@
-export LFICC = /opt/decl-branch-groundhog/bin/aarch64-lfi-linux-musl-gcc
+export LFICC = /opt/decl-lfi-timer-clang/lfi-bin/aarch64-lfi-linux-musl-clang
 
 CONTRACTS = hello.lfi \
 			test_calldata.lfi \
@@ -22,7 +22,7 @@ LINKLIBS = -led25519 \
 		   -lsyscalls \
 		   -lc \
 		   -lsyscalls \
-		   -lgcc
+		   /opt/decl-lfi-timer-clang/lib/clang/19/lib/linux/libclang_rt.builtins-aarch64.a
 
 CFLAGS = -Os -nostdlib -static
 LDFLAGS = -Wl,--gc-sections -Tld.ld

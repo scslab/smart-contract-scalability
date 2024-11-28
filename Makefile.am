@@ -197,7 +197,7 @@ LFI_BUILTS = $(LFI_CONTRACTS:.c=.lfi)
 
 %.lfi:%.c
 	cd lfi_contracts && \
-	knit $@
+	make $@
 
 main/test.o: $(LFI_CONTRACTS:.c=.lfi)
 
