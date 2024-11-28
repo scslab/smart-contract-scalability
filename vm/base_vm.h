@@ -28,6 +28,7 @@
 
 #include "mempool/mempool.h"
 #include "block_assembly/assembly_worker.h"
+#include <wasm_api/wasm_api.h>
 
 namespace scs {
 
@@ -61,13 +62,13 @@ class BaseVirtualMachine : public utils::NonMovableOrCopyable
     BlockHeader make_block_header();
 
   public:
-    BaseVirtualMachine()
-	    : global_context()
+    BaseVirtualMachine(wasm_api::SupportedWasmEngine engine)
+	    : global_context(engine)
 	    , current_block_context()
-	      , mempool()
-	      , worker_cache(mempool, global_context)
-	      , prev_block_hash()
-        , executors()
+      , mempool()
+      , worker_cache(mempool, global_context)
+      , prev_block_hash()
+      , executors()
 	{}
     
     void init_default_genesis();

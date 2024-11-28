@@ -31,6 +31,7 @@
 #include "tx_block/tx_set.h"
 
 #include <utils/non_movable.h>
+#include <wasm_api/wasm_api.h>
 
 namespace scs
 {
@@ -40,8 +41,10 @@ struct GlobalContext : public utils::NonMovableOrCopyable
 	ContractDB contract_db;
 	StateDB state_db;
 	RpcAddressDB address_db;
+	wasm_api::SupportedWasmEngine engine;
 
-	GlobalContext() = default;
+	GlobalContext(wasm_api::SupportedWasmEngine engine_inp)
+		: engine(engine_inp) {}
 };
 
 struct SisyphusGlobalContext : public utils::NonMovableOrCopyable
@@ -49,8 +52,10 @@ struct SisyphusGlobalContext : public utils::NonMovableOrCopyable
 	ContractDB contract_db;
 	SisyphusStateDB state_db;
 	RpcAddressDB address_db;
+	wasm_api::SupportedWasmEngine engine;
 
-	SisyphusGlobalContext() = default;
+	SisyphusGlobalContext(wasm_api::SupportedWasmEngine engine_inp)
+		: engine(engine_inp) {}
 };
 
 struct GroundhogGlobalContext : public utils::NonMovableOrCopyable
@@ -58,8 +63,10 @@ struct GroundhogGlobalContext : public utils::NonMovableOrCopyable
 	ContractDB contract_db;
 	GroundhogPersistentStateDB state_db;
 	RpcAddressDB address_db;
+	wasm_api::SupportedWasmEngine engine;
 
-	GroundhogGlobalContext() = default;
+	GroundhogGlobalContext(wasm_api::SupportedWasmEngine engine_inp)
+		: engine(engine_inp) {}
 };
 
 template<typename T>

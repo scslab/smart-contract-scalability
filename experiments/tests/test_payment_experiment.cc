@@ -25,13 +25,14 @@
 #include "block_assembly/limits.h"
 
 #include <tbb/global_control.h>
+#include <wasm_api/wasm_api.h>
 
 namespace scs
 {
 
 TEST(PaymentExperiment, InitializeSmall)
 {
-	PaymentExperiment e(2);
+	PaymentExperiment e(2, true, wasm_api::SupportedWasmEngine::WASM3);
 
 	auto vm = e.prepare_vm();
 
@@ -40,7 +41,7 @@ TEST(PaymentExperiment, InitializeSmall)
 
 TEST(PaymentExperiment, SmallBlockOk)
 {
-	PaymentExperiment e(2);
+	PaymentExperiment e(2, true, wasm_api::SupportedWasmEngine::WASM3);
 
 	auto vm = e.prepare_vm();
 
@@ -68,7 +69,7 @@ TEST(PaymentExperiment, SmallBlockOk)
 
 TEST(PaymentExperiment, LargeBlockFillsReplayCache)
 {
-	PaymentExperiment e(2);
+	PaymentExperiment e(2, true, wasm_api::SupportedWasmEngine::WASM3);
 
 	auto vm = e.prepare_vm();
 
@@ -97,7 +98,7 @@ TEST(PaymentExperiment, LargeBlockFillsReplayCache)
 
 TEST(PaymentExperiment, AssembleBlockSmall)
 {
-	PaymentExperiment e(10, 1000);
+	PaymentExperiment e(10, true, wasm_api::SupportedWasmEngine::WASM3, 1000);
 
 	auto vm = e.prepare_vm();
 
@@ -117,7 +118,7 @@ TEST(PaymentExperiment, AssembleBlockSmall)
 
 TEST(PaymentExperiment, AssembleSeveralBlocks)
 {
-	PaymentExperiment e(10, 1000);
+	PaymentExperiment e(10, true, wasm_api::SupportedWasmEngine::WASM3, 1000);
 
 	auto vm = e.prepare_vm();
 

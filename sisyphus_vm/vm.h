@@ -34,6 +34,8 @@
 
 #include "vm/base_vm.h"
 
+#include <wasm_api/wasm_api.h>
+
 namespace scs {
 
 class AssemblyLimits;
@@ -55,8 +57,8 @@ class SisyphusVirtualMachine : public BaseVirtualMachine<SisyphusGlobalContext, 
     AsyncKeysToDisk keys_persist;
 
   public:
-    SisyphusVirtualMachine()
-      : BaseVirtualMachine()
+    SisyphusVirtualMachine(wasm_api::SupportedWasmEngine engine)
+      : BaseVirtualMachine(engine)
       , keys_persist()
       {}
 

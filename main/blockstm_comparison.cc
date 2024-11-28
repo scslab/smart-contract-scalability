@@ -19,7 +19,10 @@ run_experiment(uint32_t num_accounts,
                uint32_t num_blocks,
 	       uint16_t size_boost)
 {
-    PaymentExperiment e(num_accounts, size_boost);
+
+    const bool use_native_sig = true;
+    wasm_api::SupportedWasmEngine engine = wasm_api::SupportedWasmEngine::WASM3;
+    PaymentExperiment e(num_accounts, use_native_sig, engine, size_boost);
 
     auto vm = e.prepare_vm();
 
@@ -49,7 +52,6 @@ run_experiment(uint32_t num_accounts,
     auto ts = utils::init_time_measurement();
 
     Block block_buffer;
-    // std::vector<std::unique_ptr<Block>> gc;
 
     for (size_t i = 0; i < num_blocks; i++) {
         AssemblyLimits limits(batch_size, INT64_MAX);

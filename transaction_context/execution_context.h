@@ -86,7 +86,7 @@ class ExecutionContext : public utils::NonMovableOrCopyable
     }
 
   public:
-    ExecutionContext();
+    ExecutionContext(wasm_api::SupportedWasmEngine engine);
 
     template<typename BlockContext, typename GlobalContext>
     TransactionStatus execute(Hash const& tx_hash,

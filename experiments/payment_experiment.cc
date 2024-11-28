@@ -32,12 +32,18 @@ namespace scs {
 const uint64_t gas_limit = 10'000'000;
 
 // wasmsig needs A LOT of gas
-const char* payment_contract = "cpp_contracts/payment_experiment/payment_wasmsig.wasm";
+const char* payment_contract_wasmsig = "cpp_contracts/payment_experiment/payment_wasmsig.wasm";
+const char* payment_contract_nativesig = "cpp_contracts/payment_experiment/payment.wasm";
 
-PaymentExperiment::PaymentExperiment(size_t num_accounts, uint16_t hs_size_inc)
+PaymentExperiment::PaymentExperiment(size_t num_accounts, bool use_native_signature, wasm_api::SupportedWasmEngine e, uint16_t hs_size_inc)
     : num_accounts(num_accounts)
     , hs_size_inc(hs_size_inc)
-{}
+    , payment_contract(use_native_signature?payment_contract_nativesig: payment_contract_wasmsig)
+    , engine(e)
+{
+    std::printf("using payment contract %s\n", payment_contract);
+    std::printf("using wasm engine id: %d\n", engine);
+}
 
 TxSetEntry make_txset_entry(SignedTransaction const& stx) {
     TxSetEntry out;
@@ -47,7 +53,7 @@ TxSetEntry make_txset_entry(SignedTransaction const& stx) {
 }
 
 Block
-make_create_transactions(const char* erc20_contract)
+make_create_transactions(const char* erc20_contract, const char* payment_contract)
 {
     auto erc20 = load_wasm_from_file(erc20_contract);
     auto wallet
@@ -338,11 +344,11 @@ PaymentExperiment::make_random_payment(uint64_t expiration_time,
 std::unique_ptr<VirtualMachine>
 PaymentExperiment::prepare_vm()
 {
-    auto vm = std::make_unique<VirtualMachine>();
+    auto vm = std::make_unique<VirtualMachine>(engine);
 
     vm->init_default_genesis();
 
-    if (!vm->try_exec_tx_block(make_create_transactions("cpp_contracts/erc20.wasm"))) {
+    if (!vm->try_exec_tx_block(make_create_transactions("cpp_contracts/erc20.wasm", payment_contract))) {
         return nullptr;
     }
 
@@ -397,11 +403,11 @@ PaymentExperiment::prepare_vm()
 std::unique_ptr<GroundhogVirtualMachine>
 PaymentExperiment::prepare_groundhog_vm()
 {
-    auto vm = std::make_unique<GroundhogVirtualMachine>();
+    auto vm = std::make_unique<GroundhogVirtualMachine>(engine);
 
     vm->init_default_genesis();
 
-    if (!vm->try_exec_tx_block(make_create_transactions("cpp_contracts/erc20.wasm"))) {
+    if (!vm->try_exec_tx_block(make_create_transactions("cpp_contracts/erc20.wasm", payment_contract))) {
         return nullptr;
     }
 
@@ -456,7 +462,7 @@ PaymentExperiment::prepare_groundhog_vm()
 std::unique_ptr<SisyphusVirtualMachine>
 PaymentExperiment::prepare_sisyphus_vm()
 {
-    auto vm = std::make_unique<SisyphusVirtualMachine>();
+    auto vm = std::make_unique<SisyphusVirtualMachine>(engine);
 
     const char* erc20_contract = (SisyphusStateDB::USE_ASSETS == 1) ? "cpp_contracts/sisyphus_erc20.wasm" : "cpp_contracts/erc20.wasm"; //"cpp_contracts/sisyphus_erc20.wasm"; // version with asset implementation
 
@@ -464,7 +470,7 @@ PaymentExperiment::prepare_sisyphus_vm()
 
     std::printf("preparing sisyphus vm with erc20 contact= %s\n", erc20_contract);
 
-    if (!vm->try_exec_tx_block(make_create_transactions(erc20_contract))) {
+    if (!vm->try_exec_tx_block(make_create_transactions(erc20_contract, payment_contract))) {
         return nullptr;
     }
 

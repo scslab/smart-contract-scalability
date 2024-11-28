@@ -34,6 +34,8 @@
 
 #include "xdr/types.h"
 
+#include <wasm_api/wasm_api.h>
+
 using namespace scs;
 
 class SdkTests : public ::testing::Test {
@@ -54,10 +56,10 @@ class SdkTests : public ::testing::Test {
 
   Address deploy_addr;
 
-  GlobalContext scs_data_structures;
+  GlobalContext scs_data_structures = GlobalContext(wasm_api::SupportedWasmEngine::WASM3);
   std::unique_ptr<BlockContext> block_context = std::make_unique<BlockContext>(0);
 
-  ExecutionContext<TxContext> exec_ctx;
+  ExecutionContext<TxContext> exec_ctx = ExecutionContext<TxContext>(scs_data_structures.engine);
 
   Hash make_replay_tx(uint64_t nonce, uint64_t expiry_time, bool success = true) {
         struct calldata_0

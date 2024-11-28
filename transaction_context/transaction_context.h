@@ -79,7 +79,7 @@ class TransactionContext
 
 public:
 
-	using StateDB_t = decltype(GlobalContext_t().state_db);
+	using StateDB_t = decltype(GlobalContext_t(wasm_api::SupportedWasmEngine::WASM3).state_db);
 
 	std::vector<uint8_t> return_buf;
 

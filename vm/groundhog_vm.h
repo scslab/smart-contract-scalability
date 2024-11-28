@@ -31,6 +31,7 @@
 #include "mempool/mempool.h"
 
 #include "state_db/async_keys_to_disk.h"
+#include <wasm_api/wasm_api.h>
 
 //#include "persistence/async_rdb_bulkload.h"
 
@@ -59,8 +60,8 @@ class GroundhogVirtualMachine : public BaseVirtualMachine<GroundhogGlobalContext
 
   public:
 
-    GroundhogVirtualMachine()
-      : BaseVirtualMachine()
+    GroundhogVirtualMachine(wasm_api::SupportedWasmEngine engine)
+      : BaseVirtualMachine(engine)
       , keys_persist()//global_context.state_db.get_rdb())
       {}
     

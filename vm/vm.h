@@ -26,6 +26,8 @@
 
 #include <utils/non_movable.h>
 
+#include <wasm_api/wasm_api.h>
+
 #include "vm/base_vm.h"
 
 #include "mempool/mempool.h"
@@ -48,44 +50,14 @@ class AssemblyLimits;
 
 class VirtualMachine : public BaseVirtualMachine<GlobalContext, BlockContext>
 {
-
   public:
+
+     VirtualMachine(wasm_api::SupportedWasmEngine engine)
+      : BaseVirtualMachine(engine)
+      {}
+      
     BlockHeader propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& out);
 };
 
-#if 0
-class VirtualMachine : public utils::NonMovableOrCopyable
-{
-    GlobalContext global_context;
-    std::unique_ptr<BlockContext> current_block_context;
-    Mempool mempool;
-
-    Hash prev_block_hash;
-
-    void assert_initialized() const;
-
-    bool validate_tx_block(Block const& txs);
-
-    void advance_block_number();
-
-    BlockHeader make_block_header();
-
-  public:
-    void init_default_genesis();
-
-    std::optional<BlockHeader>
-    try_exec_tx_block(Block const& txs);
-
-    Mempool& get_mempool() {
-      return mempool;
-    }
-
-    BlockHeader propose_tx_block(AssemblyLimits& limits, uint64_t max_time_ms, uint32_t n_threads, Block& out);
-
-    uint64_t get_current_block_number() const;
-
-    ~VirtualMachine();
-};
-#endif
 
 } // namespace scs

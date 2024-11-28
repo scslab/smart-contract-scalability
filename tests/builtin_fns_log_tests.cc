@@ -25,6 +25,7 @@
 #include "utils/load_wasm.h"
 
 #include "test_utils/deploy_and_commit_contractdb.h"
+#include <wasm_api/wasm_api.h>
 
 namespace scs {
 
@@ -44,10 +45,10 @@ class BuiltinLogTests : public ::testing::Test {
 
   Address deploy_addr;
 
-  GlobalContext scs_data_structures;
+  GlobalContext scs_data_structures = GlobalContext(wasm_api::SupportedWasmEngine::WASM3);
   BlockContext block_context = BlockContext(0);
 
-  ExecutionContext<TxContext> exec_ctx;
+  ExecutionContext<TxContext> exec_ctx = ExecutionContext<TxContext>(scs_data_structures.engine);
 
 
   void exec_success(const Hash& tx_hash, const SignedTransaction& tx) {
@@ -115,7 +116,6 @@ TEST_F(BuiltinLogTests, TestLogCalldata)
 TEST_F(BuiltinLogTests, TestLogTwice)
 {
     test::DeferredContextClear defer;
-    
 
     TransactionInvocation invocation(
         deploy_addr,

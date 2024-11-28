@@ -66,8 +66,8 @@ template class ExecutionContext<GroundhogTxContext>;
 template class ExecutionContext<SisyphusTxContext>;
 template class ExecutionContext<TxContext>;
 
-EC_DECL()::ExecutionContext()
-    : wasm_context(MAX_STACK_BYTES)
+EC_DECL()::ExecutionContext(wasm_api::SupportedWasmEngine engine)
+    : wasm_context(MAX_STACK_BYTES, engine)
     , active_runtimes()
     , tx_context(nullptr)
     , results_of_last_tx(nullptr)
