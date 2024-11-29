@@ -48,7 +48,7 @@ struct HashSet
 };
 
 const MAX_HASH_SET_SIZE = 65535;
-const START_HASH_SET_SIZE = 64;
+const START_HASH_SET_SIZE = 128;
 
 struct AssetObject {
 	uint64 amount;
