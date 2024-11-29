@@ -100,7 +100,6 @@ HASH_SET_TEST_SRCS = \
 	hash_set/tests/test_hs_utils.cc \
 	hash_set/tests/test_atomic_set.cc 
 
-
 MEMPOOL_SRCS = \
 	mempool/mempool.cc
 
@@ -206,14 +205,12 @@ TESTS_CCS = \
 	tx_block/tests/test_unique_txset.cc \
 	object/tests/test_revertable_object.cc \
 	$(EXPERIMENTS_TEST_SRCS) \
-	$(HASH_SET_TEST_SRCS)
-
-
+	$(HASH_SET_TEST_SRCS) \
+	storage_proxy/tests/test_proxy_applicator.cc
 
 
 #	tests/storage_tests.cc \
 #	tests/test_rpc.cc \
-#	storage_proxy/tests/test_proxy_applicator.cc \
 #	$(STATE_DB_TEST_SRCS)
 
 MAIN_CCS = \
