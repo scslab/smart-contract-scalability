@@ -32,6 +32,7 @@ class PaymentExperiment
 {
     size_t num_accounts;
     uint16_t hs_size_inc;
+    bool use_native_signature;
 
     struct account_entry
     {
@@ -58,7 +59,7 @@ class PaymentExperiment
                                           std::minstd_rand& gen);
 
   public:
-    PaymentExperiment(size_t num_accounts, uint16_t hs_size_inc = 0);
+    PaymentExperiment(size_t num_accounts, bool native_signature, uint16_t hs_size_inc = 0);
 
     std::unique_ptr<VirtualMachine> prepare_vm();
     std::unique_ptr<SisyphusVirtualMachine> prepare_sisyphus_vm();

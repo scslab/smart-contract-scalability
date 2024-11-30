@@ -34,10 +34,15 @@ const uint64_t gas_limit = 100'000'000'000;
 // wasmsig needs A LOT of gas
 const char* payment_contract = "lfi_contracts/payment.lfi";
 
-PaymentExperiment::PaymentExperiment(size_t num_accounts, uint16_t hs_size_inc)
+PaymentExperiment::PaymentExperiment(size_t num_accounts, bool native_signature, uint16_t hs_size_inc)
     : num_accounts(num_accounts)
     , hs_size_inc(hs_size_inc)
-{}
+    , use_native_signature(native_signature)
+{
+    if (use_native_signature) {
+        throw std::runtime_error("not yet supported");
+    }
+}
 
 TxSetEntry make_txset_entry(SignedTransaction const& stx) {
     TxSetEntry out;

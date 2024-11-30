@@ -100,7 +100,6 @@ toplevel_transfer(const uint8_t* to, int64_t amount, uint64_t expiration_time)
     }
     lfihog_hs_clear(buf, cur_block_number);
 
-
     memset(buf, 0, 32);
     memcpy(buf, pk_addr, strlen(pk_addr));
     lfihog_raw_mem_get(buf, pk, 32);

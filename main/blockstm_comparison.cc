@@ -19,7 +19,8 @@ run_experiment(uint32_t num_accounts,
                uint32_t num_blocks,
 	       uint16_t size_boost)
 {
-    PaymentExperiment e(num_accounts, size_boost);
+    const bool use_native_sig = false;
+    PaymentExperiment e(num_accounts, use_native_sig, size_boost);
 
     auto vm = e.prepare_vm();
 
@@ -94,22 +95,24 @@ main(int argc, const char** argv)
     // std::vector<uint32_t> batches = {100, 1'000,  10'000, 100'000 };
     // std::vector<uint32_t> nthreads = { /*1, 2, 4, 8, 16,*/ 32, 64, 96 };
     std::vector<uint32_t> batches = {100};
-    std::vector<uint32_t> nthreads = {1};
-    std::vector<uint32_t> big_accts = {  100'000,  1'000'000 , 10'000'000  };
+    std::vector<uint32_t> nthreads = {1, 8, 16, 32, 64, 96, 128, 160, 192};
+    std::vector<uint32_t> big_accts = {  1'000'000 };
     struct exp_res
     {
         uint32_t acct;
         uint32_t batch;
         uint32_t nthread;
         double avg;
+        bool native_sig;
 
         void print()
         {
-            std::printf("result: acct %lu batch %lu nthread %lu avg %lf\n",
+            std::printf("result: acct %lu batch %lu nthread %lu avg %lf native_sig %u LFI\n",
                         acct,
                         batch,
                         nthread,
-                        avg);
+                        avg,
+                        uint8_t{native_sig});
         }
     };
 
@@ -119,15 +122,15 @@ main(int argc, const char** argv)
 
     bool short_stuff = false;
 	bool long_stuff = true;
-    if (short_stuff)
+    /*if (short_stuff)
     {
 
     for (auto acct : accts) {
         for (auto batch : batches) {
             for (auto nthread : nthreads) {
                 std::printf("start %lu %lu %lu\n", acct, batch, nthread);
-                uint32_t trials = 25;
-                // 20 trials, 5 warmup
+                uint32_t trials = 15;
+                // 10 trials, 5 warmup
                 auto results = run_experiment(acct, batch, nthread, trials, UINT16_MAX);
                 double res = 0;
                 for (size_t i = 5; i < trials; i++) {
@@ -136,22 +139,22 @@ main(int argc, const char** argv)
                 double avg = res / (trials - 5);
 
                 exp_res r{
-                    .acct = acct, .batch = batch, .nthread = nthread, .avg = avg
+                    .acct = acct, .batch = batch, .nthread = nthread, .avg = avg, .native_sig = false
                 };
                 overall_results.push_back(r);
                 r.print();
             }
         }
     }
-    }
+    } */
     if (long_stuff)
     {
     for (auto acct : big_accts) {
         for (auto nthread : nthreads) {
             uint32_t batch = 100'000;
             std::printf("start %lu %lu %lu\n", acct, batch, nthread);
-            uint32_t trials = 25;
-            // 20 trials, 5 warmup
+            uint32_t trials = 15;
+            // 10 trials, 5 warmup
 	    uint16_t boost = 0;
             auto results = run_experiment(acct, batch, nthread, trials, boost);
             double res = 0;
@@ -161,7 +164,7 @@ main(int argc, const char** argv)
             double avg = res / (trials - 5);
 
             exp_res r{
-                .acct = acct, .batch = batch, .nthread = nthread, .avg = avg
+                .acct = acct, .batch = batch, .nthread = nthread, .avg = avg, .native_sig = false
             };
             overall_results.push_back(r);
             r.print();
