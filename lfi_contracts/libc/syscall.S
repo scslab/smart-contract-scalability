@@ -1,4 +1,5 @@
 .macro syscall name num
+.section ".text.\name"
 .globl \name
 \name:
 	mov x8, \num
@@ -52,3 +53,6 @@ syscall lfihog_witness_get_len 625
 syscall lfihog_return 626
 
 syscall lfihog_gas 629
+
+syscall lfihog_hash 700
+syscall lfihog_verify_ed25519 701

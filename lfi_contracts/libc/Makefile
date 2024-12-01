@@ -8,11 +8,11 @@ libsyscalls.a: $(OBJS)
 	ar rcs $@ $^
 
 syscall.S.o: syscall.S
-	$(LFICC) -c $< -o $@
+	$(LFICC) -c $< -o $@ $(CFLAGS)
 syscall.c.o: syscall.c
-	$(LFICC) -c $< -o $@ -Os
+	$(LFICC) -c $< -o $@ $(CFLAGS)
 crt0.c.o: crt0.c
-	$(LFICC) -c $< -o $@ -Os
+	$(LFICC) -c $< -o $@ $(CFLAGS)
 
 build:
 	mkdir -p build

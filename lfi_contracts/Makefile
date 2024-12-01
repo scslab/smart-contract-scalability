@@ -24,7 +24,7 @@ LINKLIBS = -led25519 \
 		   -lsyscalls \
 		   /opt/decl-lfi-timer-clang/lib/clang/19/lib/linux/libclang_rt.builtins-aarch64.a
 
-CFLAGS = -Os -nostdlib -static
+export CFLAGS = -Os -nostdlib -static -ffunction-sections -fdata-sections
 LDFLAGS = -Wl,--gc-sections -Tld.ld
 
 all: $(CONTRACTS)
@@ -39,7 +39,7 @@ libc:
 	$(LFICC) $< -o $@ $(LIBS) $(LINKLIBS) $(CFLAGS) $(LDFLAGS)
 
 %.o: %.c
-	$(LFICC) $< -o $@ -c $(INCLUDE) $(CFLAGS)
+	$(LFICC) $< -o $@ -c $(INCLUDE) $(CFLAGS) -DDECL_CRYPTO
 
 clean:
 	rm -f *.o *.lfi
