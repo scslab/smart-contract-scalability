@@ -1,5 +1,5 @@
 [binaries]
-c = 'x86_64-lfi-linux-musl-gcc'
+c = '/opt/decl-lfi-timer-clang/bin/clang'
 ar = 'ar'
 strip = 'strip'
 exe_wrapper = 'lfi-run'

@@ -16,7 +16,7 @@ crt0.c.o: crt0.c
 
 build:
 	mkdir -p build
-	CC=$(LFICC) CFLAGS="-DBUFSIZ=8192 $(CFLAGS)" cd build && meson setup --cross-file ../lfi.txt \
+	CC=$(LFICC) cd build && meson setup -Dc_args='-DBUFSIZ=8192 -g0' --cross-file ../lfi.txt \
 		-Dtls-model=local-exec \
 		-Dmultilib=false \
 		-Dpicolib=false \

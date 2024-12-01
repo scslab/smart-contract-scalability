@@ -1,4 +1,4 @@
-export LFICC = x86_64-lfi-linux-musl-gcc
+export LFICC = /opt/decl-lfi-timer-clang/bin/clang
 
 CONTRACTS = hello.lfi \
 			test_calldata.lfi \
@@ -22,7 +22,7 @@ LINKLIBS = -led25519 \
 		   -lsyscalls \
 		   -lc \
 		   -lsyscalls \
-		   -lgcc
+		   /opt/decl-lfi-timer-clang/lib/clang/19/lib/linux/libclang_rt.builtins-x86_64.a
 
 export CFLAGS = -Os -nostdlib -static -fno-pic
 LDFLAGS = -Wl,--gc-sections -Tld.ld -z noexecstack

@@ -20,7 +20,7 @@ LFIGlobalEngine::LFIGlobalEngine(SysHandler handler)
         LFIOptions opts = (LFIOptions) {
             .noverify = 1, // programs should be verified when they're registered, not at runtime
             .poc = 1,
-            .sysexternal = 0,
+            .sysexternal = 1,
             .pagesize = 4 * 1024,
             .stacksize = 65536, 
             .gas = 1'000'000,
@@ -112,7 +112,7 @@ DeClProc::run(uint32_t method, std::vector<uint8_t> const& calldata, uint32_t ga
     if (actively_running) {
         throw HostError("reentrance in DeClProc");
     }
-    lfi_proc_init(proc, info.elfentry, reinterpret_cast<uintptr_t>(info.stack) + info.stacksize - 16);
+    lfi_proc_init(proc, info.elfentry, reinterpret_cast<uintptr_t>(info.stack) + info.stacksize - 8);
 
     brkbase = info.lastva;
     brksize = 0;
