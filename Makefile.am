@@ -252,7 +252,7 @@ $(CC_WASMS:.cc=.wasm) : Makefile.am Makefile wasm_ed25519/libed25519.a
 $(CC_WASMS:.cc=.wasm) : $(wildcard cpp_contracts/sdk/*.h)
 
 .cc.wasm:
-	clang++ -O3 -target wasm32-unknown-wasi -I./cpp_contracts/ $< -o $@ \
+	clang++ -O3 -target wasm32-wasip1 -I./cpp_contracts/ $< -o $@ \
 		--sysroot=wasi/wasi-sysroot \
 		-std=gnu++2b \
 		-nostdlib++ \

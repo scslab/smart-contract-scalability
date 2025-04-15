@@ -73,6 +73,11 @@ struct ResultListInsertFn
     {
         return TxSetEntry{};
     }
+
+    static void reset_value(TxSet::value_t& v, const TxSet::prefix_t& prefix)
+    {
+        v = new_value(prefix);
+    }
 };
 
 static TxSetEntry const& get_txset_entry(trie::ByteArrayPrefix<sizeof(Hash)> const&, const LockableTxSetEntry& entry)
