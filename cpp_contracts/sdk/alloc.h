@@ -17,6 +17,7 @@
 #pragma once
 
 #include <new>
+#include <cstdint>
 #ifndef HEAP_SIZE
 #define HEAP_SIZE 64480
 #endif
@@ -28,7 +29,7 @@ static uint8_t buf[HEAP_SIZE];
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-noreturn"
-
+extern "C" {
 void __attribute__((__noreturn__))
 abort()
 {
@@ -68,6 +69,8 @@ void assert(bool x)
     abort();
   }
 }
+
+}
 /**
  * Taken from
  * https://github.com/microsoft/mimalloc/blob/master/include/mimalloc-new-delete.h
@@ -103,3 +106,16 @@ void* operator new[](std::size_t n, std::align_val_t al) noexcept(false) { abort
 void* operator new  (std::size_t n, std::align_val_t al, const std::nothrow_t&) noexcept { abort(); }
 void* operator new[](std::size_t n, std::align_val_t al, const std::nothrow_t&) noexcept { abort(); }
 #endif
+
+extern "C" {
+__attribute__((used))
+int memcmp(const void *s1, const void *s2, size_t n) {
+
+    const unsigned char *p1 = static_cast<const unsigned char*>(s1), *p2 = static_cast<const unsigned char*>(s2);
+    for (size_t i = 0; i < n; i++) {
+        if (p1[i] != p2[i]) return p1[i] - p2[i];
+    }
+    return 0;
+}
+}
+

@@ -23,7 +23,7 @@
 
 namespace scs {
 
-class StorageDelta;
+struct StorageDelta;
 
 class ProxyApplicator
 {

@@ -56,7 +56,7 @@ class SdkTests : public ::testing::Test {
 
   Address deploy_addr;
 
-  GlobalContext scs_data_structures = GlobalContext(wasm_api::SupportedWasmEngine::WASM3);
+  GlobalContext scs_data_structures = GlobalContext(wasm_api::SupportedWasmEngine::WASMTIME_CRANELIFT);
   std::unique_ptr<BlockContext> block_context = std::make_unique<BlockContext>(0);
 
   ExecutionContext<TxContext> exec_ctx = ExecutionContext<TxContext>(scs_data_structures.engine);
@@ -101,7 +101,7 @@ class SdkTests : public ::testing::Test {
     };
 
     void check_invalid(const Hash& tx_hash) {
-        ASSERT_EQ(block_context->tx_set.contains_tx(tx_hash), 0);
+        ASSERT_EQ(block_context->tx_set.contains_tx(tx_hash), 0u);
     };
 
     void finish_block() {
@@ -234,7 +234,7 @@ TEST_F(SdkTests, ReplayCacheOneBlock)
 
 TEST_F(SdkTests, ReplayCacheFill)
 {
-    for (size_t i = 0; i < 64; i++)
+    for (size_t i = 0; i < START_HASH_SET_SIZE; i++)
     {
         make_replay_tx(i, 0);
         make_replay_tx(i, 0, false);
@@ -247,7 +247,7 @@ TEST_F(SdkTests, ReplayCacheFill)
 
     // next block can insert again until full
     advance_block();
-    for (size_t i = 0; i < 64; i++)
+    for (size_t i = 0; i < START_HASH_SET_SIZE; i++)
     {
         make_replay_tx(i, 1);
         make_replay_tx(i, 1, false);

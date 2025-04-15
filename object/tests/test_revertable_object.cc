@@ -549,24 +549,26 @@ TEST_F(RevertableObjectTests, HSSizeLimitIncreasesRespected)
     ASSERT_TRUE(!!r);
     r->commit();
 
-    for (size_t i = 0; i < 64; i++)
+    for (size_t i = 0; i < START_HASH_SET_SIZE; i++)
     {
         auto h = object.try_add_delta(make_insert(i));
         ASSERT_TRUE(!!h);
         h -> commit();
     }
 
-    ASSERT_FALSE(!!object.try_add_delta(make_insert(64)));
+    ASSERT_FALSE(!!object.try_add_delta(make_insert(START_HASH_SET_SIZE)));
 
     object.commit_round();
 
-    for (size_t i = 64; i < 128; i++)
+    for (size_t i = START_HASH_SET_SIZE; i < START_HASH_SET_SIZE + 64; i++)
     {
         auto h = object.try_add_delta(make_insert(i));
         ASSERT_TRUE(!!h);
         h -> commit();
     }
-} 
+
+    ASSERT_FALSE(!!object.try_add_delta(make_insert(START_HASH_SET_SIZE + 64)));
+}
 
 TEST_F(RevertableObjectTests, AssetFromEmpty)
 {

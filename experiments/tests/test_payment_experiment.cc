@@ -84,7 +84,7 @@ TEST(PaymentExperiment, LargeBlockFillsReplayCache)
 	ASSERT_TRUE(!!vm);
 
 
-	auto batch = e.gen_transaction_batch(200);
+	auto batch = e.gen_transaction_batch(3 * START_HASH_SET_SIZE);
 
 	Block b;
 	for (auto const& stx : batch)

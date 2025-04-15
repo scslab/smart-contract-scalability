@@ -46,6 +46,11 @@ struct UniqueInsertFn
     {
         return TxSetEntry{};
     }
+
+    static void reset_value(UniqueTxSet::value_t& v, const UniqueTxSet::prefix_t& prefix)
+    {
+        v = new_value(prefix);
+    }
 };
 
 void

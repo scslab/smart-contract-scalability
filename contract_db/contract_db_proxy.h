@@ -29,7 +29,7 @@
 namespace scs {
 
 class ContractDB;
-class TransactionRewind;
+struct TransactionRewind;
 
 class ContractCreateClosure : public utils::NonCopyable
 {

@@ -52,7 +52,7 @@ test_see_hs_writes_from_empty()
 	sdk::print("check size");
 	assert(sdk::hashset_get_size(addr) == 1);
 	sdk::print("check max size");
-	assert(sdk::hashset_get_max_size(addr) == 64);
+	assert(sdk::hashset_get_max_size(addr) == 128);
 
 	sdk::hashset_insert(addr, get_hash(1), 1);
 

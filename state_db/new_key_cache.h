@@ -31,7 +31,7 @@
 
 namespace scs {
 
-class StorageDelta;
+struct StorageDelta;
 
 
 /**

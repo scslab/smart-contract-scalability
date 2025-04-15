@@ -305,8 +305,9 @@ RevertableObject::try_add_delta(const StorageDelta& delta)
                 while (true) {
                     int64_t cur_value
                         = total_subtracted.load(std::memory_order_relaxed);
-                    if (__builtin_add_overflow_p(
-                            cur_value, d, static_cast<int64_t>(0))) {
+                    int64_t x;
+                    if (__builtin_add_overflow(
+                            cur_value, d, &x)) {
                         return std::nullopt;
                     }
 
@@ -702,10 +703,11 @@ RevertableObject::commit_round()
 
             uint64_t add = total_added.fetch_cap();
 
-            if (__builtin_add_overflow_p(
+            int64_t x;
+            if (__builtin_add_overflow(
                     committed_base->body.nonnegative_int64(),
                     add,
-                    static_cast<int64_t>(0))) {
+                    &x)) {
                 committed_base->body.nonnegative_int64() = INT64_MAX;
             } else {
                 committed_base->body.nonnegative_int64() += add;

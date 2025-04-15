@@ -16,6 +16,9 @@
 
 #include "threadlocal/rate_limiter.h"
 
+#include <exception>
+#include <stdexcept>
+
 namespace scs {
 
 RateLimiter::RateLimiter()
