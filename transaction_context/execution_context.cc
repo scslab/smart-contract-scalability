@@ -85,7 +85,6 @@ EC_DECL(wasm_api::MeteredReturn)::invoke_subroutine(MethodInvocation const& invo
     if (iter == active_runtimes.end()) {
         CONTRACT_INFO("creating new runtime for contract at %s",
                       debug::array_to_str(invocation.addr).c_str());
-
         //auto timestamp = utils::init_time_measurement();
 
         if (!tx_context) {
@@ -185,6 +184,8 @@ ExecutionContext<TransactionContext_t>::execute(Hash const& tx_hash,
             std::printf("unrecoverable error\n");
             std::terminate();
         }
+
+        std::printf("invoke failed\n");
 
         return TransactionStatus::FAILURE;
     }

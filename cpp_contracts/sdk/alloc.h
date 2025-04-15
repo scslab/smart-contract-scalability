@@ -106,3 +106,16 @@ void* operator new[](std::size_t n, std::align_val_t al) noexcept(false) { abort
 void* operator new  (std::size_t n, std::align_val_t al, const std::nothrow_t&) noexcept { abort(); }
 void* operator new[](std::size_t n, std::align_val_t al, const std::nothrow_t&) noexcept { abort(); }
 #endif
+
+extern "C" {
+__attribute__((used))
+int memcmp(const void *s1, const void *s2, size_t n) {
+
+    const unsigned char *p1 = static_cast<const unsigned char*>(s1), *p2 = static_cast<const unsigned char*>(s2);
+    for (size_t i = 0; i < n; i++) {
+        if (p1[i] != p2[i]) return p1[i] - p2[i];
+    }
+    return 0;
+}
+}
+
