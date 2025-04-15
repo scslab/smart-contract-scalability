@@ -56,7 +56,7 @@ class SdkTests : public ::testing::Test {
 
   Address deploy_addr;
 
-  GlobalContext scs_data_structures = GlobalContext(wasm_api::SupportedWasmEngine::WASMTIME_CRANELIFT);
+  GlobalContext scs_data_structures = GlobalContext(wasm_api::SupportedWasmEngine::WASM3);
   std::unique_ptr<BlockContext> block_context = std::make_unique<BlockContext>(0);
 
   ExecutionContext<TxContext> exec_ctx = ExecutionContext<TxContext>(scs_data_structures.engine);
