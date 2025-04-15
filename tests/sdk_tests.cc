@@ -234,7 +234,7 @@ TEST_F(SdkTests, ReplayCacheOneBlock)
 
 TEST_F(SdkTests, ReplayCacheFill)
 {
-    for (size_t i = 0; i < 64; i++)
+    for (size_t i = 0; i < START_HASH_SET_SIZE; i++)
     {
         make_replay_tx(i, 0);
         make_replay_tx(i, 0, false);
@@ -247,7 +247,7 @@ TEST_F(SdkTests, ReplayCacheFill)
 
     // next block can insert again until full
     advance_block();
-    for (size_t i = 0; i < 64; i++)
+    for (size_t i = 0; i < START_HASH_SET_SIZE; i++)
     {
         make_replay_tx(i, 1);
         make_replay_tx(i, 1, false);

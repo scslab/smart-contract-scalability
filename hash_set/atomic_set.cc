@@ -87,7 +87,6 @@ AtomicSet::try_insert(const HashSetEntry& h)
                         local, alloc, std::memory_order_relaxed)) {
 
                     num_filled_slots.fetch_add(1, std::memory_order_relaxed);
-
                     return true;
                 } else {
                     continue;

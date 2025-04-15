@@ -257,6 +257,7 @@ $(CC_WASMS:.cc=.wasm) : $(wildcard cpp_contracts/sdk/*.h)
 		-std=gnu++2b \
 		-nostdlib++ \
 		-nostdlib \
+		-mno-bulk-memory \
 		-Wl,--no-entry -fno-exceptions -Wl,--allow-undefined \
 		wasi/lib/libclang_rt.builtins-wasm32.a \
 		wasm_ed25519/libed25519.a \
