@@ -17,6 +17,7 @@
 #pragma once
 
 #include <new>
+#include <cstdint>
 #ifndef HEAP_SIZE
 #define HEAP_SIZE 64480
 #endif
@@ -28,7 +29,7 @@ static uint8_t buf[HEAP_SIZE];
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-noreturn"
-
+extern "C" {
 void __attribute__((__noreturn__))
 abort()
 {
@@ -67,6 +68,8 @@ void assert(bool x)
   {
     abort();
   }
+}
+
 }
 /**
  * Taken from

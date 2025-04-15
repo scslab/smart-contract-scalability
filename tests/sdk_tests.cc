@@ -56,7 +56,7 @@ class SdkTests : public ::testing::Test {
 
   Address deploy_addr;
 
-  GlobalContext scs_data_structures = GlobalContext(wasm_api::SupportedWasmEngine::WASM3);
+  GlobalContext scs_data_structures = GlobalContext(wasm_api::SupportedWasmEngine::WASMI);
   std::unique_ptr<BlockContext> block_context = std::make_unique<BlockContext>(0);
 
   ExecutionContext<TxContext> exec_ctx = ExecutionContext<TxContext>(scs_data_structures.engine);
@@ -101,7 +101,7 @@ class SdkTests : public ::testing::Test {
     };
 
     void check_invalid(const Hash& tx_hash) {
-        ASSERT_EQ(block_context->tx_set.contains_tx(tx_hash), 0);
+        ASSERT_EQ(block_context->tx_set.contains_tx(tx_hash), 0u);
     };
 
     void finish_block() {

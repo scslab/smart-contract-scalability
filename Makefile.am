@@ -258,7 +258,7 @@ $(CC_WASMS:.cc=.wasm) : $(wildcard cpp_contracts/sdk/*.h)
 		-nostdlib++ \
 		-nostdlib \
 		-Wl,--no-entry -fno-exceptions -Wl,--allow-undefined \
-		wasi/lib/wasi/libclang_rt.builtins-wasm32.a \
+		wasi/lib/libclang_rt.builtins-wasm32.a \
 		wasm_ed25519/libed25519.a \
 		-I./wasm_ed25519/ed25519/src/
 
