@@ -35,7 +35,8 @@ public:
 	{
 		uint64_t prev_lowbits = lowbits.fetch_add(v, std::memory_order_relaxed);
 
-		if (__builtin_add_overflow_p(prev_lowbits, v, static_cast<uint64_t>(0)))
+		uint64_t x;
+		if (__builtin_add_overflow(prev_lowbits, v, &x))
 		{
 			highbits.fetch_add(1, std::memory_order_relaxed);
 		}
@@ -45,7 +46,8 @@ public:
 	{
 		uint64_t prev_lowbits = lowbits.fetch_sub(v, std::memory_order_relaxed);
 
-		if (__builtin_sub_overflow_p(prev_lowbits, v, static_cast<uint64_t>(0)))
+		uint64_t x;
+		if (__builtin_sub_overflow(prev_lowbits, v, &x))
 		{
 			highbits.fetch_sub(1, std::memory_order_relaxed);
 		}

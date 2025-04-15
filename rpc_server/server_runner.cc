@@ -16,6 +16,9 @@
 
 #include "rpc_server/server_runner.h"
 
+#include <thread>
+#include <string>
+
 namespace scs {
 
 void

@@ -58,7 +58,7 @@ public:
 };
 
 template<typename worker_t>
-class AsyncAssemblyWorker : public utils::AsyncWorker
+class AsyncAssemblyWorker final : public utils::AsyncWorker
 {
 	std::unique_ptr<worker_t> worker;
 	typename worker_t::bc_t* current_block_context = nullptr;

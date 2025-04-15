@@ -33,6 +33,7 @@
 #include "transaction_context/global_context.h"
 
 #include "utils/defer.h"
+#include "utils/overflow.h"
 
 #include <utils/time.h>
 
@@ -486,7 +487,7 @@ syscall_handler(wasm_api::WasmRuntime* runtime, uint64_t callno, uint64_t arg0, 
 
         auto invoke_res = invoke_subroutine(invocation, runtime-> get_available_gas());
 
-        if (__builtin_add_overflow_p(required_gas, invoke_res.gas_consumed, static_cast<uint64_t>(0)))
+        if (integer_add_overflow<uint64_t>(required_gas, invoke_res.gas_consumed))
         {
             required_gas = UINT64_MAX;
         } else

@@ -26,6 +26,7 @@
 #include "object/make_delta.h"
 
 #include "hash_set/utils.h"
+#include "utils/overflow.h"
 
 using xdr::operator==;
 
@@ -63,15 +64,13 @@ std::optional<set_add_t>
 make_nnint64_delta(int64_t base, int64_t old_delta, int64_t new_delta)
 {
     if (new_delta < 0) {
-        if (__builtin_add_overflow_p(
-                new_delta, old_delta, static_cast<int64_t>(0))) {
+        if (integer_add_overflow<int64_t>(new_delta, old_delta)) {
             return std::nullopt;
         }
 
         new_delta += old_delta;
 
-        if (__builtin_add_overflow_p(
-                base, new_delta, static_cast<int64_t>(0))) {
+        if (integer_add_overflow<int64_t>(base, new_delta)) {
 
             if (new_delta < 0) {
                 // base + new_delta < INT64_MIN
@@ -111,8 +110,7 @@ make_nnint64_delta(int64_t base, int64_t old_delta, int64_t new_delta)
         // return make_nonnegative_int64_set_add(base, new_delta);
     }
     // else new_delta >= 0
-    if (__builtin_add_overflow_p(
-            old_delta, new_delta, static_cast<int64_t>(0))) {
+    if (integer_add_overflow<int64_t>(old_delta, new_delta)) {
         new_delta = INT64_MAX;
     } else {
         new_delta += old_delta;
@@ -158,8 +156,7 @@ ProxyApplicator::make_current_nnint64(set_add_t const& delta)
 {
     make_current(ObjectType::NONNEGATIVE_INT64);
 
-    if (__builtin_add_overflow_p(
-            delta.set_value, delta.delta, static_cast<int64_t>(0))) {
+    if (integer_add_overflow<int64_t>(delta.set_value, delta.delta)) {
         if (delta.delta > 0) {
             current->body.nonnegative_int64() = INT64_MAX;
         } else {
@@ -285,13 +282,13 @@ ProxyApplicator::try_apply(StorageDelta const& d)
             make_current(ObjectType::KNOWN_SUPPLY_ASSET);
 
             // check overflow on delta
-            if (delta.has_value() && __builtin_add_overflow_p(*delta, d.asset_delta(), static_cast<int64_t>(0)))
+            if (delta.has_value() && integer_add_overflow<int64_t>(*delta, d.asset_delta()))
             {
                 return false;
             }
 
             uint64_t cur_asset_value = current->body.asset().amount;
-            if (__builtin_add_overflow_p(cur_asset_value, d.asset_delta(), static_cast<uint64_t>(0)))
+            if (integer_add_overflow<uint64_t>(cur_asset_value, d.asset_delta()))
             {
                 return false;
             }

@@ -28,7 +28,7 @@
 namespace scs
 {
 
-class TransactionRewind;
+struct TransactionRewind;
 class ModifiedKeysList;
 class TypedModificationIndex;
 
