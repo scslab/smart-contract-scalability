@@ -35,14 +35,18 @@ const uint64_t gas_limit = 10'000'000;
 const char* payment_contract_wasmsig = "cpp_contracts/payment_experiment/payment_wasmsig.wasm";
 const char* payment_contract_nativesig = "cpp_contracts/payment_experiment/payment.wasm";
 
-PaymentExperiment::PaymentExperiment(size_t num_accounts, bool use_native_signature, wasm_api::SupportedWasmEngine e, uint16_t hs_size_inc)
+PaymentExperiment::PaymentExperiment(
+    size_t num_accounts, 
+    bool use_native_signature, 
+    std::variant<wasm_api::SupportedWasmEngine, wasm_api::WasmContext> e, 
+    uint16_t hs_size_inc)
     : num_accounts(num_accounts)
     , hs_size_inc(hs_size_inc)
     , payment_contract(use_native_signature?payment_contract_nativesig: payment_contract_wasmsig)
     , engine(e)
 {
     std::printf("using payment contract %s\n", payment_contract);
-    std::printf("using wasm engine id: %d\n", engine);
+    std::printf("using wasm engine %s\n", wasm_api::engine_to_string(engine).c_str());
 }
 
 TxSetEntry make_txset_entry(SignedTransaction const& stx) {

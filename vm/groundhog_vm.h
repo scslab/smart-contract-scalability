@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <vector>
+#include <variant>
 
 #include "xdr/transaction.h"
 #include "xdr/block.h"
@@ -54,13 +55,12 @@ class AssemblyLimits;
 
 class GroundhogVirtualMachine : public BaseVirtualMachine<GroundhogGlobalContext, GroundhogBlockContext>
 {
-
     AsyncKeysToDisk keys_persist;
     //AsyncRDBBulkLoad keys_persist;
 
   public:
 
-    GroundhogVirtualMachine(wasm_api::SupportedWasmEngine engine)
+    GroundhogVirtualMachine(std::variant<wasm_api::SupportedWasmEngine, wasm_api::WasmContext> engine)
       : BaseVirtualMachine(engine)
       , keys_persist()//global_context.state_db.get_rdb())
       {}

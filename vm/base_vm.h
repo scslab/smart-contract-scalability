@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <vector>
+#include <variant>
 
 #include "xdr/transaction.h"
 #include "xdr/block.h"
@@ -62,7 +63,7 @@ class BaseVirtualMachine : public utils::NonMovableOrCopyable
     BlockHeader make_block_header();
 
   public:
-    BaseVirtualMachine(wasm_api::SupportedWasmEngine engine)
+    BaseVirtualMachine(std::variant<wasm_api::SupportedWasmEngine, wasm_api::WasmContext> engine)
 	    : global_context(engine)
 	    , current_block_context()
       , mempool()

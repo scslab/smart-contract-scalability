@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <vector>
+#include <variant>
 
 #include "xdr/transaction.h"
 #include "xdr/block.h"
@@ -52,7 +53,7 @@ class VirtualMachine : public BaseVirtualMachine<GlobalContext, BlockContext>
 {
   public:
 
-     VirtualMachine(wasm_api::SupportedWasmEngine engine)
+     VirtualMachine(std::variant<wasm_api::SupportedWasmEngine, wasm_api::WasmContext> engine)
       : BaseVirtualMachine(engine)
       {}
       

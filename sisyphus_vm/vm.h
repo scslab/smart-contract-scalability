@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <vector>
+#include <variant>
 
 #include "xdr/transaction.h"
 #include "xdr/block.h"
@@ -57,7 +58,7 @@ class SisyphusVirtualMachine : public BaseVirtualMachine<SisyphusGlobalContext, 
     AsyncKeysToDisk keys_persist;
 
   public:
-    SisyphusVirtualMachine(wasm_api::SupportedWasmEngine engine)
+    SisyphusVirtualMachine(std::variant<wasm_api::SupportedWasmEngine, wasm_api::WasmContext> engine)
       : BaseVirtualMachine(engine)
       , keys_persist()
       {}

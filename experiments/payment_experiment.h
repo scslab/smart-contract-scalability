@@ -27,6 +27,7 @@
 #include <cstdint>
 #include <mutex>
 #include <random>
+#include <variant>
 
 namespace scs {
 
@@ -35,7 +36,7 @@ class PaymentExperiment
     size_t num_accounts;
     uint16_t hs_size_inc;
     const char* payment_contract;
-    wasm_api::SupportedWasmEngine engine;
+    std::variant<wasm_api::SupportedWasmEngine, wasm_api::WasmContext> engine;
 
     struct account_entry
     {
@@ -62,7 +63,11 @@ class PaymentExperiment
                                           std::minstd_rand& gen);
 
   public:
-    PaymentExperiment(size_t num_accounts, bool use_native_signature, wasm_api::SupportedWasmEngine e, uint16_t hs_size_inc = 0);
+    PaymentExperiment(
+        size_t num_accounts, 
+        bool use_native_signature, 
+        std::variant<wasm_api::SupportedWasmEngine, wasm_api::WasmContext> e, 
+        uint16_t hs_size_inc = 0);
 
     std::unique_ptr<VirtualMachine> prepare_vm();
     std::unique_ptr<SisyphusVirtualMachine> prepare_sisyphus_vm();

@@ -19,7 +19,7 @@ run_experiment(uint32_t num_accounts,
                uint32_t num_blocks,
 	       uint16_t size_boost,
 	       bool use_native_sig,
-	       wasm_api::SupportedWasmEngine engine)
+	       std::variant<wasm_api::SupportedWasmEngine, wasm_api::WasmContext> engine)
 {
     std::printf("using wasm engine %s native_sig %u\n", wasm_api::engine_to_string(engine).c_str(), use_native_sig);
     PaymentExperiment e(num_accounts, use_native_sig, engine, size_boost);
@@ -97,10 +97,10 @@ main(int argc, const char** argv)
     std::vector<uint32_t> nthreads = { 1, 8, 16, 32, 64, 96, 128, 160, 192 };
     std::vector<uint32_t> big_accts = { 100'000,  1'000'000  };
     std::vector<bool> sigs = { true, false};
-    std::vector<wasm_api::SupportedWasmEngine> engines = {
+    std::vector<std::variant<wasm_api::SupportedWasmEngine, wasm_api::WasmContext>> engines = {
 	    wasm_api::SupportedWasmEngine::WASMI,
 	    wasm_api::SupportedWasmEngine::WASM3,
-	    wasm_api::SupportedWasmEngine::WASMTIME};
+	    wasm_api::SupportedWasmEngine::WASMTIME_WINCH};
 
     struct exp_res
     {
@@ -108,8 +108,8 @@ main(int argc, const char** argv)
         uint32_t batch;
         uint32_t nthread;
         double avg;
-	bool native_sig;
-	wasm_api::SupportedWasmEngine engine;
+        bool native_sig;
+        std::string engine;
 
         void print()
         {
@@ -119,7 +119,7 @@ main(int argc, const char** argv)
                         nthread,
                         avg,
 			native_sig,
-			wasm_api::engine_to_string(engine).c_str());
+			engine.c_str());
         }
     };
 
@@ -173,7 +173,12 @@ main(int argc, const char** argv)
                 double avg = res / (trials - 5);
 
                 exp_res r{
-                    .acct = acct, .batch = batch, .nthread = nthread, .avg = avg, .native_sig = sig, .engine = engine
+                    .acct = acct, 
+                    .batch = batch, 
+                    .nthread = nthread, 
+                    .avg = avg, 
+                    .native_sig = sig, 
+                    .engine = wasm_api::engine_to_string(engine)
                 };
                 overall_results.push_back(r);
                 r.print();
