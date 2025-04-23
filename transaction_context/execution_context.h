@@ -86,7 +86,7 @@ class ExecutionContext : public utils::NonMovableOrCopyable
     }
 
   public:
-    ExecutionContext(wasm_api::SupportedWasmEngine engine);
+    ExecutionContext(std::variant<wasm_api::SupportedWasmEngine, wasm_api::WasmContext> engine);
 
     template<typename BlockContext, typename GlobalContext>
     TransactionStatus execute(Hash const& tx_hash,
@@ -98,6 +98,13 @@ class ExecutionContext : public utils::NonMovableOrCopyable
     std::vector<TransactionLog> const& get_logs();
 
     ~ExecutionContext();
+
+    static wasm_api::WasmContext link_engine(wasm_api::SupportedWasmEngine engine) {
+      wasm_api::WasmContext context_out(MAX_STACK_BYTES, engine);
+      context_out.link_fn("scs", "syscall", &ExecutionContext<TransactionContext_t>::static_syscall_handler);
+      context_out.link_fn("scs", "gas", &gas_handler);
+      return context_out;
+    }
 };
 
 } // namespace scs

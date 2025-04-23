@@ -41,10 +41,11 @@ struct GlobalContext : public utils::NonMovableOrCopyable
 	ContractDB contract_db;
 	StateDB state_db;
 	RpcAddressDB address_db;
-	wasm_api::SupportedWasmEngine engine;
+	// engine if context is not shared, context if context is to be shared.
+	std::variant<wasm_api::SupportedWasmEngine, wasm_api::WasmContext> engine;
 
-	GlobalContext(wasm_api::SupportedWasmEngine engine_inp)
-		: engine(engine_inp) {}
+	GlobalContext(std::variant<wasm_api::SupportedWasmEngine, wasm_api::WasmContext> engine_inp)
+		: engine(std::move(engine_inp)) {}
 };
 
 struct SisyphusGlobalContext : public utils::NonMovableOrCopyable
@@ -52,10 +53,12 @@ struct SisyphusGlobalContext : public utils::NonMovableOrCopyable
 	ContractDB contract_db;
 	SisyphusStateDB state_db;
 	RpcAddressDB address_db;
-	wasm_api::SupportedWasmEngine engine;
+	// engine if context is not shared, context if context is to be shared.
+	std::variant<wasm_api::SupportedWasmEngine, wasm_api::WasmContext> engine;
 
-	SisyphusGlobalContext(wasm_api::SupportedWasmEngine engine_inp)
-		: engine(engine_inp) {}
+	SisyphusGlobalContext(std::variant<wasm_api::SupportedWasmEngine, wasm_api::WasmContext> engine_inp)
+		: engine(std::move(engine_inp)) {}
+
 };
 
 struct GroundhogGlobalContext : public utils::NonMovableOrCopyable
@@ -63,10 +66,11 @@ struct GroundhogGlobalContext : public utils::NonMovableOrCopyable
 	ContractDB contract_db;
 	GroundhogPersistentStateDB state_db;
 	RpcAddressDB address_db;
-	wasm_api::SupportedWasmEngine engine;
+	// engine if context is not shared, context if context is to be shared.
+	std::variant<wasm_api::SupportedWasmEngine, wasm_api::WasmContext> engine;
 
-	GroundhogGlobalContext(wasm_api::SupportedWasmEngine engine_inp)
-		: engine(engine_inp) {}
+	GroundhogGlobalContext(std::variant<wasm_api::SupportedWasmEngine, wasm_api::WasmContext> engine_inp)
+		: engine(std::move(engine_inp)) {}
 };
 
 template<typename T>

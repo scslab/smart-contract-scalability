@@ -67,15 +67,18 @@ template class ExecutionContext<GroundhogTxContext>;
 template class ExecutionContext<SisyphusTxContext>;
 template class ExecutionContext<TxContext>;
 
-EC_DECL()::ExecutionContext(wasm_api::SupportedWasmEngine engine)
-    : wasm_context(MAX_STACK_BYTES, engine)
+EC_DECL()::ExecutionContext(std::variant<wasm_api::SupportedWasmEngine, wasm_api::WasmContext> engine)
+    : wasm_context([&] {
+        if (std::holds_alternative<wasm_api::WasmContext>(engine)) {
+            return std::get<wasm_api::WasmContext>(engine);
+        }
+        return link_engine(std::get<wasm_api::SupportedWasmEngine>(engine));
+    }())
     , active_runtimes()
     , tx_context(nullptr)
     , results_of_last_tx(nullptr)
     , addr_db(nullptr)
 {
-    wasm_context.link_fn("scs", "syscall", &ExecutionContext<TransactionContext_t>::static_syscall_handler);
-    wasm_context.link_fn("scs", "gas", &gas_handler);
 }
 
 

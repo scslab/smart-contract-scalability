@@ -83,7 +83,6 @@ TEST(PaymentExperiment, LargeBlockFillsReplayCache)
 
 	ASSERT_TRUE(!!vm);
 
-
 	auto batch = e.gen_transaction_batch(3 * START_HASH_SET_SIZE);
 
 	Block b;
@@ -111,9 +110,9 @@ TEST(PaymentExperiment, AssembleBlockSmall)
 
 	Block blk;
 
-	auto header = vm -> propose_tx_block(limits, 1000, 10, blk);
+	vm -> propose_tx_block(limits, 1000, 10, blk);
 
-	ASSERT_EQ(blk.transactions.size(), 10);
+	ASSERT_EQ(blk.transactions.size(), 10u);
 }
 
 TEST(PaymentExperiment, AssembleSeveralBlocks)
@@ -125,7 +124,7 @@ TEST(PaymentExperiment, AssembleSeveralBlocks)
 	ASSERT_TRUE(!!vm);
 
 	auto& mp = vm -> get_mempool();
-	ASSERT_EQ(mp.add_txs(e.gen_transaction_batch(10000)), 10000);
+	ASSERT_EQ(mp.add_txs(e.gen_transaction_batch(10000)), 10000u);
 
 	Block blk;
 
@@ -133,8 +132,8 @@ TEST(PaymentExperiment, AssembleSeveralBlocks)
 	{
 		AssemblyLimits limits(100, INT64_MAX);
 		std::printf("============= start block ===============\n");
-		auto header = vm -> propose_tx_block(limits, 1000, 10, blk);
-		ASSERT_EQ(blk.transactions.size(),  100);
+		vm -> propose_tx_block(limits, 1000, 10, blk);
+		ASSERT_EQ(blk.transactions.size(),  100u);
 	}
 } 
 

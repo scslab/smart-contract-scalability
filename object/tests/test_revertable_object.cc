@@ -354,7 +354,7 @@ TEST_F(RevertableObjectTests, HashsetFromEmpty)
     auto const& hashes
         = object.get_committed_object()->body.hash_set().hashes;
 
-    ASSERT_EQ(hashes.size(), 1);
+    ASSERT_EQ(hashes.size(), 1u);
     EXPECT_EQ(hashes[0].hash, hash_xdr<uint64_t>(0));
 
     // try raising hashset limit
@@ -373,7 +373,7 @@ TEST_F(RevertableObjectTests, HashsetFromEmpty)
     object.commit_round();
 
     ASSERT_TRUE(!!object.get_committed_object());
-    EXPECT_EQ(object.get_committed_object()->body.hash_set().hashes.size(), 1);
+    EXPECT_EQ(object.get_committed_object()->body.hash_set().hashes.size(), 1u);
     EXPECT_EQ(object.get_committed_object()->body.hash_set().max_size, 64 + START_HASH_SET_SIZE);
 
     {
@@ -392,7 +392,7 @@ TEST_F(RevertableObjectTests, HashsetFromEmpty)
     object.commit_round();
 
     ASSERT_TRUE(!!object.get_committed_object());
-    EXPECT_EQ(object.get_committed_object()->body.hash_set().hashes.size(), 1);
+    EXPECT_EQ(object.get_committed_object()->body.hash_set().hashes.size(), 1u);
     EXPECT_EQ(object.get_committed_object()->body.hash_set().max_size, MAX_HASH_SET_SIZE);
 }
 
@@ -422,14 +422,14 @@ TEST_F(RevertableObjectTests, HashsetClear)
 
     object.commit_round();
     ASSERT_TRUE(!!object.get_committed_object());
-    EXPECT_EQ(object.get_committed_object()->body.hash_set().hashes.size(), 2);
+    EXPECT_EQ(object.get_committed_object()->body.hash_set().hashes.size(), 2u);
 
 
     good_add(make_hash_set_clear(0));
     object.commit_round();
     
     ASSERT_TRUE(!!object.get_committed_object());
-    EXPECT_EQ(object.get_committed_object()->body.hash_set().hashes.size(), 0);
+    EXPECT_EQ(object.get_committed_object()->body.hash_set().hashes.size(), 0u);
 }
 
 TEST_F(RevertableObjectTests, HashsetFromNonempty)
@@ -471,7 +471,7 @@ TEST_F(RevertableObjectTests, HashsetFromNonempty)
 
     object.commit_round();
     ASSERT_TRUE(!!object.get_committed_object());
-    EXPECT_EQ(object.get_committed_object()->body.hash_set().hashes.size(), 0);
+    EXPECT_EQ(object.get_committed_object()->body.hash_set().hashes.size(), 0u);
 }
 
 TEST_F(RevertableObjectTests, HashsetFromNonemptyWithThresholds)
@@ -513,7 +513,7 @@ TEST_F(RevertableObjectTests, HashsetFromNonemptyWithThresholds)
     {
         auto const& hs = object.get_committed_object() -> body.hash_set().hashes;
 
-        ASSERT_EQ(hs.size(), 4);
+        ASSERT_EQ(hs.size(), 4u);
         EXPECT_EQ(hs[0].hash, hash_xdr<uint64_t>(2));
         EXPECT_EQ(hs[1].hash, hash_xdr<uint64_t>(1));
         EXPECT_EQ(hs[2].hash, hash_xdr<uint64_t>(0));
@@ -532,7 +532,7 @@ TEST_F(RevertableObjectTests, HashsetFromNonemptyWithThresholds)
     {
         auto const& hs = object.get_committed_object() -> body.hash_set().hashes;
 
-        ASSERT_EQ(hs.size(), 1);
+        ASSERT_EQ(hs.size(), 1u);
         EXPECT_EQ(hs[0].hash, hash_xdr<uint64_t>(2));
     }
 }
