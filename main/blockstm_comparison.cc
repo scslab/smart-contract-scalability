@@ -97,10 +97,14 @@ main(int argc, const char** argv)
     std::vector<uint32_t> nthreads = { 1, 8, 16, 32, 64, 96, 128, 160, 192 };
     std::vector<uint32_t> big_accts = { 100'000,  1'000'000  };
     std::vector<bool> sigs = { true, false};
+    // Provide the wasm_api::SupportedWasmEngine to have a separate context for each transaction,
+    // and provide PaymentExperiment::prepare_wasm_context(engine type) to have a shared context.
     std::vector<std::variant<wasm_api::SupportedWasmEngine, wasm_api::WasmContext>> engines = {
 	    wasm_api::SupportedWasmEngine::WASMI,
 	    wasm_api::SupportedWasmEngine::WASM3,
-	    wasm_api::SupportedWasmEngine::WASMTIME_WINCH};
+	    wasm_api::SupportedWasmEngine::WASMTIME_WINCH,
+        PaymentExperiment::prepare_wasm_context(wasm_api::SupportedWasmEngine::WASMTIME_CRANELIFT)
+        };
 
     struct exp_res
     {

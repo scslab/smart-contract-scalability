@@ -73,6 +73,16 @@ class PaymentExperiment
     std::unique_ptr<SisyphusVirtualMachine> prepare_sisyphus_vm();
     std::unique_ptr<GroundhogVirtualMachine> prepare_groundhog_vm();
 
+    static wasm_api::WasmContext prepare_wasm_context(wasm_api::SupportedWasmEngine engine) {
+        return VirtualMachine::new_wasm_context(engine);
+    }
+    static wasm_api::WasmContext prepare_sisyphus_wasm_context(wasm_api::SupportedWasmEngine engine) {
+        return SisyphusVirtualMachine::new_wasm_context(engine);
+    }
+    static wasm_api::WasmContext prepare_groundhog_wasm_context(wasm_api::SupportedWasmEngine engine) {
+        return GroundhogVirtualMachine::new_wasm_context(engine);
+    }
+
     std::vector<AddressAndKey> get_active_key_set();
 
     std::vector<SignedTransaction> gen_transaction_batch(

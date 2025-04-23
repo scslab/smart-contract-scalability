@@ -72,6 +72,10 @@ class BaseVirtualMachine : public utils::NonMovableOrCopyable
       , executors()
 	{}
     
+    static wasm_api::WasmContext new_wasm_context(wasm_api::SupportedWasmEngine engine) {
+      return ExecutionContext<TransactionContext_t>::link_engine(engine);
+    }
+
     void init_default_genesis();
 
     std::optional<BlockHeader>
