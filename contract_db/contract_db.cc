@@ -43,23 +43,23 @@ ContractDB::assert_not_uncommitted_modifications() const
 }
 
 
-RunnableScriptView
+std::pair<Hash, RunnableScriptView>
 ContractDB::get_script_by_address(Address const& addr) const
 {
     auto const* contract = addresses_to_contracts_map.get_value_nolocks(addr);
     if (contract == nullptr)
     {
-        return null_script;
+        return {{}, null_script};
     }
 
     auto const* metered_script_out = contract -> contract.get();
 
-    if (metered_script_out == nullptr || metered_script_out -> to_view().data == nullptr)
+    if (metered_script_out == nullptr || metered_script_out -> contract.to_view().data == nullptr)
     {
         throw std::runtime_error("invalid script stored within ContractDB!");
     }
 
-    return metered_script_out -> to_view();//{ metered_script_out -> data(), metered_script_out -> size()};
+    return {metered_script_out -> hash, metered_script_out -> contract.to_view()};//{ metered_script_out -> data(), metered_script_out -> size()};
 }
 
 RunnableScriptView
@@ -69,7 +69,7 @@ ContractDB::get_script_by_hash(const Hash& hash) const
     if (it == hashes_to_contracts_map.end()) {
         return null_script;
     }
-    return it -> second.get()->to_view();
+    return it -> second.get()->contract.to_view();
 }
 
 void
@@ -117,10 +117,10 @@ ContractDB::check_committed_contract_exists(const Hash& contract_hash) const
 
 void
 ContractDB::add_new_uncommitted_contract(
-    Hash const& h, 
     metered_contract_ptr_t new_contract,
     std::shared_ptr<const Contract> new_unmetered_contract)
 {
+    auto const& h = new_contract->hash;
     has_uncommitted_modifications.store(true, std::memory_order_relaxed);
     uncommitted_contracts.add_new_contract(h, new_contract);
     persistence.log_create(h, new_unmetered_contract);

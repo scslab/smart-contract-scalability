@@ -28,19 +28,16 @@
 namespace scs {
 
 ContractCreateClosure::ContractCreateClosure(
-    Hash const& h, 
     metered_contract_ptr_t contract,
     std::shared_ptr<const Contract> unmetered_contract,
     ContractDB& contract_db)
-    : h(h)
-    , contract(contract)
+    : contract(contract)
     , unmetered_contract(unmetered_contract)
     , contract_db(contract_db)
 {}
 
 ContractCreateClosure::ContractCreateClosure(ContractCreateClosure&& other)
-    : h(other.h)
-    , contract(other.contract)
+    : contract(other.contract)
     , unmetered_contract(other.unmetered_contract)
     , contract_db(other.contract_db)
     , do_create(other.do_create)
@@ -57,7 +54,7 @@ ContractCreateClosure::commit()
 ContractCreateClosure::~ContractCreateClosure()
 {
     if (do_create) {
-        contract_db.add_new_uncommitted_contract(h, std::move(contract), std::move(unmetered_contract));
+        contract_db.add_new_uncommitted_contract(std::move(contract), std::move(unmetered_contract));
     }
 }
 
@@ -131,15 +128,15 @@ ContractDBProxy::create_contract(std::shared_ptr<const Contract> contract)
     // This is where gas metering, or verification, or whatever other checks
     // on new contracts should take place
     Hash h = hash_xdr(*contract);
-    new_contracts[h] = std::make_pair(std::make_shared<const MeteredContract>(contract), contract);
+    new_contracts[h] = std::make_pair(std::make_shared<MeteredContractWithHash>(h, contract), contract);
     return h;
 }
 
 ContractCreateClosure
 ContractDBProxy::push_create_contract(
-    Hash const& h, std::pair<metered_contract_ptr_t, std::shared_ptr<const Contract>> const& contract)
+    std::pair<metered_contract_ptr_t, std::shared_ptr<const Contract>> const& contract)
 {
-    return ContractCreateClosure(h, contract.first, contract.second, contract_db);
+    return ContractCreateClosure(contract.first, contract.second, contract_db);
 }
 
 void
@@ -152,16 +149,17 @@ ContractDBProxy::push_updates_to_db(TransactionRewind& rewind)
         rewind.add(push_deploy_contract(addr, hash));
     }
 
-    for (auto const& [hash, script] : new_contracts) {
-        rewind.add(push_create_contract(hash, script));
+    for (auto const& [_, script] : new_contracts) {
+        rewind.add(push_create_contract(script));
     }
 }
 
-RunnableScriptView
+std::pair<Hash, RunnableScriptView>
 ContractDBProxy::get_script(const Address& address) const
 {
     auto it = new_deployments.find(address);
 
+    // If it's an address where a contract was deployed in a past block, look there.
     if (it == new_deployments.end()) {
         return contract_db.get_script_by_address(address);
     }
@@ -170,9 +168,9 @@ ContractDBProxy::get_script(const Address& address) const
     
     auto s_it = new_contracts.find(script_hash);
     if (s_it == new_contracts.end()) {
-        return contract_db.get_script_by_hash(script_hash);
+        return {script_hash, contract_db.get_script_by_hash(script_hash)};
     }
-    return s_it-> second.first->to_view();
+    return {script_hash, s_it->second.first->contract.to_view()};
 }
 
 void

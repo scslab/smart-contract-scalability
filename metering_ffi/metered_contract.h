@@ -51,9 +51,19 @@ class MeteredContract : public utils::NonMovableOrCopyable
     operator bool() const { return base.data != nullptr; }
 
     RunnableScriptView to_view() const;
-    Hash hash() const;
+   // Hash hash() const;
 };
 
-using metered_contract_ptr_t = std::shared_ptr<const MeteredContract>;
+struct MeteredContractWithHash {
+  const Hash hash;
+  const MeteredContract contract;
+
+  MeteredContractWithHash(Hash const& h, std::shared_ptr<const Contract> unmetered)
+    : hash(h)
+    , contract(unmetered)
+  {}
+};
+
+using metered_contract_ptr_t = std::shared_ptr<MeteredContractWithHash>;
 
 } // namespace scs
