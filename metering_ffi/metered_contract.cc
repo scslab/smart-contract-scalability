@@ -60,12 +60,13 @@ MeteredContract::to_view() const
     return RunnableScriptView(base.data, base.len);
 }
 
+/*
 Hash
 MeteredContract::hash() const
 {
     Hash out;
     hash_raw(base.data, base.len, out.data());
     return out;
-}
+} */
 
 } // namespace scs

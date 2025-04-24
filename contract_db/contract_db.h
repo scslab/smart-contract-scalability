@@ -56,7 +56,7 @@ class ContractDB
         {
             if (contract)
             {
-                auto view = contract->to_view();
+                auto view = contract->contract.to_view();
                 buf.insert(buf.end(), view.data, view.data + view.len);
             }
         }
@@ -104,13 +104,13 @@ class ContractDB
                                Hash const& script_hash);
 
     void add_new_uncommitted_contract(
-        Hash const& h,
         metered_contract_ptr_t new_contract,
         std::shared_ptr<const Contract> new_unmetered_contract);
 
     RunnableScriptView get_script_by_hash(const Hash& hash) const;
 
-    RunnableScriptView get_script_by_address(
+    std::pair<Hash, RunnableScriptView>
+    get_script_by_address(
         Address const& addr) const;
 
 

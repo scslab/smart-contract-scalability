@@ -94,12 +94,13 @@ EC_DECL(wasm_api::MeteredReturn)::invoke_subroutine(MethodInvocation const& invo
             throw std::runtime_error("no tx context??");
         }
 
-        auto script = tx_context->get_contract_db_proxy().get_script(invocation.addr);
+        auto [hash, script] = tx_context->get_contract_db_proxy().get_script(invocation.addr);
         wasm_api::Script s {.data = script.data, .len = script.len};
 
         auto runtime_instance = wasm_context.new_runtime_instance(
             s,
-            reinterpret_cast<void*>(this));
+            reinterpret_cast<void*>(this),
+            &hash);
 
         if (!runtime_instance) {
             return wasm_api::MeteredReturn{

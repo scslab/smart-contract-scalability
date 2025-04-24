@@ -54,7 +54,7 @@ deploy_and_commit_contractdb(ContractDB& contract_db,
 
     ContractDBProxy proxy_new(contract_db);
 
-    ASSERT_TRUE(proxy_new.get_script(addr).data);
+    ASSERT_TRUE(proxy_new.get_script(addr).second.data);
 }
 
 } // namespace test

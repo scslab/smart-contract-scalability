@@ -33,7 +33,6 @@ struct TransactionRewind;
 
 class ContractCreateClosure : public utils::NonCopyable
 {
-    Hash h;
     metered_contract_ptr_t contract;
     std::shared_ptr<const Contract> unmetered_contract;
     ContractDB& contract_db;
@@ -41,8 +40,7 @@ class ContractCreateClosure : public utils::NonCopyable
     bool do_create = false;
 
   public:
-    ContractCreateClosure(Hash const& h, 
-                          metered_contract_ptr_t contract,
+    ContractCreateClosure(metered_contract_ptr_t contract,
                           std::shared_ptr<const Contract> unmetered_contract,
                           ContractDB& contract_db);
 
@@ -82,8 +80,7 @@ class ContractDBProxy
                          const Hash& contract_hash) const;
 
     ContractCreateClosure __attribute__((warn_unused_result))
-    push_create_contract(Hash const& h, 
-      std::pair<metered_contract_ptr_t, std::shared_ptr<const Contract>> const& contract);
+    push_create_contract(std::pair<metered_contract_ptr_t, std::shared_ptr<const Contract>> const& contract);
 
     bool is_committed = false;
     void assert_not_committed() const;
@@ -114,7 +111,7 @@ class ContractDBProxy
 
     void push_updates_to_db(TransactionRewind& rewind);
 
-    RunnableScriptView
+    std::pair<Hash, RunnableScriptView>
     get_script(const Address& address) const;
 };
 
