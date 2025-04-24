@@ -165,7 +165,7 @@ main(int argc, const char** argv)
         for (auto acct : big_accts) {
             for (auto nthread : nthreads) {
                 uint32_t batch = 100'000;
-                std::printf("start %lu %lu %lu %u %d\n", acct, batch, nthread, uint8_t{sig}, engine);
+                std::printf("start %lu %lu %lu %u %s\n", acct, batch, nthread, uint8_t{sig}, wasm_api::engine_to_string(engine).c_str());
                 uint32_t trials = 25;
                 // 20 trials, 5 warmup
                 uint16_t boost = 0;
