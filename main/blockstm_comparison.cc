@@ -100,9 +100,9 @@ main(int argc, const char** argv)
     // Provide the wasm_api::SupportedWasmEngine to have a separate context for each transaction,
     // and provide PaymentExperiment::prepare_wasm_context(engine type) to have a shared context.
     std::vector<std::variant<wasm_api::SupportedWasmEngine, wasm_api::WasmContext>> engines = {
-	    wasm_api::SupportedWasmEngine::WASMI,
-	    wasm_api::SupportedWasmEngine::WASM3,
-	    wasm_api::SupportedWasmEngine::WASMTIME_WINCH,
+	    // wasm_api::SupportedWasmEngine::WASMI,
+	    // wasm_api::SupportedWasmEngine::WASM3,
+	   // wasm_api::SupportedWasmEngine::WASMTIME_CRANELIFT,
         PaymentExperiment::prepare_wasm_context(wasm_api::SupportedWasmEngine::WASMTIME_CRANELIFT)
         };
 
